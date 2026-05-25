@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/daily-packets",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/streak-maintenance",
+      "schedule": "59 23 * * *"
+    },
+    {
+      "path": "/api/cron/dunning",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/shop-expiry",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

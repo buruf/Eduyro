@@ -1,0 +1,847 @@
+// prisma/schema.prisma
+// BrightSteps — Complete Database Schema
+// Run: npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// USERS & ROLES
+// ─────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  PARENT
+  TEACHER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  MICROSOFT
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  emailVerified DateTime?
+  name          String?
+  firstName     String?
+  lastName      String?
+  image         String?
+  role          Role         @default(STUDENT)
+  provider      AuthProvider @default(EMAIL)
+  passwordHash  String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  lastActiveAt  DateTime?
+
+  // Profile fields
+  dateOfBirth   DateTime?    // Used for COPPA age calculation
+
+  // COPPA — for students under 13
+  requiresCoppaConsent Boolean             @default(false)
+  coppaConsentStatus   CoppaConsentStatus? // PENDING / VERIFIED / DENIED / EXPIRED
+  coppaVerifiedAt      DateTime?
+
+  // Relations
+  student       Student?
+  parent        Parent?
+  teacher       Teacher?
+  accounts      Account[]
+  sessions      Session[]
+  notifications Notification[]
+  subscription  Subscription?
+  googleClassroom GoogleClassroomIntegration?
+  coppaConsentRequests CoppaConsentRequest[]
+
+  @@index([email])
+  @@index([role])
+}
+
+// NextAuth required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+}
+
+// ─────────────────────────────────────────────
+// STUDENT
+// ─────────────────────────────────────────────
+
+model Student {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  grade       String?   // "Grade 4", "Pre-K", etc.
+  dateOfBirth DateTime?
+  schoolId    String?
+
+  // Streak tracking
+  currentStreak     Int      @default(0)
+  longestStreak     Int      @default(0)
+  lastActiveDate    DateTime?
+  totalSheetsCompleted Int   @default(0)
+
+  // External sync (Google Classroom, etc.)
+  externalId String?   // ID from external system
+  source     String?   // "GOOGLE_CLASSROOM", "CSV_IMPORT", "MANUAL"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school        School?         @relation(fields: [schoolId], references: [id])
+  parentLinks   ParentStudent[]
+  progress      StudentProgress[]
+  completedSheets CompletedSheet[]
+  placementTests  PlacementTest[]
+  pdfExports    PdfExport[]
+  badges        StudentBadge[]
+  teacherLinks  TeacherStudent[]
+
+  @@index([userId])
+  @@index([schoolId])
+}
+
+// ─────────────────────────────────────────────
+// PARENT
+// ─────────────────────────────────────────────
+
+model Parent {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  children ParentStudent[]
+
+  @@index([userId])
+}
+
+model ParentStudent {
+  id        String @id @default(cuid())
+  parentId  String
+  studentId String
+
+  parent  Parent  @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, studentId])
+  @@index([parentId])
+  @@index([studentId])
+}
+
+// ─────────────────────────────────────────────
+// TEACHER & SCHOOL
+// ─────────────────────────────────────────────
+
+model Teacher {
+  id       String @id @default(cuid())
+  userId   String @unique
+  schoolId String
+  title    String? // "Ms.", "Mr.", "Dr."
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school   School           @relation(fields: [schoolId], references: [id])
+  students TeacherStudent[]
+
+  @@index([userId])
+  @@index([schoolId])
+}
+
+model TeacherStudent {
+  id        String @id @default(cuid())
+  teacherId String
+  studentId String
+  className String? // "Grade 4 – Homeroom"
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, studentId])
+}
+
+enum SchoolPlan {
+  STARTER   // 20-49 students — $19/student
+  SCHOOL    // 50-199 students — $12/student
+  DISTRICT  // 200+ — custom
+}
+
+model School {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  plan        SchoolPlan @default(STARTER)
+  logoUrl     String?
+  address     String?
+  city        String?
+  province    String?
+  country     String     @default("CA")
+  phoneNumber String?
+  contactEmail String?
+
+  // Branding for worksheets
+  worksheetHeaderText String?
+  worksheetLogoUrl    String?
+  worksheetFooterText String?
+
+  // Stripe
+  stripeCustomerId String? @unique
+
+  // Scheduling
+  autoExportEnabled   Boolean  @default(false)
+  autoExportTime      String?  @default("06:00") // 24h format
+  autoExportTimezone  String?  @default("America/Toronto")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  students     Student[]
+  teachers     Teacher[]
+  subscription Subscription?
+  pdfExports   PdfExport[]
+  classroomLinks GoogleClassroomCourseLink[]
+
+  @@index([slug])
+}
+
+// ─────────────────────────────────────────────
+// CURRICULUM
+// ─────────────────────────────────────────────
+
+enum SubjectSlug {
+  MATH
+  READING
+  WRITING
+  SCIENCE
+}
+
+model Subject {
+  id          String      @id @default(cuid())
+  name        String      // "Mathematics"
+  slug        SubjectSlug @unique
+  description String?
+  iconEmoji   String?
+  colorHex    String?
+  sortOrder   Int         @default(0)
+
+  levels Level[]
+
+  @@index([slug])
+}
+
+model Level {
+  id          String @id @default(cuid())
+  subjectId   String
+  code        String // "M1", "M5", "R3", "W2", "S4" etc.
+  name        String // "Multiplication Fluency"
+  gradeMin    String // "Grade 3"
+  gradeMax    String // "Grade 4"
+  description String?
+  sortOrder   Int    @default(0) // lower = easier
+  isActive    Boolean @default(true)
+
+  // Mastery config
+  masteryThresholdPct  Int @default(95)  // 95%
+  masteryConsecutiveDays Int @default(5) // 5 days in a row
+  sheetsPerDay         Int @default(3)
+  problemsPerSheet     Int @default(20)
+  timeLimitMinutes     Int @default(10)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subject      Subject           @relation(fields: [subjectId], references: [id])
+  skills       Skill[]
+  worksheets   Worksheet[]
+  prerequisites LevelPrerequisite[] @relation("LevelPrerequisites")
+  unlocks       LevelPrerequisite[] @relation("LevelUnlocks")
+  progress     StudentProgress[]
+  placements   PlacementTest[]
+
+  @@unique([subjectId, code])
+  @@index([subjectId])
+  @@index([sortOrder])
+}
+
+model LevelPrerequisite {
+  id            String @id @default(cuid())
+  levelId       String // the level that requires this prereq
+  prerequisiteId String // must complete this first
+
+  level        Level @relation("LevelPrerequisites", fields: [levelId], references: [id])
+  prerequisite Level @relation("LevelUnlocks", fields: [prerequisiteId], references: [id])
+
+  @@unique([levelId, prerequisiteId])
+}
+
+model Skill {
+  id         String @id @default(cuid())
+  levelId    String
+  name       String // "×9 Tables"
+  description String?
+  sortOrder  Int    @default(0)
+  totalSheets Int   @default(40)
+
+  level      Level       @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  worksheets Worksheet[]
+
+  @@index([levelId])
+}
+
+// ─────────────────────────────────────────────
+// WORKSHEETS & QUESTIONS
+// ─────────────────────────────────────────────
+
+enum WorksheetType {
+  DAILY_PRACTICE
+  TIMED_DRILL
+  REVIEW
+  MASTERY_TEST
+  CHALLENGE
+}
+
+model Worksheet {
+  id          String        @id @default(cuid())
+  levelId     String
+  skillId     String
+  type        WorksheetType @default(DAILY_PRACTICE)
+  sheetNumber Int           // 1-200+ within skill
+  title       String
+
+  // Cached problem/answer data (JSON)
+  problems    Json   // Array of { id, question, type, options?, answer, points }
+  answerKey   Json   // Array of { id, answer, explanation? }
+
+  // Metadata
+  problemCount     Int
+  estimatedMinutes Int
+  difficultyScore  Float @default(1.0) // 1.0 = standard, 0.5 = easier, 1.5 = harder
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  level          Level           @relation(fields: [levelId], references: [id])
+  skill          Skill           @relation(fields: [skillId], references: [id])
+  completedSheets CompletedSheet[]
+  contentReview  ContentReview?
+
+  @@index([levelId])
+  @@index([skillId])
+  @@index([sheetNumber])
+}
+
+// ─────────────────────────────────────────────
+// STUDENT PROGRESS & COMPLETED SHEETS
+// ─────────────────────────────────────────────
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  MASTERED
+  REVIEWING // placed back for review
+}
+
+model StudentProgress {
+  id        String         @id @default(cuid())
+  studentId String
+  levelId   String
+  status    ProgressStatus @default(NOT_STARTED)
+
+  // Progress counters
+  sheetsCompleted     Int   @default(0)
+  correctAnswers      Int   @default(0)
+  totalAnswers        Int   @default(0)
+
+  // Rolling 5-day mastery tracking
+  consecutivePassDays Int   @default(0)  // days at ≥95%
+  lastAccuracyPct     Float @default(0)
+
+  // Dates
+  startedAt  DateTime?
+  masteredAt DateTime?
+  updatedAt  DateTime @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  level   Level   @relation(fields: [levelId], references: [id])
+  dailyAccuracy DailyAccuracy[]
+
+  @@unique([studentId, levelId])
+  @@index([studentId])
+  @@index([levelId])
+}
+
+model DailyAccuracy {
+  id                String @id @default(cuid())
+  studentProgressId String
+  date              DateTime @db.Date
+  accuracyPct       Float
+  sheetsCompleted   Int
+  totalProblems     Int
+  correctProblems   Int
+
+  progress StudentProgress @relation(fields: [studentProgressId], references: [id], onDelete: Cascade)
+
+  @@unique([studentProgressId, date])
+  @@index([studentProgressId])
+  @@index([date])
+}
+
+model CompletedSheet {
+  id          String   @id @default(cuid())
+  studentId   String
+  worksheetId String
+
+  // Submitted answers: Array of { problemId, answer, isCorrect }
+  answers     Json
+  score       Int    // correct count
+  totalProblems Int
+  accuracyPct Float  // score / totalProblems * 100
+  timeSeconds Int    // elapsed time in seconds
+
+  completedAt DateTime @default(now())
+
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  worksheet Worksheet @relation(fields: [worksheetId], references: [id])
+
+  @@index([studentId])
+  @@index([worksheetId])
+  @@index([completedAt])
+}
+
+// ─────────────────────────────────────────────
+// PLACEMENT TEST
+// ─────────────────────────────────────────────
+
+enum PlacementStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+model PlacementTest {
+  id        String          @id @default(cuid())
+  studentId String
+  subjectId String
+  status    PlacementStatus @default(IN_PROGRESS)
+
+  // Adaptive engine state
+  currentDifficulty Float  @default(1.0)
+  questionsAsked    Int    @default(0)
+  correctAnswers    Int    @default(0)
+  confidenceScore   Float  @default(0)
+
+  // Results
+  resultLevelId    String?
+  resultLevelCode  String?
+  placementPct     Float?  // final ability estimate
+
+  // Raw Q&A log
+  questionLog Json? // Array of { questionId, question, correct, difficulty, timeMs }
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  student      Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  resultLevel  Level?  @relation(fields: [resultLevelId], references: [id])
+
+  @@index([studentId])
+  @@index([subjectId])
+}
+
+// ─────────────────────────────────────────────
+// PDF EXPORTS
+// ─────────────────────────────────────────────
+
+enum ExportType {
+  SINGLE_SHEET
+  DAILY_PACKET   // 3 sheets
+  WEEKLY_PACKET  // 15 sheets
+  MASTERY_TEST
+  BULK_CLASS     // all students in a class
+  BULK_SCHOOL    // all students in school
+}
+
+model PdfExport {
+  id        String     @id @default(cuid())
+  studentId String?    // null for bulk exports
+  schoolId  String?    // for bulk exports
+  type      ExportType
+
+  // What's in it
+  worksheetIds String[] // array of Worksheet IDs
+  sheetCount   Int
+
+  // Storage
+  fileUrl      String?  // S3 signed URL or path
+  fileKey      String?  // S3 object key
+  fileSizeBytes Int?
+  zipUrl        String? // for bulk exports
+
+  includesAnswerKey Boolean @default(true)
+  customBranding    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime? // signed URL expiry
+
+  student Student? @relation(fields: [studentId], references: [id])
+  school  School?  @relation(fields: [schoolId], references: [id])
+
+  @@index([studentId])
+  @@index([schoolId])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────
+// SUBSCRIPTIONS & BILLING
+// ─────────────────────────────────────────────
+
+enum SubscriptionPlan {
+  FREE
+  PREMIUM       // $19/student/month
+  SCHOOL_STARTER // $19/student/month (20-49)
+  SCHOOL_PLAN    // $12/student/month (50-199)
+  DISTRICT       // custom
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  PAUSED
+}
+
+model Subscription {
+  id       String             @id @default(cuid())
+  userId   String?            @unique
+  schoolId String?            @unique
+  plan     SubscriptionPlan   @default(FREE)
+  status   SubscriptionStatus @default(TRIALING)
+
+  // Stripe
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
+  stripePriceId        String?
+
+  // Dates
+  trialEndsAt          DateTime?
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  canceledAt           DateTime?
+
+  // Quantities (for school plans)
+  studentQuantity Int @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User?   @relation(fields: [userId], references: [id])
+  school School? @relation(fields: [schoolId], references: [id])
+
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+}
+
+// ─────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────
+
+enum NotificationType {
+  SHEET_COMPLETED
+  LEVEL_ADVANCED
+  STREAK_MILESTONE
+  PLACEMENT_COMPLETE
+  PDF_READY
+  PAYMENT_FAILED
+  PAYMENT_SUCCESS
+  SYSTEM
+}
+
+model Notification {
+  id      String           @id @default(cuid())
+  userId  String
+  type    NotificationType
+  title   String
+  message String
+  linkUrl String?
+  isRead  Boolean          @default(false)
+  metadata Json?           // extra data (e.g. { levelCode: "M6", streak: 30 })
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────
+// BADGES
+// ─────────────────────────────────────────────
+
+model Badge {
+  id          String @id @default(cuid())
+  slug        String @unique // "speed-demon", "perfect-score"
+  name        String
+  description String
+  iconEmoji   String
+  criteria    Json   // { type: "streak", threshold: 7 }
+  isActive    Boolean @default(true)
+
+  studentBadges StudentBadge[]
+}
+
+model StudentBadge {
+  id        String   @id @default(cuid())
+  studentId String
+  badgeId   String
+  earnedAt  DateTime @default(now())
+  metadata  Json?    // e.g. { streakDays: 18 }
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  badge   Badge   @relation(fields: [badgeId], references: [id])
+
+  @@unique([studentId, badgeId])
+  @@index([studentId])
+}
+
+// ─────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String   // "student.level_advance", "pdf.bulk_export", etc.
+  entityId  String?
+  entityType String?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────
+// PHASE 3 — INTEGRATIONS & EXTERNAL SYNC
+// ─────────────────────────────────────────────
+
+model GoogleClassroomIntegration {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  googleEmail  String
+  accessToken  String   @db.Text
+  refreshToken String   @db.Text
+  expiryDate   DateTime
+  scope        String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model GoogleClassroomCourseLink {
+  id                  String   @id @default(cuid())
+  classroomCourseId   String   @unique
+  schoolId            String
+  school              School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacherId           String   // BrightSteps user ID of the teacher
+  lastSyncedAt        DateTime?
+  lastSyncResult      Json?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([teacherId])
+}
+
+// ─────────────────────────────────────────────
+// PHASE 5 — COPPA COMPLIANCE
+// ─────────────────────────────────────────────
+
+enum CoppaConsentStatus {
+  PENDING
+  VERIFIED
+  DENIED
+  EXPIRED
+}
+
+enum CoppaConsentMethod {
+  CREDIT_CARD_MICROCHARGE
+  GOVERNMENT_ID
+  KNOWLEDGE_BASED_AUTH
+  SCHOOL_TEACHER_AUTHORIZATION
+}
+
+model CoppaConsentRequest {
+  id                   String              @id @default(cuid())
+  studentUserId        String
+  studentUser          User                @relation(fields: [studentUserId], references: [id], onDelete: Cascade)
+  childFirstName       String
+  childDateOfBirth     DateTime
+  parentEmail          String
+  parentFullName       String
+  consentMethod        CoppaConsentMethod
+  verificationToken    String              @unique
+  status               CoppaConsentStatus  @default(PENDING)
+  verifiedAt           DateTime?
+  verificationEvidence Json?               // Stripe paymentIntentId, ID document hash, etc.
+  expiresAt            DateTime
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  @@index([studentUserId])
+  @@index([parentEmail])
+  @@index([verificationToken])
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────
+// PHASE 5 — CONTENT REVIEW
+// ─────────────────────────────────────────────
+
+enum ContentReviewStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  NEEDS_REVISION
+}
+
+model ContentReview {
+  id            String              @id @default(cuid())
+  worksheetId   String              @unique
+  worksheet     Worksheet           @relation(fields: [worksheetId], references: [id], onDelete: Cascade)
+  status        ContentReviewStatus @default(PENDING_REVIEW)
+  reviewedById  String?
+  reviewerName  String?
+  reviewedAt    DateTime?
+  notes         String?             @db.Text
+  issuesFound   Json?               // Array of { type: string, problemIdx: number, note: string }
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([status])
+  @@index([worksheetId])
+}
+
+// ─────────────────────────────────────────────
+// SHOP — One-off worksheet pack purchases (no signup required)
+// ─────────────────────────────────────────────
+
+enum ShopPurchaseStatus {
+  PENDING       // Stripe checkout session created, payment not yet confirmed
+  PAID          // Payment confirmed, PDFs being generated
+  COMPLETED     // PDFs ready and download URL is valid
+  FAILED        // PDF generation failed
+  EXPIRED       // 30 days passed, download links no longer valid
+}
+
+model ShopPurchase {
+  id                String              @id @default(cuid())
+  // Customer details — no user account required
+  customerEmail     String
+  // Stripe identifiers
+  stripeSessionId   String?             @unique  // Checkout Session ID
+  stripePaymentIntentId String?         @unique
+  // Purchase contents — comma-separated ShopSkill values
+  // (using string instead of array for portability)
+  skillsCsv         String              // e.g. "ADDITION,SUBTRACTION"
+  amountCents       Int
+  status            ShopPurchaseStatus  @default(PENDING)
+  // Email delivery preference (chosen at checkout)
+  emailDelivery     Boolean             @default(true)
+  // Generated file artifacts (one entry per skill purchased)
+  files             ShopPurchaseFile[]
+  // Public download token — sent in confirmation email + redirect
+  downloadToken     String              @unique
+  // Anti-abuse: limit download count
+  downloadCount     Int                 @default(0)
+  // 30-day expiry
+  expiresAt         DateTime
+  // Optional link to existing user (when a logged-in parent buys from shop)
+  linkedUserId      String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([customerEmail])
+  @@index([downloadToken])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model ShopPurchaseFile {
+  id           String       @id @default(cuid())
+  purchaseId   String
+  purchase     ShopPurchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  skill        String       // ShopSkill value
+  fileKey      String       // S3 key
+  fileUrl      String       @db.Text // Public/signed URL
+  fileSizeBytes Int
+  sheetCount   Int
+  createdAt    DateTime     @default(now())
+
+  @@index([purchaseId])
+}

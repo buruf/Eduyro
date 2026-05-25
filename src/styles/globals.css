@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-feature-settings: "cv11", "ss01";
+  }
+  body {
+    @apply bg-cream text-ink font-sans antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-ink text-cream px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-ink-soft transition-colors;
+  }
+  .btn-secondary {
+    @apply bg-transparent text-ink border-[1.5px] border-border-mid px-5 py-2.5 rounded-lg text-sm font-medium hover:border-ink transition-colors;
+  }
+  .btn-gold {
+    @apply bg-gold text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gold-dark transition-colors;
+  }
+  .card {
+    @apply bg-white border border-border rounded-lg p-6;
+  }
+  .input-field {
+    @apply w-full px-3 py-2.5 border-[1.5px] border-border rounded-md text-sm font-sans bg-white text-ink outline-none transition-colors focus:border-brand-blue;
+  }
+}
+
+@layer utilities {
+  .stripe-divider {
+    height: 3px;
+    background: repeating-linear-gradient(
+      90deg,
+      #1A1612 0,
+      #1A1612 18px,
+      #C8902A 18px,
+      #C8902A 36px,
+      transparent 36px,
+      transparent 54px
+    );
+  }
+}
+
+/* ─────────────────────────────────────────────
+ * Print CSS — for /pdf-generator and worksheet output
+ * ───────────────────────────────────────────── */
+
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 0.5in;
+  }
+
+  html, body {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide all UI chrome */
+  nav, aside, header, footer, .no-print, [class*="print:hidden"] {
+    display: none !important;
+  }
+
+  /* Force the main content area to take the full page */
+  main, [role="main"] {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+  }
+
+  /* Page breaks between sheets (when multiple sheets exist on one page) */
+  .page-break {
+    page-break-before: always;
+  }
+
+  /* Don't break a problem across pages */
+  .problem-row, .question-block {
+    page-break-inside: avoid;
+  }
+}
