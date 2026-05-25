@@ -134,7 +134,7 @@ export async function generateDailyPackets(): Promise<{
           type: "SHEET_COMPLETED",
           title: "Today's packet is ready",
           message: `${upcomingSheets.length} sheets · ${activeProgress.level.timeLimitMinutes * upcomingSheets.length} minutes target`,
-          actionUrl: fileUrl,
+          linkUrl: fileUrl,
         },
       });
 
