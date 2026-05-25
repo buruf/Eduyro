@@ -9,7 +9,7 @@ import puppeteer from "puppeteer";
  * Render an HTML string to a PDF buffer.
  * Used by the worksheet preview-bundle route to generate printable PDFs.
  */
-export async function renderHtmlToPdf(html: string): Promise<Buffer> {
+export async function renderHtmlToPdf(html: string): Promise<Uint8Array> {
   const browser = await puppeteer.launch({
     headless: true,
     args: [
@@ -35,7 +35,7 @@ export async function renderHtmlToPdf(html: string): Promise<Buffer> {
       },
     });
 
-    return Buffer.from(pdfBuffer);
+    return new Uint8Array(pdfBuffer);
   } finally {
     await browser.close();
   }

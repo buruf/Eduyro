@@ -14,7 +14,7 @@
 
 import { uploadToS3, getSignedDownloadUrl } from "@/lib/pdf/generator";
 import { generatePackForSkill, SHOP_SKILLS, type ShopSkill } from "./pack-generator";
-import { renderPackPdf } from "./pack-pdf";
+import { renderPackHtml } from "./pack-pdf";
 import { promises as fs } from "fs";
 import path from "path";
 
@@ -54,7 +54,7 @@ export async function getOrCreatePackPdf(skill: ShopSkill): Promise<CachedPack> 
   // Cache miss → generate fresh
   console.log(`[shop-cache] Generating ${skill} pack (cache miss)…`);
   const pack = generatePackForSkill(skill);
-  const pdf = await renderPackPdf(pack);
+  const pdf = await renderPackHtml(pack);
   const url = await uploadToS3(pdf, key, "application/pdf");
 
   return {
@@ -87,7 +87,7 @@ export async function getOrCreateSamplePdf(skill: ShopSkill): Promise<CachedPack
     label: `${full.label} — Free Sample`,
     sheets: sampleSheets,
   };
-  const pdf = await renderPackPdf(samplePack);
+  const pdf = await renderPackHtml(samplePack);
   const url = await uploadToS3(pdf, key, "application/pdf");
 
   return { skill, key, url, sizeBytes: pdf.length, sheetCount: sampleSheets.length };
