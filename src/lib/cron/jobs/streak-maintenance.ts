@@ -72,7 +72,7 @@ export async function runStreakMaintenance(): Promise<{
               await db.notification.create({
                 data: {
                   userId: student.userId,
-                  type: "BADGE_EARNED",
+                  type: "STREAK_MILESTONE",
                   title: `Badge earned: ${badge.name}`,
                   message: `${newStreak}-day streak! ${badge.iconEmoji}`,
                 },
