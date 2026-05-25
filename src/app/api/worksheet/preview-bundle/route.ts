@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
 
     const pdfBytes = await renderHtmlToPdf(doc);
 
-    return new Response(pdfBytes, {
+    return new Response(pdfBytes.buffer as ArrayBuffer, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
