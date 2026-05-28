@@ -57,7 +57,7 @@ export async function sendVerificationEmail(params: {
   firstName: string;
   token: string;
 }) {
-  const url = `${APP_URL}/verify-email?token=${params.token}`;
+  const url = `${APP_URL}/api/auth/verify-email?token=${params.token}`;
   const html = wrapEmail(`
     <h2 style="font-family:Georgia,serif;font-size:24px;margin:0 0 12px">Welcome, ${params.firstName}!</h2>
     <p style="font-size:15px;line-height:1.6;color:#1A1612">Please verify your email address by clicking the button below. This link expires in 24 hours.</p>
