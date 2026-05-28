@@ -77,29 +77,29 @@ export default function RegisterPage() {
         return;
       }
 
-      // Step 2: Auto sign-in so the user is authenticated immediately
-      const signInResult = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
+    // Redirect to sign in with check-email message
+    router.push("/signin?check-email=1");
 
-      if (signInResult?.error) {
-        // Account was created but sign-in failed — direct them to sign in manually
-        setError("Account created! Please sign in to continue.");
-        setLoading(false);
-        router.push("/signin");
-        return;
-      }
 
-      // Step 3: Redirect based on role
-      // Students go to placement test to get placed
-      // Parents go to their dashboard
-      if (role === "STUDENT") {
-        router.push("/placement");
-      } else {
-        router.push("/parent");
-      }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     } catch {
       setError("Network error — try again");
       setLoading(false);
