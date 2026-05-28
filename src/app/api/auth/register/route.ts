@@ -11,7 +11,7 @@ import {
   withRateLimit,
 } from "@/lib/api/helpers";
 import { RegisterSchema } from "@/lib/validation/schemas";
-import { sendWelcomeEmail, sendVerificationEmail } from "@/lib/email";
+import { sendVerificationEmail } from "@/lib/email";
 import { calculateAge, requiresParentalConsent } from "@/lib/coppa";
 import { nanoid } from "nanoid";
 
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     // Send emails (non-blocking) — but skip welcome to children awaiting COPPA
     sendVerificationEmail({ email, firstName: firstName ?? "there", token }).catch(console.error);
     if (!needsCoppa) {
-      sendWelcomeEmail({ email, firstName: firstName ?? "there", role }).catch(console.error);
+
     }
 
     return ok(
