@@ -63,7 +63,6 @@ function SignInForm() {
       return;
     }
 
-    // Fetch session to get role and redirect to correct dashboard
     const session = await fetch("/api/auth/session").then((r) => r.json());
     const role = session?.user?.role;
 
@@ -91,17 +90,19 @@ function SignInForm() {
 
       {checkEmail && (
         <div className="bg-brand-blue-light border border-brand-blue/30 text-brand-blue text-sm rounded-lg p-3 mb-4 text-center">
-          📧 Verification email sent — check your inbox and spam folder before signing in.
+          Verification email sent — check your inbox and spam folder before signing in.
         </div>
       )}
+
       {resendMessage && (
         <div className="bg-brand-green-light border border-brand-green/30 text-brand-green text-sm rounded-lg p-3 mb-4 text-center">
-          ✓ {resendMessage}
+          {resendMessage}
         </div>
       )}
+
       {verified && (
         <div className="bg-brand-green-light border border-brand-green/30 text-brand-green text-sm rounded-lg p-3 mb-4">
-          ✓ Email verified — you can now sign in.
+          Email verified — you can now sign in.
         </div>
       )}
 
@@ -164,35 +165,42 @@ function SignInForm() {
           Keep me signed in
         </label>
 
-        <Button type="submit" variant="primary" fullWidth loading={loading} rightIcon={<span>→</span>}>
+        <Button type="submit" variant="primary" fullWidth loading={loading} rightIcon={<span>{">"}</span>}>
           Sign in
         </Button>
       </form>
 
-        <p className="text-center text-sm text-muted mt-4">
-        Didn't get the verification email?{" "}
-          <button onClick={handleResend} disabled={resendLoading} className="text-brand-blue hover:underline disabled:opacity-50">
-            {resendLoading ? "Sending..." : "Resend it"}
-          </button>
-        </p>
-        <p className="text-center text-sm text-muted mt-2">
-          Don't have an account?{" "}
+      <p className="text-center text-sm text-muted mt-4">
+        Did not get the verification email?{" "}
+        <button
+          onClick={handleResend}
+          disabled={resendLoading}
+          className="text-brand-blue hover:underline disabled:opacity-50"
+        >
+          {resendLoading ? "Sending..." : "Resend it"}
+        </button>
+      </p>
+
+      <p className="text-center text-sm text-muted mt-2">
+        Do not have an account?{" "}
         <Link href="/register" className="text-brand-blue font-medium hover:underline">
           Create one free
         </Link>
-        </p>
+      </p>
 
+      <p className="text-center text-[11px] text-muted mt-4 leading-relaxed">
         By signing in you agree to our{" "}
-        <Link href="/terms" className="text-brand-blue">Terms</Link> and{" "}
+        <Link href="/terms" className="text-brand-blue">Terms</Link>{" "}
+        and{" "}
         <Link href="/privacy" className="text-brand-blue">Privacy Policy</Link>
-      </div>
+      </p>
     </div>
   );
 }
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<div className="bg-white border border-border rounded-2xl p-8 text-center text-muted">Loading…</div>}>
+    <Suspense fallback={<div className="bg-white border border-border rounded-2xl p-8 text-center text-muted">Loading...</div>}>
       <SignInForm />
     </Suspense>
   );
