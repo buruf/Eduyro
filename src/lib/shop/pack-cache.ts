@@ -90,7 +90,10 @@ export async function getOrCreateSamplePdf(skill: ShopSkill): Promise<CachedPack
     label: `${full.label} — Free Sample`,
     sheets: sampleSheets,
   };
-  const pdf = await renderPackHtml(samplePack);
+  const mappedSampleSheets = sampleSheets.map((s) => ({ problems: s.problems.map((p: any) => ({ ...p, answer: String(p.answer) })), skillBand: s.bandLabel }));
+  const sampleHtml = renderPackHtml({ skillLabel: full.label + " — Free Sample", skillCode: full.skill, levelCode: full.skill, sheets: mappedSampleSheets });
+  const samplePdfBytes = await renderHtmlToPdf(sampleHtml);
+  const pdf = Buffer.from(samplePdfBytes);
   const url = await uploadToS3(pdf, key, "application/pdf");
 
   return { skill, key, url, sizeBytes: pdf.length, sheetCount: sampleSheets.length };
