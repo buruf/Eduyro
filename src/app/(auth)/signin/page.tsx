@@ -13,17 +13,38 @@ function SignInForm() {
   const params = useSearchParams();
   const callbackUrl = params.get("callbackUrl") || "";
   const verified = params.get("verified") === "1";
+  const checkEmail = params.get("check-email") === "1";
   const errorParam = params.get("error");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(
     errorParam === "invalid-token" ? "Invalid verification link" :
     errorParam === "expired-token" ? "Verification link expired" :
     null
   );
+
+  async function handleResend() {
+    if (!email) { setError("Enter your email address first"); return; }
+    setResendLoading(true);
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      setResendMessage(data.data?.message ?? "Verification email sent.");
+    } catch {
+      setResendMessage("Failed to resend. Please try again.");
+    } finally {
+      setResendLoading(false);
+    }
+  }
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
@@ -68,6 +89,16 @@ function SignInForm() {
       <h2 className="font-serif text-2xl font-bold mb-1">Welcome back</h2>
       <p className="text-sm text-muted mb-6">Sign in to access your worksheets and progress.</p>
 
+      {checkEmail && (
+        <div className="bg-brand-blue-light border border-brand-blue/30 text-brand-blue text-sm rounded-lg p-3 mb-4 text-center">
+          📧 Verification email sent — check your inbox and spam folder before signing in.
+        </div>
+      )}
+      {resendMessage && (
+        <div className="bg-brand-green-light border border-brand-green/30 text-brand-green text-sm rounded-lg p-3 mb-4 text-center">
+          ✓ {resendMessage}
+        </div>
+      )}
       {verified && (
         <div className="bg-brand-green-light border border-brand-green/30 text-brand-green text-sm rounded-lg p-3 mb-4">
           ✓ Email verified — you can now sign in.
@@ -139,7 +170,13 @@ function SignInForm() {
       </form>
 
       <div className="text-center text-sm text-muted mt-6">
-        Don't have an account?{" "}
+        Didn't get the verification email?{" "}
+          <button onClick={handleResend} disabled={resendLoading} className="text-brand-blue hover:underline disabled:opacity-50">
+            {resendLoading ? "Sending..." : "Resend it"}
+          </button>
+        </p>
+        <p className="text-center text-sm text-muted mt-2">
+          Don't have an account?{" "}
         <Link href="/register" className="text-brand-blue font-medium hover:underline">
           Create one free
         </Link>
