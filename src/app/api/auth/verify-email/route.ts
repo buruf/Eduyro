@@ -1,5 +1,6 @@
 // src/app/api/auth/verify-email/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { sendWelcomeEmail } from "@/lib/email";
 import { db } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
