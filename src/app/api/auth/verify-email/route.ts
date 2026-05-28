@@ -30,5 +30,9 @@ export async function GET(req: NextRequest) {
     db.verificationToken.delete({ where: { token } }),
   ]);
 
+  const user = await db.user.findUnique({ where: { email: record.identifier } });
+  if (user) {
+    sendWelcomeEmail({ email: user.email, firstName: user.firstName ?? user.name?.split(" ")[0] ?? "there", role: user.role }).catch(console.error);
+  }
   return NextResponse.redirect(new URL("/signin?verified=1", req.url));
 }
