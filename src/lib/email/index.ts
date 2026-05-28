@@ -16,14 +16,14 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://eduyro.com";
 
 function wrapEmail(content: string, preheader = ""): string {
   return `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>BrightSteps</title></head>
+<html><head><meta charset="UTF-8"><title>Eduyro</title></head>
 <body style="margin:0;padding:0;background:#F5F0E8;font-family:'Helvetica Neue',Arial,sans-serif;color:#1A1612">
 ${preheader ? `<div style="display:none;font-size:0;line-height:0;max-height:0;overflow:hidden">${preheader}</div>` : ""}
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:32px 16px">
   <tr><td align="center">
     <table width="540" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:14px;overflow:hidden;border:1px solid #E8E0D0">
       <tr><td style="padding:24px 28px;background:#1A1612;text-align:center">
-        <span style="font-family:Georgia,serif;font-size:20px;font-weight:bold;color:#FDFAF4">Bright<span style="color:#E8C87A">Steps</span></span>
+        <span style="font-family:Georgia,serif;font-size:20px;font-weight:bold;color:#FDFAF4">Edu<span style="color:#E8C87A">yro</span></span>
       </td></tr>
       <tr><td style="padding:32px 28px">${content}</td></tr>
       <tr><td style="padding:20px 28px;background:#F5F0E8;font-size:12px;color:#7A6E5F;text-align:center">
