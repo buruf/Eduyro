@@ -54,7 +54,7 @@ export async function getOrCreatePackPdf(skill: ShopSkill): Promise<CachedPack> 
   // Cache miss → generate fresh
   console.log(`[shop-cache] Generating ${skill} pack (cache miss)…`);
   const pack = generatePackForSkill(skill);
-  const pdf = await renderPackHtml({ skillLabel: pack.label, skillCode: pack.skill, levelCode: pack.skill, sheets: pack.sheets });
+  const mappedSheets = pack.sheets.map((s) => ({ problems: s.problems, skillBand: s.bandLabel }));const pdf = await renderPackHtml({ skillLabel: pack.label, skillCode: pack.skill, levelCode: pack.skill, sheets: mappedSheets });
   const url = await uploadToS3(pdf, key, "application/pdf");
 
   return {
