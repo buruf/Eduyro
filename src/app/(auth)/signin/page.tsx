@@ -169,7 +169,7 @@ function SignInForm() {
         </Button>
       </form>
 
-      <div className="text-center text-sm text-muted mt-6">
+        <p className="text-center text-sm text-muted mt-4">
         Didn't get the verification email?{" "}
           <button onClick={handleResend} disabled={resendLoading} className="text-brand-blue hover:underline disabled:opacity-50">
             {resendLoading ? "Sending..." : "Resend it"}
@@ -180,8 +180,8 @@ function SignInForm() {
         <Link href="/register" className="text-brand-blue font-medium hover:underline">
           Create one free
         </Link>
-      </div>
-      <div className="text-center text-[11px] text-muted mt-4 leading-relaxed">
+        </p>
+
         By signing in you agree to our{" "}
         <Link href="/terms" className="text-brand-blue">Terms</Link> and{" "}
         <Link href="/privacy" className="text-brand-blue">Privacy Policy</Link>
