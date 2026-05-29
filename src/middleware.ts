@@ -54,7 +54,7 @@ export async function middleware(req: NextRequest) {
   // Public routes — always allowed
   if (PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
     // If already signed in and visiting auth pages, redirect to dashboard
-    if (token && (pathname === "/signin" || pathname === "/register")) {
+    if (token && (pathname === "/signin" || pathname === "/register") && !req.nextUrl.searchParams.get("verified") && !req.nextUrl.searchParams.get("check-email")) {
       const dashUrl = roleToDashboard(token.role as string);
       return NextResponse.redirect(new URL(dashUrl, req.url));
     }
