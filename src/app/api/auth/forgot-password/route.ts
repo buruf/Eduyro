@@ -1,14 +1,12 @@
 // src/app/api/auth/forgot-password/route.ts
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { ok, handleRouteError, parseRequest, withRateLimit } from "@/lib/api/helpers";
+import { ok, handleRouteError, parseRequest } from "@/lib/api/helpers";
 import { ForgotPasswordSchema } from "@/lib/validation/schemas";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { nanoid } from "nanoid";
 
 export async function POST(req: NextRequest) {
-  const limited = withRateLimit(req, 3, 60 * 60 * 1000); // 3 per hour
-  if (limited) return limited;
 
   const parsed = await parseRequest(req, ForgotPasswordSchema);
   if ("status" in parsed) return parsed;
@@ -34,11 +32,11 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      sendPasswordResetEmail({
+      await sendPasswordResetEmail({
         email,
         firstName: user.firstName ?? "there",
         token,
-      }).catch(console.error);
+      });
     }
 
     return ok({
