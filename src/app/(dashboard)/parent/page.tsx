@@ -247,6 +247,11 @@ function AddChildModal({ open, onClose, onSuccess }: { open: boolean; onClose: (
       }
       // Reset form
       setFirstName(""); setLastName(""); setEmail(""); setPassword(""); setGrade("");
+      // Redirect to Stripe checkout for first child
+      if (data.data?.checkoutUrl) {
+        window.location.href = data.data.checkoutUrl;
+        return;
+      }
       onSuccess();
     } catch {
       setError("Network error — please try again");
