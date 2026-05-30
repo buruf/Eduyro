@@ -13,6 +13,7 @@ function SignInForm() {
   const params = useSearchParams();
   const callbackUrl = params.get("callbackUrl") || "";
   const verified = params.get("verified") === "1";
+  const passwordReset = params.get("password-reset") === "1";
   const checkEmail = params.get("check-email") === "1";
   const errorParam = params.get("error");
 
@@ -100,6 +101,11 @@ function SignInForm() {
         </div>
       )}
 
+      {passwordReset && (
+        <div className="bg-brand-green-light border border-brand-green/30 text-brand-green text-sm rounded-lg p-3 mb-4">
+          Password updated successfully — sign in with your new password.
+        </div>
+      )}
       {verified && (
         <div className="bg-brand-green-light border border-brand-green/30 text-brand-green text-sm rounded-lg p-3 mb-4">
           Email verified — you can now sign in.

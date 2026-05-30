@@ -4,6 +4,7 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import { Input } from "@/components/ui";
 import { Button } from "@/components/ui/Button";
 
@@ -39,7 +40,7 @@ function ResetForm() {
         return;
       }
       setSuccess(true);
-      setTimeout(() => router.push("/signin"), 2000);
+      setTimeout(() => signOut({ callbackUrl: "/signin?password-reset=1" }), 2000);
     } catch {
       setError("Network error — try again");
       setLoading(false);
