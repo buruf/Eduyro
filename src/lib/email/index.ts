@@ -99,8 +99,8 @@ export async function sendPasswordResetEmail(params: {
     <p style="font-size:15px;line-height:1.6">Hi ${params.firstName}, click the button below to reset your password. This link expires in 1 hour.</p>
     <p style="margin:24px 0"><a href="${url}" style="background:#1A1612;color:#FDFAF4;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block">Reset password →</a></p>
     <p style="font-size:13px;color:#7A6E5F">If you didn't request this, you can safely ignore this email.</p>
-  `, "Reset your BrightSteps password");
-  await send(params.email, "Reset your BrightSteps password", html);
+  `, "Reset your Eduyro password");
+  await send(params.email, "Reset your Eduyro password", html);
 }
 
 export async function sendLevelAdvanceEmail(params: {
