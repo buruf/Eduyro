@@ -17,12 +17,9 @@ import { Input } from "@/components/ui";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
-type Role = "STUDENT" | "PARENT";
+type Role = "PARENT";
 
-const ROLES: { id: Role; icon: string; label: string; desc: string }[] = [
-  { id: "STUDENT", icon: "🎓", label: "Student", desc: "Daily worksheets & practice" },
-  { id: "PARENT", icon: "👨‍👩‍👧", label: "Parent", desc: "Manage my child's progress" },
-];
+
 
 const GRADES = [
   "Pre-K", "Kindergarten",
@@ -32,7 +29,7 @@ const GRADES = [
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [role, setRole] = useState<Role>("STUDENT");
+  const [role, setRole] = useState<Role>("PARENT");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -117,32 +114,11 @@ export default function RegisterPage() {
         </div>
       )}
 
-      <div className="mb-5">
-        <div className="text-xs font-medium mb-2">I am a:</div>
-        <div className="grid grid-cols-2 gap-2">
-          {ROLES.map((r) => (
-            <button
-              key={r.id}
-              type="button"
-              onClick={() => setRole(r.id)}
-              className={cn(
-                "p-3 border-[1.5px] rounded-lg text-center transition-all",
-                role === r.id
-                  ? "border-brand-blue bg-brand-blue-light"
-                  : "border-border bg-white hover:border-ink"
-              )}
-            >
-              <div className="text-xl mb-1">{r.icon}</div>
-              <div className="text-xs font-semibold">{r.label}</div>
-              <div className="text-[10px] text-muted mt-0.5 leading-tight">{r.desc}</div>
-            </button>
-          ))}
-        </div>
-      </div>
+
 
       <button
         type="button"
-        onClick={() => signIn("google", { callbackUrl: role === "STUDENT" ? "/placement" : "/parent" })}
+        onClick={() => signIn("google", { callbackUrl: "/parent" })}
         className="w-full py-2.5 px-4 mb-3 border-[1.5px] border-border rounded-lg text-sm font-medium hover:border-ink hover:bg-cream transition-colors flex items-center justify-center gap-2.5"
       >
         <GoogleIcon /> Sign up with Google
@@ -170,19 +146,6 @@ export default function RegisterPage() {
           />
         </div>
 
-        {role === "STUDENT" && (
-          <div className="space-y-1">
-            <label className="block text-xs font-medium text-ink">Grade / Year</label>
-            <select
-              value={grade}
-              onChange={(e) => setGrade(e.target.value)}
-              className="w-full px-3 py-2.5 border-[1.5px] border-border rounded-md text-sm bg-white outline-none focus:border-brand-blue"
-            >
-              <option value="">Select grade…</option>
-              {GRADES.map((g) => <option key={g}>{g}</option>)}
-            </select>
-          </div>
-        )}
 
         <Input
           label="Email"
