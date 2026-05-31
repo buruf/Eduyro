@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
             }
           : null,
         questionNumber: 1,
-        maxQuestions: 12,
+        maxQuestions: 25,
       });
     } catch (error) {
       return handleRouteError(error);

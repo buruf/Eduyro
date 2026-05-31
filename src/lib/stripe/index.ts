@@ -1,7 +1,7 @@
 // src/lib/stripe/index.ts
 // Stripe SDK and helpers
 // PRICING MODEL:
-//   - First child: $9.99/mo with 14-day trial
+//   - First child: $9.99/mo with 7-day trial
 //   - Each additional child: $5.99/mo, no trial
 //   - Billed on the same subscription using two line items
 //   - Example: 3 kids = $9.99 + $5.99 + $5.99 = $21.97/mo
@@ -27,7 +27,7 @@ export const PLANS = {
     additionalChildPriceMonthly: 5.99,
     stripePriceId: process.env.STRIPE_PRICE_PREMIUM,
     stripeAdditionalChildPriceId: process.env.STRIPE_PRICE_ADDITIONAL_CHILD,
-    trialDays: 14, // Only for the first child
+    trialDays: 7, // Only for the first child
     limits: {
       sheetsPerDay: Infinity,
       subjects: 4,
@@ -95,7 +95,7 @@ export async function createCheckoutSession(params: {
     throw new Error(`No Stripe price configured for plan ${params.plan}`);
   }
 
-  const trialDays = params.trialDays ?? planConfig.trialDays ?? 14;
+  const trialDays = params.trialDays ?? planConfig.trialDays ?? 7;
 
   return stripe.checkout.sessions.create({
     customer: params.customerId,

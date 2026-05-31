@@ -55,7 +55,7 @@ export default function TermsPage() {
         <section>
           <h2 className="font-serif text-xl font-bold mb-3">4. Subscriptions and Payments</h2>
           <p className="text-sm leading-relaxed text-muted mb-3">
-            Eduyro offers monthly subscriptions. The first child costs $9.99/month with a 14-day free trial. 
+            Eduyro offers monthly subscriptions. The first child costs $9.99/month with a 7-day free trial. 
             Additional children cost $5.99/month each. No credit card is required during the free trial period.
           </p>
           <p className="text-sm leading-relaxed text-muted mb-3">

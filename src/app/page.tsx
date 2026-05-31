@@ -201,7 +201,7 @@ export default function HomePage() {
           <div className="max-w-5xl mx-auto px-6 lg:px-8 text-center">
             <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold mb-3">Pricing</div>
             <h2 className="font-serif text-4xl font-bold leading-tight mb-3">
-              14-day free trial. Then from $9.99/month.
+              7-day free trial. Then from $9.99/month.
             </h2>
             <p className="text-muted max-w-xl mx-auto mb-12">
               No credit card required to start. Cancel anytime.
@@ -217,7 +217,7 @@ export default function HomePage() {
                   <div className="flex items-center justify-between bg-white/10 rounded-lg px-4 py-3">
                     <div>
                       <div className="text-sm font-semibold">First child</div>
-                      <div className="text-xs text-cream/55">14-day free trial included</div>
+                      <div className="text-xs text-cream/55">7-day free trial included</div>
                     </div>
                     <div className="font-serif text-2xl font-bold text-gold-mid">$9.99<span className="text-sm font-sans text-cream/55">/mo</span></div>
                   </div>
@@ -236,7 +236,7 @@ export default function HomePage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/register"><Button variant="gold" fullWidth size="lg">Start 14-day free trial →</Button></Link>
+                <Link href="/register"><Button variant="gold" fullWidth size="lg">Start 7-day free trial →</Button></Link>
                 <p className="text-center text-xs text-cream/40 mt-3">No credit card required · Cancel anytime</p>
               </div>
             </div>

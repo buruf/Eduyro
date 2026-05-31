@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
         customerId,
         plan: plan as any,
         quantity,
-        trialDays: 14,
+        trialDays: 7,
         successUrl,
         cancelUrl,
         metadata: {
