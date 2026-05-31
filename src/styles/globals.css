@@ -57,7 +57,7 @@
 @media print {
   @page {
     size: letter portrait;
-    margin: 0.5in;
+    margin: 1.5cm 2cm;
   }
 
   html, body {
@@ -74,6 +74,49 @@
     display: none !important;
   }
 
+  /* The full-page layout grid becomes a flat flow on print */
+  .lg\:grid-cols-\[320px_1fr\] {
+    display: block !important;
+  }
+
+  /* Preview container: no padding, no background */
+  .overflow-y-auto {
+    overflow: visible !important;
+    padding: 0 !important;
+    background: white !important;
+    height: auto !important;
+  }
+
+  /* Each sheet: full width, auto height, no shadow */
+  .bg-white.rounded-md.shadow-elev {
+    width: 100% !important;
+    max-width: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 1.5cm 2cm !important;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  /* Last sheet: no trailing page break */
+  .bg-white.rounded-md.shadow-elev:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  /* Never break a problem row across pages */
+  .break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Page breaks between sheets */
+  .print\:break-before-page {
+    break-before: page;
+    page-break-before: always;
+  }
+
   /* Force the main content area to take the full page */
   main, [role="main"] {
     width: 100% !important;
@@ -81,15 +124,5 @@
     padding: 0 !important;
     margin: 0 !important;
     background: white !important;
-  }
-
-  /* Page breaks between sheets (when multiple sheets exist on one page) */
-  .page-break {
-    page-break-before: always;
-  }
-
-  /* Don't break a problem across pages */
-  .problem-row, .question-block {
-    page-break-inside: avoid;
   }
 }
