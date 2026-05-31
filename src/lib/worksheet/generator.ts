@@ -241,12 +241,12 @@ function generateMissingNumbers(count: number): Problem[] {
 // ─── Addition ───
 function generateAddition(count: number, max: number): Problem[] {
   const problems: Problem[] = [];
-  for (let i = 0; i < count * 4; i++) {
+  for (let i = 0; i < count; i++) {
     const a = rand(1, max);
     const b = rand(1, max);
     problems.push({ id: nanoid(8), type: "arithmetic", question: `${a} + ${b} =`, answer: a + b, points: 1 });
   }
-  return deduplicateProblems(problems).slice(0, count);
+  return problems;
 }
 
 // ─── Subtraction ───
@@ -263,26 +263,24 @@ function generateSubtraction(count: number, max: number): Problem[] {
 // ─── Multiplication ───
 function generateMultiplication(count: number, multipliers: number[]): Problem[] {
   const problems: Problem[] = [];
-  for (const m of multipliers) {
-    for (let n = 2; n <= 12; n++) {
-      problems.push({ id: nanoid(8), type: "arithmetic", question: `${m} × ${n} =`, answer: m * n, points: 1, explanation: `${m} × ${n} = ${m * n}` });
-      problems.push({ id: nanoid(8), type: "arithmetic", question: `${n} × ${m} =`, answer: n * m, points: 1 });
-      problems.push({ id: nanoid(8), type: "fill_blank", question: `${m} × ___ = ${m * n}`, answer: n, points: 1 });
-    }
+  for (let i = 0; i < count; i++) {
+    const m = multipliers[rand(0, multipliers.length - 1)];
+    const n = rand(1, 12);
+    problems.push({ id: nanoid(8), type: "arithmetic", question: `${m} x ${n} =`, answer: m * n, points: 1 });
   }
-  return shuffleArray(deduplicateProblems(problems)).slice(0, count);
+  return problems;
 }
 
 // ─── Division ───
 function generateDivision(count: number, divisors: number[]): Problem[] {
   const problems: Problem[] = [];
-  for (const d of divisors) {
-    for (let q = 2; q <= 12; q++) {
-      const dividend = d * q;
-      problems.push({ id: nanoid(8), type: "arithmetic", question: `${dividend} ÷ ${d} =`, answer: q, points: 1, explanation: `${dividend} ÷ ${d} = ${q} because ${d} × ${q} = ${dividend}` });
-    }
+  for (let i = 0; i < count; i++) {
+    const d = divisors[rand(0, divisors.length - 1)];
+    const q = rand(1, 12);
+    const dividend = d * q;
+    problems.push({ id: nanoid(8), type: "arithmetic", question: `${dividend} / ${d} =`, answer: q, points: 1 });
   }
-  return shuffleArray(deduplicateProblems(problems)).slice(0, count);
+  return problems;
 }
 
 // ─── Division with Remainders ───
