@@ -138,7 +138,7 @@ export default function StudentDashboardPage() {
     const tutorialKey = `eduyro:tutorial:${sheet.skillName.toLowerCase().replace(/\s+/g, '-')}`;
     const seen = typeof window !== 'undefined' && localStorage.getItem(tutorialKey) === '1';
     if (!seen) {
-      const subjectSlug = data?.levelProgress?.subjectName?.toUpperCase() as string ?? "MATH";
+      const subjectSlug = subjectNameToSlug(data?.levelProgress?.subjectName);
       const content = getTutorial(subjectSlug, sheet.skillName);
       setTutorialContent(content);
       setTutorialSheet(sheet);
@@ -364,7 +364,7 @@ export default function StudentDashboardPage() {
           onClose={() => { setTutorialOpen(false); setTutorialSheet(null); setTutorialContent(null); }}
           sheet={tutorialSheet}
           content={tutorialContent}
-          subjectSlug={data.levelProgress?.subjectName === "Mathematics" ? "MATH" : data.levelProgress?.subjectName?.toUpperCase() ?? "MATH"}
+          subjectSlug={subjectNameToSlug(data.levelProgress?.subjectName)}
           onComplete={() => onTutorialComplete(tutorialSheet)}
         />
       )}
@@ -376,7 +376,7 @@ export default function StudentDashboardPage() {
           onClose={closePractice}
           sheet={practiceSheet}
           studentId={data.student.id}
-          subjectSlug={data.levelProgress?.subjectName?.toUpperCase() as any ?? "MATH"}
+          subjectSlug={subjectNameToSlug(data.levelProgress?.subjectName)}
           levelCode={data.levelProgress?.levelCode ?? "M5"}
           timerSeconds={timerElapsed}
           onSubmitted={onSheetSubmitted}
