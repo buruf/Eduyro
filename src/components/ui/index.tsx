@@ -3,7 +3,7 @@
 
 import {
   forwardRef, HTMLAttributes, InputHTMLAttributes, SelectHTMLAttributes,
-  TextareaHTMLAttributes, ReactNode, useEffect,
+  TextareaHTMLAttributes, ReactNode, useEffect, useRef,
 } from "react";
 import { cn, initials } from "@/lib/utils";
 
@@ -268,6 +268,12 @@ const modalSize: Record<NonNullable<ModalProps["size"]>, string> = {
 export function Modal({
   open, onClose, title, description, children, size = "md", className,
 }: ModalProps) {
+  // Track where the mousedown originated so that click-to-close only fires
+  // when both mousedown AND mouseup land on the backdrop — not when the user
+  // drags a text selection from inside the modal out onto the backdrop
+  // (which is exactly what happens when you copy text from an input).
+  const mousedownOnBackdrop = useRef(false);
+
   useEffect(() => {
     if (!open) return;
     const handleEsc = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -284,7 +290,8 @@ export function Modal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/55 backdrop-blur-sm"
-      onClick={onClose}
+      onMouseDown={(e) => { mousedownOnBackdrop.current = e.target === e.currentTarget; }}
+      onClick={(e) => { if (e.target === e.currentTarget && mousedownOnBackdrop.current) onClose(); }}
     >
       <div
         className={cn(
@@ -292,6 +299,7 @@ export function Modal({
           modalSize[size],
           className
         )}
+        onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
         {(title || description) && (
