@@ -1014,60 +1014,278 @@ function generateCalculusApplications(count: number): Problem[] {
 // READING GENERATOR
 // ─────────────────────────────────────────────────────────────────────────────
 
-const readingPassages: Record<string, { passage: string; questions: Problem[] }> = {
-  "main idea": {
+// ─── R2: Phonics generators (Silent E, Long Vowels) ───────────────────────────
+
+function generateSilentEProblems(count: number): Problem[] {
+  const items = [
+    { q: "Which word has a silent E? (cap / cape / cat / can)", a: "cape", opts: ["cap","cape","cat","can"] },
+    { q: "Add a silent E to make a new word: 'pin' → ___", a: "pine" },
+    { q: "Which word has a long vowel sound? (hop / hope / hot / hop)", a: "hope", opts: ["hop","hope","hot","cot"] },
+    { q: "Does 'cake' have a silent E?", a: "Yes", opts: ["Yes","No"] },
+    { q: "Which word follows the silent E rule? (bit / bite / sit / fit)", a: "bite", opts: ["bit","bite","sit","fit"] },
+    { q: "Add a silent E: 'rob' → ___", a: "robe" },
+    { q: "Which is a silent E word? (cut / cute / cup / cub)", a: "cute", opts: ["cut","cute","cup","cub"] },
+    { q: "What sound does the vowel 'a' make in 'game'?", a: "Long A (like the letter name)", opts: ["Short A","Long A (like the letter name)","Silent","Schwa"] },
+    { q: "Add a silent E: 'slid' → ___", a: "slide" },
+    { q: "Which word rhymes with 'bone'? (Don / done / tone / ton)", a: "tone", opts: ["don","done","tone","ton"] },
+    { q: "Circle the silent E word: ride / rid / rip / rich", a: "ride" },
+    { q: "Does 'have' follow the regular silent E rule?", a: "No — 'have' is an exception; the 'a' is still short", opts: ["Yes","No — 'have' is an exception; the 'a' is still short"] },
+    { q: "What does a silent E at the end of a word usually do?", a: "Makes the vowel before it say its long sound (letter name)" },
+    { q: "Make a silent E word from these letters: t, i, m, e", a: "time" },
+    { q: "Which pair shows the silent E rule? (hop→hope / cat→cate / fit→fite / run→rune)", a: "hop→hope", opts: ["hop→hope","cat→cate","fit→fite","run→rune"] },
+    { q: "Spell the silent E word for a small rodent that rhymes with 'mice'.", a: "mice" },
+    { q: "What is the vowel sound in 'tube'?", a: "Long U", opts: ["Short U","Long U","Silent","Schwa"] },
+    { q: "Which word has a short vowel sound? (kite / kit / bike / time)", a: "kit", opts: ["kite","kit","bike","time"] },
+    { q: "Add a silent E: 'not' → ___", a: "note" },
+    { q: "Does the word 'blue' follow the silent E rule?", a: "Yes — the 'e' is silent and the 'u' says its long sound" },
+  ];
+  return shuffleArray(items).slice(0, count).map((item) => ({
+    id: nanoid(8),
+    type: (item.opts ? "multiple_choice" : "short_answer") as any,
+    question: item.q, options: item.opts, answer: item.a, points: 1,
+  }));
+}
+
+function generateLongVowelProblems(vowel: "a" | "i" | "o", count: number): Problem[] {
+  const banks = {
+    a: [
+      { q: "Which word has a long A sound? (hat / hate / have / hand)", a: "hate", opts: ["hat","hate","have","hand"] },
+      { q: "Does 'rain' have a long A sound?", a: "Yes", opts: ["Yes","No"] },
+      { q: "Which spelling pattern makes a long A sound? (ai / au / oi / ou)", a: "ai", opts: ["ai","au","oi","ou"] },
+      { q: "Give an example of a long A word spelled with 'ay'.", a: "(e.g., play, day, say, way)" },
+      { q: "Sort: long A or short A — 'cake'?", a: "Long A" },
+      { q: "Sort: long A or short A — 'cap'?", a: "Short A" },
+      { q: "Which word rhymes with 'train'? (tan / rain / ran / tin)", a: "rain", opts: ["tan","rain","ran","tin"] },
+      { q: "What are three ways to spell the long A sound?", a: "a_e (cake), ai (rain), ay (play)" },
+      { q: "Spell a long A word that means the opposite of night.", a: "day" },
+      { q: "Does 'snake' have a long or short A?", a: "Long A" },
+      { q: "Which word has a long A? (bad / braid / back / ban)", a: "braid", opts: ["bad","braid","back","ban"] },
+      { q: "Change the short A to a long A: 'mad' → ___", a: "made" },
+    ],
+    i: [
+      { q: "Which word has a long I sound? (bit / bite / big / bin)", a: "bite", opts: ["bit","bite","big","bin"] },
+      { q: "Does 'night' have a long I sound?", a: "Yes", opts: ["Yes","No"] },
+      { q: "Which spelling makes a long I? (ie / oe / ue / ae)", a: "ie", opts: ["ie","oe","ue","ae"] },
+      { q: "Give a long I word spelled with 'igh'.", a: "(e.g., night, light, right, fight)" },
+      { q: "Sort: long I or short I — 'pine'?", a: "Long I" },
+      { q: "Sort: long I or short I — 'pin'?", a: "Short I" },
+      { q: "Spell a long I word that means not dark.", a: "light" },
+      { q: "What are two ways to spell the long I sound?", a: "i_e (kite), igh (night), ie (pie), y (fly)" },
+      { q: "Which rhymes with 'kite'? (kit / sit / white / hit)", a: "white", opts: ["kit","sit","white","hit"] },
+      { q: "Change the short I to a long I: 'rip' → ___", a: "ripe" },
+      { q: "Does 'fly' have a long I sound?", a: "Yes — the 'y' acts as a long I vowel" },
+      { q: "Which word has a long I? (hill / mild / fill / mill)", a: "mild", opts: ["hill","mild","fill","mill"] },
+    ],
+    o: [
+      { q: "Which word has a long O sound? (hop / hope / hot / hog)", a: "hope", opts: ["hop","hope","hot","hog"] },
+      { q: "Does 'boat' have a long O sound?", a: "Yes", opts: ["Yes","No"] },
+      { q: "Which spelling makes a long O? (oa / ou / oi / au)", a: "oa", opts: ["oa","ou","oi","au"] },
+      { q: "Give a long O word spelled with 'ow'.", a: "(e.g., snow, blow, grow, show)" },
+      { q: "Sort: long O or short O — 'code'?", a: "Long O" },
+      { q: "Sort: long O or short O — 'cot'?", a: "Short O" },
+      { q: "Spell a long O word that means a path or road.", a: "road" },
+      { q: "What are two ways to spell the long O sound?", a: "o_e (home), oa (boat), ow (snow)" },
+      { q: "Which rhymes with 'coat'? (cot / goat / got / cob)", a: "goat", opts: ["cot","goat","got","cob"] },
+      { q: "Change the short O to a long O: 'not' → ___", a: "note" },
+      { q: "Does 'toe' have a long O sound?", a: "Yes", opts: ["Yes","No"] },
+      { q: "Which word has a long O? (fog / fond / fold / frog)", a: "fold", opts: ["fog","fond","fold","frog"] },
+    ],
+  };
+  const items = banks[vowel];
+  return shuffleArray(items).slice(0, count).map((item) => ({
+    id: nanoid(8),
+    type: (item.opts ? "multiple_choice" : "short_answer") as any,
+    question: item.q, options: item.opts, answer: item.a, points: 1,
+  }));
+}
+
+// ─── R5/R9: Passage banks — each has enough questions to fill up to 30 problems ──
+
+const readingPassages: Record<string, { passage: string; questions: Problem[] }[]> = {
+  "main idea": [{
     passage: `Honey bees are one of the most important insects on Earth. A single hive can contain up to 60,000 bees, all working together. The queen bee lays up to 2,000 eggs per day. Worker bees gather nectar from flowers and turn it into honey. A single bee produces only one twelfth of a teaspoon of honey in its entire lifetime. Bees communicate using a dance called the "waggle dance," which tells other bees the direction and distance of food.`,
     questions: [
       { id: nanoid(8), type: "multiple_choice", question: "What is the main idea of this passage?", options: ["Bees are dangerous", "Honey bees are important insects that work together", "All bees make honey", "Bees only live in hives"], answer: "Honey bees are important insects that work together", points: 1 },
       { id: nanoid(8), type: "multiple_choice", question: "How much honey does one bee make in its lifetime?", options: ["One jar", "One teaspoon", "One twelfth of a teaspoon", "One cup"], answer: "One twelfth of a teaspoon", points: 1 },
       { id: nanoid(8), type: "short_answer", question: "What is the waggle dance used for?", answer: "To tell other bees the direction and distance of food", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What is the role of the queen bee?", answer: "She lays up to 2,000 eggs per day", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "What do worker bees collect from flowers?", options: ["Water", "Nectar", "Pollen only", "Wax"], answer: "Nectar", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "Why are honey bees described as 'important'?", answer: "They work together, produce honey, and communicate complex information", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "How many bees can a single hive contain?", options: ["Up to 600", "Up to 6,000", "Up to 60,000", "Up to 600,000"], answer: "Up to 60,000", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "In your own words, describe how bees communicate.", answer: "They do a 'waggle dance' to show other bees where food is", points: 1 },
     ],
-  },
-  "cause and effect": {
+  }, {
+    passage: `The Great Barrier Reef is the world's largest coral reef system, stretching over 2,300 kilometres off the coast of Queensland, Australia. It is home to thousands of species of fish, corals, and other sea creatures. Scientists warn that rising ocean temperatures caused by climate change are bleaching the corals — stripping them of the algae they depend on for survival. Without urgent action, large sections of the reef could be permanently lost.`,
+    questions: [
+      { id: nanoid(8), type: "short_answer", question: "What is the main idea of this passage?", answer: "The Great Barrier Reef is the world's largest coral reef but is threatened by climate change", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "Where is the Great Barrier Reef located?", options: ["New Zealand", "Brazil", "Queensland, Australia", "South Africa"], answer: "Queensland, Australia", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What is coral bleaching?", answer: "When rising temperatures strip corals of the algae they need to survive", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "How long is the Great Barrier Reef?", options: ["230 km", "2,300 km", "23,000 km", "230,000 km"], answer: "2,300 km", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What does the passage suggest could happen without urgent action?", answer: "Large sections of the reef could be permanently lost", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What causes coral bleaching according to the passage?", answer: "Rising ocean temperatures caused by climate change", points: 1 },
+    ],
+  }],
+  "cause and effect": [{
     passage: `Every autumn, millions of monarch butterflies migrate up to 5,000 kilometres from Canada and the United States to Mexico. They navigate using the sun and Earth's magnetic field. The migration is threatened by climate change and loss of milkweed — the only plant monarch caterpillars can eat. Conservation efforts include planting milkweed gardens across North America.`,
     questions: [
       { id: nanoid(8), type: "short_answer", question: "What causes the monarch butterfly migration to be threatened? Give two reasons.", answer: "Climate change and loss of milkweed habitat", points: 2 },
       { id: nanoid(8), type: "multiple_choice", question: "Why is milkweed important to monarch butterflies?", options: ["It helps them navigate", "It is the only plant their caterpillars can eat", "It provides shelter", "It attracts other insects"], answer: "It is the only plant their caterpillars can eat", points: 1 },
       { id: nanoid(8), type: "short_answer", question: "What conservation effort is mentioned in the passage?", answer: "Planting milkweed gardens across North America", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "How do monarch butterflies navigate?", options: ["By smell", "Using the sun and Earth's magnetic field", "By following rivers", "By echolocation"], answer: "Using the sun and Earth's magnetic field", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What is the cause of milkweed loss? What is the effect on butterflies?", answer: "Habitat destruction causes milkweed loss; butterflies cannot feed their caterpillars", points: 2 },
+      { id: nanoid(8), type: "short_answer", question: "How far do monarchs migrate each autumn?", answer: "Up to 5,000 kilometres", points: 1 },
     ],
-  },
-  "context clues": {
+  }, {
+    passage: `In 1883, the volcanic island of Krakatau in Indonesia erupted with enormous force. The explosion was heard 5,000 kilometres away. The eruption sent massive amounts of ash into the atmosphere, blocking sunlight around the world. As a result, global temperatures dropped by about 1.2°C for several years — a phenomenon scientists now call a 'volcanic winter.' Crops failed in many regions, causing widespread food shortages.`,
+    questions: [
+      { id: nanoid(8), type: "short_answer", question: "What was the direct cause of the volcanic winter described in the passage?", answer: "Ash from the Krakatau eruption blocked sunlight, causing temperatures to drop", points: 2 },
+      { id: nanoid(8), type: "multiple_choice", question: "How far away was the eruption heard?", options: ["500 km", "1,000 km", "5,000 km", "50,000 km"], answer: "5,000 km", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What was the effect of the temperature drop on people?", answer: "Crops failed in many regions, causing widespread food shortages", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "By how much did global temperatures drop?", options: ["0.12°C", "1.2°C", "12°C", "0.012°C"], answer: "1.2°C", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "Identify one cause and one effect from the passage.", answer: "Cause: eruption sent ash into atmosphere; Effect: sunlight blocked, temperatures dropped", points: 2 },
+    ],
+  }],
+  "context clues": [{
     passage: `The ancient city of Pompeii was buried under volcanic ash when Mount Vesuvius erupted in 79 CE. The eruption was so sudden that residents had no time to escape. Archaeologists excavating the site have uncovered remarkably preserved buildings, artwork, and even food. The city gives us a unique snapshot of Roman life at the height of the empire.`,
     questions: [
       { id: nanoid(8), type: "multiple_choice", question: "Using context clues, what does 'excavating' most likely mean?", options: ["Burning", "Digging up", "Rebuilding", "Flooding"], answer: "Digging up", points: 1 },
       { id: nanoid(8), type: "short_answer", question: "What does 'remarkably preserved' tell you about the buildings?", answer: "They were unusually well kept or undamaged despite being buried for centuries", points: 1 },
       { id: nanoid(8), type: "multiple_choice", question: "What does 'snapshot' mean in this context?", options: ["A photograph", "A quick look or picture of a moment in time", "A type of building", "A volcanic eruption"], answer: "A quick look or picture of a moment in time", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What clues in the passage helped you understand what 'excavating' means?", answer: "'Uncovered' and 'site' suggest digging at a location to find buried things", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "What does 'residents' most likely mean?", options: ["Soldiers", "People who lived in the city", "Tourists", "Government officials"], answer: "People who lived in the city", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What does 'at the height of the empire' suggest about Rome?", answer: "Rome was at its most powerful or successful period", points: 1 },
     ],
-  },
-  "inference": {
+  }],
+  "inference": [{
     passage: `Maya arrived at the library with muddy boots and a drenched jacket. She pulled a stack of travel books off the shelf and spread a map across the table. She circled several locations in South America and scribbled notes in the margins. A smile crossed her face as she looked at the circled spots.`,
     questions: [
       { id: nanoid(8), type: "multiple_choice", question: "What can you infer about the weather outside?", options: ["It was hot and sunny", "It was raining", "It was snowing", "It was windy only"], answer: "It was raining", points: 1 },
       { id: nanoid(8), type: "short_answer", question: "What can you infer about Maya's plans based on her actions?", answer: "She is planning a trip to South America", points: 1 },
       { id: nanoid(8), type: "multiple_choice", question: "Why do you think Maya was smiling?", options: ["She found a funny book", "She was excited about her travel plans", "She saw a friend", "She finished her homework"], answer: "She was excited about her travel plans", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What evidence from the text supports your inference about the weather?", answer: "'Muddy boots' and 'drenched jacket' both suggest she walked through rain", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What does the detail about 'scribbled notes in the margins' tell us about Maya?", answer: "She is engaged, organized, and serious about planning", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "Which word best describes Maya's mood in this passage?", options: ["Sad", "Bored", "Excited", "Frightened"], answer: "Excited", points: 1 },
     ],
-  },
+  }],
+  "sequence of events": [{
+    passage: `Making bread from scratch takes patience. First, you mix flour, yeast, salt, and water into a dough. Next, you knead the dough for about ten minutes until it is smooth and elastic. After that, you leave the dough in a warm place to rise for an hour. Once the dough has doubled in size, you shape it into a loaf and place it in a pan. Finally, you bake it in a hot oven for thirty minutes until the crust is golden brown.`,
+    questions: [
+      { id: nanoid(8), type: "multiple_choice", question: "What is the FIRST step in making bread?", options: ["Knead the dough", "Mix flour, yeast, salt, and water", "Bake in the oven", "Let the dough rise"], answer: "Mix flour, yeast, salt, and water", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "What happens AFTER kneading the dough?", options: ["You mix the ingredients", "You bake it", "You leave it to rise", "You shape it into a loaf"], answer: "You leave it to rise", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "List the five steps in the correct order.", answer: "1. Mix ingredients 2. Knead 3. Let rise 4. Shape into loaf 5. Bake", points: 2 },
+      { id: nanoid(8), type: "multiple_choice", question: "How long should the dough rise?", options: ["10 minutes", "30 minutes", "1 hour", "2 hours"], answer: "1 hour", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What signal word tells you the LAST step?", answer: "'Finally'", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "What is the LAST step?", options: ["Knead the dough", "Mix ingredients", "Let it rise", "Bake until golden brown"], answer: "Bake until golden brown", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What sequence signal words are used in this passage?", answer: "First, Next, After that, Once, Finally", points: 1 },
+    ],
+  }, {
+    passage: `The life cycle of a frog has four stages. It begins when a female frog lays hundreds of eggs in a pond. The eggs hatch into tadpoles, which breathe through gills and swim using their tails. Over several weeks, the tadpoles grow back legs, then front legs, and their tails shrink. By the end of the process, the tadpole has become a fully formed froglet that can breathe air and hop onto land.`,
+    questions: [
+      { id: nanoid(8), type: "multiple_choice", question: "What is the FIRST stage of the frog's life cycle?", options: ["Tadpole", "Froglet", "Egg", "Adult frog"], answer: "Egg", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "What comes AFTER the egg stage?", options: ["Froglet", "Tadpole", "Adult frog", "Larva"], answer: "Tadpole", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "In what order do legs grow on the tadpole?", answer: "Back legs grow first, then front legs", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "How does the froglet differ from the tadpole?", answer: "The froglet breathes air and can hop on land; the tadpole breathes through gills and swims", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "How many stages does the frog life cycle have?", options: ["2", "3", "4", "5"], answer: "4", points: 1 },
+    ],
+  }],
+  "character analysis": [{
+    passage: `In the story of 'The Tortoise and the Hare,' the hare is quick to brag about his speed and challenges the tortoise to a race, certain of an easy win. The tortoise, calm and determined, accepts without complaint. During the race, the hare takes a nap, confident he has plenty of time. The tortoise, never stopping, crosses the finish line first. The hare wakes to find he has lost — not because of speed, but because of arrogance and laziness.`,
+    questions: [
+      { id: nanoid(8), type: "short_answer", question: "What character trait causes the hare to lose the race?", answer: "Arrogance and laziness — he was overconfident and stopped to nap", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "Which word best describes the tortoise?", options: ["Arrogant", "Determined", "Lazy", "Frightened"], answer: "Determined", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "How does the author reveal the hare's personality? Give two examples from the text.", answer: "He brags about his speed and takes a nap during the race, showing arrogance", points: 2 },
+      { id: nanoid(8), type: "short_answer", question: "What lesson does the tortoise's behaviour teach?", answer: "Steady, persistent effort beats natural talent combined with laziness", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "How does the tortoise respond to the hare's challenge?", options: ["He refuses", "He is afraid", "He accepts calmly", "He brags back"], answer: "He accepts calmly", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "Would you describe the hare as a static or dynamic character? Explain.", answer: "Static — the hare does not change or learn from his experience by the story's end", points: 1 },
+    ],
+  }],
+  "theme identification": [{
+    passage: `At the end of a long journey, a weary traveller came to a well. He found a young boy drawing water to give to a thirsty dog. 'I have been walking for hours,' said the traveller, 'yet you give water to an animal before me.' The boy replied, 'All living things are thirsty, and kindness costs nothing.' The traveller was ashamed of his selfishness. He helped the boy carry the water and they shared it together, traveller, boy, and dog alike.`,
+    questions: [
+      { id: nanoid(8), type: "short_answer", question: "What is the theme of this passage?", answer: "Kindness and compassion for all living things; generosity benefits everyone", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "Which statement best expresses the theme?", options: ["Animals are more important than people", "Kindness and sharing benefit everyone", "Travellers should always be served first", "Water is more valuable than gold"], answer: "Kindness and sharing benefit everyone", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What does the boy's action of giving water to the dog tell us about his character?", answer: "He is compassionate and treats all living things with equal care", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "How does the traveller change by the end of the story?", answer: "He feels ashamed of his selfishness and chooses to help and share", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "The phrase 'kindness costs nothing' is an example of:", options: ["Metaphor", "Simile", "Aphorism (a wise saying)", "Alliteration"], answer: "Aphorism (a wise saying)", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What evidence from the text supports the theme of generosity?", answer: "The boy shares water with the dog; the traveller eventually helps and shares with both", points: 1 },
+    ],
+  }],
+  "figurative language": [{
+    passage: `The storm arrived like an army marching to war. Thunder drummed across the sky, and lightning stitched silver threads through the clouds. The wind was a wolf howling in the darkness, shaking the windows until they rattled their protests. By morning, the street was a mirror reflecting the pale sun — perfectly still, as if the storm had never come to call.`,
+    questions: [
+      { id: nanoid(8), type: "short_answer", question: "Identify the simile in the first sentence.", answer: "'The storm arrived like an army marching to war'", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "What figure of speech is 'The wind was a wolf'?", options: ["Simile", "Metaphor", "Personification", "Hyperbole"], answer: "Metaphor", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "Find an example of personification in the passage.", answer: "'The windows rattled their protests' — windows cannot actually protest; they are given human behaviour", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What is the effect of calling the street 'a mirror' after the storm?", answer: "It creates an image of stillness and calm, contrasting with the violent storm", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "What does 'Thunder drummed across the sky' use?", options: ["Simile", "Personification", "Metaphor", "Alliteration"], answer: "Personification", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What mood does the figurative language create in this passage?", answer: "A dramatic, powerful mood — the storm feels alive and threatening", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "Explain the metaphor 'lightning stitched silver threads through the clouds.'", answer: "Lightning is compared to a needle stitching fabric — vivid image of lightning's jagged lines", points: 1 },
+    ],
+  }],
+  "narrative structure": [{
+    passage: `Lena had always been afraid of the deep end of the pool. Every summer, her friends dived in fearlessly while she stayed in the shallows. One afternoon, her coach quietly challenged her: 'You don't have to jump. Just walk to the edge and look.' Lena took a breath and walked to the edge. She looked down. Her heart hammered. But she didn't walk away. The next day, she jumped. It was terrifying — and then it was wonderful.`,
+    questions: [
+      { id: nanoid(8), type: "short_answer", question: "What is the conflict (problem) in this story?", answer: "Lena is afraid of the deep end of the pool", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "What is the climax (turning point) of this story?", options: ["Lena watching her friends dive", "The coach giving advice", "Lena walking to the edge", "Lena jumping the next day"], answer: "Lena jumping the next day", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "How does the coach help Lena overcome her fear?", answer: "He gives her a small manageable challenge — just walk to the edge and look — not a big demand", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What is the resolution of the story?", answer: "Lena overcomes her fear and jumps — and it is wonderful", points: 1 },
+      { id: nanoid(8), type: "multiple_choice", question: "What narrative technique is used in 'Her heart hammered'?", options: ["Flashback", "Foreshadowing", "Personification", "Simile"], answer: "Personification", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "What is the theme of this story?", answer: "Courage grows by facing fear one small step at a time", points: 1 },
+      { id: nanoid(8), type: "short_answer", question: "Describe the rising action in this story.", answer: "Lena's history of fear, watching her friends, the coach's challenge, walking to the edge", points: 1 },
+    ],
+  }],
 };
 
 function generateReadingProblems(skillName: string, count: number): Problem[] {
   const skill = skillName.toLowerCase();
+
+  // R2 — Phonics (no passage, direct question banks)
+  if (skill.includes("silent e")) return generateSilentEProblems(count);
+  if (skill.includes("long a")) return generateLongVowelProblems("a", count);
+  if (skill.includes("long i")) return generateLongVowelProblems("i", count);
+  if (skill.includes("long o")) return generateLongVowelProblems("o", count);
+
+  // R5/R9 — Passage-based comprehension
   let key = "main idea";
-  if (skill.includes("cause") || skill.includes("effect")) key = "cause and effect";
+  if (skill.includes("cause") || skill.includes("effect"))        key = "cause and effect";
   else if (skill.includes("context") || skill.includes("vocabulary")) key = "context clues";
-  else if (skill.includes("inference") || skill.includes("infer")) key = "inference";
-  else if (skill.includes("main idea") || skill.includes("topic")) key = "main idea";
+  else if (skill.includes("inference") || skill.includes("infer"))    key = "inference";
+  else if (skill.includes("sequence"))                               key = "sequence of events";
+  else if (skill.includes("character"))                              key = "character analysis";
+  else if (skill.includes("theme"))                                  key = "theme identification";
+  else if (skill.includes("figurative"))                             key = "figurative language";
+  else if (skill.includes("narrative structure"))                    key = "narrative structure";
+  else if (skill.includes("main idea") || skill.includes("topic") || skill.includes("detail")) key = "main idea";
 
-  const content = readingPassages[key] ?? readingPassages["main idea"];
+  const bank = readingPassages[key] ?? readingPassages["main idea"];
 
-  const problems: Problem[] = [
-    {
+  // Build a pool by cycling through all passages in the bank
+  const allProblems: Problem[] = [];
+  for (const entry of bank) {
+    allProblems.push({
       id: nanoid(8), type: "short_answer",
-      question: `READ THIS PASSAGE:\n\n${content.passage}\n\nNow answer the questions below.`,
+      question: `READ THIS PASSAGE:\n\n${entry.passage}\n\nNow answer the questions below.`,
       answer: "(passage — no answer required)", points: 0,
-    },
-    ...content.questions,
-  ];
-  return problems.slice(0, count);
+    });
+    allProblems.push(...entry.questions);
+  }
+
+  // If we have enough, shuffle just the questions (keep passage headers in place)
+  // Build sheet: passage block + questions from first entry; if more needed, add second entry
+  const result: Problem[] = [];
+  for (const entry of bank) {
+    if (result.length >= count) break;
+    result.push({
+      id: nanoid(8), type: "short_answer",
+      question: `READ THIS PASSAGE:\n\n${entry.passage}\n\nNow answer the questions below.`,
+      answer: "(passage — no answer required)", points: 0,
+    });
+    for (const q of entry.questions) {
+      if (result.length >= count) break;
+      result.push({ ...q, id: nanoid(8) });
+    }
+  }
+  return result;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1080,6 +1298,8 @@ function generateWritingProblems(skillName: string, count: number): Problem[] {
   if (skill.includes("noun")) return generateNounProblems(count);
   if (skill.includes("verb")) return generateVerbProblems(count);
   if (skill.includes("adjective")) return generateAdjectiveProblems(count);
+  if (skill.includes("pronoun")) return generatePronounProblems(count);
+  if (skill.includes("preposition")) return generatePrepositionProblems(count);
   if (skill.includes("parts of speech") || skill.includes("part of speech")) return generatePartsOfSpeech(count);
   if (skill.includes("punctuation") || skill.includes("capitalization")) return generatePunctuationProblems(count);
   if (skill.includes("sentence")) return generateSentenceProblems(count);
@@ -1149,6 +1369,47 @@ function generateAdjectiveProblems(count: number): Problem[] {
   ];
   return shuffleArray(items).slice(0, count).map((s) => ({ id: nanoid(8), type: "short_answer" as const, question: s.q, answer: s.a, points: 1 }));
 }
+
+function generatePronounProblems(count: number): Problem[] {
+  const items = [
+    { q: "Replace the noun with a pronoun: 'Maria went to school.' → ___ went to school.", a: "She" },
+    { q: "Which is a subject pronoun? (him / her / she / them)", a: "she", opts: ["him","her","she","them"] },
+    { q: "Which is an object pronoun? (I / he / she / him)", a: "him", opts: ["I","he","she","him"] },
+    { q: "Fill in: Give the book to ___. (he / him)", a: "him", opts: ["he","him"] },
+    { q: "Fill in: ___ and I went to the park. (Me / Him / She / He)", a: "He", opts: ["Me","Him","She","He"] },
+    { q: "What is a reflexive pronoun? Give an example.", a: "A pronoun that refers back to the subject (e.g., himself, herself, themselves)" },
+    { q: "Choose the correct pronoun: Each student must bring ___ own pencil. (their / they / them)", a: "their", opts: ["their","they","them"] },
+    { q: "What type of pronoun is 'who'?", a: "Relative pronoun", opts: ["Personal","Reflexive","Relative","Indefinite"] },
+    { q: "Replace: 'The dog wagged the dog's tail.'", a: "The dog wagged its tail." },
+    { q: "What is an indefinite pronoun? Give an example.", a: "A pronoun that does not refer to a specific person or thing (e.g., everyone, nobody, someone)" },
+  ];
+  return shuffleArray(items).slice(0, count).map((item) => ({
+    id: nanoid(8), type: (item.opts ? "multiple_choice" : "short_answer") as any,
+    question: item.q, options: item.opts, answer: item.a, points: 1,
+  }));
+}
+
+function generatePrepositionProblems(count: number): Problem[] {
+  const items = [
+    { q: "Which word is a preposition? (run / under / happy / eat)", a: "under", opts: ["run","under","happy","eat"] },
+    { q: "Fill in: The cat sat ___ the mat. (on / run / blue / sing)", a: "on", opts: ["on","run","blue","sing"] },
+    { q: "Identify the preposition: 'She walked through the park.'", a: "through" },
+    { q: "What is a prepositional phrase? Give an example.", a: "A phrase beginning with a preposition (e.g., 'in the morning', 'under the table')" },
+    { q: "Choose the correct preposition: She arrived ___ Monday. (on / in / at / by)", a: "on", opts: ["on","in","at","by"] },
+    { q: "Choose the correct preposition: He lives ___ Canada. (on / in / at / by)", a: "in", opts: ["on","in","at","by"] },
+    { q: "Choose the correct preposition: The meeting is ___ noon. (on / in / at / by)", a: "at", opts: ["on","in","at","by"] },
+    { q: "Identify all prepositions: 'The dog ran under the fence and through the garden.'", a: "under, through" },
+    { q: "True or False: A preposition always comes before a noun or pronoun.", a: "True" },
+    { q: "What does a preposition show?", a: "The relationship between a noun/pronoun and another word (position, direction, time, etc.)" },
+    { q: "Give three examples of prepositions of place.", a: "(e.g., on, under, above, beside, between, near, behind, in front of)" },
+    { q: "Give three examples of prepositions of time.", a: "(e.g., at, on, in, before, after, during, since, until)" },
+  ];
+  return shuffleArray(items).slice(0, count).map((item) => ({
+    id: nanoid(8), type: (item.opts ? "multiple_choice" : "short_answer") as any,
+    question: item.q, options: item.opts, answer: item.a, points: 1,
+  }));
+}
+
 
 function generatePartsOfSpeech(count: number): Problem[] {
   const items = [
