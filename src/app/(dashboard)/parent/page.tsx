@@ -543,7 +543,7 @@ function BillingCard({ subscription, childCount }: { subscription: any; childCou
           <div className={cn("text-[11px] mt-0.5", isPremium ? "text-brand-green/80" : "text-muted")}>
             {subscription?.currentPeriodEnd
               ? `Next billing: ${formatDate(subscription.currentPeriodEnd, "MMM d, yyyy")}`
-              : "Start your 14-day free trial"}
+              : "Start your 7-day free trial"}
           </div>
         </div>
         <div className={cn("font-serif text-xl font-bold", isPremium ? "text-brand-green" : "text-ink")}>

@@ -14,7 +14,6 @@ interface TutorialModalProps {
   onClose: () => void;
   sheet: TodaySheet;
   content: TutorialContent;
-  subjectSlug?: string;
   onComplete: () => void;
 }
 
@@ -29,7 +28,7 @@ const SUBJECT_THEMES: Record<string, { bg: string; accent: string; cardBg: strin
 
 const CELEBRATIONS = ["Great work! 🎉", "Excellent! ⭐", "You got it! 🚀", "Amazing! 💪", "Keep going! 🔥"];
 
-export function TutorialModal({ open, onClose, sheet, content, subjectSlug: subjectSlugProp, onComplete }: TutorialModalProps) {
+export function TutorialModal({ open, onClose, sheet, content, onComplete }: TutorialModalProps) {
   const [phase, setPhase] = useState<Phase>("concepts");
   const [conceptIndex, setConceptIndex] = useState(0);
   const [exampleIndex, setExampleIndex] = useState(0);
@@ -37,7 +36,7 @@ export function TutorialModal({ open, onClose, sheet, content, subjectSlug: subj
   const [showAnswer, setShowAnswer] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const subjectSlug = subjectSlugProp ?? (sheet as any).subjectSlug ?? "MATH";
+  const subjectSlug = (sheet as any).subjectSlug ?? "MATH";
   const theme = SUBJECT_THEMES[subjectSlug] ?? SUBJECT_THEMES.MATH;
 
   const concepts = content.concepts ?? [];

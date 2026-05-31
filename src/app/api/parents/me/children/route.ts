@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
       let checkoutUrl: string | null = null;
 
       if (isFirstChild && !subscription?.stripeSubscriptionId) {
-        // First child — start checkout with 14-day trial
+        // First child — start checkout with 7-day trial
         const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
         const customerId = await getOrCreateCustomer({
           email: parent.user.email,
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
         const session = await createCheckoutSession({
           customerId,
           plan: "PREMIUM",
-          trialDays: 14,
+          trialDays: 7,
           successUrl: `${appUrl}/parent?subscribed=1`,
           cancelUrl: `${appUrl}/parent`,
           metadata: { userId: ctx.userId, plan: "PREMIUM" },
@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
         isFirstChild,
         checkoutUrl, // Non-null for first child — frontend should redirect
         message: isFirstChild
-          ? `${firstName}'s account created. Start your 14-day free trial to activate.`
+          ? `${firstName}'s account created. Start your 7-day free trial to activate.`
           : `${firstName}'s account created. $5.99/mo added to your subscription.`,
       }, 201);
     } catch (error) {
