@@ -24,7 +24,9 @@ import { DashboardSidebar, DashboardTopbar } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { Card, StatCard, Progress, Modal, EmptyState } from "@/components/ui";
 import { StudentRealtime } from "@/components/realtime/StudentRealtime";
+import { TutorialModal } from "@/components/TutorialModal";
 import { cn, formatTime } from "@/lib/utils";
+import { getTutorial, type TutorialContent } from "@/lib/worksheet/tutorials";
 import type { StudentDashboard, TodaySheet } from "@/types";
 
 const TIMER_STORAGE_KEY = "bs:practice-timer";
@@ -38,6 +40,9 @@ export default function StudentDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [practiceOpen, setPracticeOpen] = useState(false);
   const [practiceSheet, setPracticeSheet] = useState<TodaySheet | null>(null);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [tutorialSheet, setTutorialSheet] = useState<TodaySheet | null>(null);
+  const [tutorialContent, setTutorialContent] = useState<TutorialContent | null>(null);
 
   // Timer state — persisted across refreshes
   const [timerRunning, setTimerRunning] = useState(false);
@@ -129,6 +134,28 @@ export default function StudentDashboardPage() {
 
   function openPractice(sheet: TodaySheet) {
     if (sheet.status !== "IN_PROGRESS") return;
+    // Check if tutorial has been seen for this skill
+    const tutorialKey = `eduyro:tutorial:${sheet.skillName.toLowerCase().replace(/\s+/g, '-')}`;
+    const seen = typeof window !== 'undefined' && localStorage.getItem(tutorialKey) === '1';
+    if (!seen) {
+      const subjectSlug = data?.levelProgress?.subjectName?.toUpperCase() as string ?? "MATH";
+      const content = getTutorial(subjectSlug, sheet.skillName);
+      setTutorialContent(content);
+      setTutorialSheet(sheet);
+      setTutorialOpen(true);
+    } else {
+      setPracticeSheet(sheet);
+      setPracticeOpen(true);
+      if (!timerRunning) setTimerRunning(true);
+    }
+  }
+
+  function onTutorialComplete(sheet: TodaySheet) {
+    const tutorialKey = `eduyro:tutorial:${sheet.skillName.toLowerCase().replace(/\s+/g, '-')}`;
+    if (typeof window !== 'undefined') localStorage.setItem(tutorialKey, '1');
+    setTutorialOpen(false);
+    setTutorialSheet(null);
+    setTutorialContent(null);
     setPracticeSheet(sheet);
     setPracticeOpen(true);
     if (!timerRunning) setTimerRunning(true);
@@ -329,6 +356,17 @@ export default function StudentDashboardPage() {
           </div>
         </div>
       </main>
+
+      {/* Tutorial modal — shown once per skill */}
+      {tutorialOpen && tutorialSheet && tutorialContent && (
+        <TutorialModal
+          open={tutorialOpen}
+          onClose={() => { setTutorialOpen(false); setTutorialSheet(null); setTutorialContent(null); }}
+          sheet={tutorialSheet}
+          content={tutorialContent}
+          onComplete={() => onTutorialComplete(tutorialSheet)}
+        />
+      )}
 
       {/* Practice modal — wired to real APIs */}
       {practiceOpen && practiceSheet && (
