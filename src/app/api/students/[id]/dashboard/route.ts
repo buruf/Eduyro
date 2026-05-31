@@ -90,7 +90,7 @@ export async function GET(
         ? {
             levelCode: activeProgress.level.code,
             levelName: activeProgress.level.name,
-            subjectName: activeProgress.level.subject.name,
+            subjectName: activeProgress.level.subject.slug,
             sheetsCompleted: activeProgress.sheetsCompleted,
             totalSheets:
               activeProgress.level.problemsPerSheet *
