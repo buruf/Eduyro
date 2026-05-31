@@ -364,6 +364,7 @@ export default function StudentDashboardPage() {
           onClose={() => { setTutorialOpen(false); setTutorialSheet(null); setTutorialContent(null); }}
           sheet={tutorialSheet}
           content={tutorialContent}
+          subjectSlug={data.levelProgress?.subjectName === "Mathematics" ? "MATH" : data.levelProgress?.subjectName?.toUpperCase() ?? "MATH"}
           onComplete={() => onTutorialComplete(tutorialSheet)}
         />
       )}
