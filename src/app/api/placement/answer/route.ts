@@ -144,6 +144,14 @@ export async function POST(req: NextRequest) {
 
       // Continue — pick next question
       const nextQuestion = pickNextQuestion(subject.slug, newDifficulty, askedIds);
+      // If no questions left, force termination regardless of shouldTerminate
+      if (!nextQuestion && !shouldEnd) {
+        const forcedPlacement = await calculatePlacement(subject.slug, newDifficulty, newCorrectAnswers, newQuestionsAsked);
+        const forcedLevel = await db.level.findFirst({ where: { subjectId: subject.id, code: forcedPlacement.assignedLevelCode } });
+        await db.placementTest.update({ where: { id: testId }, data: { status: "COMPLETED", completedAt: new Date(), currentDifficulty: newDifficulty, questionsAsked: newQuestionsAsked, correctAnswers: newCorrectAnswers, confidenceScore: confidence, placementPct: forcedPlacement.accuracyPct, resultLevelId: forcedLevel?.id, resultLevelCode: forcedPlacement.assignedLevelCode, questionLog: log } });
+        if (forcedLevel) { await db.studentProgress.upsert({ where: { studentId_levelId: { studentId: test.studentId, levelId: forcedLevel.id } }, create: { studentId: test.studentId, levelId: forcedLevel.id, status: "IN_PROGRESS", startedAt: new Date() }, update: { status: "IN_PROGRESS", startedAt: new Date() } }); }
+        return ok({ done: true, isCorrect, correctAnswer: question.options[question.correctIndex], result: forcedPlacement, nextTestId: null, totalQuestions: newQuestionsAsked });
+      }
 
       await db.placementTest.update({
         where: { id: testId },
