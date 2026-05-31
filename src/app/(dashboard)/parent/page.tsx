@@ -151,9 +151,9 @@ export default function ParentDashboardPage() {
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => window.open("/pdf-generator", "_blank")}
+                onClick={() => window.open(`/print/${data.children[activeChildIndex]?.student?.id}`, "_blank")}
               >
-                🖨 Print this week
+                Print today's packet
               </Button>
             </div>
           }
