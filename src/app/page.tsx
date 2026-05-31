@@ -4,9 +4,9 @@ import { PublicNavbar, PublicFooter } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
 import { FaqAccordion } from "@/components/marketing/FaqAccordion";
 import { SampleWorksheets } from "@/components/marketing/SampleWorksheets";
-import { LevelLadder } from "@/components/marketing/LevelLadder";
 import { CurriculumTables } from "@/components/marketing/CurriculumTables";
 import { PracticeWidgets } from "@/components/marketing/PracticeWidgets";
+import { HeroAnimation } from "@/components/marketing/HeroAnimation";
 
 export default function HomePage() {
   return (
@@ -14,74 +14,99 @@ export default function HomePage() {
       <PublicNavbar />
       <main className="bg-cream">
 
-        {/* HERO */}
-        <section className="relative overflow-hidden">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-20 pb-24 lg:pt-28 lg:pb-32 grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold mb-3">
-                Pre-K through Grade 12 · 4 subjects
-              </div>
-              <h1 className="font-serif text-5xl lg:text-6xl font-bold leading-[1.05] tracking-tight">
-                Mastery learning,<br />
-                <em className="italic font-light text-gold">one step at a time.</em>
-              </h1>
-              <p className="text-lg text-muted mt-6 max-w-lg leading-relaxed">
-                Eduyro gives every student a personalized path through mastery — daily printable worksheets in Math, Reading, Writing &amp; Science, paced exactly to their level.
-              </p>
-              <div className="flex flex-wrap gap-3 mt-8">
-                <Link href="/placement">
-                  <Button variant="primary" size="lg" rightIcon={<span>→</span>}>
-                    Take free placement test
-                  </Button>
-                </Link>
-                <Link href="/shop">
-                  <Button variant="secondary" size="lg">Browse printable packs</Button>
-                </Link>
-              </div>
-              <div className="flex flex-wrap items-center gap-6 mt-10 text-sm text-muted">
-                <div className="flex items-center gap-2"><span className="text-brand-green">✓</span>Free placement test</div>
-                <div className="flex items-center gap-2"><span className="text-brand-green">✓</span>No credit card required</div>
-                <div className="flex items-center gap-2"><span className="text-brand-green">✓</span>Print at home</div>
-              </div>
+        {/* ── HERO ─────────────────────────────────────────────────────── */}
+        <section className="relative overflow-hidden pt-16 pb-10 lg:pt-24 lg:pb-16">
+          {/* Subtle texture grid */}
+          <div
+            className="absolute inset-0 opacity-[0.03] pointer-events-none"
+            style={{
+              backgroundImage: "linear-gradient(#1A1612 1px, transparent 1px), linear-gradient(90deg, #1A1612 1px, transparent 1px)",
+              backgroundSize: "40px 40px",
+            }}
+          />
+
+          <div className="max-w-5xl mx-auto px-6 lg:px-8 relative">
+            {/* Eyebrow */}
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <div className="h-px w-8 bg-gold/40" />
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">
+                Pre-K through Grade 12 · 4 subjects · Print at home
+              </span>
+              <div className="h-px w-8 bg-gold/40" />
             </div>
 
-            {/* Hero card preview */}
-            <div className="relative">
-              <div className="absolute -inset-6 bg-gold/10 rounded-3xl rotate-2" />
-              <div className="relative bg-white border border-border rounded-2xl shadow-elev p-8">
-                <div className="flex items-center justify-between border-b border-border pb-4 mb-5">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted font-semibold">Eduyro Education</div>
-                    <div className="font-serif text-lg font-bold mt-1">Multiplication — ×6, ×7, ×8 Tables</div>
-                    <div className="text-xs text-muted mt-1">Level M5 · Sheet 1 of 3 · Target: 10 min</div>
-                  </div>
-                  <div className="text-right text-xs text-muted">Name: ___________<br />Score: __/20</div>
+            {/* Headline — full width, centred */}
+            <div className="text-center mb-6">
+              <h1 className="font-serif text-5xl lg:text-[3.75rem] font-bold leading-[1.06] tracking-tight text-ink">
+                Your child deserves a{" "}
+                <span className="relative inline-block">
+                  <em className="italic font-light text-gold not-italic">personalised</em>
+                  <span
+                    className="absolute -bottom-1 left-0 w-full h-0.5 bg-gold/40 rounded-full"
+                    style={{ transform: "skewX(-8deg)" }}
+                  />
+                </span>
+                <br />path through school.
+              </h1>
+              <p className="text-lg text-muted mt-5 max-w-2xl mx-auto leading-relaxed">
+                Eduyro places your child at their exact skill level — not their grade —
+                then builds daily habits through mastery-based worksheets in Math, Reading, Writing &amp; Science.
+                The same method as Kumon. A fraction of the cost.
+              </p>
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
+              <Link href="/placement">
+                <Button variant="primary" size="lg" rightIcon={
+                  <svg viewBox="0 0 20 20" className="w-4 h-4 fill-current"><path d="M10.293 5.293a1 1 0 0 1 1.414 0l4 4a1 1 0 0 1 0 1.414l-4 4a1 1 0 0 1-1.414-1.414L12.586 11H5a1 1 0 1 1 0-2h7.586l-2.293-2.293a1 1 0 0 1 0-1.414z"/></svg>
+                }>
+                  Take the free placement test
+                </Button>
+              </Link>
+              <Link href="#how-it-works">
+                <Button variant="secondary" size="lg">See how it works</Button>
+              </Link>
+            </div>
+
+            {/* Trust signals */}
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-12 text-sm text-muted">
+              {[
+                { icon: "M5 13l4 4L19 7", label: "No credit card required" },
+                { icon: "M5 13l4 4L19 7", label: "7-day free trial" },
+                { icon: "M5 13l4 4L19 7", label: "Cancel anytime" },
+              ].map(t => (
+                <div key={t.label} className="flex items-center gap-1.5">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 stroke-brand-green fill-none stroke-2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d={t.icon} />
+                  </svg>
+                  {t.label}
                 </div>
-                <div className="grid grid-cols-2 gap-x-8 gap-y-1 font-serif">
-                  {[
-                    "6 × 7 =", "8 × 3 =", "7 × 9 =", "6 × 8 =",
-                    "8 × 7 =", "7 × 4 =", "6 × 9 =", "8 × 6 =",
-                    "7 × 7 =", "6 × 6 =", "8 × 8 =", "7 × 5 =",
-                  ].map((q, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm border-b border-cream-dark py-1.5">
-                      <span className="text-[10px] text-muted/40 font-sans">{i + 1}.</span>
-                      <span className="font-bold flex-1 px-2">{q}</span>
-                      <div className="w-10 h-5 border border-border-mid rounded bg-cream-dark/30" />
-                    </div>
-                  ))}
+              ))}
+            </div>
+
+            {/* Animated product demo */}
+            <HeroAnimation />
+
+            {/* Social proof numbers under demo */}
+            <div className="mt-10 grid grid-cols-3 gap-4 max-w-lg mx-auto text-center">
+              {[
+                { n: "12,600+", label: "worksheets generated" },
+                { n: "95%", label: "mastery threshold" },
+                { n: "4 subjects", label: "Pre-K to Grade 12" },
+              ].map(stat => (
+                <div key={stat.label}>
+                  <div className="font-serif text-2xl font-bold text-ink">{stat.n}</div>
+                  <div className="text-xs text-muted mt-0.5">{stat.label}</div>
                 </div>
-                <div className="mt-5 pt-3 border-t border-dashed border-border flex justify-between text-[10px] text-muted/60 font-sans">
-                  <span>Level M5 · Eduyro</span>
-                  <span>Page 1 of 3</span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
 
         <div className="stripe-divider" />
 
-        {/* SAMPLE WORKSHEETS */}
+        {/* ── SAMPLE WORKSHEETS ───────────────────────────────────────── */}
         <section className="py-20 bg-cream-dark">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold mb-3">See it in action</div>
@@ -93,102 +118,214 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* INTERACTIVE PRACTICE */}
+        {/* ── INTERACTIVE PRACTICE ────────────────────────────────────── */}
         <section className="py-20" id="practice">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold mb-3">Try it yourself</div>
             <h2 className="font-serif text-4xl font-bold leading-tight mb-3">Practice a few problems right now.</h2>
             <p className="text-muted max-w-xl mb-12">
-              Type your answers. Get instant feedback. Just like the daily practice your student will get.
+              Type your answers. Get instant feedback. Just like the daily practice your student will get every morning.
             </p>
             <PracticeWidgets />
           </div>
         </section>
 
-        {/* HOW IT WORKS */}
+        {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
         <section id="how-it-works" className="py-24 bg-ink text-cream">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold-mid mb-3">How it works</div>
-            <h2 className="font-serif text-4xl font-bold leading-tight mb-16">The mastery loop, in four steps.</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
+            <h2 className="font-serif text-4xl font-bold leading-tight mb-4">
+              Four steps. One consistent habit.
+            </h2>
+            <p className="text-cream/60 max-w-xl mb-16 text-base leading-relaxed">
+              Most tutoring centres never tell parents exactly where their child stands or why they're not advancing.
+              Eduyro is built around total transparency and a single measurable outcome: mastery.
+            </p>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-0 border border-white/10 rounded-2xl overflow-hidden">
               {[
-                { n: 1, t: "Placement test", d: "A 15-minute adaptive test places your student at their exact skill level — not their grade level." },
-                { n: 2, t: "Daily packet", d: "Three short worksheets every day, 20 problems each, targeted at one specific skill." },
-                { n: 3, t: "95% mastery", d: "Hit 95% accuracy for 5 days in a row, and the system automatically advances your student to the next level." },
-                { n: 4, t: "Track everything", d: "Streaks, accuracy, attendance, level advances. All visible to parents in real time." },
-              ].map((s) => (
-                <div key={s.n}>
-                  <div className="w-12 h-12 rounded-full bg-gold/20 text-gold-mid flex items-center justify-center font-serif text-lg font-bold mb-5">{s.n}</div>
-                  <h3 className="font-serif text-lg font-semibold mb-2">{s.t}</h3>
-                  <p className="text-sm text-cream/60 leading-relaxed">{s.d}</p>
+                {
+                  n: "01",
+                  t: "Placement test",
+                  d: "A 15-minute adaptive test finds your child's exact skill level — not their grade level. No guessing, no wasted time on material they already know.",
+                  tag: "Takes 15 min",
+                  icon: "M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 0 2-2h2a2 2 0 0 0 2 2",
+                },
+                {
+                  n: "02",
+                  t: "Daily 3-sheet packet",
+                  d: "Three focused worksheets every morning. 20–30 problems each. Targeted at one specific skill. Print them out — screen-free practice builds stronger retention.",
+                  tag: "10 min/day",
+                  icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z",
+                },
+                {
+                  n: "03",
+                  t: "95% mastery gates",
+                  d: "The system only advances your child when they've hit 95% accuracy for 5 consecutive days. No child moves forward before they're truly ready.",
+                  tag: "Auto-paced",
+                  icon: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 0 0 1.946-.806 3.42 3.42 0 0 1 4.438 0 3.42 3.42 0 0 0 1.946.806 3.42 3.42 0 0 1 3.138 3.138 3.42 3.42 0 0 0 .806 1.946 3.42 3.42 0 0 1 0 4.438 3.42 3.42 0 0 0-.806 1.946 3.42 3.42 0 0 1-3.138 3.138 3.42 3.42 0 0 0-1.946.806 3.42 3.42 0 0 1-4.438 0 3.42 3.42 0 0 0-1.946-.806 3.42 3.42 0 0 1-3.138-3.138 3.42 3.42 0 0 0-.806-1.946 3.42 3.42 0 0 1 0-4.438 3.42 3.42 0 0 0 .806-1.946 3.42 3.42 0 0 1 3.138-3.138z",
+                },
+                {
+                  n: "04",
+                  t: "Parent dashboard",
+                  d: "Streaks, accuracy, level advances, attendance. Everything visible in real time. You'll know within seconds whether your child did their work today.",
+                  tag: "Full visibility",
+                  icon: "M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z",
+                },
+              ].map((s, i) => (
+                <div
+                  key={s.n}
+                  className="p-7 border-r border-b border-white/10 last:border-r-0 [&:nth-child(2)]:border-r-0 lg:[&:nth-child(2)]:border-r lg:[&:nth-child(3)]:border-r"
+                >
+                  <div className="flex items-start justify-between mb-5">
+                    <div className="w-10 h-10 rounded-lg bg-gold/15 flex items-center justify-center">
+                      <svg viewBox="0 0 24 24" className="w-5 h-5 stroke-gold-mid fill-none stroke-[1.5]">
+                        <path strokeLinecap="round" strokeLinejoin="round" d={s.icon} />
+                      </svg>
+                    </div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-white/30 font-sans">{s.tag}</span>
+                  </div>
+                  <div className="font-serif text-3xl font-bold text-white/10 mb-2 leading-none">{s.n}</div>
+                  <h3 className="font-serif text-lg font-semibold mb-2 text-cream">{s.t}</h3>
+                  <p className="text-sm text-cream/55 leading-relaxed">{s.d}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Kumon comparison callout */}
+            <div className="mt-12 bg-white/5 border border-white/10 rounded-2xl p-7 grid md:grid-cols-3 gap-6">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-gold-mid mb-3">Eduyro vs Kumon</div>
+                <p className="text-sm text-cream/60 leading-relaxed">
+                  Same methodology. Same 95% mastery threshold. Same daily drill habit. The difference is cost, transparency, and control.
+                </p>
+              </div>
+              {[
+                {
+                  label: "Monthly cost",
+                  eduyro: "$9.99/child",
+                  kumon: "$150–$200/child",
+                  win: true,
+                },
+                {
+                  label: "Parent visibility",
+                  eduyro: "Real-time dashboard",
+                  kumon: "Monthly report",
+                  win: true,
+                },
+              ].map(row => (
+                <div key={row.label} className="bg-white/5 rounded-xl p-4">
+                  <div className="text-xs text-cream/40 uppercase tracking-wider mb-3 font-sans">{row.label}</div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-2 h-2 rounded-full bg-gold flex-shrink-0" />
+                    <div>
+                      <div className="text-xs text-cream/40 font-sans">Eduyro</div>
+                      <div className="text-sm font-semibold text-gold-mid">{row.eduyro}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-white/20 flex-shrink-0" />
+                    <div>
+                      <div className="text-xs text-cream/40 font-sans">Kumon</div>
+                      <div className="text-sm text-cream/50 line-through">{row.kumon}</div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* LEVEL LADDER */}
+        {/* ── CURRICULUM ───────────────────────────────────────────────── */}
         <section className="py-20" id="curriculum">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold mb-3">The level ladder</div>
-            <h2 className="font-serif text-4xl font-bold leading-tight mb-3">From counting to calculus.</h2>
-            <p className="text-muted max-w-xl mb-12">
-              23 levels in Math alone. Each level contains 200+ worksheets organized by skill.
-            </p>
-            <LevelLadder />
-          </div>
-        </section>
-
-        {/* CURRICULUM TABLES */}
-        <section className="py-20 bg-cream-dark">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold mb-3">Full curriculum</div>
-            <h2 className="font-serif text-4xl font-bold leading-tight mb-12">Every level, every subject.</h2>
+            <h2 className="font-serif text-4xl font-bold leading-tight mb-3">
+              From counting to calculus — every level mapped.
+            </h2>
+            <p className="text-muted max-w-xl mb-12 leading-relaxed">
+              42 levels across 4 subjects. Over 12,600 individual worksheets. Every skill sequenced so mastery at one level
+              is exactly the foundation the next level requires.
+            </p>
             <CurriculumTables />
           </div>
         </section>
 
-        {/* SHOP */}
-        <section id="shop" className="py-24">
+        {/* ── SHOP ─────────────────────────────────────────────────────── */}
+        <section id="shop" className="py-24 bg-cream-dark">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold mb-3">Shop</div>
             <h2 className="font-serif text-4xl font-bold leading-tight mb-3">
-              Buy a printable pack today.
+              Buy a printable pack. No account needed.
             </h2>
             <p className="text-muted max-w-xl mb-12 leading-relaxed">
-              100 worksheets per skill, instant download, answer keys included. No account required.
+              100 worksheets per skill, instant download, answer keys included. Perfect if you just need one subject.
             </p>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
               {[
-                { emoji: "➕", label: "Addition", desc: "Counting through 2-digit addition. 100 sheets, ~2,500 problems.", grades: "Pre-K – Grade 2" },
-                { emoji: "➖", label: "Subtraction", desc: "Subtraction within 20 through 3-digit regrouping. 100 sheets.", grades: "Grade 1 – Grade 3" },
-                { emoji: "✖", label: "Multiplication", desc: "Times tables through mixed fluency drills. 100 sheets, ~2,500 problems.", grades: "Grade 2 – Grade 5" },
-                { emoji: "➗", label: "Division", desc: "Division facts through long division with remainders. 100 sheets.", grades: "Grade 3 – Grade 5" },
-              ].map((pack) => (
-                <div key={pack.label} className="bg-white border border-border rounded-2xl p-6 hover:border-gold hover:shadow-card transition-all group">
-                  <div className="text-3xl mb-3">{pack.emoji}</div>
+                {
+                  label: "Addition",
+                  desc: "Counting through 2-digit addition. 100 sheets, ~2,500 problems.",
+                  grades: "Pre-K – Grade 2",
+                  icon: "M12 4v16m8-8H4",
+                },
+                {
+                  label: "Subtraction",
+                  desc: "Subtraction within 20 through 3-digit regrouping. 100 sheets.",
+                  grades: "Grade 1 – Grade 3",
+                  icon: "M20 12H4",
+                },
+                {
+                  label: "Multiplication",
+                  desc: "Times tables through mixed fluency drills. 100 sheets, ~2,500 problems.",
+                  grades: "Grade 2 – Grade 5",
+                  icon: "M6 18L18 6M6 6l12 12",
+                },
+                {
+                  label: "Division",
+                  desc: "Division facts through long division with remainders. 100 sheets.",
+                  grades: "Grade 3 – Grade 5",
+                  icon: "M12 4v3m0 10v3M4 12h3m10 0h3",
+                },
+              ].map(pack => (
+                <div
+                  key={pack.label}
+                  className="bg-white border border-border rounded-2xl p-6 hover:border-gold hover:shadow-card transition-all group flex flex-col"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-brand-blue-light flex items-center justify-center mb-4">
+                    <svg viewBox="0 0 24 24" className="w-5 h-5 stroke-brand-blue fill-none stroke-2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d={pack.icon} />
+                    </svg>
+                  </div>
                   <h3 className="font-serif text-lg font-bold mb-1">{pack.label}</h3>
                   <div className="text-[10px] text-gold font-semibold uppercase tracking-wider mb-2">{pack.grades}</div>
-                  <p className="text-sm text-muted leading-relaxed mb-4">{pack.desc}</p>
+                  <p className="text-sm text-muted leading-relaxed mb-4 flex-1">{pack.desc}</p>
                   <div className="text-xs text-muted mb-4">100 sheets · Answer keys · Instant download</div>
                   <Link
                     href="/shop"
-                    className="w-full mt-3 bg-brand-blue text-white text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-brand-blue/90 transition-colors flex items-center justify-center gap-2"
+                    className="w-full bg-brand-blue text-white text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-[#153F6E] transition-colors flex items-center justify-center gap-2"
                   >
-                    👁 Preview sample worksheets
+                    <svg viewBox="0 0 20 20" className="w-4 h-4 fill-current">
+                      <path d="M10 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"/>
+                    </svg>
+                    Preview &amp; buy
                   </Link>
                 </div>
               ))}
             </div>
-            <div className="bg-cream-dark border border-border rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 max-w-3xl mx-auto">
+
+            <div className="bg-ink text-cream rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 max-w-3xl mx-auto">
               <div>
                 <div className="font-serif text-lg font-bold mb-1">Bundle pricing</div>
-                <div className="text-sm text-muted">
+                <div className="text-sm text-cream/60">
                   1 pack · $9.99 &nbsp;|&nbsp; 2 packs · $15.99 &nbsp;|&nbsp; 3 packs · $19.99 &nbsp;|&nbsp; All 4 · $24.99
                 </div>
               </div>
               <Link href="/shop">
-                <Button variant="gold" size="lg" rightIcon={<span>→</span>}>
+                <Button variant="gold" size="lg" rightIcon={
+                  <svg viewBox="0 0 20 20" className="w-4 h-4 fill-current"><path d="M10.293 5.293a1 1 0 0 1 1.414 0l4 4a1 1 0 0 1 0 1.414l-4 4a1 1 0 0 1-1.414-1.414L12.586 11H5a1 1 0 1 1 0-2h7.586l-2.293-2.293a1 1 0 0 1 0-1.414z"/></svg>
+                }>
                   Shop now
                 </Button>
               </Link>
@@ -196,69 +333,132 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* PRICING */}
-        <section id="pricing" className="py-24 bg-cream-dark">
-          <div className="max-w-5xl mx-auto px-6 lg:px-8 text-center">
-            <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold mb-3">Pricing</div>
-            <h2 className="font-serif text-4xl font-bold leading-tight mb-3">
-              7-day free trial. Then from $9.99/month.
-            </h2>
-            <p className="text-muted max-w-xl mx-auto mb-12">
-              No credit card required to start. Cancel anytime.
-            </p>
-            <div className="max-w-lg mx-auto">
-              <div className="bg-ink text-cream rounded-2xl p-8 relative">
-                <div className="absolute top-4 right-4 bg-gold text-ink text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded">
-                  Simple pricing
-                </div>
-                <div className="font-serif text-lg font-semibold mb-1">Per-child plan</div>
-                <div className="text-xs text-cream/55 mb-6">Every child gets their own personalized learning path</div>
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center justify-between bg-white/10 rounded-lg px-4 py-3">
-                    <div>
-                      <div className="text-sm font-semibold">First child</div>
-                      <div className="text-xs text-cream/55">7-day free trial included</div>
-                    </div>
-                    <div className="font-serif text-2xl font-bold text-gold-mid">$9.99<span className="text-sm font-sans text-cream/55">/mo</span></div>
-                  </div>
-                  <div className="flex items-center justify-between bg-white/10 rounded-lg px-4 py-3">
-                    <div>
-                      <div className="text-sm font-semibold">Each additional child</div>
-                      <div className="text-xs text-cream/55">Added to same subscription</div>
-                    </div>
-                    <div className="font-serif text-2xl font-bold text-gold-mid">$5.99<span className="text-sm font-sans text-cream/55">/mo</span></div>
-                  </div>
-                </div>
-                <ul className="space-y-2 text-sm mb-8">
-                  {["All 4 subjects", "Unlimited daily worksheets", "Printable PDF downloads", "Parent dashboard", "No per-seat cap — add as many children as you have"].map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-cream/85">
-                      <span className="text-gold-mid">✓</span>{f}
+        {/* ── PRICING ──────────────────────────────────────────────────── */}
+        <section id="pricing" className="py-24">
+          <div className="max-w-5xl mx-auto px-6 lg:px-8">
+            <div className="text-center mb-14">
+              <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold mb-3">Pricing</div>
+              <h2 className="font-serif text-4xl font-bold leading-tight mb-3">
+                Start free. Stay if it works.
+              </h2>
+              <p className="text-muted max-w-lg mx-auto">
+                Seven days to see real progress. No card required. If your child doesn't improve in the first week, you haven't paid a cent.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+              {/* Free trial */}
+              <div className="bg-cream-dark border-2 border-border rounded-2xl p-8 flex flex-col">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Free trial</div>
+                <div className="font-serif text-4xl font-bold text-ink mb-1">$0</div>
+                <div className="text-sm text-muted mb-6">7 days · No card required</div>
+                <ul className="space-y-3 text-sm mb-8 flex-1">
+                  {[
+                    "Full AI placement test",
+                    "All 4 subjects unlocked",
+                    "Daily worksheet packets",
+                    "Parent dashboard",
+                    "Up to 3 children",
+                  ].map(f => (
+                    <li key={f} className="flex items-start gap-2.5 text-muted">
+                      <svg viewBox="0 0 20 20" className="w-4 h-4 fill-brand-green flex-shrink-0 mt-0.5">
+                        <path d="M10 18A8 8 0 1 0 10 2a8 8 0 0 0 0 16zm3.707-9.293l-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414z"/>
+                      </svg>
+                      {f}
                     </li>
                   ))}
                 </ul>
-                <Link href="/register"><Button variant="gold" fullWidth size="lg">Start 7-day free trial →</Button></Link>
-                <p className="text-center text-xs text-cream/40 mt-3">No credit card required · Cancel anytime</p>
+                <Link href="/placement">
+                  <Button variant="secondary" fullWidth size="lg">Start free trial</Button>
+                </Link>
+              </div>
+
+              {/* Premium */}
+              <div className="bg-ink text-cream rounded-2xl p-8 relative flex flex-col shadow-elev">
+                <div className="absolute top-4 right-4 bg-gold text-ink text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
+                  Most popular
+                </div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-gold-mid mb-1">Premium</div>
+                <div className="font-serif text-4xl font-bold text-cream mb-0.5">
+                  $9.99<span className="text-lg font-sans font-normal text-cream/50">/mo</span>
+                </div>
+                <div className="text-sm text-cream/50 mb-2">First child · +$5.99 each additional</div>
+                <div className="text-xs text-gold-mid mb-6 font-sans">7-day free trial included</div>
+                <ul className="space-y-3 text-sm mb-8 flex-1">
+                  {[
+                    "Everything in free trial",
+                    "Unlimited daily worksheets",
+                    "Printable PDF downloads",
+                    "Auto-advance on mastery",
+                    "No per-seat cap",
+                    "Email progress reports",
+                  ].map(f => (
+                    <li key={f} className="flex items-start gap-2.5 text-cream/80">
+                      <svg viewBox="0 0 20 20" className="w-4 h-4 fill-gold-mid flex-shrink-0 mt-0.5">
+                        <path d="M10 18A8 8 0 1 0 10 2a8 8 0 0 0 0 16zm3.707-9.293l-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414z"/>
+                      </svg>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/register">
+                  <Button variant="gold" fullWidth size="lg" rightIcon={
+                    <svg viewBox="0 0 20 20" className="w-4 h-4 fill-current"><path d="M10.293 5.293a1 1 0 0 1 1.414 0l4 4a1 1 0 0 1 0 1.414l-4 4a1 1 0 0 1-1.414-1.414L12.586 11H5a1 1 0 1 1 0-2h7.586l-2.293-2.293a1 1 0 0 1 0-1.414z"/></svg>
+                  }>
+                    Start 7-day free trial
+                  </Button>
+                </Link>
+                <p className="text-center text-xs text-cream/30 mt-3 font-sans">Cancel anytime · No hidden fees</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* TESTIMONIALS */}
-        <section className="py-20">
+        {/* ── TESTIMONIALS ─────────────────────────────────────────────── */}
+        <section className="py-20 bg-cream-dark">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold mb-3">What parents say</div>
             <h2 className="font-serif text-4xl font-bold leading-tight mb-12">Real stories. Real progress.</h2>
             <div className="grid md:grid-cols-3 gap-6">
               {[
-                { q: "My daughter went from Level M3 to Level M5 in two months. The daily routine made all the difference — it became as automatic as brushing her teeth.", name: "Maria R.", role: "Homeschool parent · Ontario", color: "#1B4F8A", av: "MR" },
-                { q: "We pulled both kids from Kumon and switched to Eduyro. Same methodology, a fraction of the cost, and far better transparency. The parent dashboard alone justifies the price.", name: "David K.", role: "Parent of two · Toronto", color: "#2D6A3F", av: "DK" },
-                { q: "My son went from hating math to asking for his sheets every morning. Honestly didn't think it was possible.", name: "Sunita P.", role: "Parent · Brampton", color: "#C8902A", av: "SP" },
+                {
+                  q: "My daughter went from Level M3 to Level M5 in two months. The daily routine made all the difference — it became as automatic as brushing her teeth.",
+                  name: "Maria R.",
+                  role: "Homeschool parent · Ontario",
+                  color: "#1B4F8A",
+                  av: "MR",
+                },
+                {
+                  q: "We pulled both kids from Kumon and switched to Eduyro. Same methodology, a fraction of the cost, and far better transparency. The parent dashboard alone justifies the price.",
+                  name: "David K.",
+                  role: "Parent of two · Toronto",
+                  color: "#2D6A3F",
+                  av: "DK",
+                },
+                {
+                  q: "My son went from hating math to asking for his sheets every morning. Honestly didn't think it was possible.",
+                  name: "Sunita P.",
+                  role: "Parent · Brampton",
+                  color: "#C8902A",
+                  av: "SP",
+                },
               ].map((t, i) => (
                 <div key={i} className="bg-white border border-border rounded-2xl p-7">
-                  <div className="text-gold mb-3 tracking-tighter">★★★★★</div>
+                  <div className="flex gap-0.5 mb-3">
+                    {[1,2,3,4,5].map(s => (
+                      <svg key={s} viewBox="0 0 20 20" className="w-4 h-4 fill-gold">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 0 0-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 0 0 .951-.69l1.07-3.292z"/>
+                      </svg>
+                    ))}
+                  </div>
                   <p className="font-serif italic font-light text-base leading-relaxed mb-6">"{t.q}"</p>
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full text-white text-xs font-semibold flex items-center justify-center" style={{ background: t.color }}>{t.av}</div>
+                    <div
+                      className="w-9 h-9 rounded-full text-white text-xs font-semibold flex items-center justify-center flex-shrink-0"
+                      style={{ background: t.color }}
+                    >
+                      {t.av}
+                    </div>
                     <div>
                       <div className="text-sm font-medium">{t.name}</div>
                       <div className="text-xs text-muted">{t.role}</div>
@@ -270,38 +470,68 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* FAQ */}
-        <section id="faq" className="py-24 bg-cream-dark">
+        {/* ── FAQ ──────────────────────────────────────────────────────── */}
+        <section id="faq" className="py-24">
           <div className="max-w-3xl mx-auto px-6 lg:px-8">
             <div className="text-center">
               <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold mb-3">FAQ</div>
               <h2 className="font-serif text-4xl font-bold leading-tight mb-12">Common questions.</h2>
             </div>
             <FaqAccordion items={[
-              { q: "How is this different from Kumon?", a: "Same methodology — mastery through daily practice, level-based progression, 95% accuracy threshold — but at a tenth of the cost. No physical centres, a real parent dashboard, and an AI placement test that replaces hour-long manual intake assessments." },
-              { q: "Do I need a printer?", a: "Recommended but not required. You can complete worksheets digitally on the student dashboard, but most families print the daily 3-sheet packet — it works better for fluency and there's no screen time." },
-              { q: "How does the placement test work?", a: "15 minutes, adaptive — it gets harder or easier based on your answers. After 8–12 questions per subject, the AI confidently knows your exact starting level. Far more accurate than a grade-based assumption." },
-              { q: "What if my child gets stuck?", a: "The system detects this automatically. If accuracy drops below 70% for 3 days in a row on a skill, we insert review sheets from the previous level. No human intervention needed." },
-              { q: "Can I cancel anytime?", a: "Yes. One click in your billing settings. We don't lock in or hide cancellation. If you cancel mid-month, you keep access until the period ends." },
-              { q: "Is this COPPA compliant?", a: "Yes. All student accounts are created by parents. We never share student data with advertisers, and parents can request full account deletion at any time." },
+              {
+                q: "How is this different from Kumon?",
+                a: "Same methodology — mastery through daily practice, level-based progression, 95% accuracy threshold — but at a tenth of the cost. No physical centres, a real parent dashboard, and an AI placement test that replaces hour-long manual intake assessments.",
+              },
+              {
+                q: "Do I need a printer?",
+                a: "Recommended but not required. You can complete worksheets digitally on the student dashboard, but most families print the daily 3-sheet packet — it works better for fluency and there's no screen time.",
+              },
+              {
+                q: "How does the placement test work?",
+                a: "15 minutes, adaptive — it gets harder or easier based on your answers. After 8–12 questions per subject, the AI confidently knows your exact starting level. Far more accurate than a grade-based assumption.",
+              },
+              {
+                q: "What if my child gets stuck at a level?",
+                a: "The system detects this automatically. If accuracy drops below 70% for 3 days in a row on a skill, we insert review sheets from the previous level. No human intervention needed.",
+              },
+              {
+                q: "Can I cancel anytime?",
+                a: "Yes. One click in your billing settings. We don't lock in or hide cancellation. If you cancel mid-month, you keep access until the period ends.",
+              },
+              {
+                q: "Is this COPPA compliant?",
+                a: "Yes. All student accounts are created by parents. We never share student data with advertisers, and parents can request full account deletion at any time.",
+              },
             ]} />
           </div>
         </section>
 
-        {/* FINAL CTA */}
+        {/* ── FINAL CTA ─────────────────────────────────────────────────── */}
         <section className="py-24 bg-ink text-cream text-center">
           <div className="max-w-3xl mx-auto px-6 lg:px-8">
-            <h2 className="font-serif text-5xl font-bold leading-tight mb-6">
-              Ready to start the<br /><em className="italic text-gold-mid font-light">first step?</em>
+            <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold-mid mb-4">Get started today</div>
+            <h2 className="font-serif text-5xl font-bold leading-tight mb-5">
+              Know exactly where<br />
+              <em className="italic text-gold-mid font-light">your child stands.</em>
             </h2>
-            <p className="text-lg text-cream/65 mb-10 max-w-xl mx-auto">
-              Take the free placement test. See exactly where your student should begin. No card. No commitment.
+            <p className="text-lg text-cream/60 mb-10 max-w-xl mx-auto leading-relaxed">
+              The placement test takes 15 minutes. It will tell you precisely which skills are solid and which ones have gaps — for free, before you commit to anything.
             </p>
-            <Link href="/placement">
-              <Button variant="gold" size="lg" rightIcon={<span>→</span>}>
-                Begin placement test
-              </Button>
-            </Link>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Link href="/placement">
+                <Button variant="gold" size="lg" rightIcon={
+                  <svg viewBox="0 0 20 20" className="w-4 h-4 fill-current"><path d="M10.293 5.293a1 1 0 0 1 1.414 0l4 4a1 1 0 0 1 0 1.414l-4 4a1 1 0 0 1-1.414-1.414L12.586 11H5a1 1 0 1 1 0-2h7.586l-2.293-2.293a1 1 0 0 1 0-1.414z"/></svg>
+                }>
+                  Begin free placement test
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button variant="ghost" size="lg" className="text-cream/70 hover:text-cream hover:bg-white/10">
+                  Create an account
+                </Button>
+              </Link>
+            </div>
+            <p className="text-xs text-cream/30 mt-5 font-sans">No credit card · No commitment · Results in 15 minutes</p>
           </div>
         </section>
 
