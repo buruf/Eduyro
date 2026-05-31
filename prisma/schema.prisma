@@ -153,6 +153,7 @@ model Student {
   pdfExports    PdfExport[]
   badges        StudentBadge[]
   teacherLinks  TeacherStudent[]
+  dailyPackets  DailyPacket[]
 
   @@index([userId])
   @@index([schoolId])
@@ -844,4 +845,39 @@ model ShopPurchaseFile {
   createdAt    DateTime     @default(now())
 
   @@index([purchaseId])
+}
+
+// ─────────────────────────────────────────────
+// DAILY PACKET — locked once per day per child
+// ─────────────────────────────────────────────
+
+model DailyPacket {
+  id        String   @id @default(cuid())
+  studentId String
+  date      DateTime @db.Date   // the calendar date this packet belongs to
+  
+  // What level/skill was active when packet was generated
+  levelId   String
+  levelCode String
+  levelName String
+  skillName String
+  subjectSlug String  // "MATH" | "READING" | "WRITING" | "SCIENCE"
+  
+  // The locked problems — 3 sheets stored as JSON
+  // Array of { sheetNumber, problems: Problem[], answerKey: AnswerKeyEntry[] }
+  sheets    Json
+  
+  // Config used at generation time
+  problemsPerSheet Int  @default(30)
+  timeLimitMinutes Int  @default(10)
+  
+  // Tracking
+  printCount Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, date])
+  @@index([studentId])
+  @@index([date])
 }
