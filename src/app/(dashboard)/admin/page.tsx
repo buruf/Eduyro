@@ -1,6 +1,6 @@
 // src/app/(dashboard)/admin/page.tsx
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -81,7 +81,7 @@ export default function AdminPage() {
         {activeTab === "export" && <BulkExportTab />}
         {activeTab === "roster" && <RosterTab />}
         {activeTab === "analytics" && <AnalyticsTab />}
-        {activeTab === "integrations" && <IntegrationsTab />}
+        {activeTab === "integrations" && <Suspense fallback={<div className="p-8 text-sm text-muted">Loading integrations…</div>}><IntegrationsTab /></Suspense>}
       </main>
     </div>
   );

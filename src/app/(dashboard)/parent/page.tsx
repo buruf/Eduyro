@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -23,7 +23,7 @@ const GRADES = [
   "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12",
 ];
 
-export default function ParentDashboardPage() {
+function ParentDashboardInner() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const showDemo = searchParams.get("demo") === "1";
@@ -616,4 +616,17 @@ function BillingCard({ subscription, childCount }: { subscription: any; childCou
 function initials(name?: string | null) {
   if (!name) return "?";
   return name.split(/\s+/).map((s) => s[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+}
+
+// Suspense boundary required by Next.js 14 for useSearchParams
+export default function ParentDashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-cream">
+        <div className="w-8 h-8 border-2 border-ink border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <ParentDashboardInner />
+    </Suspense>
+  );
 }
