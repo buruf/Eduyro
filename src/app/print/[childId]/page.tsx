@@ -1,62 +1,33 @@
 // src/app/print/[childId]/page.tsx
-// Clean print page — parent lands here after clicking "Print today's packet"
-// on their dashboard. Auto-triggers window.print() on load.
-// No navigation, no sidebar, just 3 print-ready sheets.
-
 "use client";
 
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/layout";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
 type Problem = {
-  id: string;
-  type: string;
-  question: string;
-  answer: string | number;
-  options?: string[];
-  explanation?: string;
-  points: number;
+  id: string; type: string; question: string;
+  answer: string | number; options?: string[];
+  explanation?: string; points: number;
 };
-
 type AnswerKeyEntry = { id: string; answer: string | number; explanation?: string };
-
-type Sheet = {
-  sheetNumber: number;
-  problems: Problem[];
-  answerKey: AnswerKeyEntry[];
-};
-
+type Sheet = { sheetNumber: number; problems: Problem[]; answerKey: AnswerKeyEntry[] };
 type Packet = {
-  id: string;
-  studentId: string;
-  date: string;
-  levelCode: string;
-  levelName: string;
-  skillName: string;
-  subjectSlug: string;
-  sheets: Sheet[];
-  problemsPerSheet: number;
-  timeLimitMinutes: number;
-  printCount: number;
+  id: string; studentId: string; date: string;
+  levelCode: string; levelName: string; skillName: string;
+  subjectSlug: string; sheets: Sheet[];
+  problemsPerSheet: number; timeLimitMinutes: number; printCount: number;
 };
-
 type FetchState =
   | { status: "loading" }
   | { status: "no_placement" }
   | { status: "error"; message: string }
-  | { status: "ready"; packet: Packet; date: string; studentName: string };
-
-// ─── Page ────────────────────────────────────────────────────────────────────
+  | { status: "ready"; packet: Packet; date: string };
 
 export default function PrintPage() {
   const { childId } = useParams<{ childId: string }>();
   const [state, setState] = useState<FetchState>({ status: "loading" });
-  const [showAnswerKey, setShowAnswerKey] = useState(false);
   const printTriggered = useRef(false);
 
   useEffect(() => {
@@ -64,309 +35,197 @@ export default function PrintPage() {
     fetch(`/api/students/${childId}/daily-packet`)
       .then((r) => r.json())
       .then((data) => {
-        if (!data.success) {
-          setState({ status: "error", message: data.error ?? "Failed to load packet" });
-          return;
-        }
-        if (!data.data.packet) {
-          setState({ status: data.data.reason === "no_placement" ? "no_placement" : "error", message: "No packet available" });
-          return;
-        }
-        setState({
-          status: "ready",
-          packet: data.data.packet,
-          date:   data.data.date,
-          studentName: "", // will be set by a separate fetch if needed
-        });
+        if (!data.success) { setState({ status: "error", message: data.error ?? "Failed" }); return; }
+        if (!data.data.packet) { setState({ status: data.data.reason === "no_placement" ? "no_placement" : "error", message: "No packet" }); return; }
+        setState({ status: "ready", packet: data.data.packet, date: data.data.date });
       })
       .catch((e) => setState({ status: "error", message: e.message }));
   }, [childId]);
 
-  // Auto-trigger print once sheets are in DOM
   useEffect(() => {
     if (state.status === "ready" && !printTriggered.current) {
       printTriggered.current = true;
-      // Small delay to ensure DOM is fully painted
-      const t = setTimeout(() => window.print(), 600);
+      const t = setTimeout(() => window.print(), 900);
       return () => clearTimeout(t);
     }
   }, [state.status]);
 
-  // ── Loading / error / no-placement states ──
-  if (state.status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cream">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-ink border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm text-muted">Preparing today's packet…</p>
-        </div>
-      </div>
-    );
-  }
+  if (state.status === "loading") return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <p style={{ color: "#7A6E5F", fontSize: "14px" }}>Preparing today's packet…</p>
+    </div>
+  );
 
-  if (state.status === "no_placement") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cream p-8">
-        <div className="max-w-md text-center">
-          <div className="w-14 h-14 rounded-full bg-gold/10 flex items-center justify-center mx-auto mb-4">
-            <svg viewBox="0 0 24 24" className="w-7 h-7 stroke-gold fill-none stroke-2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 0 2-2h2a2 2 0 0 0 2 2m-6 7 2 2 4-4"/>
-            </svg>
-          </div>
-          <h1 className="font-serif text-2xl font-bold mb-3">Placement test needed</h1>
-          <p className="text-muted text-sm leading-relaxed mb-6">
-            Your child hasn't taken the placement test yet. The test places them at
-            exactly the right level — it takes 15 minutes and is free.
-          </p>
-          <Link href="/placement" className="inline-flex items-center gap-2 bg-ink text-cream px-6 py-3 rounded-lg text-sm font-medium hover:bg-ink-soft transition-colors">
-            Take placement test
-            <svg viewBox="0 0 20 20" className="w-4 h-4 fill-current"><path d="M10.293 5.293a1 1 0 0 1 1.414 0l4 4a1 1 0 0 1 0 1.414l-4 4a1 1 0 0 1-1.414-1.414L12.586 11H5a1 1 0 1 1 0-2h7.586l-2.293-2.293a1 1 0 0 1 0-1.414z"/></svg>
-          </Link>
-        </div>
+  if (state.status === "no_placement") return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px" }}>
+      <div style={{ maxWidth: "400px", textAlign: "center" }}>
+        <h1 style={{ fontFamily: "Georgia, serif", fontSize: "24px", marginBottom: "12px" }}>Placement test needed</h1>
+        <p style={{ color: "#7A6E5F", fontSize: "14px", marginBottom: "20px" }}>Your child hasn't taken the placement test yet. It takes 15 minutes and is free.</p>
+        <Link href="/placement" style={{ background: "#1A1612", color: "white", padding: "12px 24px", borderRadius: "8px", fontSize: "14px", textDecoration: "none" }}>Take placement test</Link>
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (state.status === "error") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cream p-8">
-        <div className="max-w-md text-center">
-          <p className="text-muted text-sm mb-4">Something went wrong: {state.message}</p>
-          <Link href="/parent" className="text-sm text-brand-blue underline">← Back to dashboard</Link>
-        </div>
+  if (state.status === "error") return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ textAlign: "center" }}>
+        <p style={{ color: "#7A6E5F", fontSize: "14px", marginBottom: "12px" }}>Something went wrong: {(state as any).message}</p>
+        <Link href="/parent" style={{ color: "#1B4F8A", fontSize: "14px" }}>← Back to dashboard</Link>
       </div>
-    );
-  }
+    </div>
+  );
 
   const { packet, date } = state;
   const sheets: Sheet[] = Array.isArray(packet.sheets) ? packet.sheets : [];
 
   return (
-    <div className="min-h-screen bg-cream-dark">
+    <>
+      <style>{`
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-      {/* ── Screen-only toolbar ─────────────────────────────────────────── */}
-      <div className="print:hidden bg-white border-b border-border sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <BrandLogo size="sm" />
-            <div className="h-5 w-px bg-border" />
-            <div>
-              <div className="text-xs font-semibold text-ink">
-                {packet.skillName} · {packet.levelCode}
+        @media screen {
+          body { background: #e5e7eb; }
+          .toolbar { position: sticky; top: 0; z-index: 100; background: white; border-bottom: 1px solid #E8E0D0; padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; }
+          .sheet-wrapper { width: 8.5in; min-height: 11in; background: white; margin: 24px auto; box-shadow: 0 4px 24px rgba(0,0,0,0.10); padding: 0.6in 0.7in; }
+        }
+
+        @media print {
+          @page { size: letter portrait; margin: 0; }
+          html, body { margin: 0; padding: 0; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .toolbar { display: none !important; }
+          .sheet-wrapper {
+            width: 100vw;
+            height: 100vh;
+            padding: 0.5in 0.6in;
+            page-break-after: always;
+            break-after: page;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            /* Scale down to guarantee fit — zoom is supported in Chrome/Edge,
+               transform fallback for Firefox */
+            transform-origin: top left;
+          }
+          .sheet-wrapper:last-child { page-break-after: auto; break-after: auto; }
+        }
+      `}</style>
+
+      {/* Screen toolbar */}
+      <div className="toolbar">
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <BrandLogo size="sm" />
+          <div style={{ width: "1px", height: "20px", background: "#E8E0D0" }} />
+          <div>
+            <div style={{ fontSize: "12px", fontWeight: "600", color: "#1A1612" }}>{packet.skillName} · {packet.levelCode}</div>
+            <div style={{ fontSize: "10px", color: "#7A6E5F" }}>{date} · {sheets.length} worksheets + {sheets.length} answer keys = {sheets.length * 2} pages total</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <button
+            onClick={() => window.print()}
+            style={{ background: "#1A1612", color: "white", border: "none", padding: "8px 16px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            🖨 Print / Save PDF
+          </button>
+          <Link href="/parent" style={{ fontSize: "12px", color: "#7A6E5F", textDecoration: "none" }}>← Dashboard</Link>
+        </div>
+      </div>
+
+      {/* Worksheet pages first, then answer key pages */}
+      {sheets.map((sheet) => <SheetPage key={`s${sheet.sheetNumber}`} sheet={sheet} packet={packet} date={date} isAnswerKey={false} />)}
+      {sheets.map((sheet) => <SheetPage key={`ak${sheet.sheetNumber}`} sheet={sheet} packet={packet} date={date} isAnswerKey={true} />)}
+    </>
+  );
+}
+
+function SheetPage({ sheet, packet, date, isAnswerKey }: {
+  sheet: Sheet; packet: Packet; date: string; isAnswerKey: boolean;
+}) {
+  const isMath = packet.subjectSlug === "MATH";
+  const problems = sheet.problems ?? [];
+  const answerMap = Object.fromEntries((sheet.answerKey ?? []).map((e) => [e.id, String(e.answer)]));
+  const count = problems.length;
+
+  // Dynamic sizing: shrink everything proportionally based on problem count
+  const scale = count <= 20 ? 1 : count <= 30 ? 0.88 : count <= 40 ? 0.78 : 0.68;
+  const baseFontPt = Math.round(11 * scale);
+  const rowPadPt   = count <= 20 ? 5 : count <= 30 ? 3 : 2;
+
+  return (
+    <div className="sheet-wrapper" style={{ fontFamily: "Georgia, serif" }}>
+      {/* Apply scale via inline style for both screen and print */}
+      <div style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: `${100/scale}%`, flex: 1, display: "flex", flexDirection: "column" }}>
+
+        {/* Header */}
+        <div style={{ borderBottom: `2.5px solid ${isAnswerKey ? "#2D6A3F" : "#1A1612"}`, paddingBottom: "6pt", marginBottom: "6pt", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexShrink: 0 }}>
+          <div>
+            <div style={{ fontSize: "8pt", textTransform: "uppercase", letterSpacing: "0.08em", color: "#7A6E5F", fontFamily: "DM Sans, sans-serif" }}>Eduyro Education · eduyro.com</div>
+            <div style={{ fontWeight: "bold", fontSize: "14pt", marginTop: "2pt", color: isAnswerKey ? "#2D6A3F" : "#1A1612" }}>
+              {packet.skillName}{isAnswerKey && <span style={{ fontSize: "11pt" }}> — ANSWER KEY</span>}
+            </div>
+            <div style={{ fontSize: "9pt", color: "#7A6E5F", marginTop: "1pt", fontFamily: "DM Sans, sans-serif" }}>
+              {packet.levelCode} · {packet.levelName} · {isAnswerKey ? `Answer Key — Sheet ${sheet.sheetNumber}` : `Sheet ${sheet.sheetNumber} of ${packet.sheets.length}`} · Target: {packet.timeLimitMinutes} min · {count} problems
+            </div>
+          </div>
+          <div style={{ fontSize: "8pt", color: "#aaa", textAlign: "right", fontFamily: "DM Sans, sans-serif", flexShrink: 0 }}>Eduyro<br />Education</div>
+        </div>
+
+        {/* Name / Date / Score */}
+        {!isAnswerKey && (
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "12pt", marginBottom: "6pt", fontFamily: "DM Sans, sans-serif", flexShrink: 0 }}>
+            {[{ label: "Student Name", val: "" }, { label: "Date", val: date }, { label: `Score  / ${count}`, val: "" }].map((f) => (
+              <div key={f.label}>
+                <div style={{ fontSize: "7pt", textTransform: "uppercase", letterSpacing: "0.07em", color: "#bbb", marginBottom: "2pt" }}>{f.label}</div>
+                <div style={{ borderBottom: "1px solid #D0C8B8", minHeight: "14pt", fontSize: "9pt" }}>{f.val}</div>
               </div>
-              <div className="text-[10px] text-muted">{date} · {sheets.length} sheets · {packet.problemsPerSheet} problems each</div>
-            </div>
+            ))}
           </div>
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 text-xs text-muted cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={showAnswerKey}
-                onChange={(e) => setShowAnswerKey(e.target.checked)}
-                className="rounded"
-              />
-              Include answer key
-            </label>
-            <button
-              onClick={() => window.print()}
-              className="flex items-center gap-2 bg-ink text-cream text-sm font-medium px-4 py-2 rounded-lg hover:bg-ink-soft transition-colors"
-            >
-              <svg viewBox="0 0 20 20" className="w-4 h-4 fill-current">
-                <path fillRule="evenodd" d="M5 4v3H4a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v2a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-2h1a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-1V4a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1zm2 0h6v3H7V4zm-1 9v-1h8v4H6v-3zm8-4a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
-              </svg>
-              Print / Save PDF
-            </button>
-            <Link href="/parent" className="text-xs text-muted hover:text-ink transition-colors">
-              ← Dashboard
-            </Link>
+        )}
+
+        {/* Instructions */}
+        {!isAnswerKey && (
+          <div style={{ background: "#F5F0E8", borderLeft: "3px solid #C8902A", padding: "4pt 8pt", marginBottom: "6pt", fontSize: "9pt", color: "#7A6E5F", fontStyle: "italic", fontFamily: "DM Sans, sans-serif", flexShrink: 0 }}>
+            Write only the answer in each box. Aim to finish in {packet.timeLimitMinutes} minutes. Skip and come back if stuck.
           </div>
+        )}
+
+        {/* Problems */}
+        <div style={{ flex: 1, overflow: "hidden" }}>
+          {isMath
+            ? <MathGrid problems={problems} answerMap={answerMap} isAnswerKey={isAnswerKey} rowPadPt={rowPadPt} fontPt={baseFontPt} />
+            : <ProseList problems={problems} answerMap={answerMap} isAnswerKey={isAnswerKey} fontPt={baseFontPt} />
+          }
         </div>
-      </div>
 
-      {/* ── Tip bar — screen only ────────────────────────────────────────── */}
-      <div className="print:hidden max-w-4xl mx-auto px-6 py-3">
-        <div className="bg-brand-blue-light text-brand-blue text-xs rounded-lg px-4 py-2.5 flex items-center gap-2">
-          <svg viewBox="0 0 20 20" className="w-4 h-4 fill-current flex-shrink-0">
-            <path fillRule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0zm-7-4a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM9 9a1 1 0 0 0 0 2v3a1 1 0 0 0 1 1h1a1 1 0 1 0 0-2v-3a1 1 0 0 0-1-1H9z"/>
-          </svg>
-          <span>
-            <strong>To save as PDF:</strong> Print dialog → change destination to "Save as PDF" → Save.
-            All {sheets.length} sheets print in one file.{" "}
-            {packet.printCount > 1 && <span className="opacity-70">Reprinted {packet.printCount - 1} time{packet.printCount > 2 ? "s" : ""} today — same problems each time.</span>}
-          </span>
+        {/* Footer */}
+        <div style={{ borderTop: "1px dashed #E8E0D0", paddingTop: "4pt", marginTop: "4pt", display: "flex", justifyContent: "space-between", fontSize: "8pt", color: "#bbb", fontFamily: "DM Sans, sans-serif", flexShrink: 0 }}>
+          <span>{packet.levelCode} · Eduyro · {date}</span>
+          <span>{isAnswerKey ? `Answer Key — Sheet ${sheet.sheetNumber}` : `Sheet ${sheet.sheetNumber} of ${packet.sheets.length}`}</span>
         </div>
-      </div>
 
-      {/* ── Sheets ──────────────────────────────────────────────────────── */}
-      <div className="max-w-4xl mx-auto px-6 pb-12 print:p-0 print:max-w-none space-y-6 print:space-y-0">
-        {sheets.map((sheet, si) => (
-          <div
-            key={sheet.sheetNumber}
-            className={cn(
-              "bg-white rounded-xl shadow-card print:shadow-none print:rounded-none",
-              si > 0 && "print:break-before-page"
-            )}
-          >
-            <WorksheetSheet
-              sheet={sheet}
-              levelCode={packet.levelCode}
-              levelName={packet.levelName}
-              skillName={packet.skillName}
-              subjectSlug={packet.subjectSlug}
-              totalSheets={sheets.length}
-              timeLimitMinutes={packet.timeLimitMinutes}
-              date={date}
-              isAnswerKey={false}
-            />
+        {!isAnswerKey && (
+          <div style={{ borderTop: "1px solid #F5F0E8", paddingTop: "3pt", marginTop: "3pt", fontSize: "9pt", color: "#bbb", fontFamily: "DM Sans, sans-serif", flexShrink: 0 }}>
+            Parent/Guardian Signature: ___________________________________ Date checked: _______________
           </div>
-        ))}
-
-        {/* Answer key sheets — only if toggled on screen, always last */}
-        {showAnswerKey && sheets.map((sheet, si) => (
-          <div
-            key={`ak-${sheet.sheetNumber}`}
-            className={cn(
-              "bg-white rounded-xl shadow-card print:shadow-none print:rounded-none print:break-before-page"
-            )}
-          >
-            <WorksheetSheet
-              sheet={sheet}
-              levelCode={packet.levelCode}
-              levelName={packet.levelName}
-              skillName={packet.skillName}
-              subjectSlug={packet.subjectSlug}
-              totalSheets={sheets.length}
-              timeLimitMinutes={packet.timeLimitMinutes}
-              date={date}
-              isAnswerKey={true}
-            />
-          </div>
-        ))}
+        )}
       </div>
     </div>
   );
 }
 
-// ─── WorksheetSheet ───────────────────────────────────────────────────────────
-
-function WorksheetSheet({
-  sheet, levelCode, levelName, skillName, subjectSlug,
-  totalSheets, timeLimitMinutes, date, isAnswerKey,
-}: {
-  sheet: Sheet;
-  levelCode: string;
-  levelName: string;
-  skillName: string;
-  subjectSlug: string;
-  totalSheets: number;
-  timeLimitMinutes: number;
-  date: string;
-  isAnswerKey: boolean;
-}) {
-  const isMath    = subjectSlug === "MATH";
-  const problems  = sheet.problems ?? [];
-  const answerMap = Object.fromEntries(
-    (sheet.answerKey ?? []).map((e) => [e.id, String(e.answer)])
-  );
-
-  return (
-    <div className="p-8 print:p-[1.5cm_2cm]" style={{ fontFamily: "Georgia, serif" }}>
-
-      {/* Header */}
-      <div className={cn(
-        "border-b-[2.5px] pb-3 mb-4 flex justify-between items-end",
-        isAnswerKey ? "border-brand-green" : "border-ink"
-      )}>
-        <div>
-          <div className="text-[10px] uppercase tracking-wider text-muted font-sans">
-            Eduyro Education · eduyro.com
-          </div>
-          <div className={cn("font-bold text-lg mt-0.5", isAnswerKey && "text-brand-green")}>
-            {skillName}
-            {isAnswerKey && <span className="ml-2 text-brand-green text-base"> — ANSWER KEY</span>}
-          </div>
-          <div className="text-xs text-muted mt-0.5 font-sans">
-            {levelCode} · {levelName} ·{" "}
-            {isAnswerKey ? `Answer Key — Sheet ${sheet.sheetNumber}` : `Sheet ${sheet.sheetNumber} of ${totalSheets}`} ·
-            Target: {timeLimitMinutes} min · {problems.length} problems
-          </div>
-        </div>
-        <div className="text-xs text-muted/60 text-right font-sans shrink-0">
-          Eduyro<br />Education
-        </div>
-      </div>
-
-      {/* Name / Date / Score row */}
-      {!isAnswerKey && (
-        <div className="grid grid-cols-[2fr_1fr_1fr] gap-4 mb-4 font-sans">
-          {[
-            { label: "Student Name", value: "" },
-            { label: "Date", value: date },
-            { label: "Score", value: `\u00a0/ ${problems.length}` },
-          ].map((f) => (
-            <div key={f.label}>
-              <div className="text-[9px] uppercase tracking-wider text-muted/60 mb-1">{f.label}</div>
-              <div className="border-b border-border-mid min-h-[20px] text-xs text-ink py-0.5">{f.value}</div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Instructions */}
-      {!isAnswerKey && (
-        <div className="bg-cream-dark border-l-[3px] border-gold rounded-r-md text-[11px] text-muted italic px-3 py-2 mb-4 font-sans leading-relaxed">
-          Write only the answer in each box. Try to finish in under {timeLimitMinutes} minutes. If stuck, skip and come back.
-        </div>
-      )}
-
-      {/* Problems */}
-      {isMath ? (
-        <MathProblems problems={problems} answerMap={answerMap} isAnswerKey={isAnswerKey} />
-      ) : (
-        <ProseProblems problems={problems} answerMap={answerMap} isAnswerKey={isAnswerKey} />
-      )}
-
-      {/* Footer */}
-      <div className="mt-5 pt-3 border-t border-dashed border-border flex justify-between text-[10px] text-muted/60 font-sans">
-        <span>{levelCode} · Eduyro · {date}</span>
-        <span>{isAnswerKey ? `Answer Key — Sheet ${sheet.sheetNumber}` : `Sheet ${sheet.sheetNumber} of ${totalSheets}`}</span>
-      </div>
-
-      {!isAnswerKey && (
-        <div className="mt-2 pt-2 border-t border-cream-dark text-[11px] text-muted/70 font-sans">
-          Parent/Guardian Signature: ___________________________________&nbsp;&nbsp;Date checked: _______________
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Math grid layout ─────────────────────────────────────────────────────────
-
-function MathProblems({
-  problems, answerMap, isAnswerKey,
-}: {
-  problems: Problem[];
-  answerMap: Record<string, string>;
-  isAnswerKey: boolean;
+function MathGrid({ problems, answerMap, isAnswerKey, rowPadPt, fontPt }: {
+  problems: Problem[]; answerMap: Record<string, string>;
+  isAnswerKey: boolean; rowPadPt: number; fontPt: number;
 }) {
   return (
-    <div className="grid grid-cols-3 gap-x-6 gap-y-0.5 print:gap-y-0">
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", columnGap: "16pt", height: "100%" }}>
       {problems.map((p, i) => (
-        <div
-          key={p.id}
-          className="flex items-center justify-between py-1.5 border-b border-cream-dark/70 break-inside-avoid"
-        >
-          <span className="text-[10px] text-border font-sans w-5 flex-shrink-0">{i + 1}.</span>
-          <span className="font-bold flex-1 text-base px-1">
+        <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #F5F0E8", paddingTop: `${rowPadPt}pt`, paddingBottom: `${rowPadPt}pt`, pageBreakInside: "avoid", breakInside: "avoid" }}>
+          <span style={{ fontSize: "8pt", color: "#ccc", fontFamily: "DM Sans, sans-serif", width: "14pt", flexShrink: 0 }}>{i + 1}.</span>
+          <span style={{ fontWeight: "bold", flex: 1, fontSize: `${fontPt}pt`, padding: "0 4pt" }}>
             {p.question.trim().endsWith("=") ? p.question : `${p.question} =`}
           </span>
-          <div className={cn(
-            "w-12 h-5 border rounded text-xs font-bold flex items-center justify-center flex-shrink-0",
-            isAnswerKey
-              ? "bg-brand-green-light border-brand-green text-brand-green"
-              : "border-border-mid bg-cream-dark/40"
-          )}>
+          <div style={{ width: "34pt", height: "14pt", border: `1px solid ${isAnswerKey ? "#2D6A3F" : "#D0C8B8"}`, borderRadius: "3pt", background: isAnswerKey ? "#E3F2E8" : "#F5F0E8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8pt", fontWeight: "bold", color: isAnswerKey ? "#2D6A3F" : "transparent", flexShrink: 0 }}>
             {isAnswerKey ? answerMap[p.id] ?? "" : ""}
           </div>
         </div>
@@ -375,62 +234,39 @@ function MathProblems({
   );
 }
 
-// ─── Prose problems (Reading / Writing / Science) ─────────────────────────────
-
-function ProseProblems({
-  problems, answerMap, isAnswerKey,
-}: {
-  problems: Problem[];
-  answerMap: Record<string, string>;
-  isAnswerKey: boolean;
+function ProseList({ problems, answerMap, isAnswerKey, fontPt }: {
+  problems: Problem[]; answerMap: Record<string, string>;
+  isAnswerKey: boolean; fontPt: number;
 }) {
   let qNum = 0;
   return (
-    <div className="space-y-4 text-sm font-sans">
-      {problems.map((p, i) => {
-        const isPassage =
-          answerMap[p.id] === "(passage — no answer required)" ||
-          p.question.startsWith("READ THIS PASSAGE");
-
+    <div style={{ fontSize: `${fontPt}pt`, fontFamily: "DM Sans, sans-serif", height: "100%", overflow: "hidden" }}>
+      {problems.map((p) => {
+        const isPassage = answerMap[p.id] === "(passage — no answer required)" || p.question.startsWith("READ THIS PASSAGE");
         if (isPassage) {
-          const passageText = p.question
-            .replace(/^READ THIS PASSAGE:\s*/i, "")
-            .replace(/\n\nNow answer the questions below\.?/i, "")
-            .trim();
+          const txt = p.question.replace(/^READ THIS PASSAGE:\s*/i, "").replace(/\n\nNow answer the questions below\.?/i, "").trim();
           return (
-            <div
-              key={p.id}
-              className="bg-brand-blue-light/40 border-l-[3px] border-brand-blue rounded-r-md px-4 py-3 text-sm leading-relaxed break-inside-avoid"
-            >
-              <strong>Read carefully:</strong> {passageText}
+            <div key={p.id} style={{ background: "#E4EEF8", borderLeft: "3px solid #1B4F8A", padding: "5pt 8pt", marginBottom: "5pt", lineHeight: 1.4, pageBreakInside: "avoid", breakInside: "avoid" }}>
+              <strong>Read carefully:</strong> {txt}
             </div>
           );
         }
-
         qNum++;
         const isMC = p.type === "multiple_choice" && Array.isArray(p.options) && p.options.length > 0;
-
         return (
-          <div key={p.id} className="py-1 break-inside-avoid">
-            <div className="font-semibold mb-1">{qNum}. {p.question}</div>
+          <div key={p.id} style={{ marginBottom: "4pt", pageBreakInside: "avoid", breakInside: "avoid" }}>
+            <div style={{ fontWeight: "600", marginBottom: "2pt" }}>{qNum}. {p.question}</div>
             {isMC ? (
-              <div className="pl-4 space-y-1 text-xs text-muted">
+              <div style={{ paddingLeft: "10pt", display: "flex", flexWrap: "wrap", gap: "3pt 14pt" }}>
                 {p.options!.map((opt, oi) => {
                   const correct = isAnswerKey && opt === answerMap[p.id];
-                  return (
-                    <div key={oi} className={correct ? "text-brand-green font-semibold" : ""}>
-                      {correct ? "●" : "○"} {opt}
-                    </div>
-                  );
+                  return <span key={oi} style={{ color: correct ? "#2D6A3F" : "#7A6E5F", fontWeight: correct ? "bold" : "normal" }}>{correct ? "●" : "○"} {opt}</span>;
                 })}
               </div>
             ) : isAnswerKey ? (
-              <div className="pl-4 text-brand-green font-semibold text-xs">{answerMap[p.id]}</div>
+              <div style={{ paddingLeft: "10pt", color: "#2D6A3F", fontWeight: "bold" }}>{answerMap[p.id]}</div>
             ) : (
-              <div className="space-y-1 pl-4">
-                <div className="border-b border-border-mid min-h-[18px]" />
-                <div className="border-b border-border-mid min-h-[18px]" />
-              </div>
+              <div style={{ paddingLeft: "10pt" }}><div style={{ borderBottom: "1px solid #D0C8B8", minHeight: "13pt" }} /></div>
             )}
           </div>
         );
