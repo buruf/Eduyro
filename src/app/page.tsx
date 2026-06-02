@@ -253,7 +253,7 @@ export default function HomePage() {
                 </p>
               </div>
               {[
-                { label: "Monthly cost", eduyro: "$9.99/child", kumon: "$150–$200/child" },
+                { label: "Monthly cost", eduyro: "$9.99 USD/child", kumon: "$150–200 USD/child" },
                 { label: "Parent visibility", eduyro: "Real-time dashboard", kumon: "Monthly report" },
               ].map(row => (
                 <div key={row.label} className="bg-white/5 rounded-xl p-4">
@@ -322,7 +322,7 @@ export default function HomePage() {
               {/* Free trial */}
               <div className="bg-cream-dark border-2 border-border rounded-2xl p-8 flex flex-col">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Free trial</div>
-                <div className="font-serif text-4xl font-bold text-ink mb-1">$0</div>
+                <div className="font-serif text-4xl font-bold text-ink mb-1">$0 <span className="text-sm font-sans font-normal text-muted">USD</span></div>
                 <div className="text-sm text-muted mb-6">7 days · No card required</div>
                 <ul className="space-y-3 text-sm mb-8 flex-1">
                   {["Full AI placement test","All 4 subjects unlocked","Daily worksheet packets","Parent dashboard","Up to 3 children"].map(f => (
@@ -346,7 +346,7 @@ export default function HomePage() {
                 </div>
                 <div className="text-xs font-semibold uppercase tracking-wider text-gold-mid mb-1">Premium</div>
                 <div className="font-serif text-4xl font-bold text-cream mb-0.5">
-                  $9.99<span className="text-lg font-sans font-normal text-cream/50">/mo</span>
+                  $9.99 USD<span className="text-lg font-sans font-normal text-cream/50">/mo</span>
                 </div>
                 <div className="text-sm text-cream/50 mb-2">First child · +$5.99 each additional</div>
                 <div className="text-xs text-gold-mid mb-6 font-sans">7-day free trial included</div>

@@ -1,25 +1,52 @@
 // src/app/api/students/[id]/daily-packet/route.ts
 // Returns (or generates) today's locked daily packet for a student.
-// GET  — fetch today's packet (creates it if it doesn't exist)
-// The packet is locked once generated: same problems on every reprint today.
+// Timezone-aware: uses the user's local timezone from X-Timezone header.
 
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { ok, notFound, forbidden, handleRouteError, withAuth } from "@/lib/api/helpers";
 import { generateProblems } from "@/lib/worksheet/generator";
-import { startOfDay, format } from "date-fns";
 
-const SHEETS_PER_DAY   = 3;
+const SHEETS_PER_DAY     = 3;
 const PROBLEMS_PER_SHEET = 30;
+
+// Get today's date string (yyyy-MM-dd) in a given timezone using native Intl
+function getTodayInTimezone(tz: string): { dateStr: string; dateUTC: Date } {
+  let timezone = tz;
+  // Validate timezone
+  try { Intl.DateTimeFormat(undefined, { timeZone: tz }); }
+  catch { timezone = "UTC"; }
+
+  // Get today's date parts in user's timezone
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year:  "numeric",
+    month: "2-digit",
+    day:   "2-digit",
+  }).formatToParts(now);
+
+  const year  = parts.find(p => p.type === "year")!.value;
+  const month = parts.find(p => p.type === "month")!.value;
+  const day   = parts.find(p => p.type === "day")!.value;
+  const dateStr = `${year}-${month}-${day}`;
+
+  // Create UTC midnight date for DB storage
+  const dateUTC = new Date(`${dateStr}T00:00:00.000Z`);
+
+  return { dateStr, dateUTC };
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   return withAuth(req, async (ctx) => {
     try {
-      const studentId = params.id;
+      const studentId  = params.id;
+      const userTz     = req.headers.get("X-Timezone") ?? "UTC";
+      const { dateStr, dateUTC } = getTodayInTimezone(userTz);
 
-      // Verify caller owns this student (parent or the student themselves)
       const student = await db.student.findUnique({
         where: { id: studentId },
         include: {
@@ -36,39 +63,25 @@ export async function GET(
 
       if (!student) return notFound("Student");
 
-      // Auth check: must be the student themselves, or their parent
       const isStudent = student.userId === ctx.userId;
       const isParent  = student.parentLinks.some((l) => l.parent.userId === ctx.userId);
       if (!isStudent && !isParent) return forbidden();
 
-      // Today's date — use server's local date (Vercel runs UTC, so offset by -4/-5)
-      // Simple approach: use UTC date which is close enough for daily packet purposes
-      const todayDate    = startOfDay(new Date());
-      const todayStr     = format(todayDate, "yyyy-MM-dd"); // for display
-
-      // Check if today's packet already exists
       const existing = await db.dailyPacket.findUnique({
-        where: { studentId_date: { studentId, date: todayDate } },
+        where: { studentId_date: { studentId, date: dateUTC } },
       });
 
       if (existing) {
-        // Increment print count on each fetch (proxy for "parent opened print page")
         await db.dailyPacket.update({
           where: { id: existing.id },
           data:  { printCount: { increment: 1 } },
         });
-        return ok({ packet: existing, date: todayStr, fresh: false });
+        return ok({ packet: existing, date: dateStr, fresh: false });
       }
 
-      // No packet yet — generate it now
       const activeProgress = student.progress[0] ?? null;
       if (!activeProgress) {
-        return ok({
-          packet:  null,
-          date:    todayStr,
-          fresh:   false,
-          reason:  "no_placement", // parent dashboard should show "Take placement test first"
-        });
+        return ok({ packet: null, date: dateStr, fresh: false, reason: "no_placement" });
       }
 
       const level   = activeProgress.level;
@@ -76,10 +89,9 @@ export async function GET(
       const skill   = level.skills[0];
 
       if (!skill) {
-        return ok({ packet: null, date: todayStr, fresh: false, reason: "no_skill" });
+        return ok({ packet: null, date: dateStr, fresh: false, reason: "no_skill" });
       }
 
-      // Generate 3 sheets
       const sheets = [];
       for (let i = 1; i <= SHEETS_PER_DAY; i++) {
         const { problems, answerKey } = generateProblems({
@@ -95,24 +107,23 @@ export async function GET(
         sheets.push({ sheetNumber: i, problems, answerKey });
       }
 
-      // Lock it to DB
       const packet = await db.dailyPacket.create({
         data: {
           studentId,
-          date:            todayDate,
-          levelId:         level.id,
-          levelCode:       level.code,
-          levelName:       level.name,
-          skillName:       skill.name,
-          subjectSlug:     subject.slug,
-          sheets:          sheets as any,
+          date:             dateUTC,
+          levelId:          level.id,
+          levelCode:        level.code,
+          levelName:        level.name,
+          skillName:        skill.name,
+          subjectSlug:      subject.slug,
+          sheets:           sheets as any,
           problemsPerSheet: PROBLEMS_PER_SHEET,
           timeLimitMinutes: level.timeLimitMinutes,
-          printCount:      1,
+          printCount:       1,
         },
       });
 
-      return ok({ packet, date: todayStr, fresh: true });
+      return ok({ packet, date: dateStr, fresh: true });
     } catch (error) {
       return handleRouteError(error);
     }

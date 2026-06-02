@@ -32,7 +32,11 @@ export default function PrintPage() {
 
   useEffect(() => {
     if (!childId) return;
-    fetch(`/api/students/${childId}/daily-packet`)
+    fetch(`/api/students/${childId}/daily-packet`, {
+        headers: {
+          "X-Timezone": Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+      })
       .then((r) => r.json())
       .then((data) => {
         if (!data.success) { setState({ status: "error", message: data.error ?? "Failed" }); return; }

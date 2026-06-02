@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { Providers } from "./providers";
+import { GdprBanner } from "@/components/GdprBanner";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://eduyro.com'),
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <Providers>{children}</Providers>
+        <GdprBanner />
       </body>
     </html>
   );
