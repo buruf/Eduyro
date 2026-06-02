@@ -15,6 +15,14 @@
     {
       "path": "/api/cron/shop-expiry",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/trial-ending",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-progress",
+      "schedule": "0 8 * * 0"
     }
   ]
 }

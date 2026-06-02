@@ -7,7 +7,7 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM = process.env.EMAIL_FROM ?? "BrightSteps <noreply@eduyro.com>";
+const FROM = process.env.EMAIL_FROM ?? "Eduyro <noreply@eduyro.com>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://eduyro.com";
 
 // ─────────────────────────────────────────────
@@ -165,4 +165,99 @@ export async function sendPaymentFailedEmail(params: {
     <p style="font-size:13px;color:#7A6E5F">If we can't process payment after 3 attempts, your account will move to the free plan.</p>
   `, "Payment failed — update your card");
   await send(params.email, "BrightSteps payment failed", html);
+}
+
+export async function sendTrialEndingEmail(params: {
+  email: string;
+  firstName: string;
+  childNames: string;
+  trialEndsAt: Date;
+  upgradeUrl: string;
+}) {
+  const dateStr = params.trialEndsAt.toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" });
+  const html = wrapEmail(`
+    <h2 style="font-family:Georgia,serif;font-size:22px;margin:0 0 12px">Your free trial ends in 3 days</h2>
+    <p style="font-size:15px;line-height:1.65">Hi ${params.firstName} — just a heads up that your Eduyro free trial ends on <strong>${dateStr}</strong>.</p>
+    <div style="background:#FDF6E8;border-left:3px solid #C8902A;padding:14px 16px;margin:20px 0;border-radius:0 8px 8px 0">
+      <p style="margin:0;font-size:14px;color:#8A5E1A">
+        <strong>${params.childNames}</strong> ${params.childNames.includes(",") ? "have" : "has"} been building a daily practice habit.
+        Subscribing keeps that momentum going — no interruption, no starting over.
+      </p>
+    </div>
+    <p style="font-size:15px;line-height:1.65">Premium is <strong>$9.99/month</strong> for the first child — less than a single Kumon session.</p>
+    <p style="margin:24px 0">
+      <a href="${params.upgradeUrl}" style="background:#C8902A;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;display:inline-block;font-weight:600">Continue with Premium →</a>
+    </p>
+    <p style="font-size:13px;color:#7A6E5F">If you choose not to upgrade, your account will move to read-only on ${dateStr}. No data is deleted — you can always come back.</p>
+  `, "Your free trial ends in 3 days");
+  await send(params.email, "Your Eduyro free trial ends in 3 days", html);
+}
+
+export async function sendWeeklyProgressEmail(params: {
+  email: string;
+  firstName: string;
+  weekOf: string;
+  children: Array<{
+    name: string;
+    levelCode: string;
+    levelName: string;
+    subjectName: string;
+    sheetsThisWeek: number;
+    avgAccuracy: number | null;
+    streak: number;
+    newBadges: string[];
+    daysUntilAdvance: number | null;
+  }>;
+}) {
+  const childCards = params.children.map(child => {
+    const accuracyColor = child.avgAccuracy != null
+      ? child.avgAccuracy >= 95 ? "#2D6A3F" : child.avgAccuracy >= 80 ? "#C8902A" : "#C23B22"
+      : "#7A6E5F";
+
+    const badgeHtml = child.newBadges.length > 0
+      ? `<p style="font-size:13px;color:#C8902A;margin:6px 0 0">🏅 New badge${child.newBadges.length > 1 ? "s" : ""} this week: ${child.newBadges.join(", ")}</p>`
+      : "";
+
+    const advanceHtml = child.daysUntilAdvance === 0
+      ? `<p style="font-size:13px;color:#2D6A3F;margin:6px 0 0">🎉 Ready to advance to the next level!</p>`
+      : child.daysUntilAdvance != null
+      ? `<p style="font-size:13px;color:#7A6E5F;margin:6px 0 0">${child.daysUntilAdvance} day${child.daysUntilAdvance !== 1 ? "s" : ""} until level advance at 95% accuracy</p>`
+      : "";
+
+    return `
+      <div style="background:#F5F0E8;border-radius:10px;padding:16px 18px;margin:12px 0">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div>
+            <div style="font-family:Georgia,serif;font-size:17px;font-weight:bold;color:#1A1612">${child.name}</div>
+            <div style="font-size:12px;color:#7A6E5F;margin-top:2px">${child.subjectName} · Level ${child.levelCode} — ${child.levelName}</div>
+          </div>
+          ${child.streak >= 3 ? `<div style="background:#C8902A;color:#fff;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:20px">🔥 ${child.streak}-day streak</div>` : ""}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:#fff;border-radius:7px;padding:10px 12px;text-align:center">
+            <div style="font-family:Georgia,serif;font-size:22px;font-weight:bold;color:#1A1612">${child.sheetsThisWeek}</div>
+            <div style="font-size:11px;color:#7A6E5F;margin-top:2px">sheets completed</div>
+          </div>
+          <div style="background:#fff;border-radius:7px;padding:10px 12px;text-align:center">
+            <div style="font-family:Georgia,serif;font-size:22px;font-weight:bold;color:${accuracyColor}">${child.avgAccuracy != null ? `${child.avgAccuracy}%` : "—"}</div>
+            <div style="font-size:11px;color:#7A6E5F;margin-top:2px">avg accuracy</div>
+          </div>
+        </div>
+        ${badgeHtml}
+        ${advanceHtml}
+      </div>`;
+  }).join("");
+
+  const html = wrapEmail(`
+    <h2 style="font-family:Georgia,serif;font-size:22px;margin:0 0 4px">Weekly progress report</h2>
+    <p style="font-size:13px;color:#7A6E5F;margin:0 0 20px">Week of ${params.weekOf}</p>
+    <p style="font-size:15px;line-height:1.65;margin:0 0 8px">Hi ${params.firstName} — here's how your ${params.children.length > 1 ? "children" : "child"} did this week.</p>
+    ${childCards}
+    <p style="margin:24px 0">
+      <a href="${APP_URL}/parent" style="background:#1A1612;color:#FDFAF4;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block">View full dashboard →</a>
+    </p>
+    <p style="font-size:13px;color:#7A6E5F">Consistency is everything. See you next week.</p>
+  `, `${params.children[0]?.name ?? "Your child"}'s weekly progress`);
+
+  await send(params.email, `Weekly progress report — ${params.weekOf}`, html);
 }
