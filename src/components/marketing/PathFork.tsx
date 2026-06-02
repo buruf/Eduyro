@@ -156,10 +156,10 @@ export function PathFork() {
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] text-muted font-sans">All 4 packs</div>
-                    <div className="text-sm font-semibold text-gold">$24.99</div>
+                    <div className="text-sm font-semibold text-brand-blue">$24.99 total</div>
                   </div>
                 </div>
-                <Link href="/shop" className="block w-full bg-ink text-cream text-sm font-bold py-3.5 rounded-xl text-center hover:bg-ink-soft transition-colors">
+                <Link href="/shop" className="block w-full bg-brand-blue text-white text-sm font-bold py-3.5 rounded-xl text-center hover:bg-[#153F6E] transition-colors">
                   Browse worksheet packs →
                 </Link>
                 <p className="text-center text-[10px] text-muted mt-2 font-sans">100 sheets per pack · Answer keys · Instant download</p>
