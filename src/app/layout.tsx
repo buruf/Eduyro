@@ -4,6 +4,7 @@ import "@/styles/globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://eduyro.com'),
   title: {
     default: "Eduyro — Mastery learning, one step at a time",
     template: "%s · Eduyro",

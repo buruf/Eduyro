@@ -63,8 +63,8 @@ export async function sendVerificationEmail(params: {
     <p style="font-size:15px;line-height:1.6;color:#1A1612">Please verify your email address by clicking the button below. This link expires in 24 hours.</p>
     <p style="margin:24px 0"><a href="${url}" style="background:#1A1612;color:#FDFAF4;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block">Verify my email →</a></p>
     <p style="font-size:13px;color:#7A6E5F">Or copy and paste this link: <br><a href="${url}" style="color:#1B4F8A;word-break:break-all">${url}</a></p>
-  `, "Verify your BrightSteps account");
-  await send(params.email, "Verify your BrightSteps account", html);
+  `, "Verify your Eduyro account");
+  await send(params.email, "Verify your Eduyro account", html);
 }
 
 export async function sendWelcomeEmail(params: {
@@ -164,7 +164,7 @@ export async function sendPaymentFailedEmail(params: {
     <p style="margin:24px 0"><a href="${APP_URL}/parent/billing" style="background:#C23B22;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block">Update payment method →</a></p>
     <p style="font-size:13px;color:#7A6E5F">If we can't process payment after 3 attempts, your account will move to the free plan.</p>
   `, "Payment failed — update your card");
-  await send(params.email, "BrightSteps payment failed", html);
+  await send(params.email, "Eduyro payment failed", html);
 }
 
 export async function sendTrialEndingEmail(params: {
