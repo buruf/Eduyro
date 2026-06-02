@@ -48,7 +48,7 @@ export function PublicNavbar() {
         <div className="hidden md:flex items-center gap-8 text-sm text-muted">
           <Link href="/#how-it-works" className="hover:text-ink transition-colors">How it works</Link>
           <Link href="/#curriculum" className="hover:text-ink transition-colors">Curriculum</Link>
-          <Link href="/#shop" className="hover:text-ink transition-colors">Shop</Link>
+          <Link href="/shop" className="hover:text-ink transition-colors">Shop</Link>
           <Link href="/#pricing" className="hover:text-ink transition-colors">Pricing</Link>
           <Link href="/#faq" className="hover:text-ink transition-colors">FAQ</Link>
         </div>
@@ -66,7 +66,7 @@ export function PublicNavbar() {
         <div className="md:hidden border-t border-border p-4 space-y-3">
           <Link href="/#how-it-works" className="block text-sm text-muted">How it works</Link>
           <Link href="/#curriculum" className="block text-sm text-muted">Curriculum</Link>
-          <Link href="/#shop" className="block text-sm text-muted">Shop</Link>
+          <Link href="/shop" className="block text-sm text-muted">Shop</Link>
           <Link href="/#pricing" className="block text-sm text-muted">Pricing</Link>
           <Link href="/#faq" className="block text-sm text-muted">FAQ</Link>
           <Link href="/signin" className="block text-sm text-ink">Sign in</Link>
@@ -117,7 +117,7 @@ export function PublicFooter() {
           <div className="flex gap-6 mt-2 md:mt-0">
             <Link href="/privacy">Privacy</Link>
             <Link href="/terms">Terms</Link>
-            <Link href="/accessibility">Accessibility</Link>
+            <Link href="/privacy">Accessibility</Link>
           </div>
         </div>
       </div>

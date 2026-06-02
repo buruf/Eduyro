@@ -42,7 +42,7 @@ export function PathFork() {
 
           {/* Card 1 — Daily Platform */}
           <div className={`transition-all duration-700 delay-150 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <div className="group relative bg-ink rounded-3xl p-8 h-full flex flex-col overflow-hidden cursor-pointer hover:scale-[1.01] transition-transform duration-300">
+            <Link href="/placement" className="group relative bg-ink rounded-3xl p-8 h-full flex flex-col overflow-hidden cursor-pointer hover:scale-[1.01] transition-transform duration-300 no-underline">
               {/* Glow */}
               <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                 style={{ background: "radial-gradient(ellipse at 30% 20%, rgba(200,144,42,0.15), transparent 60%)" }} />
@@ -99,12 +99,12 @@ export function PathFork() {
                 </Link>
                 <p className="text-center text-[10px] text-cream/30 mt-2 font-sans">7-day free trial · No card required</p>
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Card 2 — Shop */}
           <div className={`transition-all duration-700 delay-300 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <div className="group relative bg-white border-2 border-border rounded-3xl p-8 h-full flex flex-col overflow-hidden cursor-pointer hover:border-gold hover:scale-[1.01] transition-all duration-300">
+            <Link href="/shop" className="group relative bg-white border-2 border-border rounded-3xl p-8 h-full flex flex-col overflow-hidden cursor-pointer hover:border-gold hover:scale-[1.01] transition-all duration-300 no-underline">
               {/* Glow */}
               <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                 style={{ background: "radial-gradient(ellipse at 70% 20%, rgba(200,144,42,0.04), transparent 60%)" }} />
@@ -164,7 +164,7 @@ export function PathFork() {
                 </Link>
                 <p className="text-center text-[10px] text-muted mt-2 font-sans">1 pack $3.99 · 2 packs $5.99 · All 4 packs $9.99</p>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
 
