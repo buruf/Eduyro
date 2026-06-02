@@ -87,7 +87,7 @@ export function PathFork() {
                 <div className="flex items-end justify-between mb-4">
                   <div>
                     <div className="text-cream/40 text-xs font-sans mb-1">Starting from</div>
-                    <div className="font-serif text-3xl font-bold text-cream">$9.99<span className="text-base font-sans font-normal text-cream/40">/mo</span></div>
+                    <div className="font-serif text-3xl font-bold text-cream">$9.99 USD<span className="text-base font-sans font-normal text-cream/40">/mo</span></div>
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] text-cream/30 font-sans">vs Kumon</div>
@@ -152,7 +152,7 @@ export function PathFork() {
                 <div className="flex items-end justify-between mb-4">
                   <div>
                     <div className="text-muted text-xs font-sans mb-1">From</div>
-                    <div className="font-serif text-3xl font-bold text-ink">$9.99<span className="text-base font-sans font-normal text-muted">/pack</span></div>
+                    <div className="font-serif text-3xl font-bold text-ink">$3.99 USD<span className="text-base font-sans font-normal text-muted">/pack</span></div>
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] text-muted font-sans">All 4 packs</div>
