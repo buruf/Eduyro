@@ -128,7 +128,7 @@ export default function HomePage() {
             {/* Stats row */}
             <div className="mt-10 mb-0 pb-16 grid grid-cols-3 gap-4 max-w-lg mx-auto text-center">
               {[
-                { n: "12,600+", label: "worksheets generated" },
+                { n: "Unlimited", label: "fresh worksheets generated" },
                 { n: "95%", label: "mastery threshold" },
                 { n: "4 subjects", label: "Pre-K to Grade 12" },
               ].map(stat => (
