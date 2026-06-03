@@ -8,7 +8,7 @@
 import { useState, useEffect } from "react";
 import { SamplePreviewModal } from "@/components/shop/SamplePreviewModal";
 
-type Skill = "ADDITION" | "SUBTRACTION" | "MULTIPLICATION" | "DIVISION";
+type Skill = "ADDITION" | "SUBTRACTION" | "MULTIPLICATION" | "DIVISION" | "FRACTIONS" | "DECIMALS" | "RATIOS" | "PRE_ALGEBRA" | "LINEAR_EQUATIONS" | "POLYNOMIALS";
 
 interface SkillCard {
   id: Skill;
@@ -39,6 +39,7 @@ interface Catalog {
 export default function ShopPage() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [selectedSkills, setSelectedSkills] = useState<Set<Skill>>(new Set());
+  const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [emailDelivery, setEmailDelivery] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +85,7 @@ export default function ShopPage() {
         body: JSON.stringify({
           skills: Array.from(selectedSkills),
           email,
+          firstName: firstName.trim() || undefined,
           emailDelivery,
         }),
       });
@@ -169,6 +171,16 @@ className="w-full mt-3 bg-brand-blue text-white text-sm font-semibold px-4 py-2.
           </div>
 
           <div className="mb-4">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
+              First name <span className="text-muted font-normal normal-case">(optional — appears on worksheets)</span>
+            </label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="e.g. Sarah"
+              className="w-full border border-border-mid rounded-md px-3 py-2 text-sm mb-4"
+            />
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
               Email
             </label>

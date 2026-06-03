@@ -13,7 +13,8 @@ export interface PackSheet {
 export interface PackPdfInput {
   skillLabel: string; // e.g. "Addition Practice"
   skillCode: string;  // e.g. "ADDITION"
-  levelCode: string;  // e.g. "M3"
+  levelCode: string;
+  purchasedBy?: string;
   sheets: PackSheet[];
 }
 
@@ -36,6 +37,8 @@ export function renderPackHtml(input: PackPdfInput): string {
         sheetNumber: i + 1,
         totalSheets: input.sheets.length,
         timeLimitMinutes: 10,
+        purchasedBy: input.purchasedBy,
+        showDisclaimer: true,
       },
       false /* not answer key */
     );

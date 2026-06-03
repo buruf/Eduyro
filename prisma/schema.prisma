@@ -803,7 +803,8 @@ enum ShopPurchaseStatus {
 model ShopPurchase {
   id                String              @id @default(cuid())
   // Customer details — no user account required
-  customerEmail     String
+  customerEmail        String
+  customerFirstName   String?
   // Stripe identifiers
   stripeSessionId   String?             @unique  // Checkout Session ID
   stripePaymentIntentId String?         @unique

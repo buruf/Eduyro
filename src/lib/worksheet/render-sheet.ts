@@ -18,7 +18,9 @@ export interface SheetMeta {
   sheetNumber?: number;
   totalSheets?: number;
   timeLimitMinutes?: number;
-  watermark?: string; // optional watermark text (samples use this)
+  watermark?: string;
+  purchasedBy?: string;
+  showDisclaimer?: boolean;
 }
 
 /**
@@ -151,6 +153,14 @@ export function renderSheetHtml(
       border-radius: 0.2rem;
       background: rgba(245, 237, 224, 0.3);
     }
+    .sheet .disclaimer {
+      margin-top: 0.3rem;
+      font-size: 0.55rem;
+      color: rgba(107, 96, 85, 0.5);
+      text-align: center;
+      font-style: italic;
+      line-height: 1.3;
+    }
     .sheet .footer {
       margin-top: 0.6rem;
       padding-top: 0.3rem;
@@ -195,9 +205,10 @@ export function renderSheetHtml(
   </div>
   <div class="grid">${problemsHtml}</div>
   <div class="footer">
-    <span>${safeSubject} · ${escape(meta.levelCode)} · Eduyro</span>
+    <span>${safeSubject} · ${escape(meta.levelCode)} · Eduyro${meta.purchasedBy ? ` · Licensed to: ${escape(meta.purchasedBy)}` : ""}</span>
     <span>${sheetLabel}</span>
   </div>
+  ${meta.showDisclaimer ? `<div class="disclaimer">For personal and household use only. Reproduction, redistribution, resale or commercial use is strictly prohibited. © ${new Date().getFullYear()} Eduyro Education Inc.</div>` : ""}
 </div>`;
 }
 

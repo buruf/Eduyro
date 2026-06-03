@@ -19,7 +19,7 @@ import { renderPackHtml } from "./pack-pdf";
 import { promises as fs } from "fs";
 import path from "path";
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const CACHE_PREFIX = `shop-packs/${CACHE_VERSION}`;
 const SAMPLE_PREFIX = `shop-samples/${CACHE_VERSION}`;
 
@@ -35,27 +35,24 @@ export interface CachedPack {
  * Get a cached pack URL. If the file doesn't exist yet, generates and uploads it.
  * Returns the URL + metadata that can be served to a customer.
  */
-export async function getOrCreatePackPdf(skill: ShopSkill): Promise<CachedPack> {
+export async function getOrCreatePackPdf(skill: ShopSkill, purchasedBy?: string): Promise<CachedPack> {
   const config = SHOP_SKILLS[skill];
-  const key = `${CACHE_PREFIX}/${skill}.pdf`;
+  const buyerSuffix = purchasedBy ? `-${Buffer.from(purchasedBy).toString("base64").slice(0,8)}` : "";
+  const key = purchasedBy ? `shop-packs/${CACHE_VERSION}/${skill}${buyerSuffix}.pdf` : `${CACHE_PREFIX}/${skill}.pdf`;
 
   // Check if the file already exists in local storage (.local-storage/<key>)
   // In production with S3, we'd HEAD the S3 object; for now, always check local first.
-  const cached = await tryLoadCached(key);
-  if (cached) {
-    return {
-      skill,
-      key,
-      url: cached.url,
-      sizeBytes: cached.sizeBytes,
-      sheetCount: config.totalSheets,
-    };
+  if (!purchasedBy) {
+    const cached = await tryLoadCached(key);
+    if (cached) {
+      return { skill, key, url: cached.url, sizeBytes: cached.sizeBytes, sheetCount: config.totalSheets };
+    }
   }
 
   // Cache miss → generate fresh
   console.log(`[shop-cache] Generating ${skill} pack (cache miss)…`);
   const pack = generatePackForSkill(skill);
-  const mappedSheets = pack.sheets.map((s) => ({ problems: s.problems.map((p: any) => ({ ...p, answer: String(p.answer) })), skillBand: s.bandLabel }));const html = renderPackHtml({ skillLabel: pack.label, skillCode: pack.skill, levelCode: pack.skill, sheets: mappedSheets });
+  const mappedSheets = pack.sheets.map((s) => ({ problems: s.problems.map((p: any) => ({ ...p, answer: String(p.answer) })), skillBand: s.bandLabel }));const html = renderPackHtml({ skillLabel: pack.label, skillCode: pack.skill, levelCode: pack.skill, sheets: mappedSheets, purchasedBy });
   const pdfBytes = await renderHtmlToPdf(html);
   const pdf = Buffer.from(pdfBytes);
   const url = await uploadToS3(pdf, key, "application/pdf");

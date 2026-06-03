@@ -4,13 +4,14 @@
 // pack matches the customer's expectation (no random shuffling between bands).
 
 import { nanoid } from "nanoid";
+import { generateM7Band, generateM8Band, generateM9Band, generateM10Band, generateM11Band, generateM12Band } from "./band-generators";
 import type { Problem, AnswerKeyEntry } from "@/types";
 
 // ─────────────────────────────────────────────
 // Skill definitions
 // ─────────────────────────────────────────────
 
-export type ShopSkill = "ADDITION" | "SUBTRACTION" | "MULTIPLICATION" | "DIVISION";
+export type ShopSkill = "ADDITION" | "SUBTRACTION" | "MULTIPLICATION" | "DIVISION" | "FRACTIONS" | "DECIMALS" | "RATIOS" | "PRE_ALGEBRA" | "LINEAR_EQUATIONS" | "POLYNOMIALS";
 
 export const SHOP_SKILLS: Record<ShopSkill, {
   label: string;
@@ -25,12 +26,12 @@ export const SHOP_SKILLS: Record<ShopSkill, {
     description: "From single digits to 100. Builds confidence and speed.",
     iconEmoji: "➕",
     totalSheets: 100,
-    problemsPerSheet: 50, // baseline for catalog display
+    problemsPerSheet: 30, // baseline for catalog display
     bands: [
-      { id: "add-1-10",    label: "Adding 1–10",     sheetCount: 20, difficulty: "easy",        problemCount: 50 },
-      { id: "add-10-20",   label: "Adding 10–20",    sheetCount: 20, difficulty: "easy",        problemCount: 50 },
-      { id: "add-mix-1-20", label: "Mixed 1–20",     sheetCount: 20, difficulty: "standard",    problemCount: 40 },
-      { id: "add-20-100",  label: "Adding 20–100",   sheetCount: 40, difficulty: "challenging", problemCount: 25 },
+      { id: "add-1-10",    label: "Adding 1–10",     sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "add-10-20",   label: "Adding 10–20",    sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "add-mix-1-20", label: "Mixed 1–20",     sheetCount: 20, difficulty: "standard",    problemCount: 30 },
+      { id: "add-20-100",  label: "Adding 20–100",   sheetCount: 40, difficulty: "challenging", problemCount: 30 },
     ],
   },
   SUBTRACTION: {
@@ -40,10 +41,10 @@ export const SHOP_SKILLS: Record<ShopSkill, {
     totalSheets: 100,
     problemsPerSheet: 50,
     bands: [
-      { id: "sub-1-10",     label: "Subtracting 1–10",   sheetCount: 20, difficulty: "easy",        problemCount: 50 },
-      { id: "sub-10-20",    label: "Subtracting 10–20",  sheetCount: 20, difficulty: "easy",        problemCount: 50 },
-      { id: "sub-mix-1-20", label: "Mixed 1–20",         sheetCount: 20, difficulty: "standard",    problemCount: 40 },
-      { id: "sub-20-100",   label: "Subtracting to 100", sheetCount: 40, difficulty: "challenging", problemCount: 25 },
+      { id: "sub-1-10",     label: "Subtracting 1–10",   sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "sub-10-20",    label: "Subtracting 10–20",  sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "sub-mix-1-20", label: "Mixed 1–20",         sheetCount: 20, difficulty: "standard",    problemCount: 30 },
+      { id: "sub-20-100",   label: "Subtracting to 100", sheetCount: 40, difficulty: "challenging", problemCount: 30 },
     ],
   },
   MULTIPLICATION: {
@@ -53,11 +54,11 @@ export const SHOP_SKILLS: Record<ShopSkill, {
     totalSheets: 100,
     problemsPerSheet: 50,
     bands: [
-      { id: "mul-2-5",      label: "×2 through ×5",     sheetCount: 20, difficulty: "easy",        problemCount: 50 },
-      { id: "mul-6-9",      label: "×6 through ×9",     sheetCount: 20, difficulty: "easy",        problemCount: 50 },
-      { id: "mul-mix-2-9",  label: "Mixed ×2 to ×9",    sheetCount: 20, difficulty: "standard",    problemCount: 40 },
-      { id: "mul-10-12",    label: "×10, ×11, ×12",     sheetCount: 20, difficulty: "challenging", problemCount: 25 },
-      { id: "mul-all",      label: "All tables mixed",  sheetCount: 20, difficulty: "challenging", problemCount: 25 },
+      { id: "mul-2-5",      label: "×2 through ×5",     sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "mul-6-9",      label: "×6 through ×9",     sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "mul-mix-2-9",  label: "Mixed ×2 to ×9",    sheetCount: 20, difficulty: "standard",    problemCount: 30 },
+      { id: "mul-10-12",    label: "×10, ×11, ×12",     sheetCount: 20, difficulty: "challenging", problemCount: 30 },
+      { id: "mul-all",      label: "All tables mixed",  sheetCount: 20, difficulty: "challenging", problemCount: 30 },
     ],
   },
   DIVISION: {
@@ -67,11 +68,89 @@ export const SHOP_SKILLS: Record<ShopSkill, {
     totalSheets: 100,
     problemsPerSheet: 50,
     bands: [
-      { id: "div-2-5",       label: "÷2 through ÷5",        sheetCount: 20, difficulty: "easy",        problemCount: 50 },
-      { id: "div-6-9",       label: "÷6 through ÷9",        sheetCount: 20, difficulty: "easy",        problemCount: 50 },
-      { id: "div-mix-2-9",   label: "Mixed ÷2 to ÷9",       sheetCount: 20, difficulty: "standard",    problemCount: 40 },
-      { id: "div-10-12",     label: "÷10, ÷11, ÷12",        sheetCount: 20, difficulty: "challenging", problemCount: 25 },
-      { id: "div-remainders", label: "Division with remainders", sheetCount: 20, difficulty: "challenging", problemCount: 25 },
+      { id: "div-2-5",       label: "÷2 through ÷5",        sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "div-6-9",       label: "÷6 through ÷9",        sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "div-mix-2-9",   label: "Mixed ÷2 to ÷9",       sheetCount: 20, difficulty: "standard",    problemCount: 30 },
+      { id: "div-10-12",     label: "÷10, ÷11, ÷12",        sheetCount: 20, difficulty: "challenging", problemCount: 30 },
+      { id: "div-remainders", label: "Division with remainders", sheetCount: 20, difficulty: "challenging", problemCount: 30 },
+    ],
+  },
+  FRACTIONS: {
+    label: "Fractions",
+    description: "Identifying, simplifying, adding and comparing fractions.",
+    iconEmoji: "½",
+    totalSheets: 100,
+    problemsPerSheet: 30,
+    bands: [
+      { id: "frac-identify",  label: "Identifying fractions",  sheetCount: 25, difficulty: "easy",        problemCount: 30 },
+      { id: "frac-simplify",  label: "Simplifying fractions",  sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "frac-add",       label: "Adding fractions",       sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "frac-compare",   label: "Comparing fractions",    sheetCount: 25, difficulty: "challenging", problemCount: 30 },
+    ],
+  },
+  DECIMALS: {
+    label: "Decimals & Percentages",
+    description: "Place value, decimal operations, and percentage calculations.",
+    iconEmoji: ".",
+    totalSheets: 100,
+    problemsPerSheet: 30,
+    bands: [
+      { id: "dec-place",    label: "Decimal place value",  sheetCount: 25, difficulty: "easy",        problemCount: 30 },
+      { id: "dec-ops",      label: "Decimal operations",   sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "dec-pct",      label: "Percentages",          sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "dec-mixed",    label: "Mixed decimals & %",   sheetCount: 25, difficulty: "challenging", problemCount: 30 },
+    ],
+  },
+  RATIOS: {
+    label: "Ratios & Proportions",
+    description: "Ratios, proportions, and unit rate problems.",
+    iconEmoji: ":",
+    totalSheets: 100,
+    problemsPerSheet: 30,
+    bands: [
+      { id: "rat-basic",  label: "Basic ratios",       sheetCount: 25, difficulty: "easy",        problemCount: 30 },
+      { id: "rat-prop",   label: "Proportions",        sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "rat-rate",   label: "Unit rates",         sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "rat-word",   label: "Word problems",      sheetCount: 25, difficulty: "challenging", problemCount: 30 },
+    ],
+  },
+  PRE_ALGEBRA: {
+    label: "Pre-Algebra",
+    description: "One-step and two-step equations, inequalities, and word problems.",
+    iconEmoji: "x",
+    totalSheets: 100,
+    problemsPerSheet: 30,
+    bands: [
+      { id: "alg-one",   label: "One-step equations",  sheetCount: 25, difficulty: "easy",        problemCount: 30 },
+      { id: "alg-two",   label: "Two-step equations",  sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "alg-ineq",  label: "Inequalities",        sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "alg-word",  label: "Word problems",       sheetCount: 25, difficulty: "challenging", problemCount: 30 },
+    ],
+  },
+  LINEAR_EQUATIONS: {
+    label: "Linear Equations",
+    description: "Slope-intercept form, graphing lines, and systems of equations.",
+    iconEmoji: "/",
+    totalSheets: 100,
+    problemsPerSheet: 30,
+    bands: [
+      { id: "lin-slope",   label: "Slope & intercept",      sheetCount: 25, difficulty: "easy",        problemCount: 30 },
+      { id: "lin-graph",   label: "Graphing lines",         sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "lin-system",  label: "Systems of equations",   sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "lin-mixed",   label: "Mixed linear algebra",   sheetCount: 25, difficulty: "challenging", problemCount: 30 },
+    ],
+  },
+  POLYNOMIALS: {
+    label: "Polynomials",
+    description: "Adding, multiplying polynomials and factoring.",
+    iconEmoji: "²",
+    totalSheets: 100,
+    problemsPerSheet: 30,
+    bands: [
+      { id: "poly-add",     label: "Adding polynomials",      sheetCount: 25, difficulty: "easy",        problemCount: 30 },
+      { id: "poly-mul",     label: "Multiplying polynomials", sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "poly-factor",  label: "Factoring",               sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "poly-mixed",   label: "Mixed polynomials",       sheetCount: 25, difficulty: "challenging", problemCount: 30 },
     ],
   },
 };
@@ -89,10 +168,16 @@ export interface ShopBand {
 // ─────────────────────────────────────────────
 
 export const SHOP_PRICING: Record<number, { amountCents: number; label: string }> = {
-  1: { amountCents: 399, label: "$3.99" },
-  2: { amountCents: 599, label: "$5.99" },
-  3: { amountCents: 799, label: "$7.99" },
-  4: { amountCents: 999, label: "$9.99" },
+  1: { amountCents: 399,  label: "$3.99" },
+  2: { amountCents: 599,  label: "$5.99" },
+  3: { amountCents: 799,  label: "$7.99" },
+  4: { amountCents: 999,  label: "$9.99" },
+  5: { amountCents: 1199, label: "$11.99" },
+  6: { amountCents: 1399, label: "$13.99" },
+  7: { amountCents: 1599, label: "$15.99" },
+  8: { amountCents: 1799, label: "$17.99" },
+  9: { amountCents: 1999, label: "$19.99" },
+  10: { amountCents: 2199, label: "$21.99" },
 };
 
 export function calculatePrice(skills: ShopSkill[]): number {
@@ -265,112 +350,49 @@ function generateOneProblem(bandId: string, rng: () => number, progress: number 
   const r = (lo: number, hi: number) => Math.floor(rng() * (hi - lo + 1)) + lo;
 
   switch (bandId) {
-    // ── Addition — ramp the upper end of the range with progress ──
-    case "add-1-10": {
-      const max = lerpUpper(progress, 1, 10);
-      const a = r(1, max), b = r(1, max);
-      return [`${a} + ${b}`, String(a + b)];
-    }
-    case "add-10-20": {
-      const max = lerpUpper(progress, 10, 20);
-      const a = r(10, max), b = r(1, Math.min(10, max - 5));
-      return [`${a} + ${b}`, String(a + b)];
-    }
-    case "add-mix-1-20": {
-      const max = lerpUpper(progress, 5, 20);
-      const a = r(1, max), b = r(1, max);
-      return [`${a} + ${b}`, String(a + b)];
-    }
-    case "add-20-100": {
-      const max = lerpUpper(progress, 30, 100);
-      const a = r(20, max), b = r(10, Math.max(15, Math.floor(max / 2)));
-      return [`${a} + ${b}`, String(a + b)];
-    }
+    // ── Addition ──
+    case "add-1-10": { const max = lerpUpper(progress, 1, 10); const a = r(1, max), b = r(1, max); return [`${a} + ${b}`, String(a + b)]; }
+    case "add-10-20": { const max = lerpUpper(progress, 10, 20); const a = r(10, max), b = r(1, Math.min(10, max - 5)); return [`${a} + ${b}`, String(a + b)]; }
+    case "add-mix-1-20": { const max = lerpUpper(progress, 5, 20); const a = r(1, max), b = r(1, max); return [`${a} + ${b}`, String(a + b)]; }
+    case "add-20-100": { const max = lerpUpper(progress, 30, 100); const a = r(20, max), b = r(10, Math.max(15, Math.floor(max / 2))); return [`${a} + ${b}`, String(a + b)]; }
 
     // ── Subtraction ──
-    case "sub-1-10": {
-      const max = lerpUpper(progress, 2, 10);
-      const a = r(2, max), b = r(1, a);
-      return [`${a} − ${b}`, String(a - b)];
-    }
-    case "sub-10-20": {
-      const max = lerpUpper(progress, 10, 20);
-      const a = r(10, max), b = r(1, Math.min(10, a - 1));
-      return [`${a} − ${b}`, String(a - b)];
-    }
-    case "sub-mix-1-20": {
-      const max = lerpUpper(progress, 5, 20);
-      const a = r(5, max), b = r(1, a - 1);
-      return [`${a} − ${b}`, String(a - b)];
-    }
-    case "sub-20-100": {
-      const max = lerpUpper(progress, 30, 100);
-      const a = r(20, max), b = r(5, a - 1);
-      return [`${a} − ${b}`, String(a - b)];
-    }
+    case "sub-1-10": { const max = lerpUpper(progress, 2, 10); const a = r(2, max), b = r(1, a); return [`${a} − ${b}`, String(a - b)]; }
+    case "sub-10-20": { const max = lerpUpper(progress, 10, 20); const a = r(10, max), b = r(1, Math.min(10, a - 1)); return [`${a} − ${b}`, String(a - b)]; }
+    case "sub-mix-1-20": { const max = lerpUpper(progress, 5, 20); const a = r(5, max), b = r(1, a - 1); return [`${a} − ${b}`, String(a - b)]; }
+    case "sub-20-100": { const max = lerpUpper(progress, 30, 100); const a = r(20, max), b = r(5, a - 1); return [`${a} − ${b}`, String(a - b)]; }
 
     // ── Multiplication ──
-    case "mul-2-5": {
-      const maxA = lerpUpper(progress, 2, 5);
-      const maxB = lerpUpper(progress, 3, 12);
-      const a = r(2, maxA), b = r(2, maxB);
-      return [`${a} × ${b}`, String(a * b)];
-    }
-    case "mul-6-9": {
-      const maxA = lerpUpper(progress, 6, 9);
-      const maxB = lerpUpper(progress, 3, 12);
-      const a = r(6, maxA), b = r(2, maxB);
-      return [`${a} × ${b}`, String(a * b)];
-    }
-    case "mul-mix-2-9": {
-      const max = lerpUpper(progress, 3, 9);
-      const a = r(2, max), b = r(2, max);
-      return [`${a} × ${b}`, String(a * b)];
-    }
-    case "mul-10-12": {
-      const max = lerpUpper(progress, 10, 12);
-      const a = r(10, max), b = r(2, 12);
-      return [`${a} × ${b}`, String(a * b)];
-    }
-    case "mul-all": {
-      const max = lerpUpper(progress, 4, 12);
-      const a = r(2, max), b = r(2, max);
-      return [`${a} × ${b}`, String(a * b)];
-    }
+    case "mul-2-5": { const maxA = lerpUpper(progress, 2, 5), maxB = lerpUpper(progress, 3, 12); const a = r(2, maxA), b = r(2, maxB); return [`${a} × ${b}`, String(a * b)]; }
+    case "mul-6-9": { const maxA = lerpUpper(progress, 6, 9), maxB = lerpUpper(progress, 3, 12); const a = r(6, maxA), b = r(2, maxB); return [`${a} × ${b}`, String(a * b)]; }
+    case "mul-mix-2-9": { const max = lerpUpper(progress, 3, 9); const a = r(2, max), b = r(2, max); return [`${a} × ${b}`, String(a * b)]; }
+    case "mul-10-12": { const max = lerpUpper(progress, 10, 12); const a = r(10, max), b = r(2, 12); return [`${a} × ${b}`, String(a * b)]; }
+    case "mul-all": { const max = lerpUpper(progress, 4, 12); const a = r(2, max), b = r(2, max); return [`${a} × ${b}`, String(a * b)]; }
 
-    // ── Division (whole-number quotients except the remainders band) ──
-    case "div-2-5": {
-      const maxD = lerpUpper(progress, 2, 5);
-      const maxQ = lerpUpper(progress, 2, 12);
-      const d = r(2, maxD), q = r(1, maxQ);
-      return [`${d * q} ÷ ${d}`, String(q)];
-    }
-    case "div-6-9": {
-      const maxD = lerpUpper(progress, 6, 9);
-      const maxQ = lerpUpper(progress, 2, 12);
-      const d = r(6, maxD), q = r(2, maxQ);
-      return [`${d * q} ÷ ${d}`, String(q)];
-    }
-    case "div-mix-2-9": {
-      const max = lerpUpper(progress, 3, 9);
-      const d = r(2, max), q = r(2, max);
-      return [`${d * q} ÷ ${d}`, String(q)];
-    }
-    case "div-10-12": {
-      const maxD = lerpUpper(progress, 10, 12);
-      const d = r(10, maxD), q = r(2, 12);
-      return [`${d * q} ÷ ${d}`, String(q)];
-    }
-    case "div-remainders": {
-      const max = lerpUpper(progress, 3, 9);
-      const d = r(2, max), q = r(2, 12), rem = r(1, d - 1);
-      const dividend = d * q + rem;
-      return [`${dividend} ÷ ${d}`, `${q} R ${rem}`];
-    }
+    // ── Division ──
+    case "div-2-5": { const maxD = lerpUpper(progress, 2, 5), maxQ = lerpUpper(progress, 2, 12); const d = r(2, maxD), q = r(1, maxQ); return [`${d * q} ÷ ${d}`, String(q)]; }
+    case "div-6-9": { const maxD = lerpUpper(progress, 6, 9), maxQ = lerpUpper(progress, 2, 12); const d = r(6, maxD), q = r(2, maxQ); return [`${d * q} ÷ ${d}`, String(q)]; }
+    case "div-mix-2-9": { const max = lerpUpper(progress, 3, 9); const d = r(2, max), q = r(2, max); return [`${d * q} ÷ ${d}`, String(q)]; }
+    case "div-10-12": { const maxD = lerpUpper(progress, 10, 12); const d = r(10, maxD), q = r(2, 12); return [`${d * q} ÷ ${d}`, String(q)]; }
+    case "div-remainders": { const max = lerpUpper(progress, 3, 9); const d = r(2, max), q = r(2, 12), rem = r(1, d - 1); return [`${d * q + rem} ÷ ${d}`, `${q} R ${rem}`]; }
+
+    // ── M7-M12 — delegate to extended generators ──
+    case "frac-identify": case "frac-simplify": case "frac-add": case "frac-compare":
+      return generateM7Band(bandId, rng, r);
+    case "dec-place": case "dec-ops": case "dec-pct": case "dec-mixed":
+      return generateM8Band(bandId, rng, r);
+    case "rat-basic": case "rat-prop": case "rat-rate": case "rat-word":
+      return generateM9Band(bandId, rng, r);
+    case "alg-one": case "alg-two": case "alg-ineq": case "alg-word":
+      return generateM10Band(bandId, rng, r);
+    case "lin-slope": case "lin-graph": case "lin-system": case "lin-mixed":
+      return generateM11Band(bandId, rng, r);
+    case "poly-add": case "poly-factor": case "poly-mul": case "poly-mixed":
+      return generateM12Band(bandId, rng, r);
+
+    default:
+      return ["1 + 1", "2"];
   }
-
-  // Fallback (should never hit)
-  return ["1 + 1", "2"];
 }
 
 // ─────────────────────────────────────────────
@@ -392,3 +414,16 @@ function seedRng(seed: string): () => number {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+
+// ─────────────────────────────────────────────
+// Extended band generators for M7-M12 skills
+// ─────────────────────────────────────────────
+
+// These are called from generateOneProblem() via the bandId
+// They use the same seeded RNG pattern as arithmetic bands
+
+// Register new band handlers by extending generateOneProblem
+const _origGenerate = generateOneProblem;
+// Note: generateOneProblem is extended inline below via the switch cases
+// The new bandIds are handled by the existing switch statement additions
+

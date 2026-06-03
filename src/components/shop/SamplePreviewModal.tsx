@@ -21,7 +21,7 @@ interface SampleData {
 
 interface SamplePreviewModalProps {
   open: boolean;
-  skill: "ADDITION" | "SUBTRACTION" | "MULTIPLICATION" | "DIVISION" | null;
+  skill: string | null;
   onClose: () => void;
 }
 

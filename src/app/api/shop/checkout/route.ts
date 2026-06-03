@@ -16,8 +16,9 @@ import { ok, err, handleRouteError, parseRequest, withRateLimit } from "@/lib/ap
 import { SHOP_SKILLS, calculatePrice, type ShopSkill } from "@/lib/shop/pack-generator";
 
 const CheckoutSchema = z.object({
-  skills: z.array(z.enum(["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION"]))
-    .min(1).max(4),
+  skills: z.array(z.enum(["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION", "FRACTIONS", "DECIMALS", "RATIOS", "PRE_ALGEBRA", "LINEAR_EQUATIONS", "POLYNOMIALS"]))
+    .min(1).max(10),
+  firstName: z.string().max(50).optional(),
   email: z.string().email(),
   emailDelivery: z.boolean().default(true),
 });
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
 
   const parsed = await parseRequest(req, CheckoutSchema);
   if ("status" in parsed) return parsed;
-  const { skills, email, emailDelivery } = parsed.data;
+  const { skills, email, emailDelivery, firstName } = parsed.data;
 
   // Dedupe skills (in case the client sent duplicates)
   const uniqueSkills = Array.from(new Set(skills)) as ShopSkill[];
@@ -50,6 +51,7 @@ export async function POST(req: NextRequest) {
     const purchase = await db.shopPurchase.create({
       data: {
         customerEmail: email.toLowerCase(),
+        customerFirstName: firstName?.trim() || null,
         skillsCsv: uniqueSkills.join(","),
         amountCents,
         status: "PENDING",
