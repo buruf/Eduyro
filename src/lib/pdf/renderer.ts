@@ -1,28 +1,19 @@
 // src/lib/pdf/renderer.ts
-// Lightweight HTML-to-PDF renderer for worksheet preview bundles.
-// Uses Puppeteer to render HTML to a PDF buffer.
-// Distinct from generator.ts which handles S3 uploads and shop PDFs.
+// Vercel-compatible HTML-to-PDF renderer using @sparticuz/chromium.
 
-import puppeteer from "puppeteer";
+import chromium from "@sparticuz/chromium";
+import puppeteer from "puppeteer-core";
 
-/**
- * Render an HTML string to a PDF buffer.
- * Used by the worksheet preview-bundle route to generate printable PDFs.
- */
 export async function renderHtmlToPdf(html: string): Promise<Uint8Array> {
   const browser = await puppeteer.launch({
+    args: chromium.args,
+    executablePath: await chromium.executablePath(),
     headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-    ],
   });
 
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+    await page.setContent(html, { waitUntil: "load" });
 
     const pdfBuffer = await page.pdf({
       format: "Letter",

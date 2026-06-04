@@ -19,7 +19,6 @@ export interface SheetMeta {
   totalSheets?: number;
   timeLimitMinutes?: number;
   watermark?: string;
-  purchasedBy?: string;
   showDisclaimer?: boolean;
 }
 
@@ -205,7 +204,7 @@ export function renderSheetHtml(
   </div>
   <div class="grid">${problemsHtml}</div>
   <div class="footer">
-    <span>${safeSubject} · ${escape(meta.levelCode)} · Eduyro${meta.purchasedBy ? ` · Licensed to: ${escape(meta.purchasedBy)}` : ""}</span>
+    <span>${safeSubject} · ${escape(meta.levelCode)} · Eduyro</span>
     <span>${sheetLabel}</span>
   </div>
   ${meta.showDisclaimer ? `<div class="disclaimer">For personal and household use only. Reproduction, redistribution, resale or commercial use is strictly prohibited. © ${new Date().getFullYear()} Eduyro Education Inc.</div>` : ""}

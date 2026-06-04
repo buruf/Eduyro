@@ -39,7 +39,7 @@ interface Catalog {
 export default function ShopPage() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [selectedSkills, setSelectedSkills] = useState<Set<Skill>>(new Set());
-  const [firstName, setFirstName] = useState("");
+  const [maxSkillsError, setMaxSkillsError] = useState(false);
   const [email, setEmail] = useState("");
   const [emailDelivery, setEmailDelivery] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,10 +55,21 @@ export default function ShopPage() {
       });
   }, []);
 
+  const MAX_SKILLS = 4;
+
   const toggleSkill = (id: Skill) => {
     const next = new Set(selectedSkills);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
+    if (next.has(id)) {
+      next.delete(id);
+      setMaxSkillsError(false);
+    } else {
+      if (next.size >= MAX_SKILLS) {
+        setMaxSkillsError(true);
+        return;
+      }
+      next.add(id);
+      setMaxSkillsError(false);
+    }
     setSelectedSkills(next);
   };
 
@@ -85,7 +96,6 @@ export default function ShopPage() {
         body: JSON.stringify({
           skills: Array.from(selectedSkills),
           email,
-          firstName: firstName.trim() || undefined,
           emailDelivery,
         }),
       });
@@ -156,6 +166,17 @@ className="w-full mt-3 bg-brand-blue text-white text-sm font-semibold px-4 py-2.
           })}
         </div>
 
+        {maxSkillsError && (
+          <div className="max-w-2xl mx-auto mb-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+            <svg viewBox="0 0 20 20" className="w-5 h-5 fill-amber-500 flex-shrink-0">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-1-8a1 1 0 0 0-1 1v3a1 1 0 0 0 2 0V6a1 1 0 0 0-1-1z" />
+            </svg>
+            <p className="text-sm font-medium text-amber-800">
+              Maximum 4 skill packs per order. Deselect one to choose a different skill.
+            </p>
+          </div>
+        )}
+
         <div className="bg-white border border-border rounded-2xl p-6 max-w-2xl mx-auto">
           <h3 className="font-serif text-lg font-bold mb-4">Your order</h3>
           <div className="mb-4">
@@ -171,16 +192,6 @@ className="w-full mt-3 bg-brand-blue text-white text-sm font-semibold px-4 py-2.
           </div>
 
           <div className="mb-4">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
-              First name <span className="text-muted font-normal normal-case">(optional — appears on worksheets)</span>
-            </label>
-            <input
-              type="text"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              placeholder="e.g. Sarah"
-              className="w-full border border-border-mid rounded-md px-3 py-2 text-sm mb-4"
-            />
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
               Email
             </label>

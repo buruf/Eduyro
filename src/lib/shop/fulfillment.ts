@@ -54,8 +54,7 @@ export async function handleShopPurchaseCompleted(session: Stripe.Checkout.Sessi
     const files: Array<{ skill: ShopSkill; key: string; url: string; size: number; sheetCount: number }> = [];
     for (const skill of skills) {
       console.log(`[shop] Resolving cached pack for ${skill} (purchase ${purchase.id})…`);
-      const buyerName = (purchase as any).customerFirstName || purchase.customerEmail.split("@")[0];
-      const cached = await getOrCreatePackPdf(skill, buyerName);
+      const cached = await getOrCreatePackPdf(skill);
       files.push({
         skill,
         key: cached.key,

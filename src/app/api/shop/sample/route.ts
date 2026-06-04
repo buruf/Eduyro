@@ -1,55 +1,39 @@
-// src/app/api/shop/sample/route.ts
-// GET /api/shop/sample?skill=ADDITION
-//
-// CHANGED: This endpoint no longer returns a downloadable PDF URL.
-// It now returns sheet HTML rendered with a watermark, designed for
-// in-browser preview only. Customers can SEE the sheets but cannot
-// SAVE them, since no PDF file is generated.
+// src/app/api/shop/sample?skill=ADDITION
+// Returns 2 sample sheets as HTML for in-browser preview — no PDF, no download.
 
 import { NextRequest } from "next/server";
-import { z } from "zod";
 import { ok, validationError, withRateLimit } from "@/lib/api/helpers";
-import { generateShopSampleProblems } from "@/lib/shop/sample-problems";
+import { generateShopSampleProblems, type Skill } from "@/lib/shop/sample-problems";
 import { renderSheetHtml } from "@/lib/worksheet/render-sheet";
 
-const SKILLS = ["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION"] as const;
-type Skill = typeof SKILLS[number];
+const SKILLS = ["ADDITION","SUBTRACTION","MULTIPLICATION","DIVISION","FRACTIONS","DECIMALS","RATIOS","PRE_ALGEBRA","LINEAR_EQUATIONS","POLYNOMIALS"] as const;
 
 const SKILL_LABEL: Record<Skill, string> = {
-  ADDITION: "Addition",
-  SUBTRACTION: "Subtraction",
-  MULTIPLICATION: "Multiplication",
-  DIVISION: "Division",
+  ADDITION: "Addition", SUBTRACTION: "Subtraction",
+  MULTIPLICATION: "Multiplication", DIVISION: "Division",
+  FRACTIONS: "Fractions", DECIMALS: "Decimals & Percentages",
+  RATIOS: "Ratios & Proportions", PRE_ALGEBRA: "Pre-Algebra",
+  LINEAR_EQUATIONS: "Linear Equations", POLYNOMIALS: "Polynomials",
 };
 
 const SKILL_LEVEL: Record<Skill, string> = {
-  ADDITION: "M3",
-  SUBTRACTION: "M4",
-  MULTIPLICATION: "M5",
-  DIVISION: "M6",
+  ADDITION: "M3", SUBTRACTION: "M4", MULTIPLICATION: "M5", DIVISION: "M6",
+  FRACTIONS: "M7", DECIMALS: "M8", RATIOS: "M9", PRE_ALGEBRA: "M10",
+  LINEAR_EQUATIONS: "M11", POLYNOMIALS: "M12",
 };
 
-const SAMPLE_SHEET_COUNT = 2; // was 3 — now 2 per product spec
+const SAMPLE_SHEET_COUNT = 2;
 
 export async function GET(req: NextRequest) {
   const rateLimited = await withRateLimit(req, 60, 60_000);
   if (rateLimited) return rateLimited;
 
-  const url = new URL(req.url);
-  const skillParam = url.searchParams.get("skill")?.toUpperCase();
-
+  const skillParam = new URL(req.url).searchParams.get("skill")?.toUpperCase();
   if (!skillParam || !SKILLS.includes(skillParam as Skill)) {
-    return validationError({
-      skill: [
-        `Skill must be one of: ${SKILLS.join(", ")}`,
-      ],
-    });
+    return validationError({ skill: [`Skill must be one of: ${SKILLS.join(", ")}`] });
   }
   const skill = skillParam as Skill;
 
-  // Build 2 sample sheets. Each is the warmup (easiest) tier of that skill,
-  // about 50 problems — enough that a casual viewer sees the format but the
-  // problems aren't worth screen-capping for actual practice.
   const sheets: string[] = [];
   for (let s = 1; s <= SAMPLE_SHEET_COUNT; s++) {
     const problems = generateShopSampleProblems(skill, s);
@@ -64,7 +48,7 @@ export async function GET(req: NextRequest) {
         timeLimitMinutes: 10,
         watermark: "SAMPLE — NOT FOR PRINTING",
       },
-      false /* no answer key in samples */
+      false
     );
     sheets.push(html);
   }
@@ -74,7 +58,6 @@ export async function GET(req: NextRequest) {
     label: SKILL_LABEL[skill],
     sheetCount: SAMPLE_SHEET_COUNT,
     sheetsHtml: sheets,
-    // No downloadUrl on purpose. Front-end renders sheetsHtml inline.
     note: "Sample previews are view-only. Purchase the pack to download printable PDFs.",
   });
 }

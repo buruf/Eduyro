@@ -233,3 +233,327 @@ export function generateM12Band(bandId: string, rng: () => number, r: (lo: numbe
     default: return ["Add: (2x + 3) + (4x + 1)", "6x + 4"];
   }
 }
+
+// =============================================================================
+// TIER 1 NEW GENERATORS — Fractions complete, Addition regrouping, Subtraction borrowing
+// =============================================================================
+
+export function generateFractionsComplete(bandId: string, rng: () => number, r: (lo: number, hi: number) => number): [string, string] {
+  const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b);
+  const lcm = (a: number, b: number): number => (a * b) / gcd(a, b);
+
+  switch (bandId) {
+    case "frac-identify": {
+      const t = Math.floor(rng() * 3);
+      if (t === 0) {
+        // Compare two fractions
+        const pairs: [string, string, string][] = [
+          ["1/2","1/3","1/2"],["2/3","3/5","2/3"],["3/4","5/8","3/4"],
+          ["4/5","7/10","4/5"],["1/4","1/3","1/3"],["5/6","7/8","7/8"],
+          ["3/8","2/5","2/5"],["2/7","1/3","1/3"],["5/9","4/7","5/9"],
+        ];
+        const [a,b,larger] = pairs[Math.floor(rng() * pairs.length)];
+        return [`Which is larger: ${a} or ${b}?`, larger];
+      }
+      if (t === 1) {
+        const d = r(2,8), n = r(1,d-1);
+        return [`A pizza is cut into ${d} slices. ${n} slices are eaten. What fraction is left?`, `${d-n}/${d}`];
+      }
+      const items: [string, string][] = [
+        ["What fraction of 12 is 4?","1/3"],["What fraction of 20 is 5?","1/4"],
+        ["What fraction of 10 is 7?","7/10"],["What fraction of 8 is 6?","3/4"],
+        ["What fraction of 15 is 5?","1/3"],["What fraction of 16 is 4?","1/4"],
+      ];
+      return items[Math.floor(rng() * items.length)];
+    }
+
+    case "frac-simplify": {
+      const pairs: [number,number][] = [
+        [2,4],[3,6],[4,8],[6,9],[4,6],[6,10],[8,12],[9,12],[10,15],[6,8],
+        [15,20],[12,16],[4,10],[6,14],[10,12],[8,20],[9,15],[12,18],[15,25],[18,24],
+        [20,25],[14,21],[16,24],[25,30],[6,15],[10,25],[12,20],[8,24],[9,27],[6,18],
+      ];
+      const [n,d] = pairs[Math.floor(rng() * pairs.length)];
+      const g = gcd(n, d);
+      return [`Simplify ${n}/${d}`, `${n/g}/${d/g}`];
+    }
+
+    case "frac-add-same": {
+      const d = r(2,12);
+      const a = r(1,d-1), b = r(1,d);
+      const sum = a + b;
+      if (sum >= d) {
+        // Improper — show as mixed or improper
+        const whole = Math.floor(sum/d), rem = sum % d;
+        const ans = rem === 0 ? String(whole) : `${whole} ${rem}/${d}`;
+        return [`${a}/${d} + ${b}/${d} =`, ans];
+      }
+      return [`${a}/${d} + ${b}/${d} =`, `${sum}/${d}`];
+    }
+
+    case "frac-add-unlike": {
+      // Add/subtract fractions with unlike denominators
+      const denoms: [number,number][] = [[2,3],[2,4],[2,5],[3,4],[3,6],[4,5],[4,6],[3,8],[2,6],[5,10],[3,5],[4,8],[2,7],[3,7],[5,6]];
+      const [d1,d2] = denoms[Math.floor(rng() * denoms.length)];
+      const n1 = r(1,d1-1), n2 = r(1,d2-1);
+      const op = rng() > 0.5 ? "+" : "−";
+      const l = lcm(d1,d2);
+      const newN1 = n1 * (l/d1), newN2 = n2 * (l/d2);
+      let resN = op === "+" ? newN1 + newN2 : newN1 - newN2;
+      if (resN <= 0) { // avoid negatives for subtraction
+        const ansN = newN1 + newN2;
+        const g = gcd(ansN, l);
+        const simplified = `${ansN/g}/${l/g}`;
+        return [`${n1}/${d1} + ${n2}/${d2} =`, simplified];
+      }
+      const g = gcd(Math.abs(resN), l);
+      const simplified = g === l ? String(resN/l) : `${Math.abs(resN)/g}/${l/g}`;
+      return [`${n1}/${d1} ${op} ${n2}/${d2} =`, simplified];
+    }
+
+    case "frac-multiply": {
+      const pairs: [number,number,number,number][] = [
+        [1,2,1,3],[1,2,2,3],[2,3,3,4],[1,4,2,3],[3,4,2,5],
+        [1,3,3,5],[2,5,1,2],[3,8,4,9],[1,2,4,5],[2,7,7,8],
+        [3,4,4,6],[1,5,5,6],[2,3,6,7],[3,5,5,9],[1,6,3,4],
+      ];
+      const [n1,d1,n2,d2] = pairs[Math.floor(rng() * pairs.length)];
+      const resN = n1*n2, resD = d1*d2;
+      const g = gcd(resN, resD);
+      const ans = g === resD ? String(resN/g) : `${resN/g}/${resD/g}`;
+      return [`${n1}/${d1} × ${n2}/${d2} =`, ans];
+    }
+
+    case "frac-divide": {
+      // Dividing fractions — multiply by reciprocal
+      const pairs: [number,number,number,number][] = [
+        [1,2,1,4],[2,3,1,3],[3,4,3,8],[1,2,2,3],[3,5,6,10],
+        [4,5,2,5],[1,3,1,6],[2,7,4,7],[5,6,5,12],[3,4,9,16],
+      ];
+      const [n1,d1,n2,d2] = pairs[Math.floor(rng() * pairs.length)];
+      // n1/d1 ÷ n2/d2 = n1*d2 / d1*n2
+      const resN = n1*d2, resD = d1*n2;
+      const g = gcd(resN, resD);
+      const ans = g === resD ? String(resN/g) : `${resN/g}/${resD/g}`;
+      return [`${n1}/${d1} ÷ ${n2}/${d2} =`, ans];
+    }
+
+    case "frac-mixed": {
+      const t = Math.floor(rng() * 3);
+      if (t === 0) {
+        // Convert improper to mixed
+        const d = r(2,8), whole = r(1,4), rem = r(1,d-1);
+        const n = whole*d + rem;
+        return [`Convert to mixed number: ${n}/${d}`, `${whole} ${rem}/${d}`];
+      }
+      if (t === 1) {
+        // Convert mixed to improper
+        const d = r(2,8), whole = r(1,4), rem = r(1,d-1);
+        const n = whole*d + rem;
+        return [`Convert to improper fraction: ${whole} ${rem}/${d}`, `${n}/${d}`];
+      }
+      // Add mixed numbers
+      const d = r(2,6), w1 = r(1,3), n1 = r(1,d-1), w2 = r(1,3), n2 = r(1,d-1);
+      const totalN = n1 + n2;
+      const extraW = Math.floor(totalN/d);
+      const remN = totalN % d;
+      const totalW = w1 + w2 + extraW;
+      const ans = remN === 0 ? String(totalW) : `${totalW} ${remN}/${d}`;
+      return [`${w1} ${n1}/${d} + ${w2} ${n2}/${d} =`, ans];
+    }
+
+    default: return ["1/2 + 1/4 =", "3/4"];
+  }
+}
+
+export function generateAdditionRegrouping(bandId: string, rng: () => number, r: (lo: number, hi: number) => number): [string, string] {
+  switch (bandId) {
+    case "add-regroup": {
+      // 2-digit + 2-digit WITH regrouping (ones digit sums to 10+)
+      let a: number, b: number;
+      do {
+        a = r(11, 89);
+        b = r(11, 89);
+      } while ((a % 10) + (b % 10) < 10 || a + b > 99); // ensure carry, no overflow
+      return [`${a} + ${b} =`, String(a + b)];
+    }
+    case "add-3digit": {
+      const a = r(100, 899);
+      const b = r(100, 999 - a);
+      return [`${a} + ${b} =`, String(a + b)];
+    }
+    default: return ["15 + 17 =", "32"];
+  }
+}
+
+export function generateSubtractionBorrowing(bandId: string, rng: () => number, r: (lo: number, hi: number) => number): [string, string] {
+  switch (bandId) {
+    case "sub-borrow": {
+      // 2-digit - 2-digit WITH borrowing (ones of minuend < ones of subtrahend)
+      let a: number, b: number;
+      do {
+        a = r(21, 99);
+        b = r(11, a - 1);
+      } while ((a % 10) >= (b % 10)); // ensure borrowing needed
+      return [`${a} − ${b} =`, String(a - b)];
+    }
+    case "sub-3digit": {
+      const a = r(200, 999);
+      const b = r(100, a - 1);
+      return [`${a} − ${b} =`, String(a - b)];
+    }
+    default: return ["42 − 18 =", "24"];
+  }
+}
+
+// =============================================================================
+// TIER 2 NEW GENERATORS — Polynomial trinomial factoring, Decimal mul/div
+// =============================================================================
+
+export function generatePolynomialsComplete(bandId: string, rng: () => number, r: (lo: number, hi: number) => number): [string, string] {
+  switch (bandId) {
+    case "poly-add": {
+      const a = r(1,6), b = r(-5,5), cv = r(1,6), d = r(-5,5);
+      const sc = a+cv, sd = b+d;
+      const bStr = b >= 0 ? `+ ${b}` : `− ${Math.abs(b)}`;
+      const dStr = d >= 0 ? `+ ${d}` : `− ${Math.abs(d)}`;
+      const sdStr = sd >= 0 ? `+ ${sd}` : `− ${Math.abs(sd)}`;
+      const op = rng() > 0.5 ? "add" : "sub";
+      if (op === "add") {
+        return [`Add: (${a}x ${bStr}) + (${cv}x ${dStr})`, `${sc}x ${sdStr}`];
+      } else {
+        const sc2 = a-cv, sd2 = b-d;
+        const sd2Str = sd2 >= 0 ? `+ ${sd2}` : `− ${Math.abs(sd2)}`;
+        return [`Subtract: (${a}x ${bStr}) − (${cv}x ${dStr})`, `${sc2}x ${sd2Str}`];
+      }
+    }
+    case "poly-mul": {
+      const a = r(1,3), b = r(1,5), cv = r(1,3), d = r(1,5);
+      const c2 = a*cv, c1 = a*d+b*cv, c0 = b*d;
+      const c1Str = c1 >= 0 ? `+ ${c1}` : `− ${Math.abs(c1)}`;
+      const c0Str = c0 >= 0 ? `+ ${c0}` : `− ${Math.abs(c0)}`;
+      return [`Expand: (${a}x + ${b})(${cv}x + ${d})`, `${c2}x² ${c1Str}x ${c0Str}`];
+    }
+    case "poly-factor-dos": {
+      // Difference of squares: x² - a² = (x+a)(x-a)
+      const av = r(1,9);
+      return [`Factor: x² − ${av*av}`, `(x + ${av})(x − ${av})`];
+    }
+    case "poly-factor-tri": {
+      // Trinomials: (x+a)(x+b) = x² + (a+b)x + ab
+      // Pick a,b such that they are simple integers
+      const a = r(-6,6) || 1;
+      const b = r(-6,6) || 2;
+      const middle = a + b;
+      const last = a * b;
+      const midStr = middle > 0 ? `+ ${middle}` : `− ${Math.abs(middle)}`;
+      const lastStr = last > 0 ? `+ ${last}` : `− ${Math.abs(last)}`;
+      const f1 = a > 0 ? `+ ${a}` : `− ${Math.abs(a)}`;
+      const f2 = b > 0 ? `+ ${b}` : `− ${Math.abs(b)}`;
+      return [`Factor: x² ${midStr}x ${lastStr}`, `(x ${f1})(x ${f2})`];
+    }
+    case "poly-mixed": {
+      const t = Math.floor(rng() * 3);
+      if (t === 0) {
+        const gcf = r(2,5), av = r(2,8), bv = r(1,8);
+        return [`Factor out the GCF: ${gcf*av}x² + ${gcf*bv}x`, `${gcf}x(${av}x + ${bv})`];
+      }
+      if (t === 1) {
+        const av = r(1,8);
+        return [`Factor completely: x² − ${av*av}`, `(x + ${av})(x − ${av})`];
+      }
+      const a = r(1,5), b = r(1,5);
+      const mid = a+b, last = a*b;
+      const midStr = mid > 0 ? `+ ${mid}` : `− ${Math.abs(mid)}`;
+      const lastStr = last > 0 ? `+ ${last}` : `− ${Math.abs(last)}`;
+      return [`Factor: x² ${midStr}x ${lastStr}`, `(x + ${a})(x + ${b})`];
+    }
+    default: return ["Factor: x² − 9", "(x + 3)(x − 3)"];
+  }
+}
+
+export function generateDecimalsComplete(bandId: string, rng: () => number, r: (lo: number, hi: number) => number): [string, string] {
+  switch (bandId) {
+    case "dec-place": {
+      const nums = [3.5, 12.4, 0.75, 1.25, 4.08, 10.3, 0.6, 7.15, 25.9, 3.14, 0.08, 5.6, 0.125, 8.04, 100.5];
+      const n = nums[Math.floor(rng() * nums.length)];
+      const parts = n.toString().split('.');
+      const tenths = parts[1]?.[0] ?? '0';
+      const hundredths = parts[1]?.[1] ?? '0';
+      const t = Math.floor(rng() * 2);
+      if (t === 0) return [`In ${n}, what digit is in the tenths place?`, tenths];
+      return [`In ${n}, what digit is in the hundredths place?`, hundredths];
+    }
+    case "dec-add-sub": {
+      const a = parseFloat((r(1,99)/10).toFixed(1));
+      const b = parseFloat((r(1,99)/10).toFixed(1));
+      const op = rng() > 0.5 ? "+" : "−";
+      if (op === "+") return [`${a} + ${b} =`, String(parseFloat((a+b).toFixed(2)))];
+      const big = Math.max(a,b), small = Math.min(a,b);
+      return [`${big} − ${small} =`, String(parseFloat((big-small).toFixed(2)))];
+    }
+    case "dec-multiply": {
+      const t = Math.floor(rng() * 3);
+      if (t === 0) {
+        const a = parseFloat((r(1,9)/10).toFixed(1));
+        const b = r(2,9);
+        return [`${a} × ${b} =`, String(parseFloat((a*b).toFixed(2)))];
+      }
+      if (t === 1) {
+        const a = parseFloat((r(1,9)/10).toFixed(1));
+        const b = parseFloat((r(1,9)/10).toFixed(1));
+        return [`${a} × ${b} =`, String(parseFloat((a*b).toFixed(2)))];
+      }
+      const a = parseFloat((r(10,99)/100).toFixed(2));
+      const b = r(2,9);
+      return [`${a} × ${b} =`, String(parseFloat((a*b).toFixed(3)))];  
+    }
+    case "dec-divide": {
+      const t = Math.floor(rng() * 3);
+      if (t === 0) {
+        // Easy: decimal ÷ whole number with clean answer
+        const divisor = r(2,5);
+        const answer = parseFloat((r(1,9)/10).toFixed(1));
+        const dividend = parseFloat((answer * divisor).toFixed(1));
+        return [`${dividend} ÷ ${divisor} =`, String(answer)];
+      }
+      if (t === 1) {
+        const a = parseFloat((r(10,99)/10).toFixed(1));
+        const b = r(2,4);
+        return [`${a} ÷ ${b} =`, String(parseFloat((a/b).toFixed(2)))];
+      }
+      // Divide by decimal — multiply both by 10
+      const divisor = parseFloat((r(1,9)/10).toFixed(1));
+      const answer = r(2,9);
+      const dividend = parseFloat((divisor * answer).toFixed(2));
+      return [`${dividend} ÷ ${divisor} =`, String(answer)];
+    }
+    case "dec-pct": {
+      const t = Math.floor(rng() * 4);
+      if (t === 0) {
+        const base = [10,20,25,50,80,100,200][Math.floor(rng()*7)];
+        const pct = [10,15,20,25,50,75][Math.floor(rng()*6)];
+        return [`What is ${pct}% of ${base}?`, String((base*pct)/100)];
+      }
+      if (t === 1) {
+        // Convert fraction to decimal
+        const pairs: [string,string][] = [["1/2","0.5"],["1/4","0.25"],["3/4","0.75"],["1/5","0.2"],["2/5","0.4"],["1/10","0.1"],["3/10","0.3"],["1/8","0.125"]];
+        const [frac,dec] = pairs[Math.floor(rng()*pairs.length)];
+        return [`Convert ${frac} to a decimal`, dec];
+      }
+      if (t === 2) {
+        // Convert decimal to percentage
+        const pairs: [string,string][] = [["0.5","50%"],["0.25","25%"],["0.75","75%"],["0.1","10%"],["0.2","20%"],["0.4","40%"],["0.8","80%"],["0.35","35%"]];
+        const [dec,pct] = pairs[Math.floor(rng()*pairs.length)];
+        return [`Convert ${dec} to a percentage`, pct];
+      }
+      // Percentage increase/decrease
+      const base = [50,100,200,80,40][Math.floor(rng()*5)];
+      const pct = [10,20,25,50][Math.floor(rng()*4)];
+      const inc = rng() > 0.5;
+      const result = inc ? base + (base*pct)/100 : base - (base*pct)/100;
+      return [`A ${base} item ${inc?"increases":"decreases"} by ${pct}%. New value?`, String(result)];
+    }
+    default: return ["0.5 + 0.3 =", "0.8"];
+  }
+}

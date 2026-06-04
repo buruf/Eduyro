@@ -4,7 +4,7 @@
 // pack matches the customer's expectation (no random shuffling between bands).
 
 import { nanoid } from "nanoid";
-import { generateM7Band, generateM8Band, generateM9Band, generateM10Band, generateM11Band, generateM12Band } from "./band-generators";
+import { generateM7Band, generateM8Band, generateM9Band, generateM10Band, generateM11Band, generateM12Band, generateFractionsComplete, generateAdditionRegrouping, generateSubtractionBorrowing, generatePolynomialsComplete, generateDecimalsComplete } from "./band-generators";
 import type { Problem, AnswerKeyEntry } from "@/types";
 
 // ─────────────────────────────────────────────
@@ -23,28 +23,30 @@ export const SHOP_SKILLS: Record<ShopSkill, {
 }> = {
   ADDITION: {
     label: "Addition",
-    description: "From single digits to 100. Builds confidence and speed.",
+    description: "Single digits through 3-digit addition with regrouping (carrying). Grades Pre-K–3.",
     iconEmoji: "➕",
     totalSheets: 100,
-    problemsPerSheet: 30, // baseline for catalog display
+    problemsPerSheet: 30,
     bands: [
-      { id: "add-1-10",    label: "Adding 1–10",     sheetCount: 20, difficulty: "easy",        problemCount: 30 },
-      { id: "add-10-20",   label: "Adding 10–20",    sheetCount: 20, difficulty: "easy",        problemCount: 30 },
-      { id: "add-mix-1-20", label: "Mixed 1–20",     sheetCount: 20, difficulty: "standard",    problemCount: 30 },
-      { id: "add-20-100",  label: "Adding 20–100",   sheetCount: 40, difficulty: "challenging", problemCount: 30 },
+      { id: "add-1-10",       label: "Adding 1–10",                   sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "add-10-20",      label: "Adding 10–20",                  sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "add-mix-1-20",   label: "Mixed 1–20",                    sheetCount: 15, difficulty: "standard",    problemCount: 30 },
+      { id: "add-regroup",    label: "2-digit with regrouping",        sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "add-3digit",     label: "3-digit addition",               sheetCount: 20, difficulty: "challenging", problemCount: 30 },
     ],
   },
   SUBTRACTION: {
     label: "Subtraction",
-    description: "From basics to 3-digit subtraction with regrouping.",
+    description: "Single digits through 3-digit subtraction with borrowing (regrouping). Grades 1–3.",
     iconEmoji: "➖",
     totalSheets: 100,
-    problemsPerSheet: 50,
+    problemsPerSheet: 30,
     bands: [
-      { id: "sub-1-10",     label: "Subtracting 1–10",   sheetCount: 20, difficulty: "easy",        problemCount: 30 },
-      { id: "sub-10-20",    label: "Subtracting 10–20",  sheetCount: 20, difficulty: "easy",        problemCount: 30 },
-      { id: "sub-mix-1-20", label: "Mixed 1–20",         sheetCount: 20, difficulty: "standard",    problemCount: 30 },
-      { id: "sub-20-100",   label: "Subtracting to 100", sheetCount: 40, difficulty: "challenging", problemCount: 30 },
+      { id: "sub-1-10",       label: "Subtracting 1–10",              sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "sub-10-20",      label: "Subtracting 10–20",             sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "sub-mix-1-20",   label: "Mixed 1–20",                    sheetCount: 15, difficulty: "standard",    problemCount: 30 },
+      { id: "sub-borrow",     label: "2-digit with borrowing",         sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "sub-3digit",     label: "3-digit subtraction",            sheetCount: 20, difficulty: "challenging", problemCount: 30 },
     ],
   },
   MULTIPLICATION: {
@@ -77,28 +79,32 @@ export const SHOP_SKILLS: Record<ShopSkill, {
   },
   FRACTIONS: {
     label: "Fractions",
-    description: "Identifying, simplifying, adding and comparing fractions.",
+    description: "Complete fractions mastery — from identifying to multiplying and dividing. Grades 3–7.",
     iconEmoji: "½",
     totalSheets: 100,
     problemsPerSheet: 30,
     bands: [
-      { id: "frac-identify",  label: "Identifying fractions",  sheetCount: 25, difficulty: "easy",        problemCount: 30 },
-      { id: "frac-simplify",  label: "Simplifying fractions",  sheetCount: 25, difficulty: "standard",    problemCount: 30 },
-      { id: "frac-add",       label: "Adding fractions",       sheetCount: 25, difficulty: "standard",    problemCount: 30 },
-      { id: "frac-compare",   label: "Comparing fractions",    sheetCount: 25, difficulty: "challenging", problemCount: 30 },
+      { id: "frac-identify",        label: "Identifying & comparing",         sheetCount: 15, difficulty: "easy",        problemCount: 30 },
+      { id: "frac-simplify",        label: "Simplifying fractions",           sheetCount: 15, difficulty: "easy",        problemCount: 30 },
+      { id: "frac-add-same",        label: "Add/subtract same denominator",   sheetCount: 15, difficulty: "standard",    problemCount: 30 },
+      { id: "frac-add-unlike",      label: "Add/subtract unlike denominators",sheetCount: 15, difficulty: "standard",    problemCount: 30 },
+      { id: "frac-multiply",        label: "Multiplying fractions",           sheetCount: 15, difficulty: "challenging", problemCount: 30 },
+      { id: "frac-divide",          label: "Dividing fractions",              sheetCount: 15, difficulty: "challenging", problemCount: 30 },
+      { id: "frac-mixed",           label: "Mixed numbers",                   sheetCount: 10, difficulty: "challenging", problemCount: 30 },
     ],
   },
   DECIMALS: {
     label: "Decimals & Percentages",
-    description: "Place value, decimal operations, and percentage calculations.",
+    description: "Place value, all four decimal operations, percentage calculations and conversions. Grades 5–7.",
     iconEmoji: ".",
     totalSheets: 100,
     problemsPerSheet: 30,
     bands: [
-      { id: "dec-place",    label: "Decimal place value",  sheetCount: 25, difficulty: "easy",        problemCount: 30 },
-      { id: "dec-ops",      label: "Decimal operations",   sheetCount: 25, difficulty: "standard",    problemCount: 30 },
-      { id: "dec-pct",      label: "Percentages",          sheetCount: 25, difficulty: "standard",    problemCount: 30 },
-      { id: "dec-mixed",    label: "Mixed decimals & %",   sheetCount: 25, difficulty: "challenging", problemCount: 30 },
+      { id: "dec-place",    label: "Decimal place value",          sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "dec-add-sub",  label: "Adding & subtracting decimals",sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "dec-multiply", label: "Multiplying decimals",         sheetCount: 20, difficulty: "standard",    problemCount: 30 },
+      { id: "dec-divide",   label: "Dividing decimals",            sheetCount: 20, difficulty: "standard",    problemCount: 30 },
+      { id: "dec-pct",      label: "Percentages & conversions",    sheetCount: 20, difficulty: "challenging", problemCount: 30 },
     ],
   },
   RATIOS: {
@@ -135,22 +141,23 @@ export const SHOP_SKILLS: Record<ShopSkill, {
     problemsPerSheet: 30,
     bands: [
       { id: "lin-slope",   label: "Slope & intercept",      sheetCount: 25, difficulty: "easy",        problemCount: 30 },
-      { id: "lin-graph",   label: "Graphing lines",         sheetCount: 25, difficulty: "standard",    problemCount: 30 },
+      { id: "lin-graph",   label: "Slope, intercept & key facts", sheetCount: 25, difficulty: "standard",    problemCount: 30 },
       { id: "lin-system",  label: "Systems of equations",   sheetCount: 25, difficulty: "standard",    problemCount: 30 },
       { id: "lin-mixed",   label: "Mixed linear algebra",   sheetCount: 25, difficulty: "challenging", problemCount: 30 },
     ],
   },
   POLYNOMIALS: {
     label: "Polynomials",
-    description: "Adding, multiplying polynomials and factoring.",
+    description: "Adding, subtracting, multiplying polynomials, factoring trinomials and difference of squares. Grades 9–11.",
     iconEmoji: "²",
     totalSheets: 100,
     problemsPerSheet: 30,
     bands: [
-      { id: "poly-add",     label: "Adding polynomials",      sheetCount: 25, difficulty: "easy",        problemCount: 30 },
-      { id: "poly-mul",     label: "Multiplying polynomials", sheetCount: 25, difficulty: "standard",    problemCount: 30 },
-      { id: "poly-factor",  label: "Factoring",               sheetCount: 25, difficulty: "standard",    problemCount: 30 },
-      { id: "poly-mixed",   label: "Mixed polynomials",       sheetCount: 25, difficulty: "challenging", problemCount: 30 },
+      { id: "poly-add",          label: "Adding & subtracting polynomials", sheetCount: 20, difficulty: "easy",        problemCount: 30 },
+      { id: "poly-mul",          label: "Multiplying polynomials (FOIL)",   sheetCount: 20, difficulty: "standard",    problemCount: 30 },
+      { id: "poly-factor-dos",   label: "Factoring — difference of squares",sheetCount: 20, difficulty: "standard",    problemCount: 30 },
+      { id: "poly-factor-tri",   label: "Factoring trinomials ax²+bx+c",   sheetCount: 25, difficulty: "challenging", problemCount: 30 },
+      { id: "poly-mixed",        label: "Mixed polynomials & factoring",    sheetCount: 15, difficulty: "challenging", problemCount: 30 },
     ],
   },
 };
@@ -379,16 +386,16 @@ function generateOneProblem(bandId: string, rng: () => number, progress: number 
     // ── M7-M12 — delegate to extended generators ──
     case "frac-identify": case "frac-simplify": case "frac-add": case "frac-compare":
       return generateM7Band(bandId, rng, r);
-    case "dec-place": case "dec-ops": case "dec-pct": case "dec-mixed":
-      return generateM8Band(bandId, rng, r);
+    case "dec-place": case "dec-add-sub": case "dec-multiply": case "dec-divide": case "dec-pct":
+      return generateDecimalsComplete(bandId, rng, r);
     case "rat-basic": case "rat-prop": case "rat-rate": case "rat-word":
       return generateM9Band(bandId, rng, r);
     case "alg-one": case "alg-two": case "alg-ineq": case "alg-word":
       return generateM10Band(bandId, rng, r);
     case "lin-slope": case "lin-graph": case "lin-system": case "lin-mixed":
       return generateM11Band(bandId, rng, r);
-    case "poly-add": case "poly-factor": case "poly-mul": case "poly-mixed":
-      return generateM12Band(bandId, rng, r);
+    case "poly-add": case "poly-mul": case "poly-factor-dos": case "poly-factor-tri": case "poly-mixed":
+      return generatePolynomialsComplete(bandId, rng, r);
 
     default:
       return ["1 + 1", "2"];
