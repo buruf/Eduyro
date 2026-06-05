@@ -13,7 +13,7 @@
 // change problem-generation logic and want fresh PDFs across the board.
 
 import { uploadToS3, getSignedDownloadUrl } from "@/lib/pdf/generator";
-import { renderHtmlToPdf } from "@/lib/pdf/renderer";
+import { renderPackToPdf } from "@/lib/pdf/renderer";
 import { generatePackForSkill, SHOP_SKILLS, type ShopSkill } from "./pack-generator";
 import { renderPackHtml } from "./pack-pdf";
 import { promises as fs } from "fs";
@@ -49,8 +49,8 @@ export async function getOrCreatePackPdf(skill: ShopSkill): Promise<CachedPack> 
   // Cache miss → generate fresh
   console.log(`[shop-cache] Generating ${skill} pack (cache miss)…`);
   const pack = generatePackForSkill(skill);
-  const mappedSheets = pack.sheets.map((s) => ({ problems: s.problems.map((p: any) => ({ ...p, answer: String(p.answer) })), skillBand: s.bandLabel }));const html = renderPackHtml({ skillLabel: pack.label, skillCode: pack.skill, levelCode: pack.skill, sheets: mappedSheets });
-  const pdfBytes = await renderHtmlToPdf(html);
+  const mappedSheets = pack.sheets.map((s) => ({ problems: s.problems.map((p: any) => ({ ...p, answer: String(p.answer) })), skillBand: s.bandLabel }));const pdfInput = { skillLabel: pack.label, skillCode: pack.skill, levelCode: pack.skill, sheets: mappedSheets };
+  const pdfBytes = await renderPackToPdf(pdfInput);
   const pdf = Buffer.from(pdfBytes);
   const url = await uploadToS3(pdf, key, "application/pdf");
 
@@ -85,8 +85,8 @@ export async function getOrCreateSamplePdf(skill: ShopSkill): Promise<CachedPack
     sheets: sampleSheets,
   };
   const mappedSampleSheets = sampleSheets.map((s) => ({ problems: s.problems.map((p: any) => ({ ...p, answer: String(p.answer) })), skillBand: s.bandLabel }));
-  const sampleHtml = renderPackHtml({ skillLabel: full.label + " — Free Sample", skillCode: full.skill, levelCode: full.skill, sheets: mappedSampleSheets });
-  const samplePdfBytes = await renderHtmlToPdf(sampleHtml);
+  const sampleInput = { skillLabel: full.label + " — Free Sample", skillCode: full.skill, levelCode: full.skill, sheets: mappedSampleSheets };
+  const samplePdfBytes = await renderPackToPdf(sampleInput);
   const pdf = Buffer.from(samplePdfBytes);
   const url = await uploadToS3(pdf, key, "application/pdf");
 
