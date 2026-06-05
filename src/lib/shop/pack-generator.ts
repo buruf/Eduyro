@@ -384,8 +384,10 @@ function generateOneProblem(bandId: string, rng: () => number, progress: number 
     case "div-remainders": { const max = lerpUpper(progress, 3, 9); const d = r(2, max), q = r(2, 12), rem = r(1, d - 1); return [`${d * q + rem} ÷ ${d}`, `${q} R ${rem}`]; }
 
     // ── M7-M12 — delegate to extended generators ──
-    case "frac-identify": case "frac-simplify": case "frac-add": case "frac-compare":
-      return generateM7Band(bandId, rng, r);
+    // ── Fractions — complete coverage via generateFractionsComplete ──
+    case "frac-identify": case "frac-simplify": case "frac-add-same":
+    case "frac-add-unlike": case "frac-multiply": case "frac-divide": case "frac-mixed":
+      return generateFractionsComplete(bandId, rng, r);
     case "dec-place": case "dec-add-sub": case "dec-multiply": case "dec-divide": case "dec-pct":
       return generateDecimalsComplete(bandId, rng, r);
     case "rat-basic": case "rat-prop": case "rat-rate": case "rat-word":
