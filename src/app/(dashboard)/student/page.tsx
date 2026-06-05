@@ -15,6 +15,7 @@
 //   #S14 Cleaned up encoding garbage in emoji.
 
 "use client";
+import { MathText } from "@/components/MathText";
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -637,7 +638,7 @@ function PracticeModal({
             {problems.map((p, i) => (
               <div key={p.id} className="flex items-center gap-2 py-1">
                 <span className="text-[10px] text-muted/40 w-5 font-sans">{i + 1}.</span>
-                <span className="font-serif font-bold flex-1 text-base">{p.question}</span>
+                <MathText className="font-serif font-bold flex-1 text-base">{p.question}</MathText>
                 <input
                   type="text"
                   value={answers[p.id] ?? ""}

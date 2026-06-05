@@ -1,5 +1,6 @@
 // src/app/print/[childId]/page.tsx
 "use client";
+import { MathText } from "@/components/MathText";
 
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
@@ -227,7 +228,7 @@ function MathGrid({ problems, answerMap, isAnswerKey, rowPadPt, fontPt }: {
         <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #F5F0E8", paddingTop: `${rowPadPt}pt`, paddingBottom: `${rowPadPt}pt`, pageBreakInside: "avoid", breakInside: "avoid" }}>
           <span style={{ fontSize: "8pt", color: "#ccc", fontFamily: "DM Sans, sans-serif", width: "14pt", flexShrink: 0 }}>{i + 1}.</span>
           <span style={{ fontWeight: "bold", flex: 1, fontSize: `${fontPt}pt`, padding: "0 4pt" }}>
-            {p.question.trim().endsWith("=") ? p.question : `${p.question} =`}
+            <MathText>{p.question.trim().endsWith("=") ? p.question : `${p.question} =`}</MathText>
           </span>
           <div style={{ width: "34pt", height: "14pt", border: `1px solid ${isAnswerKey ? "#2D6A3F" : "#D0C8B8"}`, borderRadius: "3pt", background: isAnswerKey ? "#E3F2E8" : "#F5F0E8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8pt", fontWeight: "bold", color: isAnswerKey ? "#2D6A3F" : "transparent", flexShrink: 0 }}>
             {isAnswerKey ? answerMap[p.id] ?? "" : ""}

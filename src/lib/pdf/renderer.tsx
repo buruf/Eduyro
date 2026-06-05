@@ -4,6 +4,7 @@
 // Dynamic column layout: word problems = 1 col, short arithmetic = 3 col.
 
 import { renderToBuffer } from "@react-pdf/renderer";
+import { PdfMathText } from "@/lib/math/pdf-math";
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import React from "react";
 
@@ -128,10 +129,10 @@ function WorksheetPage({ sheet }: { sheet: SheetData }) {
         {sheet.problems.map((p, i) => (
           <View key={p.id} style={cellStyle}>
             <Text style={styles.problemNum}>{i + 1}.</Text>
-            <Text style={textStyle}>{formatQuestion(p.question)}</Text>
+            <PdfMathText text={formatQuestion(p.question)} fontSize={cols === 1 ? 11 : 10} />
             {sheet.isAnswerKey ? (
               <View style={styles.answerBoxFilled}>
-                <Text style={styles.answerText}>{String(p.answer)}</Text>
+                <PdfMathText text={String(p.answer)} fontSize={7} />
               </View>
             ) : (
               <View style={styles.answerBox} />

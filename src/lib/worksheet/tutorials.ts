@@ -1023,11 +1023,17 @@ function genericMathTutorial(skillName: string): TutorialContent {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getReadingTutorial(skill: string, skillName: string): TutorialContent {
+  if (skill.includes("letter") || skill.includes("alphabet") || skill.includes("recognition")) return letterRecognitionTutorial();
+  if (skill.includes("phonic") || skill.includes("vowel") || skill.includes("blend") || skill.includes("sound")) return phonicsTutorial();
+  if (skill.includes("sight") || skill.includes("dolch") || skill.includes("high frequency")) return sightWordsTutorial();
   if (skill.includes("main idea") || skill.includes("topic")) return mainIdeaTutorial();
   if (skill.includes("cause") || skill.includes("effect")) return causeEffectTutorial();
   if (skill.includes("context") || skill.includes("vocabulary")) return contextCluesTutorial();
   if (skill.includes("inference") || skill.includes("infer")) return inferenceTutorial();
   if (skill.includes("figurative") || skill.includes("metaphor") || skill.includes("simile")) return figurativeLanguageTutorial();
+  if (skill.includes("compare") || skill.includes("contrast")) return compareContrastTutorial();
+  if (skill.includes("point of view") || skill.includes("narrator") || skill.includes("perspective")) return pointOfViewTutorial();
+  if (skill.includes("text structure") || skill.includes("structure")) return textStructureTutorial();
   if (skill.includes("comprehension")) return comprehensionTutorial();
   return comprehensionTutorial();
 }
@@ -1151,11 +1157,14 @@ function comprehensionTutorial(): TutorialContent {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getWritingTutorial(skill: string, skillName: string): TutorialContent {
+  if (skill.includes("letter recognition") || skill.includes("uppercase") || skill.includes("lowercase") || skill.includes("sentence completion")) return letterRecognitionTutorial();
   if (skill.includes("noun")) return nounsTutorial();
   if (skill.includes("verb")) return verbsTutorial();
   if (skill.includes("adjective")) return adjectivesTutorial();
   if (skill.includes("punctuation") || skill.includes("capitalization")) return punctuationTutorial();
   if (skill.includes("sentence")) return sentencesTutorial();
+  if (skill.includes("spell")) return spellingTutorial();
+  if (skill.includes("edit") || skill.includes("proofread") || skill.includes("revise")) return editingProofreadingTutorial();
   if (skill.includes("paragraph") || skill.includes("topic")) return paragraphsTutorial();
   if (skill.includes("essay")) return essayTutorial();
   if (skill.includes("persuasive")) return persuasiveTutorial();
@@ -1339,6 +1348,7 @@ function narrativeTutorial(): TutorialContent {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getScienceTutorial(skill: string, skillName: string): TutorialContent {
+  if (skill.includes("scientific method") || skill.includes("hypothesis") || skill.includes("variable") || skill.includes("experiment")) return scientificMethodTutorial();
   if (skill.includes("water cycle")) return waterCycleTutorial();
   if (skill.includes("states of matter") || skill.includes("matter")) return statesOfMatterTutorial();
   if (skill.includes("food chain") || skill.includes("ecosystem")) return foodChainTutorial();
@@ -1498,6 +1508,183 @@ function chemistryTutorial(): TutorialContent {
       { problem: "What does pH measure?", steps: ["pH measures how acidic or alkaline (basic) a solution is.", "Scale: 0–14", "0–6: acidic (lemon juice = 2)", "7: neutral (pure water)", "8–14: alkaline/basic (bleach = 13)"], answer: "0–6 acidic, 7 neutral, 8–14 alkaline" },
       { problem: "What is the difference between an exothermic and endothermic reaction?", steps: ["Exothermic: releases ENERGY (usually as heat)", "Example: burning wood, explosions", "Endothermic: absorbs ENERGY", "Example: photosynthesis, melting ice"], answer: "Exothermic = releases heat; Endothermic = absorbs heat" },
       { problem: "What is a catalyst?", steps: ["A catalyst speeds up a chemical reaction.", "It is NOT consumed in the reaction.", "Example: enzymes in your body speed up digestion.", "Catalysts lower the energy needed to start a reaction."], answer: "Speeds up reactions without being consumed" },
+    ],
+  };
+}
+
+// =============================================================================
+// TIER 1 — Missing tutorials for R1, R2, R3, Writing W1, Science Method
+// =============================================================================
+
+export function letterRecognitionTutorial(): TutorialContent {
+  return {
+    skillName: "Letter Recognition",
+    intro: "Learning to recognise letters is the first step to reading. Every word is made of letters — upper case and lower case.",
+    concepts: [
+      { title: "Upper Case & Lower Case", formula: "Every letter has TWO forms: A/a  B/b  C/c  D/d", explanation: "Upper case letters (capitals) are used at the start of sentences and for names. Lower case letters are used everywhere else.", tip: "Upper case: A B C D E F G  — Lower case: a b c d e f g" },
+      { title: "Vowels vs Consonants", formula: "Vowels: A E I O U  —  All other letters are consonants", explanation: "Every word needs at least one vowel. Vowels make the open sounds. Consonants make the closed sounds.", tip: "Remember vowels with: A E I O U — and sometimes Y!" },
+      { title: "Letter Sounds", formula: "Each letter makes a sound: A = 'ah'  B = 'buh'  C = 'kuh'", explanation: "Knowing letter sounds helps you read new words by sounding them out letter by letter.", tip: "Point to each letter and say its sound out loud — practice makes it automatic!" },
+    ],
+    examples: [
+      { problem: "Which letters are vowels?", steps: ["Vowels are: A, E, I, O, U", "Every other letter is a consonant.", "Vowels make the open sounds in words."], answer: "A E I O U" },
+      { problem: "Write the lower case of: A B C D E", steps: ["A → a", "B → b", "C → c", "D → d", "E → e"], answer: "a b c d e" },
+      { problem: "How many vowels are in the word 'apple'?", steps: ["a-p-p-l-e", "Vowels are: a, e", "Count them: 2"], answer: "2 vowels (a and e)" },
+      { problem: "Which letter comes after M in the alphabet?", steps: ["...K L M N O...", "M is followed by N."], answer: "N" },
+      { problem: "Is the letter T a vowel or consonant?", steps: ["Vowels: A E I O U", "T is not in that list.", "T is a consonant."], answer: "Consonant" },
+    ],
+  };
+}
+
+export function phonicsTutorial(): TutorialContent {
+  return {
+    skillName: "Long Vowels & Phonics",
+    intro: "Phonics is understanding how letters and sounds connect. Long vowels say their name — like the A in cake or the E in tree.",
+    concepts: [
+      { title: "Short vs Long Vowels", formula: "Short A: cat, hat  |  Long A: cake, rain, day", explanation: "Short vowels make a quick clipped sound. Long vowels say the letter name. The silent e rule makes vowels long.", tip: "Silent E rule: kit → kite, hop → hope" },
+      { title: "Vowel Teams", formula: "ai = rain  |  ee = tree  |  oa = boat  |  ue = blue", explanation: "When two vowels appear together, usually the first one says its name and the second is silent.", tip: "When two vowels go walking, the first one does the talking!" },
+      { title: "Consonant Blends", formula: "bl = black  |  st = stop  |  tr = tree  |  sh = ship", explanation: "Consonant blends are two or three consonants together. Digraphs (sh, ch, th) make one new sound.", tip: "sh = one sound  |  st = two sounds" },
+    ],
+    examples: [
+      { problem: "Is the A in cake long or short?", steps: ["cake ends in silent E", "Silent E makes the A long", "The A says its name: ayy"], answer: "Long A" },
+      { problem: "Is the I in sit long or short?", steps: ["sit has no silent E", "The I makes a short sound: ih", "Short I"], answer: "Short I" },
+      { problem: "What sound do the letters sh make?", steps: ["sh is a digraph — two letters, one sound", "sh = shhhh (like shhh, be quiet)", "Examples: ship, shop, fish"], answer: "One sound: sh as in ship" },
+      { problem: "Apply the silent E rule: hop → ___e", steps: ["hop has a short O", "Add silent E: h-o-p-e", "The O becomes long: hope"], answer: "hope (long O sound)" },
+      { problem: "What vowel team is in rain?", steps: ["r-a-i-n", "a and i are together = vowel team ai", "ai makes the long A sound"], answer: "ai — makes long A sound" },
+    ],
+  };
+}
+
+export function sightWordsTutorial(): TutorialContent {
+  return {
+    skillName: "Sight Words",
+    intro: "Sight words are very common words you should know instantly — without sounding them out. They appear in almost every sentence you will ever read.",
+    concepts: [
+      { title: "What Are Sight Words?", formula: "the · and · is · it · in · of · to · a · he · she · was · for", explanation: "Sight words are the most frequently used words in English. Learning them by heart makes reading faster and smoother.", tip: "The word the alone makes up about 7% of all words written in English!" },
+      { title: "Dolch Word List — Level 1", formula: "I · a · and · the · to · is · in · it · of · can · see · we", explanation: "The Dolch list is the classic set of sight words every reader should master.", tip: "Make flashcards and practice 5 new words a day!" },
+      { title: "Reading Sight Words in Context", formula: "Use the SENTENCE to help confirm the sight word", explanation: "Even if you know a word by sight, reading the whole sentence helps you understand meaning.", tip: "Don't guess — if unsure, look at the word carefully then use the sentence for meaning." },
+    ],
+    examples: [
+      { problem: "Which of these is a sight word: elephant or the?", steps: ["Sight words are very common short words.", "the appears in nearly every sentence.", "elephant is a longer, less common word."], answer: "the" },
+      { problem: "Fill in the blank: ___ cat sat on the mat.", steps: ["The sentence needs a word before cat.", "Common sight words that fit: The or A", "Most natural: The cat sat on the mat."], answer: "The" },
+      { problem: "How many sight words are in: He is in the car?", steps: ["He = sight word", "is = sight word", "in = sight word", "the = sight word", "car = not a sight word"], answer: "4 sight words" },
+      { problem: "Read and identify the sight words: She can see the big dog", steps: ["She, can, see, the are sight words", "big and dog are not Dolch sight words"], answer: "She, can, see, the" },
+      { problem: "Why are sight words important?", steps: ["They are the most common words in English.", "Recognising them instantly makes reading faster.", "You spend less effort on individual words and more on meaning."], answer: "They appear constantly — instant recognition speeds up reading" },
+    ],
+  };
+}
+
+export function scientificMethodTutorial(): TutorialContent {
+  return {
+    skillName: "The Scientific Method",
+    intro: "The scientific method is how scientists investigate questions about the world. Every science experiment follows these steps.",
+    concepts: [
+      { title: "The 6 Steps", formula: "Question → Hypothesis → Method → Results → Conclusion → Communicate", explanation: "Scientists always start with a question. They make a prediction, design an experiment, record results, draw a conclusion, and share findings.", tip: "Remember: Queen Hyenas Must Run Crazy Circles = Question, Hypothesis, Method, Results, Conclusion, Communicate" },
+      { title: "Variables", formula: "Independent = what you CHANGE\nDependent = what you MEASURE\nControlled = what you KEEP THE SAME", explanation: "A fair test only changes ONE variable at a time.", tip: "Only change ONE thing — otherwise you don't know what caused the result!" },
+      { title: "Hypothesis vs Conclusion", formula: "Hypothesis = prediction BEFORE\nConclusion = what results TELL YOU after", explanation: "A hypothesis uses If... then... format. A conclusion states whether results supported or disproved the hypothesis.", tip: "A wrong hypothesis is NOT a failure — it is a discovery!" },
+    ],
+    examples: [
+      { problem: "What is a hypothesis?", steps: ["A hypothesis is a testable prediction made BEFORE the experiment.", "It uses If... then... format.", "Example: If I water plants daily, then they will grow taller."], answer: "A testable prediction before the experiment (If...then...)" },
+      { problem: "In an experiment testing whether sunlight affects plant growth: what is the independent variable?", steps: ["The independent variable is what you CHANGE.", "You are changing the amount of sunlight.", "Independent variable = amount of sunlight"], answer: "Amount of sunlight" },
+      { problem: "What is the dependent variable in that experiment?", steps: ["The dependent variable is what you MEASURE.", "You measure plant growth.", "Dependent variable = plant growth (height)"], answer: "Plant growth (height)" },
+      { problem: "What makes a test fair?", steps: ["Only ONE variable is changed.", "Everything else stays the same.", "This ensures the result is caused by the one change."], answer: "Only one variable changes — everything else stays the same" },
+      { problem: "A student concludes: My hypothesis was wrong. Is this a problem?", steps: ["No — a wrong hypothesis is a valid scientific finding.", "It tells us what does NOT work.", "Science advances by disproving ideas as much as proving them."], answer: "No — disproving a hypothesis is a valid scientific result" },
+    ],
+  };
+}
+
+// =============================================================================
+// TIER 2 — Compare & Contrast, Point of View, Text Structure, Spelling, Editing
+// =============================================================================
+
+export function compareContrastTutorial(): TutorialContent {
+  return {
+    skillName: "Compare & Contrast",
+    intro: "Comparing means finding similarities. Contrasting means finding differences. Good readers do both at the same time.",
+    concepts: [
+      { title: "Signal Words for Compare", formula: "both · similarly · alike · also · in the same way · just like", explanation: "These words signal that two things are being shown as similar.", tip: "Both dogs and cats are popular pets — both signals comparison." },
+      { title: "Signal Words for Contrast", formula: "however · but · on the other hand · unlike · while · whereas", explanation: "These words signal that two things are being shown as different.", tip: "Dogs bark, however cats meow — however signals contrast." },
+      { title: "Venn Diagram Thinking", formula: "Left = unique to A  |  Middle = both  |  Right = unique to B", explanation: "A Venn diagram organises similarities and differences visually.", tip: "Ask: What do they SHARE? What is DIFFERENT about each?" },
+    ],
+    examples: [
+      { problem: "What does compare mean?", steps: ["To compare = to find SIMILARITIES.", "You look at what two things have IN COMMON.", "Example: Compare a dog and a cat — both are mammals, both are kept as pets."], answer: "Finding similarities between two or more things" },
+      { problem: "What does contrast mean?", steps: ["To contrast = to find DIFFERENCES.", "You look at how two things are DIFFERENT.", "Example: Dogs bark, cats meow; dogs are pack animals, cats are solitary."], answer: "Finding differences between two or more things" },
+      { problem: "Identify: Both summer and winter are seasons, but summer is warm while winter is cold.", steps: ["Signal words: Both (compare) and but...while (contrast)", "Similarity: both are seasons", "Difference: temperature"], answer: "Compare: both are seasons | Contrast: temperature differs" },
+      { problem: "What signal word shows contrast: Dogs are loyal. ___, cats are independent.", steps: ["We need a contrast signal word.", "Options: However, But, On the other hand", "Best fit: However, cats are independent."], answer: "However" },
+      { problem: "Frogs live in water AND on land. Fish only live in water. Organise this.", steps: ["Frogs only: can live on land, breathe air", "Both: live in or near water, are cold-blooded", "Fish only: always in water, breathe through gills"], answer: "Both: live near water | Frogs: also on land | Fish: only in water" },
+    ],
+  };
+}
+
+export function pointOfViewTutorial(): TutorialContent {
+  return {
+    skillName: "Point of View",
+    intro: "Point of view is the perspective from which a story is told. Who is narrating? How does that affect what we know?",
+    concepts: [
+      { title: "First Person Point of View", formula: "Narrator uses: I · me · my · we · our", explanation: "The narrator IS a character in the story. You only know what they see, think, and feel.", tip: "I walked into the room — I tells you it is first person." },
+      { title: "Third Person Limited", formula: "Narrator uses: he · she · they — follows ONE character's thoughts", explanation: "The narrator is outside the story but only reveals the thoughts of one character.", tip: "She wondered what he was thinking — narrator knows HER thoughts but not his." },
+      { title: "Third Person Omniscient", formula: "Narrator knows ALL characters' thoughts and feelings", explanation: "The all-knowing narrator can reveal any character's inner thoughts.", tip: "He was nervous. She, however, felt confident. — omniscient narrator knows BOTH." },
+    ],
+    examples: [
+      { problem: "What is first person point of view?", steps: ["The narrator IS a character using I, me, my.", "Only that character's thoughts are revealed.", "Example: I ran as fast as I could, my heart pounding."], answer: "Narrator is a character — uses I/me/my" },
+      { problem: "Identify: She walked into the dark room, wondering what was inside.", steps: ["Pronoun: She — not first person.", "Only she is wondering — limited to her perspective.", "This is THIRD PERSON LIMITED."], answer: "Third person limited" },
+      { problem: "Identify: John felt afraid. Maria, across the room, sensed his fear.", steps: ["Uses he/she — third person.", "Both characters' feelings are revealed.", "This is THIRD PERSON OMNISCIENT."], answer: "Third person omniscient" },
+      { problem: "What is a limitation of first person narration?", steps: ["The narrator can only tell you what THEY experience.", "They cannot know other characters' true thoughts.", "They may be biased or unreliable."], answer: "Limited to narrator's knowledge — may be biased" },
+      { problem: "Why does point of view matter in a story?", steps: ["It controls what information the reader receives.", "First person = personal but limited.", "Third person omniscient = complete picture.", "The author chooses POV deliberately for effect."], answer: "It controls what readers know and feel" },
+    ],
+  };
+}
+
+export function textStructureTutorial(): TutorialContent {
+  return {
+    skillName: "Text Structure",
+    intro: "Text structure is how an author organises information. Recognising the structure helps you understand and remember what you read.",
+    concepts: [
+      { title: "5 Common Text Structures", formula: "Description · Sequence · Compare/Contrast · Cause/Effect · Problem/Solution", explanation: "Each structure organises information differently. Good readers identify the structure to predict and comprehend better.", tip: "The signal words in a text tell you which structure is being used." },
+      { title: "Structure Signal Words", formula: "Sequence: first/then/next/finally\nCause/Effect: because/so/therefore\nProblem/Solution: problem/solution/as a result", explanation: "Every text structure has its own set of signal words.", tip: "When you see first... then... finally, think SEQUENCE." },
+    ],
+    examples: [
+      { problem: "Identify: First, water evaporates. Then it forms clouds. Finally, it rains.", steps: ["Signal words: first, then, finally", "Events in ORDER", "This is a SEQUENCE structure."], answer: "Sequence" },
+      { problem: "Identify: Pollution in rivers harms fish. Because of this, many species are endangered.", steps: ["Signal words: Because of this", "One thing leads to another.", "This is CAUSE AND EFFECT structure."], answer: "Cause and Effect" },
+      { problem: "Identify: Dogs are loyal. Cats, on the other hand, are independent.", steps: ["Signal words: on the other hand", "Showing differences between two subjects.", "This is COMPARE AND CONTRAST structure."], answer: "Compare and Contrast" },
+      { problem: "Identify: Many students fail exams because of poor sleep. Schools should start later to solve this.", steps: ["A problem is identified: poor sleep.", "A solution is offered: later start times.", "This is PROBLEM AND SOLUTION structure."], answer: "Problem and Solution" },
+      { problem: "Identify: The cheetah is the fastest land animal. It can reach 70 mph and has a flexible spine.", steps: ["No sequence, no cause/effect, no comparison.", "The text describes one subject's features.", "This is DESCRIPTION structure."], answer: "Description" },
+    ],
+  };
+}
+
+export function spellingTutorial(): TutorialContent {
+  return {
+    skillName: "Spelling",
+    intro: "Good spelling makes your writing clear and credible. Many spelling patterns follow consistent rules.",
+    concepts: [
+      { title: "i before e, except after c", formula: "i before e: believe, field, piece\nexcept after c: receive, ceiling, deceive", explanation: "When i and e appear together, the i usually comes first — UNLESS the letters come after c.", tip: "Exceptions: weird, seize, neither — memorise these separately!" },
+      { title: "Dropping the Silent E", formula: "Before vowel suffix: drop the e → hope + ing = hoping\nBefore consonant suffix: keep the e → hope + ful = hopeful", explanation: "When adding a suffix that starts with a vowel, drop the silent e. Keep it before consonant suffixes.", tip: "love + ing = loving  |  love + ly = lovely" },
+      { title: "Doubling the Final Consonant", formula: "1 syllable + 1 vowel + 1 consonant → double before vowel suffix\nrun → running | stop → stopped", explanation: "Short vowel sounds need the consonant doubled to keep them short.", tip: "run + ing: only 1 vowel before final consonant → double it → running" },
+    ],
+    examples: [
+      { problem: "Spell: believe + able =", steps: ["believe ends in silent e.", "Suffix -able starts with a vowel.", "Drop the e: believ + able = believable."], answer: "believable" },
+      { problem: "Spell: run + ing =", steps: ["run = 1 syllable, 1 vowel (u), ends in consonant (n).", "Suffix starts with vowel (-ing).", "Double the n: running."], answer: "running" },
+      { problem: "Which is correct: recieve or receive?", steps: ["The letters i and e follow c.", "Rule: except after c → e before i.", "Correct: receive."], answer: "receive" },
+      { problem: "Spell: hope + ful =", steps: ["hope ends in silent e.", "-ful starts with a CONSONANT.", "Keep the e: hopeful."], answer: "hopeful" },
+      { problem: "Spell: big + est =", steps: ["big = 1 syllable, 1 vowel (i), ends in consonant (g).", "Suffix starts with vowel (-est).", "Double the g: biggest."], answer: "biggest" },
+    ],
+  };
+}
+
+export function editingProofreadingTutorial(): TutorialContent {
+  return {
+    skillName: "Editing & Proofreading",
+    intro: "Editing improves content — structure, clarity, vocabulary. Proofreading catches errors — spelling, punctuation, grammar. Every good writer does both.",
+    concepts: [
+      { title: "CUPS Proofreading Checklist", formula: "C = Capitalisation  U = Usage  P = Punctuation  S = Spelling", explanation: "CUPS is a systematic checklist. Check each category separately to avoid missing errors.", tip: "Read your work BACKWARDS to catch spelling errors — it forces you to look at each word individually." },
+      { title: "Common Grammar Errors", formula: "Subject-verb agreement: The dogs runs → The dogs run\nTense consistency: She walked in and sits → She walked in and sat", explanation: "The verb must agree with its subject in number. Tense must stay consistent throughout a passage.", tip: "Cross out everything between subject and verb to check agreement." },
+    ],
+    examples: [
+      { problem: "Find the error: The children plays in the park every day.", steps: ["Subject: The children (plural)", "Verb: plays (singular form)", "Should be: The children play in the park."], answer: "plays → play (subject-verb agreement)" },
+      { problem: "Find the error: She walked to school and eats her lunch.", steps: ["walked = past tense", "eats = present tense", "Correction: She walked to school and ate her lunch."], answer: "eats → ate (tense consistency)" },
+      { problem: "Find the error: my favourite colour is blue", steps: ["Capitalisation check: my should be My", "Punctuation: needs a full stop at the end.", "Correction: My favourite colour is blue."], answer: "Capitalise My, add full stop" },
+      { problem: "Which is more specific? A: It was a nice day. B: The sky was clear and the temperature reached 24 degrees.", steps: ["A is vague: nice could mean anything.", "B is specific: gives observable, precise details.", "B is stronger writing."], answer: "B — specific details make stronger writing" },
+      { problem: "Fix: The team of players are ready for the game.", steps: ["Subject: The team — team is SINGULAR.", "are is plural — incorrect.", "Correction: The team of players is ready for the game."], answer: "are → is (team is singular)" },
     ],
   };
 }

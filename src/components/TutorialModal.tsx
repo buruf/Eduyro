@@ -3,6 +3,7 @@
 // Every skill shows its rules FIRST, then worked examples with step-by-step reveal
 
 "use client";
+import { MathText } from "@/components/MathText";
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -167,7 +168,7 @@ export function TutorialModal({ open, onClose, sheet, content, subjectSlug: subj
                 className="rounded-xl border px-5 py-4"
               >
                 <div style={{ color: theme.accent }} className="text-[11px] uppercase tracking-widest font-semibold mb-1">Formula / Key Fact</div>
-                <div className="text-white font-mono text-base leading-relaxed whitespace-pre-line">{concept.formula}</div>
+                <MathText className="text-white font-mono text-base leading-relaxed whitespace-pre-line">{concept.formula}</MathText>
               </div>
             )}
 
