@@ -1,10 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
   reactStrictMode: true,
   poweredByHeader: false,
   experimental: {
     serverActions: { bodySizeLimit: "5mb" },
+    serverComponentsExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
   },
   images: {
     remotePatterns: [
