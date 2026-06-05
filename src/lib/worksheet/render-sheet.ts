@@ -2,12 +2,13 @@
 // Renders one worksheet sheet to HTML for printing.
 // Uses auto-scaling layout that fits any problem count on one letter page.
 
-import { getLayoutForCount, type LayoutConfig } from "./layout";
+import katex from "katex";
+import { getLayoutForCount } from "./layout";
 
 export interface SheetProblem {
   id: string;
   question: string;
-  answer?: string; // only present in answer key
+  answer?: string;
   type?: string;
 }
 
@@ -22,11 +23,39 @@ export interface SheetMeta {
   showDisclaimer?: boolean;
 }
 
-/**
- * Render a single worksheet sheet as a self-contained HTML string.
- * Set `isAnswerKey=true` to show the answers next to each question.
- * The output is a <div> — caller wraps in a full document with <html><body>.
- */
+// HTML escape
+function escape(s: string): string {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Render math notation using KaTeX server-side
+// Auto-upgrades legacy notation: 1/2 → \frac{1}{2}, x^2 → x^{2}, √9 → \sqrt{9}
+function renderMath(text: string): string {
+  // Step 1: auto-upgrade legacy notation to $...$ delimited LaTeX
+  let t = text;
+
+  // Only upgrade standalone fractions (digits only, not already in $)
+  if (!t.includes("$")) {
+    t = t.replace(/\b(\d+)\/(\d+)\b/g, (_, n, d) => `$\\frac{${n}}{${d}}$`);
+    t = t.replace(/([a-zA-Z])\^(\d+)/g, (_, b, e) => `$${b}^{${e}}$`);
+    t = t.replace(/\u221a(\d+)/g, (_, n) => `$\\sqrt{${n}}$`);
+  }
+
+  // Step 2: render $...$ blocks with KaTeX
+  return t.replace(/\$([^$]+?)\$/g, (_, math) => {
+    try {
+      return katex.renderToString(math, { throwOnError: false, output: "html" });
+    } catch {
+      return math;
+    }
+  });
+}
+
 export function renderSheetHtml(
   problems: SheetProblem[],
   meta: SheetMeta,
@@ -54,10 +83,10 @@ export function renderSheetHtml(
       (p, i) => `
       <div class="problem">
         <span class="num">${i + 1}.</span>
-        <span class="q">${escape(p.question)}</span>
+        <span class="q">${renderMath(p.question)}</span>
         ${
           isAnswerKey && p.answer
-            ? `<span class="ans">${escape(p.answer)}</span>`
+            ? `<span class="ans">${renderMath(p.answer)}</span>`
             : `<span class="blank"></span>`
         }
       </div>`
@@ -66,6 +95,7 @@ export function renderSheetHtml(
 
   return `
 <div class="sheet" data-cols="${layout.columns}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <style>
     .sheet {
       font-family: 'DM Sans', system-ui, sans-serif;
@@ -73,7 +103,6 @@ export function renderSheetHtml(
       position: relative;
       width: 100%;
       padding: 0;
-      /* Page-level margins are set by @page in the wrapping document */
     }
     .sheet .header {
       display: flex;
@@ -188,9 +217,7 @@ export function renderSheetHtml(
   <div class="header">
     <div>
       <div class="org">Eduyro Education</div>
-      <div class="title">${safeName}${
-    isAnswerKey ? " — Answer Key" : ""
-  }</div>
+      <div class="title">${safeName}${isAnswerKey ? " — Answer Key" : ""}</div>
       <div class="sub">
         ${problems.length} problems
         ${meta.timeLimitMinutes ? ` · Target: ${meta.timeLimitMinutes} min` : ""}
@@ -211,20 +238,6 @@ export function renderSheetHtml(
 </div>`;
 }
 
-/** HTML escape — prevents injection from user-controlled fields */
-function escape(s: string): string {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-/**
- * Wrap one or more rendered sheets into a printable HTML document.
- * Each sheet starts on a new page via CSS page-break.
- */
 export function wrapDocument(sheetHtmls: string[], title: string): string {
   const sheetsWithBreaks = sheetHtmls
     .map(
@@ -244,11 +257,7 @@ export function wrapDocument(sheetHtmls: string[], title: string): string {
       .page { page-break-after: always; }
       .page:last-child { page-break-after: auto; }
     }
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: white;
-    }
+    html, body { margin: 0; padding: 0; background: white; }
     body { font-family: 'DM Sans', system-ui, sans-serif; }
   </style>
 </head>
