@@ -44,10 +44,17 @@ export async function getOrCreatePackPdf(skill: ShopSkill): Promise<CachedPack> 
 
   console.log(`[shop-cache] Generating ${skill} pack (cache miss)…`);
   const pack = generatePackForSkill(skill);
-  const sheets = pack.sheets.map((s) => ({
-    problems:  s.problems.map((p: any) => ({ ...p, answer: String(p.answer) })),
-    skillBand: s.bandLabel,
-  }));
+  const sheets = pack.sheets.map((s) => {
+    // Build answer map from answerKey (problems don't store answers directly)
+    const answerMap = new Map((s.answerKey ?? []).map((e: any) => [e.id, String(e.answer)]));
+    return {
+      problems: s.problems.map((p: any) => ({
+        ...p,
+        answer: answerMap.get(p.id) ?? String(p.answer ?? ""),
+      })),
+      skillBand: s.bandLabel,
+    };
+  });
 
   const pdfBytes = await renderPackToPdf({
     skillLabel: pack.label,
@@ -70,10 +77,16 @@ export async function getOrCreateSamplePdf(skill: ShopSkill): Promise<CachedPack
 
   console.log(`[shop-cache] Generating ${skill} sample (cache miss)…`);
   const full         = generatePackForSkill(skill);
-  const sampleSheets = full.sheets.slice(0, 3).map((s) => ({
-    problems:  s.problems.map((p: any) => ({ ...p, answer: String(p.answer) })),
-    skillBand: s.bandLabel,
-  }));
+  const sampleSheets = full.sheets.slice(0, 3).map((s) => {
+    const answerMap = new Map((s.answerKey ?? []).map((e: any) => [e.id, String(e.answer)]));
+    return {
+      problems: s.problems.map((p: any) => ({
+        ...p,
+        answer: answerMap.get(p.id) ?? String(p.answer ?? ""),
+      })),
+      skillBand: s.bandLabel,
+    };
+  });
 
   const pdfBytes = await renderPackToPdf({
     skillLabel: `${full.label} — Free Sample`,
