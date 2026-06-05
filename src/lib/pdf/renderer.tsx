@@ -97,7 +97,7 @@ function WorksheetPage({ sheet }: { sheet: SheetData }) {
         {sheet.problems.map((p, i) => (
           <View key={p.id} style={styles.problemCell}>
             <Text style={styles.problemNum}>{i + 1}.</Text>
-            <Text style={styles.problemText}>{p.question.endsWith("=") ? p.question : p.question + " ="}</Text>
+            <Text style={styles.problemText}>{p.question.includes("=") ? p.question : p.question + " ="}</Text>
             {sheet.isAnswerKey ? (
               <View style={styles.answerBoxFilled}>
                 <Text style={styles.answerText}>{String(p.answer)}</Text>
