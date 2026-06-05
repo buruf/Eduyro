@@ -321,9 +321,9 @@ function getWarmupProblems(bandId: string): Array<[string, string]> {
       ];
     case "sub-1-10":
       return [
-        ["2 − 1", "1"], ["3 − 1", "2"], ["3 − 2", "1"], ["4 − 1", "3"], ["4 − 2", "2"],
-        ["4 − 3", "1"], ["5 − 1", "4"], ["5 − 2", "3"], ["5 − 3", "2"], ["5 − 4", "1"],
-        ["6 − 1", "5"], ["6 − 2", "4"], ["6 − 3", "3"], ["7 − 1", "6"], ["7 − 2", "5"],
+        ["2 - 1", "1"], ["3 - 1", "2"], ["3 - 2", "1"], ["4 - 1", "3"], ["4 - 2", "2"],
+        ["4 - 3", "1"], ["5 - 1", "4"], ["5 - 2", "3"], ["5 - 3", "2"], ["5 - 4", "1"],
+        ["6 - 1", "5"], ["6 - 2", "4"], ["6 - 3", "3"], ["7 - 1", "6"], ["7 - 2", "5"],
       ];
     case "mul-2-5":
       return [
@@ -364,10 +364,10 @@ function generateOneProblem(bandId: string, rng: () => number, progress: number 
     case "add-20-100": { const max = lerpUpper(progress, 30, 100); const a = r(20, max), b = r(10, Math.max(15, Math.floor(max / 2))); return [`${a} + ${b}`, String(a + b)]; }
 
     // ── Subtraction ──
-    case "sub-1-10": { const max = lerpUpper(progress, 2, 10); const a = r(2, max), b = r(1, a); return [`${a} − ${b}`, String(a - b)]; }
-    case "sub-10-20": { const max = lerpUpper(progress, 10, 20); const a = r(10, max), b = r(1, Math.min(10, a - 1)); return [`${a} − ${b}`, String(a - b)]; }
-    case "sub-mix-1-20": { const max = lerpUpper(progress, 5, 20); const a = r(5, max), b = r(1, a - 1); return [`${a} − ${b}`, String(a - b)]; }
-    case "sub-20-100": { const max = lerpUpper(progress, 30, 100); const a = r(20, max), b = r(5, a - 1); return [`${a} − ${b}`, String(a - b)]; }
+    case "sub-1-10": { const max = lerpUpper(progress, 2, 10); const a = r(2, max), b = r(1, a); return [`${a} - ${b}`, String(a - b)]; }
+    case "sub-10-20": { const max = lerpUpper(progress, 10, 20); const a = r(10, max), b = r(1, Math.min(10, a - 1)); return [`${a} - ${b}`, String(a - b)]; }
+    case "sub-mix-1-20": { const max = lerpUpper(progress, 5, 20); const a = r(5, max), b = r(1, a - 1); return [`${a} - ${b}`, String(a - b)]; }
+    case "sub-20-100": { const max = lerpUpper(progress, 30, 100); const a = r(20, max), b = r(5, a - 1); return [`${a} - ${b}`, String(a - b)]; }
 
     // ── Multiplication ──
     case "mul-2-5": { const maxA = lerpUpper(progress, 2, 5), maxB = lerpUpper(progress, 3, 12); const a = r(2, maxA), b = r(2, maxB); return [`${a} × ${b}`, String(a * b)]; }

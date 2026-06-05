@@ -1,9 +1,10 @@
-// src/lib/pdf/renderer.ts
+// src/lib/pdf/renderer.tsx
 // Vercel-compatible PDF renderer using @react-pdf/renderer.
 // No Chromium, no Puppeteer — works on any Node.js serverless environment.
+// Dynamic column layout: word problems = 1 col, short arithmetic = 3 col.
 
 import { renderToBuffer } from "@react-pdf/renderer";
-import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import React from "react";
 
 const styles = StyleSheet.create({
@@ -28,9 +29,16 @@ const styles = StyleSheet.create({
   metaLine: { borderBottomWidth: 1, borderBottomColor: "#D0C8B8", height: 16 },
   instructions: { backgroundColor: "#F5F0E8", borderLeftWidth: 3, borderLeftColor: "#C8902A", padding: "4 8", marginBottom: 8, fontSize: 8, color: "#7A6E5F", fontStyle: "italic" },
   problemGrid: { flexDirection: "row", flexWrap: "wrap" },
-  problemCell: { width: "33%", flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: "#F5F0E8", paddingVertical: 3, paddingHorizontal: 2 },
+  // 1 column — word problems, long questions
+  cell1: { width: "100%", flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: "#F5F0E8", paddingVertical: 6, paddingHorizontal: 4 },
+  text1: { fontSize: 11, fontFamily: "Helvetica-Bold", flex: 1 },
+  // 2 columns — medium length questions
+  cell2: { width: "50%", flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: "#F5F0E8", paddingVertical: 5, paddingHorizontal: 3 },
+  text2: { fontSize: 10, fontFamily: "Helvetica-Bold", flex: 1 },
+  // 3 columns — short arithmetic
+  cell3: { width: "33%", flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: "#F5F0E8", paddingVertical: 3, paddingHorizontal: 2 },
+  text3: { fontSize: 10, fontFamily: "Helvetica-Bold", flex: 1 },
   problemNum: { fontSize: 7, color: "#ccc", width: 14 },
-  problemText: { fontSize: 10, fontFamily: "Helvetica-Bold", flex: 1 },
   answerBox: { width: 34, height: 14, borderWidth: 1, borderColor: "#D0C8B8", backgroundColor: "#F5F0E8" },
   answerBoxFilled: { width: 34, height: 14, borderWidth: 1, borderColor: "#2D6A3F", backgroundColor: "#E3F2E8", alignItems: "center", justifyContent: "center" },
   answerText: { fontSize: 8, color: "#2D6A3F", fontFamily: "Helvetica-Bold" },
@@ -39,6 +47,22 @@ const styles = StyleSheet.create({
   disclaimer: { fontSize: 6, color: "#bbb", textAlign: "center", fontStyle: "italic", marginTop: 3 },
   signature: { borderTopWidth: 1, borderTopColor: "#F5F0E8", paddingTop: 3, marginTop: 4, fontSize: 8, color: "#aaa" },
 });
+
+// Words that indicate a word problem / non-arithmetic question
+const WORD_STARTERS = ["which","what","convert","factor","expand","simplify","add","subtract","in ","a ","two ","sam","maria","someone","there","find","how","when","why","the ","if ","solve"];
+
+function formatQuestion(q: string): string {
+  const lower = q.toLowerCase();
+  const isWordProblem = q.includes("=") || q.includes("?") || WORD_STARTERS.some(w => lower.startsWith(w));
+  return isWordProblem ? q : q + " =";
+}
+
+function getColumns(problems: { question: string }[]): 1 | 2 | 3 {
+  const avgLen = problems.reduce((s, p) => s + p.question.length, 0) / problems.length;
+  if (avgLen > 35) return 1;
+  if (avgLen > 18 || problems.length <= 16) return 2;
+  return 3;
+}
 
 interface SheetData {
   sheetNumber: number;
@@ -54,6 +78,10 @@ interface SheetData {
 
 function WorksheetPage({ sheet }: { sheet: SheetData }) {
   const date = sheet.date ?? new Date().toLocaleDateString("en-CA");
+  const cols = getColumns(sheet.problems);
+  const cellStyle = cols === 1 ? styles.cell1 : cols === 2 ? styles.cell2 : styles.cell3;
+  const textStyle = cols === 1 ? styles.text1 : cols === 2 ? styles.text2 : styles.text3;
+
   return (
     <Page size="LETTER" style={styles.page}>
       {/* Header */}
@@ -63,11 +91,14 @@ function WorksheetPage({ sheet }: { sheet: SheetData }) {
           {sheet.skillLabel}{sheet.isAnswerKey ? " — ANSWER KEY" : ""}
         </Text>
         <Text style={styles.headerSub}>
-          {sheet.levelCode} · {sheet.skillBand} · {sheet.isAnswerKey ? `Answer Key — Sheet ${sheet.sheetNumber}` : `Sheet ${sheet.sheetNumber} of ${sheet.totalSheets}`} · Target: {sheet.timeLimitMinutes ?? 10} min · {sheet.problems.length} problems
+          {sheet.levelCode} · {sheet.skillBand} · {sheet.isAnswerKey
+            ? `Answer Key — Sheet ${sheet.sheetNumber}`
+            : `Sheet ${sheet.sheetNumber} of ${sheet.totalSheets}`
+          } · Target: {sheet.timeLimitMinutes ?? 10} min · {sheet.problems.length} problems
         </Text>
       </View>
 
-      {/* Name/Date/Score — worksheets only */}
+      {/* Name / Date / Score — worksheets only */}
       {!sheet.isAnswerKey && (
         <View style={styles.metaRow}>
           <View style={styles.metaField}>
@@ -95,9 +126,9 @@ function WorksheetPage({ sheet }: { sheet: SheetData }) {
       {/* Problems grid */}
       <View style={styles.problemGrid}>
         {sheet.problems.map((p, i) => (
-          <View key={p.id} style={styles.problemCell}>
+          <View key={p.id} style={cellStyle}>
             <Text style={styles.problemNum}>{i + 1}.</Text>
-            <Text style={styles.problemText}>{p.question.includes("=") ? p.question : p.question + " ="}</Text>
+            <Text style={textStyle}>{formatQuestion(p.question)}</Text>
             {sheet.isAnswerKey ? (
               <View style={styles.answerBoxFilled}>
                 <Text style={styles.answerText}>{String(p.answer)}</Text>
@@ -112,7 +143,10 @@ function WorksheetPage({ sheet }: { sheet: SheetData }) {
       {/* Footer */}
       <View style={styles.footer} fixed>
         <Text style={styles.footerText}>{sheet.levelCode} · Eduyro · {date}</Text>
-        <Text style={styles.footerText}>{sheet.isAnswerKey ? `Answer Key — Sheet ${sheet.sheetNumber}` : `Sheet ${sheet.sheetNumber} of ${sheet.totalSheets}`}</Text>
+        <Text style={styles.footerText}>{sheet.isAnswerKey
+          ? `Answer Key — Sheet ${sheet.sheetNumber}`
+          : `Sheet ${sheet.sheetNumber} of ${sheet.totalSheets}`
+        }</Text>
       </View>
 
       {/* Disclaimer */}
@@ -136,14 +170,13 @@ export interface PdfPackInput {
 }
 
 export async function renderHtmlToPdf(_html: string): Promise<Uint8Array> {
-  throw new Error("Use renderPackToPdf instead — HTML-based PDF is no longer supported on Vercel");
+  throw new Error("Use renderPackToPdf instead");
 }
 
 export async function renderPackToPdf(input: PdfPackInput): Promise<Uint8Array> {
   const date = new Date().toLocaleDateString("en-CA");
 
   const doc = React.createElement(Document, { title: `${input.skillLabel} — Eduyro` },
-    // Worksheet pages
     ...input.sheets.map((sheet, i) =>
       React.createElement(WorksheetPage, {
         key: `sheet-${i}`,
@@ -160,7 +193,6 @@ export async function renderPackToPdf(input: PdfPackInput): Promise<Uint8Array> 
         }
       })
     ),
-    // Answer key pages
     ...input.sheets.map((sheet, i) =>
       React.createElement(WorksheetPage, {
         key: `ak-${i}`,
