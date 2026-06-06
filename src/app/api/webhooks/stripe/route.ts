@@ -62,8 +62,19 @@ export async function POST(req: NextRequest) {
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   if (session.metadata?.purpose === "shop_purchase") {
+    // Mark PAID synchronously so webhook returns fast
     const { handleShopPurchaseCompleted } = await import("@/lib/shop/fulfillment");
     await handleShopPurchaseCompleted(session);
+    // Trigger background PDF generation via internal API route (non-blocking)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://eduyro.com";
+    fetch(`${appUrl}/api/shop/generate-pdfs`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-internal-secret": "eduyro-internal-2026-secure",
+      },
+      body: JSON.stringify({ shopPurchaseId: session.metadata?.shopPurchaseId }),
+    }).catch((e) => console.error("[shop] Failed to trigger PDF generation:", e));
     return;
   }
   const userId = session.metadata?.userId;

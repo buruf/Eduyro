@@ -23,10 +23,6 @@
     {
       "path": "/api/cron/weekly-progress",
       "schedule": "0 8 * * 0"
-    },
-    {
-      "path": "/api/cron/shop-generate",
-      "schedule": "*/2 * * * *"
     }
   ]
 }
