@@ -2,23 +2,27 @@ const fs = require('fs');
 const f = 'src/lib/shop/band-generators.ts';
 let c = fs.readFileSync(f, 'utf8');
 
-// Remove the OLD duplicate return lines
-c = c.replace(
-  `        return [\`A pizza is cut into \${d} slices. \${n} slices are eaten. What fraction remains?\`, \`\${d-n}/\${d}\`];\n        return [\`A pizza has \${d} slices. \${n} are eaten. What fraction is left?\`, \`\${d-n}/\${d}\`];`,
-  `        return [\`A pizza has \${d} slices. \${n} are eaten. What fraction is left?\`, \`\${d-n}/\${d}\`];`
-);
+// Split into lines, find and remove duplicate old return statements
+const lines = c.split(/\r?\n/);
+const filtered = [];
+let skipNext = false;
 
-c = c.replace(
-  `        return [\`What fraction of \${total} is \${part}?\`, \`\${part/g}/\${total/g}\`];\n        return [\`Write \${part} out of \${total} as a fraction in simplest form.\`, \`\${part/g}/\${total/g}\`];`,
-  `        return [\`Write \${part} out of \${total} as a fraction in simplest form.\`, \`\${part/g}/\${total/g}\`];`
-);
+for (let i = 0; i < lines.length; i++) {
+  const line = lines[i];
+  const next = lines[i + 1] || '';
+  
+  // If this line is the OLD version and the next line is the NEW version of the same return, skip this line
+  if (line.includes('A pizza is cut into') && next.includes('A pizza has')) { skipNext = false; continue; }
+  if (line.includes('What fraction of') && line.includes('is ${part}') && next.includes('Write ${part} out of')) { skipNext = false; continue; }
+  if (line.includes('A shape is divided into') && next.includes('A shape has')) { skipNext = false; continue; }
+  
+  filtered.push(line);
+}
 
-c = c.replace(
-  `      return [\`A shape is divided into \${d} equal parts. \${n} parts are shaded. Write the fraction.\`, \`\${n}/\${d}\`];\n      return [\`A shape has \${d} equal parts. \${n} are shaded. Write the fraction.\`, \`\${n}/\${d}\`];`,
-  `      return [\`A shape has \${d} equal parts. \${n} are shaded. Write the fraction.\`, \`\${n}/\${d}\`];`
-);
+const result = filtered.join('\n');
+fs.writeFileSync(f, result);
 
-fs.writeFileSync(f, c);
-console.log('Duplicates removed');
-console.log('Old pizza wording gone:', !c.includes('A pizza is cut into'));
-console.log('Old fraction wording gone:', !c.includes('What fraction of ${total} is ${part}'));
+console.log('Old pizza wording gone:', !result.includes('A pizza is cut into'));
+console.log('Old fraction wording gone:', !result.includes('is ${part}?'));
+console.log('Old shape wording gone:', !result.includes('A shape is divided into'));
+console.log('Lines:', filtered.length);
