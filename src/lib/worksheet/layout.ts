@@ -32,8 +32,8 @@ export function getLayoutForCount(count: number): LayoutConfig {
   if (count <= 20) {
     return {
       columns: 2,
-      fontSize: "13pt",
-      rowPadding: "0.3rem",
+      fontSize: "12pt",
+      rowPadding: "0.2rem",
       headerScale: 1.0,
       showBorders: true,
     };
@@ -43,9 +43,9 @@ export function getLayoutForCount(count: number): LayoutConfig {
   if (count <= 32) {
     return {
       columns: 2,
-      fontSize: "11pt",
-      rowPadding: "0.2rem",
-      headerScale: 0.9,
+      fontSize: "10pt",
+      rowPadding: "0.12rem",
+      headerScale: 0.85,
       showBorders: true,
     };
   }

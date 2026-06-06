@@ -276,17 +276,17 @@ export function generateFractionsComplete(bandId: string, rng: () => number, r: 
       }
       if (t === 1) {
         const d = r(2,10), n = r(1,d-1);
-        return [`A pizza is cut into ${d} slices. ${n} slices are eaten. What fraction remains?`, `${d-n}/${d}`];
+        return [`A pizza has ${d} slices. ${n} are eaten. What fraction is left?`, `${d-n}/${d}`];
       }
       if (t === 2) {
         const total = r(6,24), part = r(1,total-1);
         const gcd = (a:number,b:number):number => b===0?a:gcd(b,a%b);
         const g = gcd(part,total);
-        return [`What fraction of ${total} is ${part}?`, `${part/g}/${total/g}`];
+        return [`Write ${part} out of ${total} as a fraction in simplest form.`, `${part/g}/${total/g}`];
       }
       // Shade/identify
       const d = r(2,8), n = r(1,d-1);
-      return [`A shape is divided into ${d} equal parts. ${n} parts are shaded. Write the fraction.`, `${n}/${d}`];
+      return [`A shape has ${d} equal parts. ${n} are shaded. Write the fraction.`, `${n}/${d}`];
     }
 
     case "frac-simplify": {
