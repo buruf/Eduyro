@@ -29,8 +29,13 @@ const MIN_ROW_HEIGHT_PT    = 14; // minimum readable row height
 const MAX_ROW_HEIGHT_PT    = 72; // maximum — don't waste space
 
 export function computeLayout(problemCount: number): PageLayout {
-  // Try 1 column first, then 2, then 3
-  for (const columns of [1, 2, 3]) {
+  // Choose starting column count based on problem count
+  // 1-12 problems: start with 1 col (spacious)
+  // 13-40 problems: start with 2 cols (standard worksheet)
+  // 41+ problems: start with 3 cols (dense drill)
+  const startCols = problemCount <= 12 ? 1 : problemCount <= 40 ? 2 : 3;
+
+  for (const columns of [startCols, startCols + 1, startCols + 2].filter(c => c <= 3)) {
     const rowsPerColumn = Math.ceil(problemCount / columns);
     const rowHeight = AVAILABLE_HEIGHT / rowsPerColumn;
 
