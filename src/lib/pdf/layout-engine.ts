@@ -18,14 +18,14 @@ const MARGIN_TOP_PT    = 36;   // 0.5in
 const MARGIN_BOTTOM_PT = 36;
 const MARGIN_LEFT_PT   = 36;
 const MARGIN_RIGHT_PT  = 36;
-const HEADER_HEIGHT_PT = 85;   // title + student info area
-const FOOTER_HEIGHT_PT = 20;
+const HEADER_HEIGHT_PT = 95;   // title + student info area (conservative)
+const FOOTER_HEIGHT_PT = 30;   // footer with padding
 
 const AVAILABLE_HEIGHT = PAGE_HEIGHT_PT - MARGIN_TOP_PT - MARGIN_BOTTOM_PT - HEADER_HEIGHT_PT - FOOTER_HEIGHT_PT;
 const AVAILABLE_WIDTH  = PAGE_WIDTH_PT - MARGIN_LEFT_PT - MARGIN_RIGHT_PT;
 
 const ANSWER_LINE_WIDTH_PT = 80; // fixed right-aligned answer line
-const MIN_ROW_HEIGHT_PT    = 14; // minimum readable row height
+const MIN_ROW_HEIGHT_PT    = 20; // minimum — accounts for KaTeX stacked fraction height
 const MAX_ROW_HEIGHT_PT    = 72; // maximum — don't waste space
 
 export function computeLayout(problemCount: number): PageLayout {

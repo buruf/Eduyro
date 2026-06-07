@@ -4,6 +4,7 @@
 // pack matches the customer's expectation (no random shuffling between bands).
 
 import { nanoid } from "nanoid";
+import { generateProgressiveSheet } from "./progressive-generator";
 import { generateM7Band, generateM8Band, generateM9Band, generateM10Band, generateM11Band, generateM12Band, generateFractionsComplete, generateAdditionRegrouping, generateSubtractionBorrowing, generatePolynomialsComplete, generateDecimalsComplete } from "./band-generators";
 import type { Problem, AnswerKeyEntry } from "@/types";
 
@@ -235,13 +236,17 @@ export function generatePackForSkill(skill: ShopSkill): GeneratedPack {
         ? 0.5
         : (i - 1) / (band.sheetCount - 1);
 
-      const { problems, answerKey } = generateProblemsForBand({
-        skill,
-        bandId: band.id,
-        problemCount: band.problemCount,
-        seed: `${skill}-${band.id}-${i}`,
-        progress,
-      });
+      // Use progressive generator for skills with difficulty curves
+      const PROGRESSIVE_SKILLS = ["ADDITION","SUBTRACTION","MULTIPLICATION","DIVISION","FRACTIONS","DECIMALS","PRE_ALGEBRA"];
+      const { problems, answerKey } = PROGRESSIVE_SKILLS.includes(skill)
+        ? generateProgressiveSheet(skill, sheetNum, band.problemCount)
+        : generateProblemsForBand({
+            skill,
+            bandId: band.id,
+            problemCount: band.problemCount,
+            seed: `${skill}-${band.id}-${i}`,
+            progress,
+          });
       sheets.push({
         sheetNumber: sheetNum,
         title: `${band.label} — Sheet ${i}`,
@@ -384,10 +389,8 @@ function generateOneProblem(bandId: string, rng: () => number, progress: number 
     case "div-remainders": { const max = lerpUpper(progress, 3, 9); const d = r(2, max), q = r(2, 12), rem = r(1, d - 1); return [`${d * q + rem} ÷ ${d}`, `${q} R ${rem}`]; }
 
     // ── M7-M12 — delegate to extended generators ──
-    // ── Fractions — complete coverage via generateFractionsComplete ──
-    case "frac-identify": case "frac-simplify": case "frac-add-same":
-    case "frac-add-unlike": case "frac-multiply": case "frac-divide": case "frac-mixed":
-      return generateFractionsComplete(bandId, rng, r);
+    case "frac-identify": case "frac-simplify": case "frac-add": case "frac-compare":
+      return generateM7Band(bandId, rng, r);
     case "dec-place": case "dec-add-sub": case "dec-multiply": case "dec-divide": case "dec-pct":
       return generateDecimalsComplete(bandId, rng, r);
     case "rat-basic": case "rat-prop": case "rat-rate": case "rat-word":
