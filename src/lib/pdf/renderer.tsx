@@ -151,7 +151,7 @@ function groupByZone(problems: WorksheetProblem[]): Map<number, WorksheetProblem
 function WorksheetPage({ sheet, isAnswerKey }: { sheet: WorksheetData; isAnswerKey: boolean }) {
   const { meta, problems, workedExample } = sheet;
   const date = new Date().toLocaleDateString("en-CA");
-  const layout = computeLayout(problems.length);
+  const layout = computeLayout(problems.length, meta.mode);
   const byZone = groupByZone(problems);
 
   return (
@@ -201,7 +201,9 @@ function WorksheetPage({ sheet, isAnswerKey }: { sheet: WorksheetData; isAnswerK
           </View>
           <View style={s.badgeSection}>
             <Text style={s.badgeLabel}>Difficulty</Text>
-            <Text style={s.badgeValue}>{stars(meta.difficultyStars)}</Text>
+            <Text style={{ ...s.badgeValue, fontSize: 11, color: C.gold }}>
+              {"★".repeat(meta.difficultyStars) + "☆".repeat(5 - meta.difficultyStars)}
+            </Text>
           </View>
           <View style={s.badgeSection}>
             <Text style={s.badgeLabel}>Goal</Text>

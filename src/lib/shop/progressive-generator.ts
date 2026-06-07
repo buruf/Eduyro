@@ -52,6 +52,10 @@ const ZONE_SCALE = [
 
 function scaleParams(p: DifficultyParams, lo: number, hi: number, t: number): DifficultyParams {
   const scale = lo + (hi - lo) * t;
+  const minD = p.minDenominator ?? 2;
+  const maxD = p.maxDenominator ?? 8;
+  // Scale denominator range — higher zones get larger denominators
+  const scaledMaxD = Math.max(minD + 1, Math.round(minD + (maxD - minD) * scale));
   return {
     ...p,
     maxA: p.maxA ? Math.max((p.minA ?? 1) + 1, Math.round(p.maxA * scale)) : undefined,
@@ -60,7 +64,8 @@ function scaleParams(p: DifficultyParams, lo: number, hi: number, t: number): Di
     maxConstant: p.maxConstant ? Math.max(1, Math.round(p.maxConstant * scale)) : undefined,
     maxAnswer: p.maxAnswer ? Math.max(2, Math.round(p.maxAnswer * scale)) : undefined,
     maxNumerator: p.maxNumerator ? Math.max(1, Math.round(p.maxNumerator * scale)) : undefined,
-    maxDenominator: p.maxDenominator ? Math.max(2, Math.round(p.maxDenominator * scale)) : undefined,
+    maxDenominator: scaledMaxD,
+    minDenominator: minD,
   };
 }
 
