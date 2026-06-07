@@ -9,7 +9,7 @@ import { uploadToS3, getSignedDownloadUrl } from "@/lib/pdf/generator";
 import { writeFileSync, existsSync, mkdirSync, statSync } from "fs";
 import { join } from "path";
 
-const CACHE_VERSION = "v17";
+const CACHE_VERSION = "v22";
 const CACHE_PREFIX  = `shop-packs/${CACHE_VERSION}`;
 const SAMPLE_PREFIX = `shop-samples/${CACHE_VERSION}`;
 
