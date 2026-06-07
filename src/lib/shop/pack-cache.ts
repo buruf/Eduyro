@@ -9,7 +9,7 @@ import { uploadToS3, getSignedDownloadUrl } from "@/lib/pdf/generator";
 import { writeFileSync, existsSync, mkdirSync, statSync } from "fs";
 import { join } from "path";
 
-const CACHE_VERSION = "v10";
+const CACHE_VERSION = "v12";
 const CACHE_PREFIX  = `shop-packs/${CACHE_VERSION}`;
 const SAMPLE_PREFIX = `shop-samples/${CACHE_VERSION}`;
 
@@ -52,6 +52,8 @@ export async function getOrCreatePackPdf(skill: ShopSkill): Promise<CachedPack> 
         answer: answerMap.get(p.id) ?? String(p.answer ?? ""),
       })),
       skillBand: s.bandLabel,
+      meta: s.metaData,
+      workedExample: s.workedExampleData,
     };
   });
 
@@ -84,6 +86,8 @@ export async function getOrCreateSamplePdf(skill: ShopSkill): Promise<CachedPack
         answer: answerMap.get(p.id) ?? String(p.answer ?? ""),
       })),
       skillBand: s.bandLabel,
+      meta: s.metaData,
+      workedExample: s.workedExampleData,
     };
   });
 

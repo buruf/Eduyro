@@ -4,7 +4,7 @@
 // pack matches the customer's expectation (no random shuffling between bands).
 
 import { nanoid } from "nanoid";
-import { generateProgressiveSheet } from "./progressive-generator";
+import { generateProgressiveSheet, type WorksheetData } from "./progressive-generator";
 import { generateM7Band, generateM8Band, generateM9Band, generateM10Band, generateM11Band, generateM12Band, generateFractionsComplete, generateAdditionRegrouping, generateSubtractionBorrowing, generatePolynomialsComplete, generateDecimalsComplete } from "./band-generators";
 import type { Problem, AnswerKeyEntry } from "@/types";
 
@@ -199,6 +199,8 @@ export function calculatePrice(skills: ShopSkill[]): number {
 // ─────────────────────────────────────────────
 
 export interface PackSheet {
+  workedExampleData?: WorksheetData["workedExample"];
+  metaData?: WorksheetData["meta"];
   sheetNumber: number;
   title: string;
   bandLabel: string;
@@ -238,20 +240,26 @@ export function generatePackForSkill(skill: ShopSkill): GeneratedPack {
 
       // Use progressive generator for skills with difficulty curves
       const PROGRESSIVE_SKILLS = ["ADDITION","SUBTRACTION","MULTIPLICATION","DIVISION","FRACTIONS","DECIMALS","PRE_ALGEBRA"];
-      const { problems, answerKey } = PROGRESSIVE_SKILLS.includes(skill)
-        ? generateProgressiveSheet(skill, sheetNum, band.problemCount)
-        : generateProblemsForBand({
-            skill,
-            bandId: band.id,
-            problemCount: band.problemCount,
-            seed: `${skill}-${band.id}-${i}`,
-            progress,
-          });
+      let problems: any[], answerKey: any[], wsData: WorksheetData | null = null;
+      if (PROGRESSIVE_SKILLS.includes(skill)) {
+        wsData = generateProgressiveSheet(skill, sheetNum, config.totalSheets ?? 100, band.problemCount);
+        problems = wsData.problems;
+        answerKey = wsData.answerKey;
+      } else {
+        const result = generateProblemsForBand({
+          skill, bandId: band.id, problemCount: band.problemCount,
+          seed: `${skill}-${band.id}-${i}`, progress,
+        });
+        problems = result.problems;
+        answerKey = result.answerKey;
+      }
       sheets.push({
         sheetNumber: sheetNum,
-        title: `${band.label} — Sheet ${i}`,
-        bandLabel: band.label,
+        title: wsData ? `${wsData.meta.subSkillLabel} — Sheet ${sheetNum}` : `${band.label} — Sheet ${i}`,
+        bandLabel: wsData ? wsData.meta.subSkillLabel : band.label,
         difficulty: band.difficulty,
+        metaData: wsData?.meta,
+        workedExampleData: wsData?.workedExample,
         problems,
         answerKey,
       });

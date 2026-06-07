@@ -79,7 +79,9 @@ function tokenize(text: string): Token[] {
   const tokens: Token[] = [];
 
   // Normalise common plain-text math patterns to LaTeX-like markers
-  let t = text;
+  // First strip $...$ delimiters — they're for browser KaTeX, not needed here
+  let t = text.replace(/\$([^$]+?)\$/g, '$1');
+  t = t.replace(/\$\$([^$]+?)\$\$/g, '$1');
 
   // lim(x→0), lim(x→∞), lim_{x→0} → «LIM:x→0»
   t = t.replace(/lim\s*[\(_]\s*(x\s*(?:→|->)\s*[^)\s,]+)\s*[)\s]/gi, (_, sub) => ` «LIM:${sub.trim()}» `);
