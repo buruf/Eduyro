@@ -30,7 +30,8 @@ const CHROME_FOOTER        = 22;
 
 export function computeLayout(
   problemCount: number,
-  mode: "tutorial" | "practice" | "assessment" = "practice"
+  mode: "tutorial" | "practice" | "assessment" = "practice",
+  avgQuestionLength: number = 10
 ): PageLayout {
   // Calculate total chrome
   let chrome = CHROME_HEADER_BAR + CHROME_FOOTER + MARGIN_TOP_PT + MARGIN_BOTTOM_PT;

@@ -133,7 +133,7 @@ function getAnswerSpace(skillCode: string, isAnswerKey: boolean, answer: string,
     );
   }
   if (level <= 2) return <View style={{ ...s.answerBoxBig, height: Math.max(20, rowHeight - 4) }} />;
-  if (level <= 6) return <View style={s.answerLine} />;
+  if (level <= 6) return <View style={{ ...s.answerLine, width: 60 }} />;
   return <View style={{ ...s.answerLine, width: 50 }} />;
 }
 
@@ -151,7 +151,8 @@ function groupByZone(problems: WorksheetProblem[]): Map<number, WorksheetProblem
 function WorksheetPage({ sheet, isAnswerKey }: { sheet: WorksheetData; isAnswerKey: boolean }) {
   const { meta, problems, workedExample } = sheet;
   const date = new Date().toLocaleDateString("en-CA");
-  const layout = computeLayout(problems.length, meta.mode);
+  const avgLen = problems.reduce((s,p) => s + p.question.length, 0) / problems.length;
+  const layout = computeLayout(problems.length, meta.mode, avgLen);
   const byZone = groupByZone(problems);
 
   return (
@@ -201,8 +202,8 @@ function WorksheetPage({ sheet, isAnswerKey }: { sheet: WorksheetData; isAnswerK
           </View>
           <View style={s.badgeSection}>
             <Text style={s.badgeLabel}>Difficulty</Text>
-            <Text style={{ ...s.badgeValue, fontSize: 11, color: C.gold }}>
-              {"★".repeat(meta.difficultyStars) + "☆".repeat(5 - meta.difficultyStars)}
+            <Text style={{ ...s.badgeValue, fontSize: 9, color: C.gold, letterSpacing: 2 }}>
+              {"[" + "★".repeat(meta.difficultyStars) + "☆".repeat(5 - meta.difficultyStars) + "]"}
             </Text>
           </View>
           <View style={s.badgeSection}>
@@ -224,14 +225,16 @@ function WorksheetPage({ sheet, isAnswerKey }: { sheet: WorksheetData; isAnswerK
       {!isAnswerKey && meta.mode === "tutorial" && workedExample && (
         <View style={s.exampleBox}>
           <Text style={s.exampleHeader}>Worked Example — Study this before you begin</Text>
-          <View style={{ marginBottom:4 }}>
-            <Text style={{ fontSize:7.5, color:C.grey4, marginBottom:3 }}>Problem:</Text>
-            <PdfMathText text={workedExample.problem} fontSize={11} />
+          <View style={{ marginBottom:6 }}>
+            <Text style={{ fontSize:7, color:C.grey4, marginBottom:2, textTransform:"uppercase", letterSpacing:0.5 }}>Problem:</Text>
+            <PdfMathText text={workedExample.problem} fontSize={12} />
           </View>
           {workedExample.steps.map((step, i) => (
             <View key={i} style={s.exampleStep}>
-              <Text style={s.stepNum}>Step {i+1}</Text>
-              <PdfMathText text={step} fontSize={8} />
+              <Text style={s.stepNum}>{i+1}.</Text>
+              <View style={{ flex:1 }}>
+                <PdfMathText text={step} fontSize={8} />
+              </View>
             </View>
           ))}
           <View style={s.exampleAns}>
@@ -284,8 +287,8 @@ function WorksheetPage({ sheet, isAnswerKey }: { sheet: WorksheetData; isAnswerK
                         backgroundColor: isEven ? C.grey1 : C.white,
                       }}>
                         <Text style={s.probNum}>{idx + 1}.</Text>
-                        <View style={{ flex:1, paddingRight:4 }}>
-                          <PdfMathText text={p.question} fontSize={layout.fontSizePt} />
+                        <View style={{ flex:1, paddingRight:2 }}>
+                          <PdfMathText text={p.question} fontSize={Math.min(layout.fontSizePt, 9)} />
                         </View>
                         {getAnswerSpace(meta.skillCode, isAnswerKey, p.answer, layout.rowHeightPt)}
                       </View>
