@@ -10,9 +10,15 @@ import { generatePdfsForPurchase } from "@/lib/shop/fulfillment";
 export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
-  // Verify internal secret
+  // Verify internal secret. Fail CLOSED: if the env var is unset, refuse rather
+  // than fall back to a secret that's visible in source (which would let anyone
+  // trigger PDF generation).
+  const expected = process.env.INTERNAL_API_SECRET;
+  if (!expected) {
+    return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+  }
   const secret = req.headers.get("x-internal-secret");
-  if (!secret || secret !== (process.env.INTERNAL_API_SECRET || "eduyro-internal-2026-secure")) {
+  if (!secret || secret !== expected) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

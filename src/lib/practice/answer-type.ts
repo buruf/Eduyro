@@ -26,8 +26,11 @@ export function classifyAnswerType(args: {
     return "multipleChoice";
   }
 
-  // Comparison: the answer is a single relational symbol.
-  if (/^(<|>|=|≤|≥|≠)$/.test(ans)) return "comparison";
+  // Comparison: the answer is exactly one of the three symbols the
+  // ComparisonSelector offers. (≤ ≥ ≠ are intentionally excluded — there's no
+  // button for them, so they fall through to a typed input instead of an
+  // unanswerable selector.)
+  if (/^[<>=]$/.test(ans)) return "comparison";
 
   // Non-math without options → short text (sized input, not a paragraph box).
   if (args.subjectSlug !== "MATH") return "text";

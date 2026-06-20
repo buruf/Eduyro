@@ -3,7 +3,7 @@
 
 import {
   forwardRef, HTMLAttributes, InputHTMLAttributes, SelectHTMLAttributes,
-  TextareaHTMLAttributes, ReactNode, useEffect, useRef,
+  TextareaHTMLAttributes, ReactNode, useEffect, useRef, useId,
 } from "react";
 import { cn, initials } from "@/lib/utils";
 
@@ -66,7 +66,9 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, hint, error, leftIcon, className, id, ...props }, ref) => {
-    const inputId = id ?? `input-${props.name ?? Math.random().toString(36).slice(2)}`;
+    // Stable across SSR/CSR (Math.random() caused hydration mismatches on every form).
+    const autoId = useId();
+    const inputId = id ?? `input-${props.name ?? autoId}`;
     return (
       <div className="space-y-1">
         {label && (

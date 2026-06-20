@@ -6,7 +6,7 @@
 
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { ok, notFound, handleRouteError, withAuth } from "@/lib/api/helpers";
+import { ok, notFound, forbidden, handleRouteError, withAuth } from "@/lib/api/helpers";
 import { generateProblems } from "@/lib/worksheet/generator";
 import { classifyAnswerType } from "@/lib/practice/answer-type";
 
@@ -14,7 +14,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { worksheetId: string } }
 ) {
-  return withAuth(req, async () => {
+  return withAuth(req, async (ctx) => {
     try {
       const worksheet = await db.worksheet.findUnique({
         where: { id: params.worksheetId },
@@ -22,6 +22,24 @@ export async function GET(
       });
 
       if (!worksheet) return notFound("Worksheet");
+
+      // Access control: a STUDENT may only load worksheets for a level they are
+      // actually enrolled in (StudentProgress) — otherwise any signed-in user
+      // could enumerate arbitrary worksheets by id (and trigger the self-heal
+      // regeneration/write below). Parents/teachers/admins are allowed through
+      // for monitoring and printing.
+      if (ctx.role === "STUDENT") {
+        const student = await db.student.findUnique({
+          where: { userId: ctx.userId },
+          select: { id: true },
+        });
+        if (!student) return forbidden();
+        const enrolled = await db.studentProgress.findFirst({
+          where: { studentId: student.id, levelId: worksheet.levelId },
+          select: { id: true },
+        });
+        if (!enrolled) return forbidden();
+      }
 
       // ── Self-heal stale content ─────────────────────────────────────────────
       // Some seeded worksheets predate the current generators:

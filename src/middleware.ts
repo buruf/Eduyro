@@ -55,6 +55,12 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Pricing lives as an anchor on the homepage; the bare /pricing URL (inbound
+  // links, SEO) should land there rather than 404.
+  if (pathname === "/pricing") {
+    return NextResponse.redirect(new URL("/#pricing", req.url));
+  }
+
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
