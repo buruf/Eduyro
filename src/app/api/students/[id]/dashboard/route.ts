@@ -7,6 +7,7 @@ import {
 import { startOfDay, subDays, format } from "date-fns";
 import { generateProblems, getMathSheetMeta, nonMathDistinctSheets, nonMathBankQuestions } from "@/lib/worksheet/generator";
 import { computeItemMastery, type ItemMastery } from "@/lib/worksheet/item-mastery";
+import { masteryTarget, isSkillMastered } from "@/lib/mastery";
 import type { StudentDashboard, TodaySheet, SkillTreeNode } from "@/types";
 
 export async function GET(
@@ -198,8 +199,13 @@ async function buildTodayPacket(
       const st = stats[sk.id];
       const n = st?.sheetsCompleted ?? 0;
       const avg = n > 0 ? st.totalAccuracy / n : 0;
-      const target = masteryTarget(false, nonMathDistinctSheets(subjectSlug, levelCode, sk.name));
-      return !nonMathMastered(n, avg, target, itemStats[sk.id]);
+      return !isSkillMastered({
+        isMath: false,
+        sheetsCompleted: n,
+        avgAccuracy: avg,
+        distinctSheets: nonMathDistinctSheets(subjectSlug, levelCode, sk.name),
+        item: itemStats[sk.id],
+      });
     }) ?? skills[skills.length - 1];
   }
 
@@ -329,21 +335,8 @@ function buildWeeklyAccuracy(
   return result;
 }
 
-// A skill is mastered after a SMALL number of high-accuracy sheets — Kumon-style
-// "show you can do it well, then move on" — not after 80% of a 40-sheet bank
-// (which took ~11 days/skill and meant the next skill never unlocked).
-const MASTERY_ACCURACY = 90;
-// Math drills need more reps to build fluency; reading/writing/science skills are
-// concept banks — a couple of solid passes is mastery, then move on.
-// Mastery target = how many DISTINCT sheets must be completed at ≥90%.
-//  • MATH: 8 (the engine raises difficulty across sheets, so depth matters).
-//  • Non-math: the number of distinct sheets the skill's bank actually supports
-//    (capped at NONMATH_TARGET_SHEETS=3). This stops a tiny bank from being
-//    "mastered" by answering the same questions repeatedly.
-function masteryTarget(isMath: boolean, distinctSheets: number): number {
-  if (isMath) return 8;
-  return Math.max(1, Math.min(3, distinctSheets || 3));
-}
+// Mastery rules (MASTERY_ACCURACY, masteryTarget, isSkillMastered) live in
+// @/lib/mastery so every route shares one source of truth.
 
 /** Per-skill { sheetsCompleted, totalAccuracy } for a student in a level. */
 async function skillCompletionStats(
@@ -409,61 +402,12 @@ async function itemMasteryBySkill(
   return out;
 }
 
-/**
- * Shared non-math mastery test. Keeps the sheet-count gate (ensures the student
- * worked through the distinct content), but accuracy may pass via EITHER the
- * legacy sheet-average OR the per-distinct-item measure — so this never
- * un-masters a student who already qualified, while adding the fairer item-level
- * signal (dedupes repeats, credits a later correct retry).
- */
-function nonMathMastered(
-  sheetsCompleted: number,
-  avgAccuracy: number,
-  target: number,
-  im?: ItemMastery,
-): boolean {
-  if (sheetsCompleted < target) return false;
-  if (avgAccuracy >= MASTERY_ACCURACY) return true;
-  if (im && im.distinctSeen > 0 && im.itemAccuracyPct >= MASTERY_ACCURACY) return true;
-  return false;
-}
-
 async function buildSkillTree(
   studentId: string,
   level: any
 ): Promise<SkillTreeNode[]> {
-  const completedBySkill = await db.completedSheet.groupBy({
-    by: ["worksheetId"],
-    where: {
-      studentId,
-      worksheet: { levelId: level.id },
-    },
-    _avg: { accuracyPct: true },
-    _count: true,
-  });
-
-  // Build a map of skillId → { count, avgAccuracy }
-  const worksheetIds = completedBySkill.map((c) => c.worksheetId);
-  const worksheets = await db.worksheet.findMany({
-    where: { id: { in: worksheetIds } },
-    select: { id: true, skillId: true },
-  });
-
-  const skillStats: Record<
-    string,
-    { sheetsCompleted: number; totalAccuracy: number }
-  > = {};
-
-  completedBySkill.forEach((c) => {
-    const ws = worksheets.find((w) => w.id === c.worksheetId);
-    if (!ws) return;
-    if (!skillStats[ws.skillId]) {
-      skillStats[ws.skillId] = { sheetsCompleted: 0, totalAccuracy: 0 };
-    }
-    skillStats[ws.skillId].sheetsCompleted += c._count;
-    skillStats[ws.skillId].totalAccuracy +=
-      (c._avg.accuracyPct ?? 0) * c._count;
-  });
+  // Shared with buildTodayPacket — one grouping helper, not a copy.
+  const skillStats = await skillCompletionStats(studentId, level.id);
 
   const isMathSubj = level.subject?.slug === "MATH";
   const itemStats = isMathSubj ? {} : await itemMasteryBySkill(studentId, level);
@@ -479,13 +423,17 @@ async function buildSkillTree(
         : 0;
 
     const im = itemStats[skill.id];
-    const target = masteryTarget(
-      isMathSubj,
-      isMathSubj ? 8 : nonMathDistinctSheets(level.subject?.slug ?? "", level.code ?? "", skill.name),
-    );
-    const isMastered = isMathSubj
-      ? avgAccuracy >= MASTERY_ACCURACY && sheetsCompleted >= target
-      : nonMathMastered(sheetsCompleted, avgAccuracy, target, im);
+    const distinctSheets = isMathSubj
+      ? 8
+      : nonMathDistinctSheets(level.subject?.slug ?? "", level.code ?? "", skill.name);
+    const target = masteryTarget(isMathSubj, distinctSheets);
+    const isMastered = isSkillMastered({
+      isMath: isMathSubj,
+      sheetsCompleted,
+      avgAccuracy,
+      distinctSheets,
+      item: im,
+    });
     // The first not-yet-mastered skill is the ACTIVE one (unlocked) — even with 0
     // sheets done yet — so the next skill opens as soon as the prior is mastered.
     const isInProgress = !isMastered && !foundInProgress;
