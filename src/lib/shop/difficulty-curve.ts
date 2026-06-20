@@ -3,6 +3,10 @@
 // Maps sheet number (1-100) to exact difficulty parameters.
 // Implements Kumon philosophy: invisible gradual progression.
 // Each skill's 100 sheets are distributed across sub-skills.
+//
+// This engine covers only the math progression skills (geometry has its own
+// engine). The skill type is sourced from ./skills so it can't drift.
+import type { MathProgressionSkill } from "./skills";
 
 export interface DifficultyParams {
   minA?: number;
@@ -138,10 +142,7 @@ export function preAlgebraDifficulty(sheet: number): DifficultyParams {
 }
 
 // ── Master resolver ───────────────────────────────────────────────────────────
-export type ShopSkill = "ADDITION" | "SUBTRACTION" | "MULTIPLICATION" | "DIVISION" |
-  "FRACTIONS" | "DECIMALS" | "RATIOS" | "PRE_ALGEBRA" | "LINEAR_EQUATIONS" | "POLYNOMIALS";
-
-export function getDifficultyForSheet(skill: ShopSkill, sheetNumber: number): DifficultyParams {
+export function getDifficultyForSheet(skill: MathProgressionSkill, sheetNumber: number): DifficultyParams {
   switch (skill) {
     case "ADDITION":        return additionDifficulty(sheetNumber);
     case "SUBTRACTION":     return subtractionDifficulty(sheetNumber);
@@ -155,7 +156,7 @@ export function getDifficultyForSheet(skill: ShopSkill, sheetNumber: number): Di
 }
 
 // Skill level codes for display
-export const SKILL_LEVEL_CODE: Record<ShopSkill, string> = {
+export const SKILL_LEVEL_CODE: Record<MathProgressionSkill, string> = {
   ADDITION: "M3", SUBTRACTION: "M4", MULTIPLICATION: "M5", DIVISION: "M6",
   FRACTIONS: "M7", DECIMALS: "M8", RATIOS: "M9", PRE_ALGEBRA: "M10",
   LINEAR_EQUATIONS: "M11", POLYNOMIALS: "M12",

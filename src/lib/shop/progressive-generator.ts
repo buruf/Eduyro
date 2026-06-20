@@ -36,8 +36,10 @@ function expandFormSequence(distribution: WorksheetBlueprint["questionDistributi
   return shuffle(seq, rng);
 }
 
-export type ShopSkill = "ADDITION" | "SUBTRACTION" | "MULTIPLICATION" | "DIVISION" |
-  "FRACTIONS" | "DECIMALS" | "RATIOS" | "PRE_ALGEBRA" | "LINEAR_EQUATIONS" | "POLYNOMIALS" | "GEOMETRY";
+// ShopSkill lives in ./skills (single source of truth); re-exported here for
+// back-compat with existing import sites.
+export type { ShopSkill } from "./skills";
+import type { ShopSkill } from "./skills";
 
 export interface WorksheetProblem {
   id: string;

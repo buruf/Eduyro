@@ -3,6 +3,10 @@
 // Progression is defined here. The generator only fills in examples.
 // Each stage has: concept, allowedForms, questionCount.
 // ONE new cognitive demand per stage. Never two.
+//
+// Covers only the math progression skills; geometry has its own engine. Skill
+// type sourced from ./skills so it can't drift from the catalog.
+import type { MathProgressionSkill } from "./skills";
 
 export type QuestionForm =
   | "a+b"           // standard addition
@@ -439,10 +443,7 @@ function fractionsSpec(sheet: number): SheetSpec {
 
 // ── Master resolver ───────────────────────────────────────────────────────────
 
-export type ShopSkill = "ADDITION" | "SUBTRACTION" | "MULTIPLICATION" | "DIVISION" |
-  "FRACTIONS" | "DECIMALS" | "RATIOS" | "PRE_ALGEBRA" | "LINEAR_EQUATIONS" | "POLYNOMIALS";
-
-export function getSheetSpec(skill: ShopSkill, sheetNumber: number): SheetSpec {
+export function getSheetSpec(skill: MathProgressionSkill, sheetNumber: number): SheetSpec {
   switch (skill) {
     case "ADDITION":  return additionSpec(sheetNumber);
     case "FRACTIONS": return fractionsSpec(sheetNumber);

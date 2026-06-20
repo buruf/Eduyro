@@ -4,6 +4,7 @@
 // pack matches the customer's expectation (no random shuffling between bands).
 
 import { nanoid } from "nanoid";
+import type { ShopSkill } from "./skills";
 import { generateProgressiveSheet, type WorksheetData } from "./progressive-generator";
 import { generateM7Band, generateM8Band, generateM9Band, generateM10Band, generateM11Band, generateM12Band, generateFractionsComplete, generateAdditionRegrouping, generateSubtractionBorrowing, generatePolynomialsComplete, generateDecimalsComplete } from "./band-generators";
 import type { Problem, AnswerKeyEntry } from "@/types";
@@ -12,7 +13,9 @@ import type { Problem, AnswerKeyEntry } from "@/types";
 // Skill definitions
 // ─────────────────────────────────────────────
 
-export type ShopSkill = "ADDITION" | "SUBTRACTION" | "MULTIPLICATION" | "DIVISION" | "FRACTIONS" | "DECIMALS" | "RATIOS" | "PRE_ALGEBRA" | "LINEAR_EQUATIONS" | "POLYNOMIALS" | "GEOMETRY";
+// ShopSkill is defined once in ./skills and re-exported here for back-compat
+// with existing `import { ShopSkill } from "@/lib/shop/pack-generator"` sites.
+export type { ShopSkill } from "./skills";
 
 export const SHOP_SKILLS: Record<ShopSkill, {
   label: string;
