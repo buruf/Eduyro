@@ -229,40 +229,49 @@ async function buildTodayPacket(
   const deficit = needed - nextWorksheets.length;
   const skill = activeSkill;
   if (deficit > 0 && skill) {
-    const maxSheet = await db.worksheet.aggregate({
-      where: { levelId: progress.levelId, skillId: skill.id },
-      _max: { sheetNumber: true },
-    });
-    let nextNum = (maxSheet._max.sheetNumber ?? 0) + 1;
-
-    for (let i = 0; i < deficit; i++) {
-      const { problems, answerKey } = generateProblems({
-        subjectSlug: progress.level?.subject?.slug ?? "MATH",
-        levelCode: progress.level?.code ?? "M3",
-        skillName: skill.name,
-        problemCount: 30,
-        timeLimitMinutes: progress.level?.timeLimitMinutes ?? 10,
-        // The engine's curriculum is 100 sheets; clamp so extreme long-running
-        // students keep getting the hardest material rather than crashing.
-        sheetNumber: Math.min(100, nextNum),
-        totalSheets: 100,
+    // Worksheets are shared per-skill content, so two concurrent requests (two
+    // tabs, or two students on the same skill) could otherwise create duplicate
+    // (skillId, sheetNumber) rows. Serialize minting per (level, skill) with a
+    // Postgres advisory lock and re-read the max sheet number INSIDE the lock so
+    // numbers can never collide. The lock auto-releases at transaction end.
+    const minted = await db.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${progress.levelId}), hashtext(${skill.id}))`;
+      const maxSheet = await tx.worksheet.aggregate({
+        where: { levelId: progress.levelId, skillId: skill.id },
+        _max: { sheetNumber: true },
       });
-      const created = await db.worksheet.create({
-        data: {
-          levelId: progress.levelId,
-          skillId: skill.id,
-          sheetNumber: nextNum,
-          title: `${skill.name} — Sheet ${nextNum}`,
-          problems: problems as any,
-          answerKey: answerKey as any,
-          problemCount: problems.length,
-          estimatedMinutes: progress.level?.timeLimitMinutes ?? 10,
-        },
-        include: { skill: true },
-      });
-      nextWorksheets.push(created);
-      nextNum++;
-    }
+      let nextNum = (maxSheet._max.sheetNumber ?? 0) + 1;
+      const created: typeof nextWorksheets = [];
+      for (let i = 0; i < deficit; i++) {
+        const { problems, answerKey } = generateProblems({
+          subjectSlug: progress.level?.subject?.slug ?? "MATH",
+          levelCode: progress.level?.code ?? "M3",
+          skillName: skill.name,
+          problemCount: 30,
+          timeLimitMinutes: progress.level?.timeLimitMinutes ?? 10,
+          // The engine's curriculum is 100 sheets; clamp so extreme long-running
+          // students keep getting the hardest material rather than crashing.
+          sheetNumber: Math.min(100, nextNum),
+          totalSheets: 100,
+        });
+        created.push(await tx.worksheet.create({
+          data: {
+            levelId: progress.levelId,
+            skillId: skill.id,
+            sheetNumber: nextNum,
+            title: `${skill.name} — Sheet ${nextNum}`,
+            problems: problems as any,
+            answerKey: answerKey as any,
+            problemCount: problems.length,
+            estimatedMinutes: progress.level?.timeLimitMinutes ?? 10,
+          },
+          include: { skill: true },
+        }));
+        nextNum++;
+      }
+      return created;
+    }, { timeout: 20_000 });
+    nextWorksheets.push(...minted);
   }
 
   const sheets: TodaySheet[] = [];
