@@ -90,27 +90,11 @@ export function generateProblems(config: GeneratorConfig): {
     return { problems, answerKey };
   }
 
-  // Pull the WHOLE bank (generators cap at their bank size) so we can slice a
-  // DISTINCT window per sheet below — otherwise consecutive daily sheets are just
-  // the same small bank reshuffled.
-  let problems: Problem[] = [];
-  switch (subjectSlug) {
-    case "READING":
-      problems = generateReadingProblems(skillName, 999);
-      break;
-    case "WRITING":
-      problems = generateWritingProblems(skillName, 999);
-      break;
-    case "SCIENCE":
-      problems = generateScienceProblems(skillName, 999);
-      break;
-    default:
-      problems = []; // MATH is fully handled above; unknown subjects yield none
-  }
-
-  // Reading / Writing / Science are answered as MULTIPLE CHOICE in the student
-  // app — kids pick an option, never type long prose into a tiny box.
-  const converted = ensureMultipleChoice(problems);
+  // The WHOLE bank for this (subject, skill), already converted to multiple
+  // choice. Memoized — building it is pure but was previously repeated many times
+  // per request (here + the mastery helpers). We slice a DISTINCT window per sheet
+  // below so consecutive daily sheets differ instead of reshuffling one pool.
+  const converted = nonMathBank(subjectSlug, skillName);
 
   // Reading keeps passages adjacent to their questions, so window by PASSAGE block.
   const hasPassage = converted.some((p) => (p.points ?? 0) === 0 || p.question.startsWith("READ THIS PASSAGE"));
@@ -143,6 +127,11 @@ export function generateProblems(config: GeneratorConfig): {
     }
   }
 
+  // Fresh ids per call: the cache holds shared template objects, so clone before
+  // returning. This keeps stored worksheet problem ids unique (as before) and
+  // prevents any caller from mutating the cached bank.
+  final = final.map((p) => ({ ...p, id: nanoid(8) }));
+
   const answerKey: AnswerKeyEntry[] = final.map((p) => ({
     id: p.id,
     answer: p.answer,
@@ -150,6 +139,26 @@ export function generateProblems(config: GeneratorConfig): {
   }));
 
   return { problems: final, answerKey };
+}
+
+// Memoized full non-math bank (post multiple-choice conversion) per (subject,
+// skill). Pure and deterministic in content, so caching is safe; callers that
+// emit sheets clone with fresh ids. Keyed case-insensitively on skill name.
+const _nonMathBankCache = new Map<string, Problem[]>();
+function nonMathBank(subjectSlug: string, skillName: string): Problem[] {
+  const key = `${subjectSlug}::${skillName.toLowerCase()}`;
+  const hit = _nonMathBankCache.get(key);
+  if (hit) return hit;
+  let problems: Problem[] = [];
+  switch (subjectSlug) {
+    case "READING": problems = generateReadingProblems(skillName, 999); break;
+    case "WRITING": problems = generateWritingProblems(skillName, 999); break;
+    case "SCIENCE": problems = generateScienceProblems(skillName, 999); break;
+    default: problems = []; // MATH handled by the engines; unknown → none
+  }
+  const converted = ensureMultipleChoice(problems);
+  _nonMathBankCache.set(key, converted);
+  return converted;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -180,14 +189,8 @@ export function nonMathDistinctSheets(
   problemCount = 20,
 ): number {
   if (subjectSlug === "MATH") return 8;
-  let problems: Problem[] = [];
-  switch (subjectSlug) {
-    case "READING": problems = generateReadingProblems(skillName, 999); break;
-    case "WRITING": problems = generateWritingProblems(skillName, 999); break;
-    case "SCIENCE": problems = generateScienceProblems(skillName, 999); break;
-    default: return 1;
-  }
-  const converted = ensureMultipleChoice(problems);
+  if (subjectSlug !== "READING" && subjectSlug !== "WRITING" && subjectSlug !== "SCIENCE") return 1;
+  const converted = nonMathBank(subjectSlug, skillName);
   const passages = converted.filter(
     (p) => (p.points ?? 0) === 0 || p.question.startsWith("READ THIS PASSAGE"),
   ).length;
@@ -203,15 +206,8 @@ export function nonMathBankQuestions(
   _levelCode: string,
   skillName: string,
 ): string[] {
-  if (subjectSlug === "MATH") return [];
-  let problems: Problem[] = [];
-  switch (subjectSlug) {
-    case "READING": problems = generateReadingProblems(skillName, 999); break;
-    case "WRITING": problems = generateWritingProblems(skillName, 999); break;
-    case "SCIENCE": problems = generateScienceProblems(skillName, 999); break;
-    default: return [];
-  }
-  const converted = ensureMultipleChoice(problems);
+  if (subjectSlug !== "READING" && subjectSlug !== "WRITING" && subjectSlug !== "SCIENCE") return [];
+  const converted = nonMathBank(subjectSlug, skillName);
   const seen = new Set<string>();
   for (const p of converted) {
     if ((p.points ?? 0) === 0 || p.question.startsWith("READ THIS PASSAGE")) continue;
