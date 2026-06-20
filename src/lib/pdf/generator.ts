@@ -10,6 +10,8 @@ import JSZip from "jszip";
 import { db } from "@/lib/db";
 import { format } from "date-fns";
 import type { PdfGenerationOptions } from "@/types";
+import { renderPackToPdf } from "@/lib/pdf/renderer";
+import { getMathSheetMeta } from "@/lib/worksheet/generator";
 
 // ─────────────────────────────────────────────
 // S3 client
@@ -46,6 +48,23 @@ async function getBrowser(): Promise<Browser> {
 }
 
 // ─────────────────────────────────────────────
+// Math markup → HTML  (parity with the shop's PdfMathText)
+// Converts \frac{n}{d} and bare n/d into stacked inline fractions so the
+// student/print PDF renders fractions identically to the shop renderer instead
+// of showing literal "\frac{1}{2}" text.
+// ─────────────────────────────────────────────
+function mathToHtml(input: string): string {
+  let t = String(input ?? "");
+  const fr = (n: string, d: string) =>
+    `<span class="fr"><span class="fr-n">${n.trim()}</span><span class="fr-d">${d.trim()}</span></span>`;
+  // \frac{n}{d}  (n/d may themselves be "___" for fill-in problems)
+  t = t.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, (_, n, d) => fr(n, d));
+  // bare n/d  (e.g. 1/2) — engine answers use \frac, but be safe for any path
+  t = t.replace(/\b(\d+)\s*\/\s*(\d+)\b/g, (_, n, d) => fr(n, d));
+  return t;
+}
+
+// ─────────────────────────────────────────────
 // Render single worksheet HTML
 // ─────────────────────────────────────────────
 
@@ -76,37 +95,38 @@ export function renderWorksheetHtml(params: {
   const problemsHtml = params.problems
     .map((p, i) => {
       const num = i + 1;
+      const q = mathToHtml(p.question);
       if (p.type === "multiple_choice" && p.options) {
         const opts = p.options
           .map((o: string, j: number) => {
             const letter = ["A", "B", "C", "D"][j];
             const isCorrect = params.isAnswerKey && p.answer === o;
-            return `<div class="opt${isCorrect ? " correct-opt" : ""}"><span class="opt-letter">${letter}</span>${o}</div>`;
+            return `<div class="opt${isCorrect ? " correct-opt" : ""}"><span class="opt-letter">${letter}</span>${mathToHtml(o)}</div>`;
           })
           .join("");
         return `<div class="prob mc">
-          <div class="prob-q"><span class="prob-num">${num}.</span> ${p.question}</div>
+          <div class="prob-q"><span class="prob-num">${num}.</span> ${q}</div>
           <div class="opts-grid">${opts}</div>
         </div>`;
       }
 
       if (p.type === "written_response" || p.type === "short_answer") {
         const ans = params.isAnswerKey
-          ? `<div class="ans-key-text">${p.answer}</div>`
+          ? `<div class="ans-key-text">${mathToHtml(String(p.answer))}</div>`
           : `<div class="write-lines"><div class="line"></div><div class="line"></div></div>`;
         return `<div class="prob written">
-          <div class="prob-q"><span class="prob-num">${num}.</span> ${p.question}</div>
+          <div class="prob-q"><span class="prob-num">${num}.</span> ${q}</div>
           ${ans}
         </div>`;
       }
 
       // Default: arithmetic / fill_blank with answer box
       const ans = params.isAnswerKey
-        ? `<div class="ans-box revealed">${p.answer}</div>`
+        ? `<div class="ans-box revealed">${mathToHtml(String(p.answer))}</div>`
         : `<div class="ans-box"></div>`;
       return `<div class="prob inline">
         <span class="prob-num">${num}.</span>
-        <span class="prob-q">${p.question}</span>
+        <span class="prob-q">${q}</span>
         ${ans}
       </div>`;
     })
@@ -150,6 +170,9 @@ export function renderWorksheetHtml(params: {
   .prob.inline { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
   .prob-num { font-family: Arial, sans-serif; font-size: 10px; color: #bbb; min-width: 22px; }
   .prob-q { font-size: 14px; font-weight: 700; flex: 1; }
+  .fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; line-height: 1.05; margin: 0 2px; }
+  .fr-n { border-bottom: 1.3px solid currentColor; padding: 0 3px; }
+  .fr-d { padding: 0 3px; }
   .prob.mc .prob-q, .prob.written .prob-q { font-weight: 600; font-size: 13px; margin-bottom: 5px; }
   .opts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; padding-left: 22px; }
   .opt { font-family: Arial, sans-serif; font-size: 11.5px; color: #555; display: flex; align-items: center; gap: 6px; padding: 2px 0; }
@@ -199,9 +222,6 @@ export async function generateWorksheetPdf(params: {
   worksheetIds: string[];
   options: PdfGenerationOptions;
 }): Promise<{ buffer: Buffer; fileName: string }> {
-  const browser = await getBrowser();
-  const page = await browser.newPage();
-
   // Load student and worksheets
   const student = params.studentId
     ? await db.student.findUnique({
@@ -217,6 +237,62 @@ export async function generateWorksheetPdf(params: {
       skill: true,
     },
   });
+
+  // ── MATH path: render with the SAME engine + layout as the shop packs ──
+  // Daily packets and shop worksheets are now visually identical (ink/gold
+  // brand, balanced columns, consolidated answer keys). Non-math subjects
+  // keep the legacy HTML renderer below because their problems carry
+  // multiple-choice options the worksheet layout doesn't draw.
+  if (worksheets.length > 0 && worksheets.every((w) => w.level.subject.slug === "MATH")) {
+    const safeNameM = (student?.user.name ?? "student").replace(/\s+/g, "");
+    const dateStrM = format(new Date(), "yyyy-MM-dd");
+    const first = worksheets[0];
+
+    const pdfBytes = await renderPackToPdf({
+      skillLabel: first.level.name,
+      skillCode:  first.level.code,
+      levelCode:  first.level.code,
+      includeAnswerKey: params.options.includeAnswerKey ?? true,
+      sheets: worksheets.map((ws) => {
+        const answerMap = new Map(
+          ((ws.answerKey as any[]) ?? []).map((e: any) => [e.id, String(e.answer)])
+        );
+        // Title each sheet by the engine's REAL unit (e.g. "Arithmetic sequences")
+        // rather than the parent skill name stored on the worksheet ("Limits").
+        const em = getMathSheetMeta(ws.level.code, ws.sheetNumber);
+        const label = em?.subSkillLabel ?? ws.skill.name;
+        return {
+          problems: ((ws.problems as any[]) ?? []).map((p: any) => ({
+            id: String(p.id),
+            question: String(p.question),
+            answer: answerMap.get(p.id) ?? String(p.answer ?? ""),
+          })),
+          skillBand: label,
+          meta: {
+            skill:             first.level.code as any,
+            skillCode:         ws.level.code,
+            sheetNumber:       ws.sheetNumber,
+            totalSheets:       100,
+            levelName:         ws.level.name,
+            subSkillLabel:     label,
+            gradeLevel:        em?.gradeLevel ?? ws.level.name,
+            difficultyStars:   3,
+            learningObjective: `practice ${label.toLowerCase()}`,
+            mode:              "practice" as const,
+            estimatedMinutes:  ws.level.timeLimitMinutes ?? 10,
+          },
+        };
+      }),
+    });
+
+    return {
+      buffer: Buffer.from(pdfBytes),
+      fileName: `${safeNameM}_${first.level.code}_${dateStrM}.pdf`,
+    };
+  }
+
+  const browser = await getBrowser();
+  const page = await browser.newPage();
 
   const totalSheets = worksheets.length + (params.options.includeAnswerKey ? 1 : 0);
 

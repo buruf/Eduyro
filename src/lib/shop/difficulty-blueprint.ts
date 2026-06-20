@@ -4,7 +4,7 @@
 // Generator uses blueprints to constrain output — never invents progression.
 
 import { type Stage } from "./curriculum-graph";
-import { scoreAddition, scoreSubtraction, scoreFraction, type ProblemFeatures } from "./difficulty-scorer";
+import { scoreAddition, scoreSubtraction, scoreMultiplication, scoreDivision, scoreFraction, type ProblemFeatures } from "./difficulty-scorer";
 
 export interface DifficultyBlueprint {
   stage: 1 | 2 | 3 | 4 | 5;
@@ -132,6 +132,28 @@ function estimateStageBaseDifficulty(stage: Stage, skill: string): number {
     return skill === "ADDITION"
       ? scoreAddition(features).total
       : scoreSubtraction(features).total;
+  }
+
+  if (skill === "MULTIPLICATION") {
+    const features: ProblemFeatures = {
+      maxOperand: c.maxA ?? 9,
+      minOperand: c.minA ?? 1,
+      digitCount: String(c.maxA ?? 9).length,
+      isMissingAddend: stage.questionForms.some(f => f.includes("missing")),
+      isWordProblem: stage.questionForms.some(f => f.includes("word")),
+    };
+    return scoreMultiplication(features).total;
+  }
+
+  if (skill === "DIVISION") {
+    const features: ProblemFeatures = {
+      maxOperand: c.maxA ?? 9,
+      minOperand: c.minB ?? 1,
+      digitCount: String(c.maxA ?? 9).length,
+      carryCount: c.operation === "remainder" ? 1 : 0,
+      isWordProblem: stage.questionForms.some(f => f.includes("word")),
+    };
+    return scoreDivision(features).total;
   }
 
   if (skill === "FRACTIONS") {

@@ -45,6 +45,49 @@ function getStageProblems(problems: WorksheetProblem[], stageIndex: number): Wor
   return problems.filter((_, i) => getStageIndex(i) === stageIndex);
 }
 
+// ── Worksheet-level forbidden concepts (from WorksheetBlueprint) ─────────────
+// Catches concepts that slipped through despite no single stage allowing them
+// — a cross-stage guardrail the per-stage checks below can't see.
+
+function validateForbiddenConcepts(
+  problems: WorksheetProblem[],
+  skill: string,
+  forbiddenConcepts: string[]
+): ValidationError[] {
+  if (forbiddenConcepts.length === 0) return [];
+  const errors: ValidationError[] = [];
+
+  problems.forEach((p, i) => {
+    const features = extractFeatures(p.question, p.answer, skill);
+    if (forbiddenConcepts.includes("missing_addend") && features.isMissingAddend) {
+      errors.push({
+        rule: "FORBIDDEN_CONCEPT",
+        message: `Problem ${i+1} uses "missing_addend", which is forbidden for this worksheet`,
+        questionIndex: i,
+        severity: "error",
+      });
+    }
+    if (forbiddenConcepts.includes("word_problem") && features.isWordProblem) {
+      errors.push({
+        rule: "FORBIDDEN_CONCEPT",
+        message: `Problem ${i+1} is a word problem, which is forbidden for this worksheet`,
+        questionIndex: i,
+        severity: "error",
+      });
+    }
+    if (forbiddenConcepts.includes("carry") && (features.carryCount ?? 0) > 0) {
+      errors.push({
+        rule: "FORBIDDEN_CONCEPT",
+        message: `Problem ${i+1} requires carrying, which is forbidden for this worksheet`,
+        questionIndex: i,
+        severity: "error",
+      });
+    }
+  });
+
+  return errors;
+}
+
 // ── Individual validators ─────────────────────────────────────────────────────
 
 function validateSkillAlignment(
@@ -300,11 +343,13 @@ export function validateWorksheet(
   skill: string,
   microSkillId: string,
   stages: Stage[],
-  allowedForms: string[]
+  allowedForms: string[],
+  forbiddenConcepts: string[] = []
 ): ValidationResult {
   const allErrors: ValidationError[] = [];
 
   // Run all validators
+  allErrors.push(...validateForbiddenConcepts(problems, skill, forbiddenConcepts));
   allErrors.push(...validateSkillAlignment(problems, skill, microSkillId));
   allErrors.push(...validateSingleConceptProgression(stages, skill));
   if (skill === "FRACTIONS") allErrors.push(...validateFractionConceptDepth(problems));

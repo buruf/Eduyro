@@ -49,6 +49,35 @@ async function send(to: string, subject: string, html: string) {
 }
 
 // ─────────────────────────────────────────────
+// Internal notifications (sales/contact leads → the team inbox)
+// ─────────────────────────────────────────────
+
+export async function sendContactNotification(params: {
+  subject: string;
+  html: string;
+  replyTo?: string;
+}): Promise<{ delivered: boolean }> {
+  const to = process.env.CONTACT_EMAIL ?? "support@eduyro.com";
+  if (!resend) {
+    console.log(`[CONTACT DEV] To: ${to} | Subject: ${params.subject}\n${params.html}`);
+    return { delivered: false };
+  }
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to,
+      subject: params.subject,
+      html: wrapEmail(params.html),
+      reply_to: params.replyTo,
+    });
+    return { delivered: true };
+  } catch (e) {
+    console.error("[CONTACT FAIL]", e);
+    return { delivered: false };
+  }
+}
+
+// ─────────────────────────────────────────────
 // Email templates
 // ─────────────────────────────────────────────
 

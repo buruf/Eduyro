@@ -149,6 +149,13 @@ function ParentDashboardInner() {
                 + Add child
               </Button>
               <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => window.open(`/print/writing-prompt`, "_blank")}
+              >
+                Writing prompts
+              </Button>
+              <Button
                 variant="primary"
                 size="sm"
                 onClick={() => window.open(`/print/${data.children[activeChildIndex]?.student?.id}`, "_blank")}
@@ -527,7 +534,9 @@ function NotificationsCard({ notifications }: { notifications: any[] }) {
 function BillingCard({ subscription, childCount }: { subscription: any; childCount: number }) {
   const plan = subscription?.plan ?? "FREE";
   const isPremium = plan !== "FREE";
-  const planPrice = plan === "UNLIMITED" ? 19.99 : plan === "FAMILY" ? 14.99 : plan === "PREMIUM" ? 9.99 : 0;
+  // Real pricing model (PLANS.PREMIUM): $9.99 first child + $5.99 each additional.
+  const monthlyTotal = 9.99 + Math.max(0, childCount - 1) * 5.99;
+  const planPrice = isPremium ? monthlyTotal : 0;
 
   return (
     <Card>
@@ -552,35 +561,37 @@ function BillingCard({ subscription, childCount }: { subscription: any; childCou
       </div>
 
       {!isPremium && (
-        <div className="space-y-2 mb-3">
-          {[
-            ["Premium — 1 child", "$9.99/mo", "PREMIUM"],
-            ["Family — up to 3 children", "$14.99/mo", "FAMILY"],
-            ["Unlimited — unlimited children", "$19.99/mo", "UNLIMITED"],
-          ].map(([name, price, planId]) => (
-            <button
-              key={planId}
-              onClick={async () => {
-                const res = await fetch("/api/checkout", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    plan: planId,
-                    successUrl: `${window.location.origin}/parent?subscribed=1`,
-                    cancelUrl: `${window.location.origin}/parent`,
-                  }),
-                });
-                const data = await res.json();
-                if (data.success && data.data.checkoutUrl) {
-                  window.location.href = data.data.checkoutUrl;
-                }
-              }}
-              className="w-full flex justify-between items-center px-3 py-2.5 border border-border rounded-lg hover:border-brand-blue hover:bg-brand-blue-light transition-all text-sm"
-            >
-              <span className="font-medium">{name}</span>
-              <span className="text-brand-blue font-semibold">{price} →</span>
-            </button>
-          ))}
+        <div className="mb-3">
+          <button
+            onClick={async () => {
+              const res = await fetch("/api/checkout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  plan: "PREMIUM",
+                  successUrl: `${window.location.origin}/parent?subscribed=1`,
+                  cancelUrl: `${window.location.origin}/parent`,
+                }),
+              });
+              const data = await res.json();
+              if (data.success && data.data.checkoutUrl) {
+                window.location.href = data.data.checkoutUrl;
+              } else {
+                alert(data.error ?? "Couldn't start checkout. Please email support@eduyro.com.");
+              }
+            }}
+            className="w-full flex justify-between items-center px-3 py-2.5 border border-border rounded-lg hover:border-brand-blue hover:bg-brand-blue-light transition-all text-sm text-left"
+          >
+            <span className="font-medium">
+              Premium — unlimited daily practice
+              <span className="block text-[11px] text-muted font-normal mt-0.5">
+                $9.99/mo first child · +$5.99 each additional · 7-day free trial
+              </span>
+            </span>
+            <span className="text-brand-blue font-semibold whitespace-nowrap">
+              {childCount > 1 ? `$${monthlyTotal.toFixed(2)}/mo` : "$9.99/mo"} →
+            </span>
+          </button>
         </div>
       )}
 

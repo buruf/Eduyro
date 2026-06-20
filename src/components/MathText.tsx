@@ -16,8 +16,19 @@ interface MathTextProps {
 
 // Convert legacy plain-text math to LaTeX where possible
 function upgradeLegacyNotation(text: string): string {
-  // Already has LaTeX — don't double-convert
-  if (text.includes("\\frac") || text.includes("\\sqrt") || text.includes("$")) return text;
+  // Already explicitly delimited — trust the author.
+  if (text.includes("$")) return text;
+
+  // The curriculum engine emits BARE LaTeX (e.g. "\frac{1}{3} + \frac{5}{6}")
+  // with no $ delimiters, so KaTeX never sees it. Wrap each LaTeX atom in $…$ so
+  // it renders as a real fraction/root instead of literal "\frac{…}" text.
+  // Underscores (fill-in blanks like \frac{___}{4}) are escaped so KaTeX doesn't
+  // treat them as subscripts.
+  if (text.includes("\\frac") || text.includes("\\sqrt")) {
+    return text
+      .replace(/\\frac\{[^{}]*\}\{[^{}]*\}/g, (m) => `$${m.replace(/_/g, "\\_")}$`)
+      .replace(/\\sqrt\{[^{}]*\}/g, (m) => `$${m.replace(/_/g, "\\_")}$`);
+  }
 
   // Simple fraction pattern: number/number → \frac{num}{den}
   // Only convert standalone fractions like "1/2", "3/4" not "x/y" variables or "km/h"

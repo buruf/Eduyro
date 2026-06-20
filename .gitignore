@@ -56,3 +56,7 @@ prisma/migrations/
 
 .vercel
 .env*
+
+# Local agent + scratch artifacts
+.claude/
+preview*.pdf

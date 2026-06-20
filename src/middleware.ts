@@ -27,6 +27,15 @@ const PUBLIC_ROUTES = [
   "/placement",
   // Public worksheet generator tool
   "/pdf-generator",
+  // Public printable writing prompts (static content, no student data)
+  "/print/writing-prompt",
+  // Metadata routes (no file extension → not caught by the dot rule below).
+  // Crawlers must reach these without being bounced to /signin.
+  "/opengraph-image",
+  "/twitter-image",
+  "/icon",
+  "/apple-icon",
+  "/manifest.webmanifest",
 ];
 
 const STUDENT_ROUTES = ["/student", "/onboarding"];

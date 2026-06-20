@@ -13,8 +13,8 @@ function PdfFraction({ num, den, fs = 9 }: { num: string; den: string; fs?: numb
   const small = Math.max(6, fs - 2);
   return (
     <View style={{ flexDirection: "column", alignItems: "center", marginHorizontal: 2 }}>
-      <Text style={{ fontSize: small, fontFamily: "Helvetica-Bold", borderBottomWidth: 0.5, borderBottomColor: "#000", paddingHorizontal: 2, lineHeight: 1.1 }}>{num}</Text>
-      <Text style={{ fontSize: small, fontFamily: "Helvetica-Bold", paddingHorizontal: 2, lineHeight: 1.1 }}>{den}</Text>
+      <Text style={{ fontSize: small, fontFamily: "BodySans-Bold", borderBottomWidth: 0.5, borderBottomColor: "#000", paddingHorizontal: 2, lineHeight: 1.1 }}>{num}</Text>
+      <Text style={{ fontSize: small, fontFamily: "BodySans-Bold", paddingHorizontal: 2, lineHeight: 1.1 }}>{den}</Text>
     </View>
   );
 }
@@ -24,8 +24,8 @@ function PdfLimit({ sub, fs = 9 }: { sub: string; fs?: number }) {
   const small = Math.max(6, fs - 3);
   return (
     <View style={{ flexDirection: "column", marginHorizontal: 1 }}>
-      <Text style={{ fontSize: fs, fontFamily: "Helvetica-Bold", lineHeight: 1 }}>lim</Text>
-      <Text style={{ fontSize: small, fontFamily: "Helvetica", lineHeight: 1, color: "#333" }}>{sub}</Text>
+      <Text style={{ fontSize: fs, fontFamily: "BodySans-Bold", lineHeight: 1 }}>lim</Text>
+      <Text style={{ fontSize: small, fontFamily: "BodySans", lineHeight: 1, color: "#333" }}>{sub}</Text>
     </View>
   );
 }
@@ -35,9 +35,9 @@ function PdfIntegral({ lower, upper, fs = 9 }: { lower?: string; upper?: string;
   const small = Math.max(5, fs - 3);
   return (
     <View style={{ flexDirection: "column", alignItems: "center", marginHorizontal: 1 }}>
-      {upper && <Text style={{ fontSize: small, fontFamily: "Helvetica", lineHeight: 1 }}>{upper}</Text>}
-      <Text style={{ fontSize: fs + 4, fontFamily: "Helvetica", lineHeight: 0.8 }}>∫</Text>
-      {lower && <Text style={{ fontSize: small, fontFamily: "Helvetica", lineHeight: 1 }}>{lower}</Text>}
+      {upper && <Text style={{ fontSize: small, fontFamily: "BodySans", lineHeight: 1 }}>{upper}</Text>}
+      <Text style={{ fontSize: fs + 4, fontFamily: "BodySans", lineHeight: 0.8 }}>∫</Text>
+      {lower && <Text style={{ fontSize: small, fontFamily: "BodySans", lineHeight: 1 }}>{lower}</Text>}
     </View>
   );
 }
@@ -47,8 +47,8 @@ function PdfSuperscript({ base, exp, fs = 9 }: { base: string; exp: string; fs?:
   const small = Math.max(5, fs - 3);
   return (
     <View style={{ flexDirection: "row", alignItems: "flex-start", marginHorizontal: 1 }}>
-      <Text style={{ fontSize: fs, fontFamily: "Helvetica-Bold" }}>{base}</Text>
-      <Text style={{ fontSize: small, fontFamily: "Helvetica-Bold", marginTop: 1 }}>{exp}</Text>
+      <Text style={{ fontSize: fs, fontFamily: "BodySans-Bold" }}>{base}</Text>
+      <Text style={{ fontSize: small, fontFamily: "BodySans-Bold", marginTop: 1 }}>{exp}</Text>
     </View>
   );
 }
@@ -57,9 +57,9 @@ function PdfSuperscript({ base, exp, fs = 9 }: { base: string; exp: string; fs?:
 function PdfSqrt({ radicand, fs = 9 }: { radicand: string; fs?: number }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 1 }}>
-      <Text style={{ fontSize: fs, fontFamily: "Helvetica" }}>√</Text>
+      <Text style={{ fontSize: fs, fontFamily: "BodySans" }}>√</Text>
       <View style={{ borderTopWidth: 0.5, borderTopColor: "#000", paddingHorizontal: 1 }}>
-        <Text style={{ fontSize: fs, fontFamily: "Helvetica-Bold" }}>{radicand}</Text>
+        <Text style={{ fontSize: fs, fontFamily: "BodySans-Bold" }}>{radicand}</Text>
       </View>
     </View>
   );
@@ -146,15 +146,37 @@ export function PdfMathText({ text, fontSize = 10 }: { text: string; fontSize?: 
 
   // If only one text token — simple render
   if (tokens.length === 1 && tokens[0].type === 'text') {
-    return <Text style={{ fontSize, fontFamily: "Helvetica-Bold" }}>{(tokens[0] as any).content}</Text>;
+    return <Text style={{ fontSize, fontFamily: "BodySans-Bold" }}>{(tokens[0] as any).content}</Text>;
   }
 
   return (
     <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}>
       {tokens.map((tok, i) => {
         switch (tok.type) {
-          case 'text':
-            return <Text key={i} style={{ fontSize, fontFamily: "Helvetica-Bold" }}>{tok.content}</Text>;
+          case 'text': {
+            // react-pdf drops a Text's leading/trailing whitespace inside a flex
+            // row, so a word sandwiched between math elements (e.g. "1/3 or 2/8")
+            // would lose its spacing and hug the left operand. We restore spacing
+            // EXPLICITLY: operators get a symmetric margin, and any other word
+            // gets a margin on whichever side the source had a space — so "or"
+            // sits evenly centered between the two fractions.
+            const trimmed = tok.content.trim();
+            if (!trimmed) return null;
+            if (/^[+\-×÷=]$/.test(trimmed)) {
+              return (
+                <Text key={i} style={{ fontSize, fontFamily: "BodySans-Bold", marginHorizontal: 4 }}>
+                  {trimmed}
+                </Text>
+              );
+            }
+            const ml = /^\s/.test(tok.content) ? fontSize * 0.28 : 0;
+            const mr = /\s$/.test(tok.content) ? fontSize * 0.28 : 0;
+            return (
+              <Text key={i} style={{ fontSize, fontFamily: "BodySans-Bold", marginLeft: ml, marginRight: mr }}>
+                {trimmed}
+              </Text>
+            );
+          }
           case 'frac':
             return <PdfFraction key={i} num={tok.num} den={tok.den} fs={fontSize} />;
           case 'limit':

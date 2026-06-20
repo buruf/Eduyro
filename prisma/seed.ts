@@ -69,7 +69,7 @@ const SUBJECTS = [
     levels: [
       { code: "W1", name: "Sentence Completion", gradeMin: "Grade 1", gradeMax: "Grade 2", skills: ["Completing sentences", "Capital letters", "Periods"] },
       { code: "W2", name: "Parts of Speech", gradeMin: "Grade 2", gradeMax: "Grade 4", skills: ["Nouns and verbs", "Adjectives and adverbs", "Pronouns", "Prepositions"] },
-      { code: "W3", name: "Sentence Structure", gradeMin: "Grade 3", gradeMax: "Grade 5", skills: ["Simple sentences", "Compound sentences", "Complex sentences", "Run-ons and fragments"] },
+      { code: "W3", name: "Sentence Structure", gradeMin: "Grade 3", gradeMax: "Grade 5", skills: ["Simple sentences", "Compound sentences", "Complex sentences", "Run-ons and fragments", "Subjects and predicates"] },
       { code: "W4", name: "Punctuation", gradeMin: "Grade 4", gradeMax: "Grade 6", skills: ["Commas", "Apostrophes", "Quotation marks", "Semicolons"] },
       { code: "W5", name: "Paragraph Structure", gradeMin: "Grade 5", gradeMax: "Grade 7", skills: ["Topic sentences", "Supporting sentences", "Concluding sentences", "Paragraph unity"] },
       { code: "W6", name: "Essay Structure", gradeMin: "Grade 6", gradeMax: "Grade 8", skills: ["Introductions", "Body paragraphs", "Conclusions", "Transitions"] },
@@ -85,13 +85,13 @@ const SUBJECTS = [
     colorHex: "#C23B22",
     sortOrder: 4,
     levels: [
-      { code: "S1", name: "Life Science Basics", gradeMin: "Grade 2", gradeMax: "Grade 4", skills: ["Living vs nonliving", "Plant life cycle", "Animal life cycles", "Habitats"] },
+      { code: "S1", name: "Life Science Basics", gradeMin: "Grade 2", gradeMax: "Grade 4", skills: ["Living vs nonliving", "Plant life cycle", "Animal life cycles", "Habitats", "Animal groups"] },
       { code: "S2", name: "Ecosystems", gradeMin: "Grade 3", gradeMax: "Grade 5", skills: ["Food chains", "Food webs", "Producers and consumers", "Adaptation"] },
-      { code: "S3", name: "Earth Science", gradeMin: "Grade 4", gradeMax: "Grade 6", skills: ["Water cycle", "Weather patterns", "Rocks and minerals"] },
+      { code: "S3", name: "Earth Science", gradeMin: "Grade 4", gradeMax: "Grade 6", skills: ["Water cycle", "Weather patterns", "Rocks and minerals", "The solar system", "Earth, Sun and Moon"] },
       { code: "S4", name: "States of Matter", gradeMin: "Grade 5", gradeMax: "Grade 7", skills: ["Solids, liquids, gases", "State changes", "Melting and freezing", "Evaporation"] },
-      { code: "S5", name: "Biology", gradeMin: "Grade 6", gradeMax: "Grade 8", skills: ["Cell structure", "Cell functions", "Photosynthesis", "Respiration"] },
+      { code: "S5", name: "Biology", gradeMin: "Grade 6", gradeMax: "Grade 8", skills: ["Cell structure", "Cell functions", "Photosynthesis", "Respiration", "Human body systems", "The digestive system"] },
       { code: "S6", name: "Chemistry", gradeMin: "Grade 7", gradeMax: "Grade 9", skills: ["Elements and compounds", "Chemical reactions", "Acids and bases", "Periodic table basics"] },
-      { code: "S7", name: "Physics", gradeMin: "Grade 8", gradeMax: "Grade 10", skills: ["Forces and motion", "Energy", "Waves and sound"] },
+      { code: "S7", name: "Physics", gradeMin: "Grade 8", gradeMax: "Grade 10", skills: ["Forces and motion", "Energy", "Waves and sound", "Simple machines", "Electricity"] },
     ],
   },
 ];

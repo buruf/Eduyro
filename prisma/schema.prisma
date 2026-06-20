@@ -154,9 +154,25 @@ model Student {
   badges        StudentBadge[]
   teacherLinks  TeacherStudent[]
   dailyPackets  DailyPacket[]
+  tutorialCompletions TutorialCompletion[]
 
   @@index([userId])
   @@index([schoolId])
+}
+
+// Tracks which concept tutorials a student has completed, so a tutorial
+// auto-opens only on the FIRST visit to a skill; afterwards the student sees
+// a small "Review tutorial" link instead.
+model TutorialCompletion {
+  id          String   @id @default(cuid())
+  studentId   String
+  conceptId   String   // concept-family id, e.g. "linear-equations"
+  completedAt DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, conceptId])
+  @@index([studentId])
 }
 
 // ─────────────────────────────────────────────

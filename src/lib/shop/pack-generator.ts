@@ -12,7 +12,7 @@ import type { Problem, AnswerKeyEntry } from "@/types";
 // Skill definitions
 // ─────────────────────────────────────────────
 
-export type ShopSkill = "ADDITION" | "SUBTRACTION" | "MULTIPLICATION" | "DIVISION" | "FRACTIONS" | "DECIMALS" | "RATIOS" | "PRE_ALGEBRA" | "LINEAR_EQUATIONS" | "POLYNOMIALS";
+export type ShopSkill = "ADDITION" | "SUBTRACTION" | "MULTIPLICATION" | "DIVISION" | "FRACTIONS" | "DECIMALS" | "RATIOS" | "PRE_ALGEBRA" | "LINEAR_EQUATIONS" | "POLYNOMIALS" | "GEOMETRY";
 
 export const SHOP_SKILLS: Record<ShopSkill, {
   label: string;
@@ -79,19 +79,17 @@ export const SHOP_SKILLS: Record<ShopSkill, {
     ],
   },
   FRACTIONS: {
-    label: "Fractions",
-    description: "Complete fractions mastery — from identifying to multiplying and dividing. Grades 3–7.",
+    label: "Fractions, Decimals & Percents",
+    description: "One visual-first workbook from picture fractions to percents — identify, compare, simplify, the four operations, decimals, and percent conversions. Grades 2–7.",
     iconEmoji: "½",
     totalSheets: 100,
     problemsPerSheet: 30,
     bands: [
-      { id: "frac-identify",        label: "Identifying & comparing",         sheetCount: 15, difficulty: "easy",        problemCount: 30 },
-      { id: "frac-simplify",        label: "Simplifying fractions",           sheetCount: 15, difficulty: "easy",        problemCount: 30 },
-      { id: "frac-add-same",        label: "Add/subtract same denominator",   sheetCount: 15, difficulty: "standard",    problemCount: 30 },
-      { id: "frac-add-unlike",      label: "Add/subtract unlike denominators",sheetCount: 15, difficulty: "standard",    problemCount: 30 },
-      { id: "frac-multiply",        label: "Multiplying fractions",           sheetCount: 15, difficulty: "challenging", problemCount: 30 },
-      { id: "frac-divide",          label: "Dividing fractions",              sheetCount: 15, difficulty: "challenging", problemCount: 30 },
-      { id: "frac-mixed",           label: "Mixed numbers",                   sheetCount: 10, difficulty: "challenging", problemCount: 30 },
+      { id: "fdp-visual",     label: "Visual fraction foundations",      sheetCount: 5,  difficulty: "easy",        problemCount: 8  },
+      { id: "fdp-frac-core",  label: "Identify, equivalent, compare, order", sheetCount: 19, difficulty: "easy",    problemCount: 30 },
+      { id: "fdp-frac-ops",   label: "Simplify, mixed numbers & 4 operations", sheetCount: 26, difficulty: "standard", problemCount: 30 },
+      { id: "fdp-decimals",   label: "Decimals — place value to operations", sheetCount: 25, difficulty: "standard", problemCount: 30 },
+      { id: "fdp-percents",   label: "Percents & fraction/decimal conversions", sheetCount: 25, difficulty: "challenging", problemCount: 30 },
     ],
   },
   DECIMALS: {
@@ -161,6 +159,19 @@ export const SHOP_SKILLS: Record<ShopSkill, {
       { id: "poly-mixed",        label: "Mixed polynomials & factoring",    sheetCount: 15, difficulty: "challenging", problemCount: 30 },
     ],
   },
+  GEOMETRY: {
+    label: "Geometry — Angles & Area",
+    description: "Angle relationships (complementary, supplementary, vertical, on a line, around a point), triangle angle sum, and perimeter & area of rectangles, squares, triangles and circles. Grades 4–7.",
+    iconEmoji: "📐",
+    totalSheets: 100,
+    problemsPerSheet: 24,
+    bands: [
+      { id: "g-angles",   label: "Complementary, supplementary & vertical angles", sheetCount: 38, difficulty: "easy",        problemCount: 24 },
+      { id: "g-line-pt",  label: "Angles on a line, around a point & in triangles", sheetCount: 42, difficulty: "standard",    problemCount: 24 },
+      { id: "g-perim",    label: "Perimeter & area of rectangles and squares",      sheetCount: 12, difficulty: "standard",    problemCount: 24 },
+      { id: "g-area",     label: "Area of triangles & circles",                     sheetCount: 8,  difficulty: "challenging", problemCount: 16 },
+    ],
+  },
 };
 
 export interface ShopBand {
@@ -175,23 +186,57 @@ export interface ShopBand {
 // Pricing
 // ─────────────────────────────────────────────
 
+// Moderate ~30% lift (council-chosen posture). Single-pack stays an impulse
+// price; the per-pack increment tapers and the full ladder tops out higher so
+// the à-la-carte sum makes the curated bundles an obvious deal.
 export const SHOP_PRICING: Record<number, { amountCents: number; label: string }> = {
-  1: { amountCents: 399,  label: "$3.99" },
-  2: { amountCents: 599,  label: "$5.99" },
-  3: { amountCents: 799,  label: "$7.99" },
-  4: { amountCents: 999,  label: "$9.99" },
-  5: { amountCents: 1199, label: "$11.99" },
-  6: { amountCents: 1399, label: "$13.99" },
-  7: { amountCents: 1599, label: "$15.99" },
-  8: { amountCents: 1799, label: "$17.99" },
-  9: { amountCents: 1999, label: "$19.99" },
-  10: { amountCents: 2199, label: "$21.99" },
+  1:  { amountCents: 499,  label: "$4.99" },
+  2:  { amountCents: 799,  label: "$7.99" },
+  3:  { amountCents: 1099, label: "$10.99" },
+  4:  { amountCents: 1399, label: "$13.99" },
+  5:  { amountCents: 1699, label: "$16.99" },
+  6:  { amountCents: 1899, label: "$18.99" },
+  7:  { amountCents: 2099, label: "$20.99" },
+  8:  { amountCents: 2299, label: "$22.99" },
+  9:  { amountCents: 2499, label: "$24.99" },
+  10: { amountCents: 2799, label: "$27.99" },
 };
 
 export function calculatePrice(skills: ShopSkill[]): number {
   const count = skills.length;
-  if (count < 1 || count > 4) throw new Error(`Invalid skill count: ${count}`);
+  if (count < 1 || count > 10) throw new Error(`Invalid skill count: ${count}`);
   return SHOP_PRICING[count].amountCents;
+}
+
+// ─────────────────────────────────────────────
+// Curated bundles — grade/goal framed, one-click products.
+// Parents shop by GRADE and GOAL, not abstract skill names. Each bundle is a
+// preset skill list at a price BELOW the à-la-carte ladder (a real "save $X"
+// hook), and "Full Math Mastery" anchors the catalog. Prices live here on the
+// server and are the single source of truth — checkout never trusts a client
+// price. Fulfillment is unchanged: bundles expand to their skills CSV.
+// ─────────────────────────────────────────────
+export interface ShopBundle {
+  id: string;
+  name: string;
+  tagline: string;
+  gradeBand: string;
+  skills: ShopSkill[];
+  priceCents: number;
+}
+
+// Bundle prices sit clearly below the à-la-carte ladder above. Full Math
+// Mastery is the anchor: $19.99 vs $27.99 à la carte → "save $8, ~29% off".
+export const SHOP_BUNDLES: ShopBundle[] = [
+  { id: "times-tables-bootcamp",     name: "Times-Tables Bootcamp",        tagline: "Master multiplication & division facts",            gradeBand: "Grades 3–4", skills: ["MULTIPLICATION", "DIVISION"],                                                priceCents: 699 },
+  { id: "arithmetic-foundations",    name: "Arithmetic Foundations",       tagline: "The four operations, start to fluent",              gradeBand: "Grades 1–4", skills: ["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION"],                     priceCents: 1099 },
+  { id: "fractions-decimals-ratios", name: "Fractions, Decimals & Ratios", tagline: "Upper-elementary number sense",                     gradeBand: "Grades 4–6", skills: ["FRACTIONS", "DECIMALS", "RATIOS"],                                           priceCents: 899 },
+  { id: "prealgebra-algebra",        name: "Pre-Algebra & Algebra",        tagline: "The bridge to high-school math",                    gradeBand: "Grades 6–9", skills: ["PRE_ALGEBRA", "LINEAR_EQUATIONS", "POLYNOMIALS"],                            priceCents: 899 },
+  { id: "full-math-mastery",         name: "Full Math Mastery",            tagline: "Every skill, K through 8 — our complete curriculum", gradeBand: "Grades K–8", skills: ["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION", "FRACTIONS", "DECIMALS", "RATIOS", "PRE_ALGEBRA", "LINEAR_EQUATIONS", "POLYNOMIALS"], priceCents: 1999 },
+];
+
+export function getBundle(id: string): ShopBundle | undefined {
+  return SHOP_BUNDLES.find((b) => b.id === id);
 }
 
 // ─────────────────────────────────────────────
@@ -239,7 +284,7 @@ export function generatePackForSkill(skill: ShopSkill): GeneratedPack {
         : (i - 1) / (band.sheetCount - 1);
 
       // Use progressive generator for skills with difficulty curves
-      const PROGRESSIVE_SKILLS = ["ADDITION","SUBTRACTION","MULTIPLICATION","DIVISION","FRACTIONS","DECIMALS","PRE_ALGEBRA"];
+      const PROGRESSIVE_SKILLS = ["ADDITION","SUBTRACTION","MULTIPLICATION","DIVISION","FRACTIONS","DECIMALS","RATIOS","PRE_ALGEBRA","LINEAR_EQUATIONS","POLYNOMIALS","GEOMETRY"];
       let problems: any[], answerKey: any[], wsData: WorksheetData | null = null;
       if (PROGRESSIVE_SKILLS.includes(skill)) {
         wsData = generateProgressiveSheet(skill, sheetNum, config.totalSheets ?? 100, band.problemCount);

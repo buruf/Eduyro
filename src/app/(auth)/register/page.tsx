@@ -106,7 +106,7 @@ export default function RegisterPage() {
   return (
     <div className="bg-white border border-border rounded-2xl p-8 shadow-card">
       <h2 className="font-serif text-2xl font-bold mb-1">Create your account</h2>
-      <p className="text-sm text-muted mb-5">Free forever. No credit card needed.</p>
+      <p className="text-sm text-muted mb-5">Free to start — no credit card needed.</p>
 
       {error && (
         <div className="bg-brand-red-light border border-brand-red/30 text-brand-red text-sm rounded-lg p-3 mb-4">

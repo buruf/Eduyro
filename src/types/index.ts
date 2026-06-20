@@ -263,6 +263,12 @@ export interface SkillTreeNode {
   progressPct: number;
   sheetsCompleted: number;
   totalSheets: number;
+  // Item-level mastery (non-math skills): distinct questions seen vs. the bank,
+  // and accuracy measured per distinct item. Omitted for MATH (unbounded items).
+  itemsSeen?: number;
+  itemsTotal?: number;
+  itemsMastered?: number;
+  itemAccuracyPct?: number;
 }
 
 export interface ParentDashboard {

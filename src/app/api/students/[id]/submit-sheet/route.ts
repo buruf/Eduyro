@@ -5,6 +5,7 @@ import {
   ok, notFound, forbidden, err, handleRouteError, withAuth, parseRequest,
 } from "@/lib/api/helpers";
 import { SubmitSheetSchema } from "@/lib/validation/schemas";
+import { answersMatch } from "@/lib/grading";
 import { startOfDay, isSameDay, subDays } from "date-fns";
 import type { GradedAnswer, SheetResult } from "@/types";
 
@@ -48,9 +49,7 @@ export async function POST(
       const answerKey = worksheet.answerKey as any[];
       const gradedAnswers: GradedAnswer[] = answers.map((submission) => {
         const correct = answerKey.find((k) => k.id === submission.problemId);
-        const isCorrect = correct
-          ? normalizeAnswer(submission.answer) === normalizeAnswer(correct.answer)
-          : false;
+        const isCorrect = correct ? answersMatch(submission.answer, correct.answer) : false;
         return {
           problemId: submission.problemId,
           answer: submission.answer,
@@ -151,10 +150,6 @@ export async function POST(
 // ─────────────────────────────────────────────
 // Grading helpers
 // ─────────────────────────────────────────────
-
-function normalizeAnswer(answer: string | number): string {
-  return String(answer).trim().toLowerCase().replace(/\s+/g, " ");
-}
 
 async function updateProgressAndMastery(
   studentId: string,

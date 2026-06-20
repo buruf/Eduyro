@@ -1,23 +1,13 @@
 // src/components/shop/SamplePreviewModal.tsx
-// In-browser preview of a sample worksheet pack.
-// Renders rendered HTML in an iframe with download/print discouraged via:
-//   - Watermark across each sheet (from the API)
-//   - No download link or save button anywhere
-//   - Disabled right-click and selection (best-effort; determined users
-//     can still use dev tools, but we make casual saving harder)
-//   - "Print" not exposed in our UI
+// In-browser preview of sample worksheets.
+// Embeds the REAL PDF from /api/shop/preview-sheet — the exact engine and
+// renderer a buyer receives — so the preview is pixel-identical to the
+// product (stamped with a translucent SAMPLE watermark server-side).
+// Download/print is discouraged: watermark, no save UI, Ctrl+P/S blocked.
 
 "use client";
 
 import { useEffect, useState } from "react";
-
-interface SampleData {
-  skill: string;
-  label: string;
-  sheetCount: number;
-  sheetsHtml: string[];
-  note: string;
-}
 
 interface SamplePreviewModalProps {
   open: boolean;
@@ -25,35 +15,17 @@ interface SamplePreviewModalProps {
   onClose: () => void;
 }
 
+const SAMPLE_SHEETS = [1, 2];
+
 export function SamplePreviewModal({ open, skill, onClose }: SamplePreviewModalProps) {
-  const [data, setData] = useState<SampleData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadedCount, setLoadedCount] = useState(0);
 
   useEffect(() => {
-    if (!open || !skill) {
-      setData(null);
-      setError(null);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    fetch(`/api/shop/sample?skill=${skill}`)
-      .then(async (r) => {
-        const json = await r.json();
-        if (!r.ok || !json.success) {
-          throw new Error(json.error ?? "Failed to load preview");
-        }
-        setData(json.data);
-      })
-      .catch((e) => setError(String(e.message ?? e)))
-      .finally(() => setLoading(false));
+    if (!open) setLoadedCount(0);
   }, [open, skill]);
 
-  // Disable Ctrl+P, Ctrl+S, Cmd+P, Cmd+S inside the modal so casual users
-  // can't print or save. (Doesn't block dev-tools-savvy users, but stops
-  // 99% of attempts. Combined with the watermark, this is good enough.)
+  // Disable Ctrl+P / Ctrl+S inside the modal so casual users can't print or
+  // save. (Doesn't stop dev-tools users, but with the watermark it's enough.)
   useEffect(() => {
     if (!open) return;
     const blockSaveOrPrint = (e: KeyboardEvent) => {
@@ -68,7 +40,12 @@ export function SamplePreviewModal({ open, skill, onClose }: SamplePreviewModalP
     return () => document.removeEventListener("keydown", blockSaveOrPrint, true);
   }, [open]);
 
-  if (!open) return null;
+  if (!open || !skill) return null;
+
+  const label = skill
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 
   return (
     <div
@@ -78,18 +55,16 @@ export function SamplePreviewModal({ open, skill, onClose }: SamplePreviewModalP
       <div
         className="bg-cream rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
-        // Discourage right-click save / drag
         onContextMenu={(e) => e.preventDefault()}
-        onDragStart={(e) => e.preventDefault()}
-        style={{ userSelect: "none" }}
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div>
             <h2 className="font-serif text-xl font-bold">
-              {data?.label ?? "Loading"} — Free Sample Preview
+              {label} — Free Sample Preview
             </h2>
             <p className="text-xs text-muted mt-1">
-              Preview is view-only. Purchase the pack to download printable PDFs.
+              These are the actual worksheets from the pack (watermarked).
+              Purchase to download all 100 sheets, clean and printable.
             </p>
           </div>
           <button
@@ -101,37 +76,26 @@ export function SamplePreviewModal({ open, skill, onClose }: SamplePreviewModalP
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 bg-white">
-          {loading && (
-            <div className="text-center py-12 text-muted">
-              Loading sample…
+        <div className="flex-1 overflow-y-auto p-4 bg-white space-y-4">
+          {loadedCount < SAMPLE_SHEETS.length && (
+            <div className="text-center py-3 text-muted text-sm">
+              Loading sample worksheets…
             </div>
           )}
-
-          {error && (
-            <div className="text-center py-12 text-brand-red">
-              Could not load preview: {error}
-            </div>
-          )}
-
-          {data && (
-            <>
-              {data.sheetsHtml.map((html, i) => (
-                <div
-                  key={i}
-                  className="mb-8 border border-border rounded-lg shadow-sm bg-white"
-                  style={{ padding: "1rem" }}
-                  // Render server-built HTML. Safe because content originates
-                  // from our own renderSheetHtml() which escapes user input.
-                  dangerouslySetInnerHTML={{ __html: html }}
-                />
-              ))}
-              <div className="text-center text-sm text-muted py-4">
-                You're previewing {data.sheetCount} sample sheets. The full pack
-                includes ~100 sheets and an answer key.
-              </div>
-            </>
-          )}
+          {SAMPLE_SHEETS.map((n) => (
+            <iframe
+              key={`${skill}-${n}`}
+              src={`/api/shop/preview-sheet?skill=${skill}&sheet=${n}#toolbar=0&navpanes=0`}
+              title={`${label} sample worksheet ${n}`}
+              className="w-full rounded-lg border border-border bg-white"
+              style={{ height: "70vh", minHeight: 480 }}
+              onLoad={() => setLoadedCount((c) => c + 1)}
+            />
+          ))}
+          <div className="text-center text-sm text-muted py-2">
+            You&rsquo;re previewing {SAMPLE_SHEETS.length} of 100 sheets. The full
+            pack includes every difficulty level plus a consolidated answer key.
+          </div>
         </div>
 
         <div className="p-4 border-t border-border bg-cream-dark text-center">

@@ -92,8 +92,18 @@ export async function GET(
         return ok({ packet: null, date: dateStr, fresh: false, reason: "no_skill" });
       }
 
+      // Advance through the level's 100-sheet curriculum over time: each prior
+      // day's packet consumed SHEETS_PER_DAY sheets, so today continues where the
+      // student left off. The clean engine maps this global sheet number to a
+      // curriculum unit, so difficulty rises day over day (Kumon-style pacing).
+      const priorPackets = await db.dailyPacket.count({
+        where: { studentId, levelCode: level.code, date: { lt: dateUTC } },
+      });
+      const baseSheet = priorPackets * SHEETS_PER_DAY;
+
       const sheets = [];
       for (let i = 1; i <= SHEETS_PER_DAY; i++) {
+        const globalSheet = Math.min(100, baseSheet + i);
         const { problems, answerKey } = generateProblems({
           subjectSlug:      subject.slug as any,
           levelCode:        level.code,
@@ -101,8 +111,8 @@ export async function GET(
           problemCount:     PROBLEMS_PER_SHEET,
           timeLimitMinutes: level.timeLimitMinutes,
           difficulty:       1.0,
-          sheetNumber:      i,
-          totalSheets:      SHEETS_PER_DAY,
+          sheetNumber:      globalSheet,
+          totalSheets:      100,
         });
         sheets.push({ sheetNumber: i, problems, answerKey });
       }

@@ -13,11 +13,14 @@ import { nanoid } from "nanoid";
 import { db } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import { ok, err, handleRouteError, parseRequest, withRateLimit } from "@/lib/api/helpers";
-import { SHOP_SKILLS, calculatePrice, type ShopSkill } from "@/lib/shop/pack-generator";
+import { SHOP_SKILLS, calculatePrice, getBundle, type ShopSkill } from "@/lib/shop/pack-generator";
 
 const CheckoutSchema = z.object({
-  skills: z.array(z.enum(["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION", "FRACTIONS", "DECIMALS", "RATIOS", "PRE_ALGEBRA", "LINEAR_EQUATIONS", "POLYNOMIALS"]))
-    .min(1).max(4),
+  // À-la-carte skills (1–10). Optional when a bundleId is supplied.
+  skills: z.array(z.enum(["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION", "FRACTIONS", "DECIMALS", "RATIOS", "PRE_ALGEBRA", "LINEAR_EQUATIONS", "POLYNOMIALS", "GEOMETRY"]))
+    .max(10).optional(),
+  // Curated bundle — the server expands it to its skill list and fixed price.
+  bundleId: z.string().optional(),
   email: z.string().email(),
   emailDelivery: z.boolean().default(true),
 });
@@ -28,23 +31,35 @@ export async function POST(req: NextRequest) {
 
   const parsed = await parseRequest(req, CheckoutSchema);
   if ("status" in parsed) return parsed;
-  const { skills, email, emailDelivery } = parsed.data;
-
-  // Dedupe skills (in case the client sent duplicates)
-  const uniqueSkills = Array.from(new Set(skills)) as ShopSkill[];
+  const { skills, bundleId, email, emailDelivery } = parsed.data;
 
   try {
-    const amountCents = calculatePrice(uniqueSkills);
+    // ── Resolve the order to (skills, price) ENTIRELY server-side ──
+    // The client may send a bundleId or a skills list; it never sends a price.
+    let uniqueSkills: ShopSkill[];
+    let amountCents: number;
+    let productName: string;
+
+    if (bundleId) {
+      const bundle = getBundle(bundleId);
+      if (!bundle) return err("Unknown bundle", 400, "INVALID_BUNDLE");
+      uniqueSkills = bundle.skills.slice();
+      amountCents  = bundle.priceCents;          // server source of truth
+      productName  = `${bundle.name} — ${bundle.gradeBand}`;
+    } else {
+      uniqueSkills = Array.from(new Set(skills ?? [])) as ShopSkill[];
+      if (uniqueSkills.length < 1) return err("Select at least one skill or a bundle", 400, "NO_SKILLS");
+      amountCents  = calculatePrice(uniqueSkills);
+      productName  = uniqueSkills.length === 1
+        ? `${SHOP_SKILLS[uniqueSkills[0]].label} Practice Pack`
+        : `${uniqueSkills.length}-Skill Math Bundle`;
+    }
+
     const downloadToken = nanoid(32);
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-    // Build product description
-    const productName = uniqueSkills.length === 1
-      ? `${SHOP_SKILLS[uniqueSkills[0]].label} Practice Pack`
-      : `${uniqueSkills.length}-Skill Math Bundle`;
-
     const skillLabels = uniqueSkills.map((s) => SHOP_SKILLS[s].label).join(", ");
-    const productDescription = `${skillLabels} · 100 worksheets per skill · ~${uniqueSkills.length * 2500} problems · Answer keys included`;
+    const productDescription = `${skillLabels} · 100 worksheets per skill · ~${uniqueSkills.length * 3000} problems · Answer keys included`;
 
     // Create the purchase record (PENDING)
     const purchase = await db.shopPurchase.create({

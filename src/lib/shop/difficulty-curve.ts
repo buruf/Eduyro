@@ -130,7 +130,7 @@ export function preAlgebraDifficulty(sheet: number): DifficultyParams {
   const isFirst = sheet === 1 || sheet === 21 || sheet === 41 || sheet === 66 || sheet === 86;
   const m = isFirst ? "tutorial" : mode(sheet);
 
-  if (sheet <= 20) { const t=progress(sheet,0,20); return { maxCoefficient:1, maxConstant:lerp(t,5,15), maxAnswer:lerp(t,10,20), subSkill:"alg-one-add-sub", subSkillLabel:"One-step equations: + and −", gradeLevel:"Grade 7", difficultyStars:2, learningObjective:"solve one-step equations using addition and subtraction", mode:m }; }
+  if (sheet <= 20) { const t=progress(sheet,0,20); return { maxCoefficient:1, maxConstant:lerp(t,5,15), maxAnswer:lerp(t,10,20), subSkill:"alg-one-add-sub", subSkillLabel:"One-step equations: + and -", gradeLevel:"Grade 7", difficultyStars:2, learningObjective:"solve one-step equations using addition and subtraction", mode:m }; }
   if (sheet <= 40) { const t=progress(sheet,20,40); return { maxCoefficient:lerp(t,1,5), maxConstant:lerp(t,5,15), maxAnswer:lerp(t,10,30), subSkill:"alg-one-mul-div", subSkillLabel:"One-step equations: × and ÷", gradeLevel:"Grade 7", difficultyStars:2, learningObjective:"solve one-step equations using multiplication and division", mode:m }; }
   if (sheet <= 65) { const t=progress(sheet,40,65); return { maxCoefficient:lerp(t,2,6), maxConstant:lerp(t,3,12), maxAnswer:lerp(t,5,20), subSkill:"alg-two-step", subSkillLabel:"Two-step equations", gradeLevel:"Grade 7–8", difficultyStars:3, learningObjective:"solve two-step equations", mode:m }; }
   if (sheet <= 85) return { maxCoefficient:5, maxConstant:15, maxAnswer:25, subSkill:"alg-inequalities", subSkillLabel:"Inequalities", gradeLevel:"Grade 8", difficultyStars:4, learningObjective:"solve and graph simple inequalities", mode:m };

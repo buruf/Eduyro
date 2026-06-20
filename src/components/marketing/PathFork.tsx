@@ -139,17 +139,17 @@ export function PathFork() {
                 <div className="flex items-end justify-between mb-4">
                   <div>
                     <div className="text-muted text-xs font-sans mb-1">From</div>
-                    <div className="font-serif text-3xl font-bold text-ink">$3.99 USD<span className="text-base font-sans font-normal text-muted">/pack</span></div>
+                    <div className="font-serif text-3xl font-bold text-ink">$4.99 USD<span className="text-base font-sans font-normal text-muted">/pack</span></div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[10px] text-muted font-sans">All 4 packs</div>
-                    <div className="text-sm font-semibold text-brand-blue">$9.99 USD total</div>
+                    <div className="text-[10px] text-muted font-sans">All 10 skills</div>
+                    <div className="text-sm font-semibold text-brand-blue">$19.99 USD bundle</div>
                   </div>
                 </div>
                 <div className="block w-full bg-brand-blue text-white text-sm font-bold py-3.5 rounded-xl text-center">
                   Browse worksheet packs →
                 </div>
-                <p className="text-center text-[10px] text-muted mt-2 font-sans">1 pack $3.99 · 2 packs $5.99 · All 4 packs $9.99 USD</p>
+                <p className="text-center text-[10px] text-muted mt-2 font-sans">1 pack $4.99 · curated bundles from $6.99 · Full Math Mastery $19.99 USD</p>
               </div>
             </Link>
           </div>

@@ -48,12 +48,14 @@ export default function PrintPage() {
   }, [childId]);
 
   useEffect(() => {
-    if (state.status === "ready" && !printTriggered.current) {
+    // Auto-print only applies to the HTML layout (non-math). Math packets
+    // embed the real PDF, whose viewer has its own print UI.
+    if (state.status === "ready" && state.packet.subjectSlug !== "MATH" && !printTriggered.current) {
       printTriggered.current = true;
       const t = setTimeout(() => window.print(), 900);
       return () => clearTimeout(t);
     }
-  }, [state.status]);
+  }, [state]);
 
   if (state.status === "loading") return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -82,6 +84,43 @@ export default function PrintPage() {
 
   const { packet, date } = state;
   const sheets: Sheet[] = Array.isArray(packet.sheets) ? packet.sheets : [];
+
+  // ── MATH: embed the REAL PDF (same engine + same renderer as shop packs) ──
+  // so what parents print is identical to a purchased Eduyro worksheet.
+  if (packet.subjectSlug === "MATH") {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const pdfUrl = `/api/students/${packet.studentId}/daily-packet/pdf?tz=${encodeURIComponent(tz)}`;
+    return (
+      <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#e5e7eb" }}>
+        <div style={{ background: "white", borderBottom: "1px solid #E8E0D0", padding: "10px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <BrandLogo size="sm" />
+            <div style={{ width: "1px", height: "20px", background: "#E8E0D0" }} />
+            <div>
+              <div style={{ fontSize: "12px", fontWeight: 600, color: "#1A1612" }}>{packet.skillName} · {packet.levelCode}</div>
+              <div style={{ fontSize: "10px", color: "#7A6E5F" }}>{date} · {sheets.length} worksheets + answer key · same layout as Eduyro shop packs</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <a
+              href={pdfUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{ background: "#1A1612", color: "white", padding: "8px 16px", borderRadius: "8px", fontSize: "13px", fontWeight: 600, textDecoration: "none" }}
+            >
+              🖨 Open & print PDF
+            </a>
+            <Link href="/parent" style={{ fontSize: "12px", color: "#7A6E5F", textDecoration: "none" }}>← Dashboard</Link>
+          </div>
+        </div>
+        <iframe
+          src={pdfUrl}
+          title="Today's worksheet packet"
+          style={{ flex: 1, border: "none", width: "100%" }}
+        />
+      </div>
+    );
+  }
 
   return (
     <>

@@ -11,7 +11,7 @@ export interface ProblemFeatures {
   digitCount?: number;        // number of digits in largest operand
   addendCount?: number;       // how many numbers being added
   // Format complexity
-  isMissingAddend?: boolean;  // □ + b = c
+  isMissingAddend?: boolean;  // ___ + b = c
   isWordProblem?: boolean;    // requires language parsing
   isReverse?: boolean;        // subtraction presented as missing addend
   // Fraction specific
@@ -95,6 +95,47 @@ export function scoreSubtraction(features: ProblemFeatures): DifficultyScore {
   return { total, breakdown };
 }
 
+// ── Multiplication scoring ────────────────────────────────────────────────────
+export function scoreMultiplication(features: ProblemFeatures): DifficultyScore {
+  const breakdown: Record<string, number> = {};
+  let total = 0;
+
+  // Difficulty scales with the size of the larger factor (times-table position)
+  // and with how many digits the operands carry — single facts are easy,
+  // multi-digit products require the standard algorithm.
+  const factorScore = (features.maxOperand ?? 1) * 4;
+  breakdown.factor = factorScore;
+  total += factorScore;
+
+  const digitScore = ((features.digitCount ?? 1) - 1) * 35;
+  breakdown.digitCount = digitScore;
+  total += digitScore;
+
+  if (features.isMissingAddend) { breakdown.missingFactor = 22; total += 22; }
+  if (features.isWordProblem)   { breakdown.word = 18;          total += 18; }
+
+  return { total, breakdown };
+}
+
+// ── Division scoring ──────────────────────────────────────────────────────────
+export function scoreDivision(features: ProblemFeatures): DifficultyScore {
+  const breakdown: Record<string, number> = {};
+  let total = 0;
+
+  const divisorScore = (features.minOperand ?? 1) * 5;
+  breakdown.divisor = divisorScore;
+  total += divisorScore;
+
+  const digitScore = ((features.digitCount ?? 1) - 1) * 35;
+  breakdown.digitCount = digitScore;
+  total += digitScore;
+
+  if (features.carryCount) { breakdown.remainder = 20; total += 20; }
+  if (features.isWordProblem) { breakdown.word = 18; total += 18; }
+
+  return { total, breakdown };
+}
+
 // ── Fraction scoring ──────────────────────────────────────────────────────────
 export function scoreFraction(features: ProblemFeatures): DifficultyScore {
   const breakdown: Record<string, number> = {};
@@ -143,6 +184,8 @@ export function scoreProblem(
   switch (skill) {
     case "ADDITION":        return scoreAddition(features);
     case "SUBTRACTION":     return scoreSubtraction(features);
+    case "MULTIPLICATION":  return scoreMultiplication(features);
+    case "DIVISION":        return scoreDivision(features);
     case "FRACTIONS":       return scoreFraction(features);
     default:                return scoreAddition(features); // fallback
   }
@@ -152,7 +195,7 @@ export function scoreProblem(
 export function extractFeatures(question: string, answer: string, skill: string): ProblemFeatures {
   const features: ProblemFeatures = {};
 
-  if (skill === "ADDITION" || skill === "SUBTRACTION") {
+  if (skill === "ADDITION" || skill === "SUBTRACTION" || skill === "MULTIPLICATION" || skill === "DIVISION") {
     // Extract numbers from question
     const nums = question.match(/\d+/g)?.map(Number) ?? [];
     if (nums.length > 0) {
@@ -174,8 +217,28 @@ export function extractFeatures(question: string, answer: string, skill: string)
       features.carryCount = carry > 0 ? 1 : 0;
     }
 
-    // Missing addend
-    features.isMissingAddend = question.includes("□");
+    // Check for borrowing in subtraction (stored in carryCount — same
+    // "regrouping required" concept the validator and blueprint reason about)
+    if (skill === "SUBTRACTION" && nums.length >= 2 && !question.includes("___")) {
+      let borrow = 0;
+      const minuend = Math.max(nums[0], nums[1]);
+      const subtrahend = Math.min(nums[0], nums[1]);
+      const a = String(minuend).padStart(10, "0").split("").reverse();
+      const b = String(subtrahend).padStart(10, "0").split("").reverse();
+      for (let i = 0; i < a.length; i++) {
+        const diff = parseInt(a[i]) - parseInt(b[i]) - borrow;
+        borrow = diff < 0 ? 1 : 0;
+      }
+      features.carryCount = borrow > 0 ? 1 : 0;
+    }
+
+    // Division remainder — flagged via "r" in the answer (e.g. "7 r 2")
+    if (skill === "DIVISION") {
+      features.carryCount = /\br\s*\d/.test(answer) ? 1 : 0;
+    }
+
+    // Missing addend / missing factor / missing operand — all represented as ___
+    features.isMissingAddend = question.includes("___");
 
     // Word problem
     features.isWordProblem = question.includes("?") &&

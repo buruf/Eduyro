@@ -168,7 +168,7 @@ export function CurriculumTables() {
         <svg viewBox="0 0 20 20" className="w-4 h-4 fill-brand-green flex-shrink-0">
           <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm3.707-9.293l-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414z"/>
         </svg>
-        Worksheets are generated fresh every time — problems are randomised so your child never sees the same sheet twice.
+        Math worksheets are generated fresh every time by our problem engine. Reading, Writing &amp; Science draw from large curated question banks, so practice keeps rotating through new material.
       </div>
     </div>
   );

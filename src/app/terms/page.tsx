@@ -70,9 +70,10 @@ export default function TermsPage() {
         <section>
           <h2 className="font-serif text-xl font-bold mb-3">5. Shop Purchases</h2>
           <p className="text-sm leading-relaxed text-muted mb-3">
-            Worksheet packs purchased from the Eduyro Shop are digital products delivered as downloadable PDFs. 
-            All sales are final. Due to the digital nature of the products, we do not offer refunds on completed 
-            purchases unless the file is defective or undelivered.
+            Worksheet packs purchased from the Eduyro Shop are digital products delivered as downloadable PDFs.
+            We offer a 7-day money-back guarantee: if you're not satisfied with a pack, email
+            support@eduyro.com within 7 days of purchase and we'll refund you in full. After 7 days, sales are
+            considered final due to the digital nature of the products.
           </p>
           <p className="text-sm leading-relaxed text-muted">
             Purchased worksheets are licensed for personal, non-commercial use only. You may print them for 

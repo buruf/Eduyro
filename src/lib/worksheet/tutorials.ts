@@ -139,12 +139,12 @@ function numberPatternsTutorial(): TutorialContent {
     concepts: [
       { title: "Arithmetic Pattern", formula: "Add or subtract the same number each time", explanation: "If you add the same number each step, it is an arithmetic pattern.", tip: "2, 5, 8, 11 → rule is +3" },
       { title: "Geometric Pattern", formula: "Multiply or divide by the same number each time", explanation: "If you multiply by the same number each step, it is a geometric pattern.", tip: "3, 6, 12, 24 → rule is ×2" },
-      { title: "Find the Rule", formula: "next − current = common difference", explanation: "Subtract any term from the next one. If the answer is always the same, you have found the rule.", tip: "10, 7, 4, 1 → rule is −3" },
+      { title: "Find the Rule", formula: "next - current = common difference", explanation: "Subtract any term from the next one. If the answer is always the same, you have found the rule.", tip: "10, 7, 4, 1 → rule is -3" },
     ],
     examples: [
       { problem: "2, 4, 6, 8, ___", steps: ["Each number increases by 2.", "8 + 2 = 10"], answer: "10" },
       { problem: "5, 10, 15, 20, ___", steps: ["Each number increases by 5.", "20 + 5 = 25"], answer: "25" },
-      { problem: "100, 90, 80, 70, ___", steps: ["Each number decreases by 10.", "70 − 10 = 60"], answer: "60" },
+      { problem: "100, 90, 80, 70, ___", steps: ["Each number decreases by 10.", "70 - 10 = 60"], answer: "60" },
       { problem: "1, 3, 9, 27, ___", steps: ["Each number is multiplied by 3.", "27 × 3 = 81"], answer: "81" },
       { problem: "What is the rule? 3, 6, 12, 24", steps: ["3 × 2 = 6", "6 × 2 = 12", "12 × 2 = 24", "The rule is: multiply by 2."], answer: "×2 (double each time)" },
     ],
@@ -157,15 +157,15 @@ function numberBondsTutorial(): TutorialContent {
     intro: "Number bonds show how a number can be split into two parts.",
     concepts: [
       { title: "Part + Part = Whole", formula: "Part₁ + Part₂ = Whole", explanation: "Every whole number can be split into two smaller parts.", tip: "8 = 3+5 = 2+6 = 4+4" },
-      { title: "Find the Missing Part", formula: "Whole − Known Part = Missing Part", explanation: "If you know the whole and one part, subtract to find the other.", tip: "? + 6 = 10 → 10 − 6 = 4" },
+      { title: "Find the Missing Part", formula: "Whole - Known Part = Missing Part", explanation: "If you know the whole and one part, subtract to find the other.", tip: "? + 6 = 10 → 10 - 6 = 4" },
       { title: "Key Bonds to 10", formula: "1+9, 2+8, 3+7, 4+6, 5+5", explanation: "Bonds to 10 are the most useful. Memorise them!", tip: "Also learn bonds to 20 next!" },
     ],
     examples: [
-      { problem: "3 + ___ = 7", steps: ["We need the missing part.", "7 − 3 = 4", "So 3 + 4 = 7"], answer: "4" },
-      { problem: "___ + 6 = 10", steps: ["10 − 6 = 4", "So 4 + 6 = 10"], answer: "4" },
-      { problem: "8 + ___ = 15", steps: ["15 − 8 = 7", "Check: 8 + 7 = 15 ✓"], answer: "7" },
-      { problem: "Split 12 into two parts. One part is 5. What is the other?", steps: ["12 = 5 + ?", "12 − 5 = 7"], answer: "7" },
-      { problem: "___ + 9 = 18", steps: ["18 − 9 = 9", "So 9 + 9 = 18"], answer: "9" },
+      { problem: "3 + ___ = 7", steps: ["We need the missing part.", "7 - 3 = 4", "So 3 + 4 = 7"], answer: "4" },
+      { problem: "___ + 6 = 10", steps: ["10 - 6 = 4", "So 4 + 6 = 10"], answer: "4" },
+      { problem: "8 + ___ = 15", steps: ["15 - 8 = 7", "Check: 8 + 7 = 15 ✓"], answer: "7" },
+      { problem: "Split 12 into two parts. One part is 5. What is the other?", steps: ["12 = 5 + ?", "12 - 5 = 7"], answer: "7" },
+      { problem: "___ + 9 = 18", steps: ["18 - 9 = 9", "So 9 + 9 = 18"], answer: "9" },
     ],
   };
 }
@@ -194,15 +194,15 @@ function missingNumbersTutorial(): TutorialContent {
     skillName: "Missing Numbers",
     intro: "To find a missing number, use the inverse (opposite) operation.",
     concepts: [
-      { title: "Use the Inverse Operation", formula: "Addition ↔ Subtraction    Multiplication ↔ Division", explanation: "Every operation has an opposite. To find a missing number, use the opposite of what's in the problem.", tip: "? + 8 = 13  →  13 − 8 = ?" },
+      { title: "Use the Inverse Operation", formula: "Addition ↔ Subtraction    Multiplication ↔ Division", explanation: "Every operation has an opposite. To find a missing number, use the opposite of what's in the problem.", tip: "? + 8 = 13  →  13 - 8 = ?" },
       { title: "Balance Rule", formula: "What you do to one side, do to the other", explanation: "An equation is like a balance scale. To isolate the unknown, perform the same operation on both sides.", tip: "Always CHECK your answer by substituting it back!" },
     ],
     examples: [
-      { problem: "___ + 8 = 13", steps: ["To find the missing number, subtract: 13 − 8 = 5", "Check: 5 + 8 = 13 ✓"], answer: "5" },
-      { problem: "25 − ___ = 11", steps: ["To find the missing number: 25 − 11 = 14", "Check: 25 − 14 = 11 ✓"], answer: "14" },
+      { problem: "___ + 8 = 13", steps: ["To find the missing number, subtract: 13 - 8 = 5", "Check: 5 + 8 = 13 ✓"], answer: "5" },
+      { problem: "25 - ___ = 11", steps: ["To find the missing number: 25 - 11 = 14", "Check: 25 - 14 = 11 ✓"], answer: "14" },
       { problem: "___ × 6 = 42", steps: ["To find the missing number, divide: 42 ÷ 6 = 7", "Check: 7 × 6 = 42 ✓"], answer: "7" },
       { problem: "48 ÷ ___ = 8", steps: ["To find the missing number: 48 ÷ 8 = 6", "Check: 48 ÷ 6 = 8 ✓"], answer: "6" },
-      { problem: "___ − 17 = 25", steps: ["To find the missing number, add: 25 + 17 = 42", "Check: 42 − 17 = 25 ✓"], answer: "42" },
+      { problem: "___ - 17 = 25", steps: ["To find the missing number, add: 25 + 17 = 42", "Check: 42 - 17 = 25 ✓"], answer: "42" },
     ],
   };
 }
@@ -212,16 +212,16 @@ function subtractionTutorial(): TutorialContent {
     skillName: "Subtraction",
     intro: "Subtraction means taking away one number from another.",
     concepts: [
-      { title: "Column Subtraction", formula: "Start from the ONES column, work RIGHT to LEFT", explanation: "Always subtract the bottom from the top. Start with ones, then tens, then hundreds.", tip: "  75\n− 32\n= 43" },
-      { title: "Borrowing (Regrouping)", formula: "If top digit < bottom digit: borrow 1 ten from the next column", explanation: "When you cannot subtract (top too small), borrow 10 from the column to the left.", tip: "82−45: ones 2<5, borrow → 12−5=7, tens 7−4=3, answer 37" },
-      { title: "Check with Addition", formula: "answer + bottom = top", explanation: "Add your answer back to the number you subtracted. You should get the original top number.", tip: "82−45=37 → check: 37+45=82 ✓" },
+      { title: "Column Subtraction", formula: "Start from the ONES column, work RIGHT to LEFT", explanation: "Always subtract the bottom from the top. Start with ones, then tens, then hundreds.", tip: "  75\n- 32\n= 43" },
+      { title: "Borrowing (Regrouping)", formula: "If top digit < bottom digit: borrow 1 ten from the next column", explanation: "When you cannot subtract (top too small), borrow 10 from the column to the left.", tip: "82-45: ones 2<5, borrow → 12-5=7, tens 7-4=3, answer 37" },
+      { title: "Check with Addition", formula: "answer + bottom = top", explanation: "Add your answer back to the number you subtracted. You should get the original top number.", tip: "82-45=37 → check: 37+45=82 ✓" },
     ],
     examples: [
-      { problem: "57 − 23 = ?", steps: ["Subtract ones: 7 − 3 = 4", "Subtract tens: 50 − 20 = 30", "Answer: 34"], answer: "34" },
-      { problem: "82 − 45 = ?", steps: ["Ones: 2 − 5 is too small, so borrow from tens.", "12 − 5 = 7 (ones digit: 7)", "Tens: 7 − 4 = 3 (after borrowing)", "Answer: 37"], answer: "37" },
-      { problem: "200 − 56 = ?", steps: ["Borrow from hundreds: 200 becomes 1 hundred, 9 tens, 10 ones.", "Ones: 10 − 6 = 4", "Tens: 9 − 5 = 4", "Hundreds: 1 − 0 = 1", "Answer: 144"], answer: "144" },
-      { problem: "500 − 273 = ?", steps: ["500 − 273", "Ones: borrow → 10 − 3 = 7", "Tens: borrow → 9 − 7 = 2", "Hundreds: 4 − 2 = 2", "Answer: 227"], answer: "227" },
-      { problem: "1000 − 364 = ?", steps: ["1000 − 364", "Work through borrowing carefully:", "Ones: 10 − 4 = 6", "Tens: 9 − 6 = 3", "Hundreds: 9 − 3 = 6", "Thousands: 0", "Answer: 636"], answer: "636" },
+      { problem: "57 - 23 = ?", steps: ["Subtract ones: 7 - 3 = 4", "Subtract tens: 50 - 20 = 30", "Answer: 34"], answer: "34" },
+      { problem: "82 - 45 = ?", steps: ["Ones: 2 - 5 is too small, so borrow from tens.", "12 - 5 = 7 (ones digit: 7)", "Tens: 7 - 4 = 3 (after borrowing)", "Answer: 37"], answer: "37" },
+      { problem: "200 - 56 = ?", steps: ["Borrow from hundreds: 200 becomes 1 hundred, 9 tens, 10 ones.", "Ones: 10 - 6 = 4", "Tens: 9 - 5 = 4", "Hundreds: 1 - 0 = 1", "Answer: 144"], answer: "144" },
+      { problem: "500 - 273 = ?", steps: ["500 - 273", "Ones: borrow → 10 - 3 = 7", "Tens: borrow → 9 - 7 = 2", "Hundreds: 4 - 2 = 2", "Answer: 227"], answer: "227" },
+      { problem: "1000 - 364 = ?", steps: ["1000 - 364", "Work through borrowing carefully:", "Ones: 10 - 4 = 6", "Tens: 9 - 6 = 3", "Hundreds: 9 - 3 = 6", "Thousands: 0", "Answer: 636"], answer: "636" },
     ],
   };
 }
@@ -258,7 +258,7 @@ function divisionTutorial(): TutorialContent {
       { problem: "63 ÷ 9 = ?", steps: ["Ask: 9 × ? = 63", "9 × 7 = 63", "So 63 ÷ 9 = 7"], answer: "7" },
       { problem: "72 ÷ 8 = ?", steps: ["8 × 9 = 72", "So 72 ÷ 8 = 9"], answer: "9" },
       { problem: "132 ÷ 11 = ?", steps: ["11 × 10 = 110", "11 × 12 = 132", "So 132 ÷ 11 = 12"], answer: "12" },
-      { problem: "156 ÷ 12 = ?", steps: ["12 × 10 = 120", "156 − 120 = 36", "12 × 3 = 36", "So 12 × 13 = 156", "156 ÷ 12 = 13"], answer: "13" },
+      { problem: "156 ÷ 12 = ?", steps: ["12 × 10 = 120", "156 - 120 = 36", "12 × 3 = 36", "So 12 × 13 = 156", "156 ÷ 12 = 13"], answer: "13" },
     ],
   };
 }
@@ -268,15 +268,15 @@ function divisionRemaindersTutorial(): TutorialContent {
     skillName: "Division with Remainders",
     intro: "Sometimes numbers don't divide evenly. The leftover is called the remainder.",
     concepts: [
-      { title: "What is a Remainder?", formula: "dividend = (divisor × quotient) + remainder", explanation: "When a number does not divide evenly, what is left over is the remainder. It is always LESS than the divisor.", tip: "17 ÷ 5 = 3 R 2 → 5×3=15 and 17−15=2" },
-      { title: "Find the Largest Multiple", formula: "Find biggest multiple of divisor that fits inside dividend", explanation: "Step 1: Find the largest multiple of the divisor that does not exceed the dividend. Step 2: Subtract to get the remainder.", tip: "23 ÷ 4: 4×5=20 fits, 23−20=3. Answer: 5 R 3" },
+      { title: "What is a Remainder?", formula: "dividend = (divisor × quotient) + remainder", explanation: "When a number does not divide evenly, what is left over is the remainder. It is always LESS than the divisor.", tip: "17 ÷ 5 = 3 R 2 → 5×3=15 and 17-15=2" },
+      { title: "Find the Largest Multiple", formula: "Find biggest multiple of divisor that fits inside dividend", explanation: "Step 1: Find the largest multiple of the divisor that does not exceed the dividend. Step 2: Subtract to get the remainder.", tip: "23 ÷ 4: 4×5=20 fits, 23-20=3. Answer: 5 R 3" },
     ],
     examples: [
-      { problem: "17 ÷ 5 = ?", steps: ["5 × 3 = 15 (closest without going over)", "17 − 15 = 2 left over", "Answer: 3 remainder 2, or 3 R 2"], answer: "3 R 2" },
-      { problem: "23 ÷ 4 = ?", steps: ["4 × 5 = 20 (closest without going over)", "23 − 20 = 3 left over", "Answer: 5 R 3"], answer: "5 R 3" },
-      { problem: "37 ÷ 6 = ?", steps: ["6 × 6 = 36", "37 − 36 = 1 left over", "Answer: 6 R 1"], answer: "6 R 1" },
-      { problem: "50 ÷ 7 = ?", steps: ["7 × 7 = 49", "50 − 49 = 1 left over", "Answer: 7 R 1"], answer: "7 R 1" },
-      { problem: "100 ÷ 9 = ?", steps: ["9 × 11 = 99", "100 − 99 = 1 left over", "Answer: 11 R 1"], answer: "11 R 1" },
+      { problem: "17 ÷ 5 = ?", steps: ["5 × 3 = 15 (closest without going over)", "17 - 15 = 2 left over", "Answer: 3 remainder 2, or 3 R 2"], answer: "3 R 2" },
+      { problem: "23 ÷ 4 = ?", steps: ["4 × 5 = 20 (closest without going over)", "23 - 20 = 3 left over", "Answer: 5 R 3"], answer: "5 R 3" },
+      { problem: "37 ÷ 6 = ?", steps: ["6 × 6 = 36", "37 - 36 = 1 left over", "Answer: 6 R 1"], answer: "6 R 1" },
+      { problem: "50 ÷ 7 = ?", steps: ["7 × 7 = 49", "50 - 49 = 1 left over", "Answer: 7 R 1"], answer: "7 R 1" },
+      { problem: "100 ÷ 9 = ?", steps: ["9 × 11 = 99", "100 - 99 = 1 left over", "Answer: 11 R 1"], answer: "11 R 1" },
     ],
   };
 }
@@ -293,7 +293,7 @@ function fractionIdentificationTutorial(): TutorialContent {
     examples: [
       { problem: "A pizza has 8 slices. You eat 3. What fraction did you eat?", steps: ["Parts eaten = 3 (numerator)", "Total parts = 8 (denominator)", "Fraction eaten = 3/8"], answer: "3/8" },
       { problem: "What fraction of 10 is 4?", steps: ["4 out of 10 total parts", "Fraction = 4/10", "Simplified: 4/10 = 2/5"], answer: "2/5" },
-      { problem: "There are 12 students. 5 are boys. What fraction are girls?", steps: ["Girls = 12 − 5 = 7", "Total = 12", "Fraction of girls = 7/12"], answer: "7/12" },
+      { problem: "There are 12 students. 5 are boys. What fraction are girls?", steps: ["Girls = 12 - 5 = 7", "Total = 12", "Fraction of girls = 7/12"], answer: "7/12" },
       { problem: "Which is larger: 1/2 or 1/4?", steps: ["Both fractions have 1 on top (numerator).", "Larger denominator = smaller pieces.", "1/2 > 1/4"], answer: "1/2" },
       { problem: "Write 0.5 as a fraction.", steps: ["0.5 = 5 tenths = 5/10", "Simplify: 5/10 = 1/2"], answer: "1/2" },
     ],
@@ -387,7 +387,7 @@ function decimalOperationsTutorial(): TutorialContent {
     ],
     examples: [
       { problem: "3.4 + 2.5 = ?", steps: ["Line up decimal points:", "  3.4", "+ 2.5", "= 5.9"], answer: "5.9" },
-      { problem: "7.8 − 3.2 = ?", steps: ["Line up decimal points:", "  7.8", "− 3.2", "= 4.6"], answer: "4.6" },
+      { problem: "7.8 - 3.2 = ?", steps: ["Line up decimal points:", "  7.8", "- 3.2", "= 4.6"], answer: "4.6" },
       { problem: "1.25 + 0.75 = ?", steps: ["  1.25", "+ 0.75", "Hundredths: 5+5=10 (write 0, carry 1)", "Tenths: 2+7+1=10 (write 0, carry 1)", "Ones: 1+0+1=2", "= 2.00"], answer: "2.00" },
       { problem: "0.5 × 10 = ?", steps: ["When multiplying by 10, move decimal right 1 place.", "0.5 × 10 = 5.0 = 5"], answer: "5" },
       { problem: "4.5 ÷ 10 = ?", steps: ["When dividing by 10, move decimal left 1 place.", "4.5 ÷ 10 = 0.45"], answer: "0.45" },
@@ -424,7 +424,7 @@ function ratiosTutorial(): TutorialContent {
       { title: "Equivalent Ratios", formula: "a:b = (a×n):(b×n)", explanation: "Multiply both parts by the same number to get an equivalent ratio.", tip: "2:3 = 4:6 = 6:9" },
     ],
     examples: [
-      { problem: "In a class of 30, there are 12 boys. Write the ratio of boys to girls.", steps: ["Boys = 12, Girls = 30 − 12 = 18", "Ratio of boys to girls = 12:18", "Simplified (÷6): 2:3"], answer: "2:3" },
+      { problem: "In a class of 30, there are 12 boys. Write the ratio of boys to girls.", steps: ["Boys = 12, Girls = 30 - 12 = 18", "Ratio of boys to girls = 12:18", "Simplified (÷6): 2:3"], answer: "2:3" },
       { problem: "Simplify the ratio 15:25", steps: ["GCF of 15 and 25 = 5", "15 ÷ 5 = 3, 25 ÷ 5 = 5", "Simplified ratio: 3:5"], answer: "3:5" },
       { problem: "The ratio 2:3. If the first quantity is 8, what is the second?", steps: ["2:3 = 8:?", "Multiply both by 4: 2×4=8, 3×4=12", "Answer: 12"], answer: "12" },
       { problem: "Are the ratios 4:6 and 6:9 equivalent?", steps: ["4:6 simplified = 2:3 (÷2)", "6:9 simplified = 2:3 (÷3)", "Yes, both equal 2:3"], answer: "Yes, both equal 2:3" },
@@ -477,15 +477,15 @@ function oneStepEquationsTutorial(): TutorialContent {
     intro: "To solve an equation, do the opposite operation to both sides to isolate x.",
     concepts: [
       { title: "The Balance Rule", formula: "Same operation on BOTH sides keeps it balanced", explanation: "An equation is a balance scale. Whatever you do to one side, do to the other.", tip: "x + 5 = 12: subtract 5 from BOTH sides → x = 7" },
-      { title: "Inverse Operations", formula: "+↔−    ×↔÷", explanation: "To cancel an operation, use its inverse. To remove +7, subtract 7.", tip: "You are trying to get x ALONE on one side" },
+      { title: "Inverse Operations", formula: "+↔-    ×↔÷", explanation: "To cancel an operation, use its inverse. To remove +7, subtract 7.", tip: "You are trying to get x ALONE on one side" },
       { title: "Always Check!", formula: "Substitute answer back into original equation", explanation: "After solving, replace x with your answer. Both sides should be equal.", tip: "x=7 in x+5=12: 7+5=12 ✓" },
     ],
     examples: [
-      { problem: "Solve: x + 7 = 12", steps: ["Subtract 7 from both sides:", "x + 7 − 7 = 12 − 7", "x = 5", "Check: 5 + 7 = 12 ✓"], answer: "x = 5" },
-      { problem: "Solve: x − 4 = 9", steps: ["Add 4 to both sides:", "x − 4 + 4 = 9 + 4", "x = 13"], answer: "x = 13" },
+      { problem: "Solve: x + 7 = 12", steps: ["Subtract 7 from both sides:", "x + 7 - 7 = 12 - 7", "x = 5", "Check: 5 + 7 = 12 ✓"], answer: "x = 5" },
+      { problem: "Solve: x - 4 = 9", steps: ["Add 4 to both sides:", "x - 4 + 4 = 9 + 4", "x = 13"], answer: "x = 13" },
       { problem: "Solve: 3x = 21", steps: ["Divide both sides by 3:", "3x ÷ 3 = 21 ÷ 3", "x = 7", "Check: 3 × 7 = 21 ✓"], answer: "x = 7" },
       { problem: "Solve: x/5 = 6", steps: ["Multiply both sides by 5:", "x/5 × 5 = 6 × 5", "x = 30"], answer: "x = 30" },
-      { problem: "Solve: x + 15 = 40", steps: ["Subtract 15 from both sides:", "x = 40 − 15 = 25"], answer: "x = 25" },
+      { problem: "Solve: x + 15 = 40", steps: ["Subtract 15 from both sides:", "x = 40 - 15 = 25"], answer: "x = 25" },
     ],
   };
 }
@@ -495,15 +495,15 @@ function twoStepEquationsTutorial(): TutorialContent {
     skillName: "Two-Step Equations",
     intro: "Two-step equations need two operations to solve. Work in reverse order of operations.",
     concepts: [
-      { title: "Reverse PEMDAS", formula: "Undo + and − FIRST, then × and ÷", explanation: "When solving, reverse the order of operations: undo addition/subtraction first, then multiplication/division.", tip: "2x+3=11: undo +3 first → 2x=8, then ÷2 → x=4" },
-      { title: "Two-Step Strategy", formula: "Step 1: ±   Step 2: ×÷", explanation: "Move constants to the other side first. Then divide by the coefficient of x.", tip: "3x−5=16 → +5 → 3x=21 → ÷3 → x=7" },
+      { title: "Reverse PEMDAS", formula: "Undo + and - FIRST, then × and ÷", explanation: "When solving, reverse the order of operations: undo addition/subtraction first, then multiplication/division.", tip: "2x+3=11: undo +3 first → 2x=8, then ÷2 → x=4" },
+      { title: "Two-Step Strategy", formula: "Step 1: ±   Step 2: ×÷", explanation: "Move constants to the other side first. Then divide by the coefficient of x.", tip: "3x-5=16 → +5 → 3x=21 → ÷3 → x=7" },
     ],
     examples: [
       { problem: "Solve: 2x + 3 = 11", steps: ["Step 1: Subtract 3 from both sides: 2x = 8", "Step 2: Divide both sides by 2: x = 4", "Check: 2(4) + 3 = 11 ✓"], answer: "x = 4" },
-      { problem: "Solve: 3x − 5 = 16", steps: ["Step 1: Add 5 to both sides: 3x = 21", "Step 2: Divide by 3: x = 7", "Check: 3(7) − 5 = 16 ✓"], answer: "x = 7" },
-      { problem: "Solve: 4x + 8 = 28", steps: ["Step 1: 4x = 28 − 8 = 20", "Step 2: x = 20 ÷ 4 = 5"], answer: "x = 5" },
-      { problem: "Solve: x/3 + 4 = 9", steps: ["Step 1: x/3 = 9 − 4 = 5", "Step 2: x = 5 × 3 = 15"], answer: "x = 15" },
-      { problem: "Solve: 5x − 10 = 20", steps: ["Step 1: 5x = 20 + 10 = 30", "Step 2: x = 30 ÷ 5 = 6"], answer: "x = 6" },
+      { problem: "Solve: 3x - 5 = 16", steps: ["Step 1: Add 5 to both sides: 3x = 21", "Step 2: Divide by 3: x = 7", "Check: 3(7) - 5 = 16 ✓"], answer: "x = 7" },
+      { problem: "Solve: 4x + 8 = 28", steps: ["Step 1: 4x = 28 - 8 = 20", "Step 2: x = 20 ÷ 4 = 5"], answer: "x = 5" },
+      { problem: "Solve: x/3 + 4 = 9", steps: ["Step 1: x/3 = 9 - 4 = 5", "Step 2: x = 5 × 3 = 15"], answer: "x = 15" },
+      { problem: "Solve: 5x - 10 = 20", steps: ["Step 1: 5x = 20 + 10 = 30", "Step 2: x = 30 ÷ 5 = 6"], answer: "x = 6" },
     ],
   };
 }
@@ -514,13 +514,13 @@ function inequalitiesTutorial(): TutorialContent {
     intro: "Inequalities use <, >, ≤, ≥ instead of =. Solve like equations, but flip the sign when multiplying/dividing by a negative.",
     concepts: [
       { title: "Inequality Symbols", formula: "< less than   > greater than   ≤ at most   ≥ at least", explanation: "Inequalities describe a RANGE of values, not just one answer.", tip: "≤ and ≥ INCLUDE the boundary value" },
-      { title: "FLIP THE SIGN", formula: "When ×÷ by a NEGATIVE number: flip the inequality!", explanation: "This is the critical exception when solving inequalities.", tip: "−2x > 6: divide by −2 and FLIP → x < −3" },
+      { title: "FLIP THE SIGN", formula: "When ×÷ by a NEGATIVE number: flip the inequality!", explanation: "This is the critical exception when solving inequalities.", tip: "-2x > 6: divide by -2 and FLIP → x < -3" },
     ],
     examples: [
-      { problem: "Solve: x + 3 > 8", steps: ["Subtract 3 from both sides:", "x > 8 − 3", "x > 5", "Solution: all numbers greater than 5"], answer: "x > 5" },
+      { problem: "Solve: x + 3 > 8", steps: ["Subtract 3 from both sides:", "x > 8 - 3", "x > 5", "Solution: all numbers greater than 5"], answer: "x > 5" },
       { problem: "Solve: 2x ≤ 12", steps: ["Divide both sides by 2:", "x ≤ 6", "Solution: all numbers ≤ 6"], answer: "x ≤ 6" },
-      { problem: "Solve: x − 4 ≥ 7", steps: ["Add 4 to both sides:", "x ≥ 11"], answer: "x ≥ 11" },
-      { problem: "Solve: −3x > 9", steps: ["Divide by −3 (flip the sign!):", "x < −3"], answer: "x < −3" },
+      { problem: "Solve: x - 4 ≥ 7", steps: ["Add 4 to both sides:", "x ≥ 11"], answer: "x ≥ 11" },
+      { problem: "Solve: -3x > 9", steps: ["Divide by -3 (flip the sign!):", "x < -3"], answer: "x < -3" },
       { problem: "Solve: 3x + 1 < 16", steps: ["Step 1: 3x < 15", "Step 2: x < 5"], answer: "x < 5" },
     ],
   };
@@ -532,13 +532,13 @@ function wordProblemsTutorial(): TutorialContent {
     intro: "Read carefully. Identify what you know and what you need to find. Choose the right operation.",
     concepts: [
       { title: "RUCSAC Method", formula: "Read → Underline → Choose → Solve → Answer → Check", explanation: "Never rush — re-read the question at least twice.", tip: "Most common mistake: not reading the whole question!" },
-      { title: "Key Words → Operations", formula: "total/altogether → +    left/fewer → −    groups of → ×    each/share → ÷", explanation: "Certain words signal which operation to use.", tip: "'How many MORE' → subtraction!" },
+      { title: "Key Words → Operations", formula: "total/altogether → +    left/fewer → -    groups of → ×    each/share → ÷", explanation: "Certain words signal which operation to use.", tip: "'How many MORE' → subtraction!" },
       { title: "Always Include Units", formula: "Never write just a bare number — include the unit", explanation: "Re-read the question to find what unit the answer needs.", tip: "45 means nothing. 45 km is a complete answer." },
     ],
     examples: [
-      { problem: "A store has 150 apples. They sell 47. How many remain?", steps: ["Known: 150 total, 47 sold", "Operation: subtraction (taking away)", "150 − 47 = 103"], answer: "103 apples" },
+      { problem: "A store has 150 apples. They sell 47. How many remain?", steps: ["Known: 150 total, 47 sold", "Operation: subtraction (taking away)", "150 - 47 = 103"], answer: "103 apples" },
       { problem: "A book has 320 pages. Maria reads 40 pages per day. How many days to finish?", steps: ["Known: 320 pages, 40 pages/day", "Operation: division (sharing equally)", "320 ÷ 40 = 8 days"], answer: "8 days" },
-      { problem: "A shirt costs $35. There is a 20% discount. What is the sale price?", steps: ["Discount = 20% of $35 = 0.2 × 35 = $7", "Sale price = $35 − $7 = $28"], answer: "$28" },
+      { problem: "A shirt costs $35. There is a 20% discount. What is the sale price?", steps: ["Discount = 20% of $35 = 0.2 × 35 = $7", "Sale price = $35 - $7 = $28"], answer: "$28" },
       { problem: "A rectangle is 12 cm long and 7 cm wide. What is its area?", steps: ["Area = length × width", "Area = 12 × 7 = 84 cm²"], answer: "84 cm²" },
       { problem: "3 friends share 45 stickers equally. How many each?", steps: ["Known: 45 stickers, 3 friends", "Operation: division", "45 ÷ 3 = 15"], answer: "15 stickers each" },
     ],
@@ -551,14 +551,14 @@ function slopeInterceptTutorial(): TutorialContent {
     intro: "In y = mx + b, m is the slope (steepness) and b is the y-intercept (where the line crosses the y-axis).",
     concepts: [
       { title: "y = mx + b", formula: "m = slope    b = y-intercept", explanation: "The slope-intercept form. m is the steepness. b is where the line crosses the y-axis.", tip: "y = 3x + 2: slope=3, y-intercept=2" },
-      { title: "What is Slope?", formula: "m = rise ÷ run = (y₂−y₁)/(x₂−x₁)", explanation: "Slope measures steepness: units up per unit right. Positive = upward. Negative = downward.", tip: "Slope 3 means: right 1, up 3" },
-      { title: "Slope Signs", formula: "m > 0: up    m < 0: down    m = 0: horizontal    undefined: vertical", explanation: "The sign of slope tells you the direction.", tip: "y = −2x + 5 has negative slope (goes down)" },
+      { title: "What is Slope?", formula: "m = rise ÷ run = (y₂-y₁)/(x₂-x₁)", explanation: "Slope measures steepness: units up per unit right. Positive = upward. Negative = downward.", tip: "Slope 3 means: right 1, up 3" },
+      { title: "Slope Signs", formula: "m > 0: up    m < 0: down    m = 0: horizontal    undefined: vertical", explanation: "The sign of slope tells you the direction.", tip: "y = -2x + 5 has negative slope (goes down)" },
     ],
     examples: [
       { problem: "Find the slope and y-intercept of y = 3x + 2", steps: ["Compare to y = mx + b", "m (slope) = 3", "b (y-intercept) = 2"], answer: "Slope = 3, y-intercept = 2" },
-      { problem: "What is the slope of y = −2x + 5?", steps: ["m = −2 (negative means line goes down left to right)"], answer: "−2" },
-      { problem: "Find y when x = 4 in y = 2x − 1", steps: ["Substitute x = 4:", "y = 2(4) − 1 = 8 − 1 = 7"], answer: "y = 7" },
-      { problem: "Write the equation of a line with slope 3 and y-intercept −4.", steps: ["y = mx + b", "y = 3x + (−4)", "y = 3x − 4"], answer: "y = 3x − 4" },
+      { problem: "What is the slope of y = -2x + 5?", steps: ["m = -2 (negative means line goes down left to right)"], answer: "-2" },
+      { problem: "Find y when x = 4 in y = 2x - 1", steps: ["Substitute x = 4:", "y = 2(4) - 1 = 8 - 1 = 7"], answer: "y = 7" },
+      { problem: "Write the equation of a line with slope 3 and y-intercept -4.", steps: ["y = mx + b", "y = 3x + (-4)", "y = 3x - 4"], answer: "y = 3x - 4" },
       { problem: "What is the slope of a horizontal line?", steps: ["A horizontal line has no rise — it's flat.", "Slope = rise/run = 0/run = 0"], answer: "0" },
     ],
   };
@@ -569,14 +569,14 @@ function graphingLinesTutorial(): TutorialContent {
     skillName: "Graphing Lines",
     intro: "To graph a line: find the y-intercept (start point), then use the slope to find more points.",
     concepts: [
-      { title: "Two Points Make a Line", formula: "Set x=0 (y-intercept) and y=0 (x-intercept) to get two easy points", explanation: "Any two points fully define a line. The intercepts are the easiest to calculate.", tip: "y=2x+4: x=0→y=4; y=0→x=−2. Two points done!" },
+      { title: "Two Points Make a Line", formula: "Set x=0 (y-intercept) and y=0 (x-intercept) to get two easy points", explanation: "Any two points fully define a line. The intercepts are the easiest to calculate.", tip: "y=2x+4: x=0→y=4; y=0→x=-2. Two points done!" },
       { title: "Rise Over Run", formula: "Start at y-intercept, step right 'run', step up 'rise'", explanation: "Plot (0,b), then apply slope repeatedly to find more points.", tip: "Slope=2/1 from (0,1): right 1, up 2 → (1,3)" },
-      { title: "Parallel and Perpendicular", formula: "Parallel: same slope    Perpendicular: slopes multiply to −1", explanation: "Parallel lines never meet (same m). Perpendicular lines cross at 90° (m₁×m₂=−1).", tip: "Perpendicular to slope 3: slope = −1/3" },
+      { title: "Parallel and Perpendicular", formula: "Parallel: same slope    Perpendicular: slopes multiply to -1", explanation: "Parallel lines never meet (same m). Perpendicular lines cross at 90° (m₁×m₂=-1).", tip: "Perpendicular to slope 3: slope = -1/3" },
     ],
     examples: [
       { problem: "Graph y = 2x + 1. What are two points on the line?", steps: ["y-intercept: when x=0, y=1 → point (0,1)", "Slope = 2 = 2/1: go right 1, up 2 → point (1,3)", "Two points: (0,1) and (1,3)"], answer: "(0,1) and (1,3)" },
-      { problem: "What is the x-intercept of y = 3x − 6?", steps: ["Set y = 0: 0 = 3x − 6", "3x = 6", "x = 2", "x-intercept = (2, 0)"], answer: "(2, 0)" },
-      { problem: "Are y = 2x + 1 and y = 2x − 3 parallel?", steps: ["Both have slope m = 2", "Parallel lines have equal slopes.", "Yes, they are parallel."], answer: "Yes, parallel (same slope)" },
+      { problem: "What is the x-intercept of y = 3x - 6?", steps: ["Set y = 0: 0 = 3x - 6", "3x = 6", "x = 2", "x-intercept = (2, 0)"], answer: "(2, 0)" },
+      { problem: "Are y = 2x + 1 and y = 2x - 3 parallel?", steps: ["Both have slope m = 2", "Parallel lines have equal slopes.", "Yes, they are parallel."], answer: "Yes, parallel (same slope)" },
       { problem: "What is the slope of y = 4?", steps: ["y = 4 is a horizontal line", "Horizontal lines have slope = 0"], answer: "0" },
       { problem: "What is the slope of x = 3?", steps: ["x = 3 is a vertical line", "Vertical lines have undefined slope"], answer: "Undefined" },
     ],
@@ -589,13 +589,13 @@ function systemsOfEquationsTutorial(): TutorialContent {
     intro: "A system of equations has two equations with two unknowns. Find the values that satisfy both.",
     concepts: [
       { title: "What is a System?", formula: "Two equations, two unknowns → find x and y that satisfy BOTH", explanation: "Graphically, the solution is where both lines intersect.", tip: "Substitution or elimination — choose the method that looks easier" },
-      { title: "Elimination Method", formula: "Add or subtract equations to eliminate one variable", explanation: "If coefficients of one variable match (or are opposite), add/subtract to remove that variable.", tip: "x+y=10 and x−y=2: ADD → 2x=12 → x=6" },
+      { title: "Elimination Method", formula: "Add or subtract equations to eliminate one variable", explanation: "If coefficients of one variable match (or are opposite), add/subtract to remove that variable.", tip: "x+y=10 and x-y=2: ADD → 2x=12 → x=6" },
       { title: "Substitution Method", formula: "Solve one equation for a variable, sub into the other", explanation: "Isolate one variable in equation 1, then substitute that expression into equation 2.", tip: "y=2x in x+y=9: x+2x=9 → 3x=9 → x=3" },
     ],
     examples: [
-      { problem: "Solve: x + y = 10 and x − y = 2", steps: ["Add both equations:", "2x = 12 → x = 6", "Substitute: 6 + y = 10 → y = 4", "Solution: x=6, y=4"], answer: "x=6, y=4" },
+      { problem: "Solve: x + y = 10 and x - y = 2", steps: ["Add both equations:", "2x = 12 → x = 6", "Substitute: 6 + y = 10 → y = 4", "Solution: x=6, y=4"], answer: "x=6, y=4" },
       { problem: "Solve: 2x + y = 7 and x + y = 4", steps: ["Subtract second from first:", "x = 3", "Substitute: 3 + y = 4 → y = 1"], answer: "x=3, y=1" },
-      { problem: "Solve: x + y = 5 and 2x − y = 4", steps: ["Add: 3x = 9 → x = 3", "y = 5 − 3 = 2"], answer: "x=3, y=2" },
+      { problem: "Solve: x + y = 5 and 2x - y = 4", steps: ["Add: 3x = 9 → x = 3", "y = 5 - 3 = 2"], answer: "x=3, y=2" },
       { problem: "Solve by substitution: y = 2x and x + y = 9", steps: ["Substitute y = 2x into second equation:", "x + 2x = 9 → 3x = 9 → x = 3", "y = 2(3) = 6"], answer: "x=3, y=6" },
       { problem: "How many solutions does x + y = 5 and x + y = 7 have?", steps: ["Both equations are parallel (same slope, different intercept)", "They never intersect → no solution"], answer: "No solution" },
     ],
@@ -614,9 +614,9 @@ function addingPolynomialsTutorial(): TutorialContent {
     examples: [
       { problem: "(3x + 5) + (2x + 4) = ?", steps: ["Group like terms: (3x + 2x) + (5 + 4)", "= 5x + 9"], answer: "5x + 9" },
       { problem: "(x² + 3x) + (2x² + x) = ?", steps: ["x² terms: x² + 2x² = 3x²", "x terms: 3x + x = 4x", "Answer: 3x² + 4x"], answer: "3x² + 4x" },
-      { problem: "(4x² − 2x + 1) + (x² + 5x − 3) = ?", steps: ["x² terms: 4x² + x² = 5x²", "x terms: −2x + 5x = 3x", "Constant: 1 + (−3) = −2", "Answer: 5x² + 3x − 2"], answer: "5x² + 3x − 2" },
-      { problem: "(7x − 3) + (−4x + 8) = ?", steps: ["x terms: 7x + (−4x) = 3x", "Constants: −3 + 8 = 5", "Answer: 3x + 5"], answer: "3x + 5" },
-      { problem: "(2x³ + x) + (x³ − 3x + 4) = ?", steps: ["x³ terms: 2x³ + x³ = 3x³", "x terms: x + (−3x) = −2x", "Constants: 0 + 4 = 4", "Answer: 3x³ − 2x + 4"], answer: "3x³ − 2x + 4" },
+      { problem: "(4x² - 2x + 1) + (x² + 5x - 3) = ?", steps: ["x² terms: 4x² + x² = 5x²", "x terms: -2x + 5x = 3x", "Constant: 1 + (-3) = -2", "Answer: 5x² + 3x - 2"], answer: "5x² + 3x - 2" },
+      { problem: "(7x - 3) + (-4x + 8) = ?", steps: ["x terms: 7x + (-4x) = 3x", "Constants: -3 + 8 = 5", "Answer: 3x + 5"], answer: "3x + 5" },
+      { problem: "(2x³ + x) + (x³ - 3x + 4) = ?", steps: ["x³ terms: 2x³ + x³ = 3x³", "x terms: x + (-3x) = -2x", "Constants: 0 + 4 = 4", "Answer: 3x³ - 2x + 4"], answer: "3x³ - 2x + 4" },
     ],
   };
 }
@@ -627,15 +627,15 @@ function multiplyingPolynomialsTutorial(): TutorialContent {
     intro: "Use FOIL (First, Outer, Inner, Last) to multiply two binomials.",
     concepts: [
       { title: "FOIL Method", formula: "(a+b)(c+d) = First + Outer + Inner + Last", explanation: "Multiply each term in the first bracket by each term in the second. FOIL is the memory order.", tip: "(x+2)(x+3): F=x², O=3x, I=2x, L=6 → x²+5x+6" },
-      { title: "Difference of Squares", formula: "(a+b)(a−b) = a² − b²", explanation: "When you multiply a sum and difference with the same terms, the middle terms cancel out perfectly.", tip: "(x+5)(x−5) = x²−25 (no middle term!)" },
+      { title: "Difference of Squares", formula: "(a+b)(a-b) = a² - b²", explanation: "When you multiply a sum and difference with the same terms, the middle terms cancel out perfectly.", tip: "(x+5)(x-5) = x²-25 (no middle term!)" },
       { title: "Perfect Square", formula: "(a+b)² = a² + 2ab + b²", explanation: "Squaring a binomial: square the first, double the product, square the last.", tip: "(x+3)² = x²+6x+9  (middle = 2×x×3)" },
     ],
     examples: [
       { problem: "(x + 2)(x + 3) = ?", steps: ["FOIL:", "First: x × x = x²", "Outer: x × 3 = 3x", "Inner: 2 × x = 2x", "Last: 2 × 3 = 6", "Combine: x² + 3x + 2x + 6 = x² + 5x + 6"], answer: "x² + 5x + 6" },
-      { problem: "(x + 4)(x − 1) = ?", steps: ["First: x²", "Outer: −x", "Inner: 4x", "Last: −4", "Combine: x² + 3x − 4"], answer: "x² + 3x − 4" },
-      { problem: "(x − 3)(x − 2) = ?", steps: ["First: x²", "Outer: −2x", "Inner: −3x", "Last: +6", "Combine: x² − 5x + 6"], answer: "x² − 5x + 6" },
+      { problem: "(x + 4)(x - 1) = ?", steps: ["First: x²", "Outer: -x", "Inner: 4x", "Last: -4", "Combine: x² + 3x - 4"], answer: "x² + 3x - 4" },
+      { problem: "(x - 3)(x - 2) = ?", steps: ["First: x²", "Outer: -2x", "Inner: -3x", "Last: +6", "Combine: x² - 5x + 6"], answer: "x² - 5x + 6" },
       { problem: "(2x + 1)(x + 3) = ?", steps: ["First: 2x²", "Outer: 6x", "Inner: x", "Last: 3", "Combine: 2x² + 7x + 3"], answer: "2x² + 7x + 3" },
-      { problem: "(x + 5)(x − 5) = ?", steps: ["This is difference of squares: (a+b)(a−b) = a² − b²", "= x² − 25"], answer: "x² − 25" },
+      { problem: "(x + 5)(x - 5) = ?", steps: ["This is difference of squares: (a+b)(a-b) = a² - b²", "= x² - 25"], answer: "x² - 25" },
     ],
   };
 }
@@ -647,14 +647,14 @@ function factoringTutorial(): TutorialContent {
     concepts: [
       { title: "Factor Out the GCF First", formula: "Always check for a common factor before anything else", explanation: "If all terms share a common factor, factor it out first — it simplifies everything that follows.", tip: "6x + 9 = 3(2x + 3)" },
       { title: "Factoring x² + bx + c", formula: "Find two numbers: multiply to c AND add to b", explanation: "Search for a factor pair of c whose sum equals b. These become the constants in your two brackets.", tip: "x²+5x+6: 2×3=6 and 2+3=5 → (x+2)(x+3)" },
-      { title: "Difference of Squares", formula: "a² − b² = (a+b)(a−b)", explanation: "Two perfect squares with a minus between them factor instantly with this pattern.", tip: "x²−16 = (x+4)(x−4)    4x²−9 = (2x+3)(2x−3)" },
+      { title: "Difference of Squares", formula: "a² - b² = (a+b)(a-b)", explanation: "Two perfect squares with a minus between them factor instantly with this pattern.", tip: "x²-16 = (x+4)(x-4)    4x²-9 = (2x+3)(2x-3)" },
     ],
     examples: [
       { problem: "Factor: x² + 5x + 6", steps: ["Find two numbers that multiply to 6 and add to 5.", "2 × 3 = 6 and 2 + 3 = 5 ✓", "Answer: (x + 2)(x + 3)"], answer: "(x + 2)(x + 3)" },
-      { problem: "Factor: x² − 9 (difference of squares)", steps: ["x² − 9 = x² − 3²", "a² − b² = (a+b)(a−b)", "= (x + 3)(x − 3)"], answer: "(x + 3)(x − 3)" },
+      { problem: "Factor: x² - 9 (difference of squares)", steps: ["x² - 9 = x² - 3²", "a² - b² = (a+b)(a-b)", "= (x + 3)(x - 3)"], answer: "(x + 3)(x - 3)" },
       { problem: "Factor: x² + 7x + 12", steps: ["Find two numbers: multiply to 12, add to 7", "3 × 4 = 12, 3 + 4 = 7 ✓", "Answer: (x + 3)(x + 4)"], answer: "(x + 3)(x + 4)" },
       { problem: "Factor out the GCF: 6x + 9", steps: ["GCF of 6 and 9 = 3", "3(2x + 3)"], answer: "3(2x + 3)" },
-      { problem: "Factor: x² − x − 6", steps: ["Find two numbers: multiply to −6, add to −1", "−3 × 2 = −6, −3 + 2 = −1 ✓", "Answer: (x − 3)(x + 2)"], answer: "(x − 3)(x + 2)" },
+      { problem: "Factor: x² - x - 6", steps: ["Find two numbers: multiply to -6, add to -1", "-3 × 2 = -6, -3 + 2 = -1 ✓", "Answer: (x - 3)(x + 2)"], answer: "(x - 3)(x + 2)" },
     ],
   };
 }
@@ -664,16 +664,16 @@ function quadraticEquationsTutorial(): TutorialContent {
     skillName: "Quadratic Equations",
     intro: "Quadratic equations have x². Solve by factoring: set each factor equal to zero.",
     concepts: [
-      { title: "Standard Form", formula: "ax² + bx + c = 0  (everything on one side = 0)", explanation: "Always rearrange first. The equation must equal zero before you can use factoring or the formula.", tip: "x²+3x=4 → x²+3x−4=0 (standard form)" },
-      { title: "Zero Product Property", formula: "If A × B = 0, then A=0 OR B=0", explanation: "If two things multiply to zero, at least one must be zero. This is how factoring leads to solutions.", tip: "(x−3)(x+2)=0 → x=3 or x=−2" },
+      { title: "Standard Form", formula: "ax² + bx + c = 0  (everything on one side = 0)", explanation: "Always rearrange first. The equation must equal zero before you can use factoring or the formula.", tip: "x²+3x=4 → x²+3x-4=0 (standard form)" },
+      { title: "Zero Product Property", formula: "If A × B = 0, then A=0 OR B=0", explanation: "If two things multiply to zero, at least one must be zero. This is how factoring leads to solutions.", tip: "(x-3)(x+2)=0 → x=3 or x=-2" },
       { title: "Methods", formula: "1. Factoring   2. Quadratic formula   3. Square root (when b=0)", explanation: "Choose the fastest method. Factoring works when numbers are nice. Formula always works.", tip: "x²=16 → x=±4 (square root method)" },
     ],
     examples: [
-      { problem: "Solve: x² + 5x + 6 = 0", steps: ["Factor: (x + 2)(x + 3) = 0", "Set each factor to zero:", "x + 2 = 0 → x = −2", "x + 3 = 0 → x = −3", "Solutions: x = −2 or x = −3"], answer: "x = −2 or x = −3" },
-      { problem: "Solve: x² − 7x + 12 = 0", steps: ["Factor: (x − 3)(x − 4) = 0", "x = 3 or x = 4"], answer: "x = 3 or x = 4" },
-      { problem: "Solve: x² − 9 = 0", steps: ["x² = 9", "x = ±√9 = ±3", "x = 3 or x = −3"], answer: "x = 3 or x = −3" },
-      { problem: "Solve: x² + 4x = 0", steps: ["Factor out x: x(x + 4) = 0", "x = 0 or x + 4 = 0", "x = 0 or x = −4"], answer: "x = 0 or x = −4" },
-      { problem: "Solve: 2x² − 8 = 0", steps: ["2x² = 8", "x² = 4", "x = ±2"], answer: "x = 2 or x = −2" },
+      { problem: "Solve: x² + 5x + 6 = 0", steps: ["Factor: (x + 2)(x + 3) = 0", "Set each factor to zero:", "x + 2 = 0 → x = -2", "x + 3 = 0 → x = -3", "Solutions: x = -2 or x = -3"], answer: "x = -2 or x = -3" },
+      { problem: "Solve: x² - 7x + 12 = 0", steps: ["Factor: (x - 3)(x - 4) = 0", "x = 3 or x = 4"], answer: "x = 3 or x = 4" },
+      { problem: "Solve: x² - 9 = 0", steps: ["x² = 9", "x = ±√9 = ±3", "x = 3 or x = -3"], answer: "x = 3 or x = -3" },
+      { problem: "Solve: x² + 4x = 0", steps: ["Factor out x: x(x + 4) = 0", "x = 0 or x + 4 = 0", "x = 0 or x = -4"], answer: "x = 0 or x = -4" },
+      { problem: "Solve: 2x² - 8 = 0", steps: ["2x² = 8", "x² = 4", "x = ±2"], answer: "x = 2 or x = -2" },
     ],
   };
 }
@@ -681,18 +681,18 @@ function quadraticEquationsTutorial(): TutorialContent {
 function quadraticFormulaTutorial(): TutorialContent {
   return {
     skillName: "Quadratic Formula",
-    intro: "For ax² + bx + c = 0, use x = (−b ± √(b²−4ac)) / 2a. The discriminant b²−4ac tells you how many solutions.",
+    intro: "For ax² + bx + c = 0, use x = (-b ± √(b²-4ac)) / 2a. The discriminant b²-4ac tells you how many solutions.",
     concepts: [
-      { title: "The Quadratic Formula", formula: "x = (−b ± √(b²−4ac)) / 2a", explanation: "This formula gives exact solutions for any quadratic equation — it always works. Memorise it!", tip: "Negative b, plus or minus root, b squared minus 4ac, all over 2a" },
-      { title: "The Discriminant", formula: "Δ = b²−4ac    Δ>0: two solutions    Δ=0: one    Δ<0: none", explanation: "Check the discriminant FIRST — it tells you how many real solutions exist before you do any work.", tip: "Δ=0 means a perfect square (repeated root)" },
-      { title: "Identify a, b, c First", formula: "ax²+bx+c=0  →  write down a, b, c before substituting", explanation: "Clearly identify all three coefficients before substituting into the formula.", tip: "2x²−3x+1=0: a=2, b=−3, c=1" },
+      { title: "The Quadratic Formula", formula: "x = (-b ± √(b²-4ac)) / 2a", explanation: "This formula gives exact solutions for any quadratic equation — it always works. Memorise it!", tip: "Negative b, plus or minus root, b squared minus 4ac, all over 2a" },
+      { title: "The Discriminant", formula: "Δ = b²-4ac    Δ>0: two solutions    Δ=0: one    Δ<0: none", explanation: "Check the discriminant FIRST — it tells you how many real solutions exist before you do any work.", tip: "Δ=0 means a perfect square (repeated root)" },
+      { title: "Identify a, b, c First", formula: "ax²+bx+c=0  →  write down a, b, c before substituting", explanation: "Clearly identify all three coefficients before substituting into the formula.", tip: "2x²-3x+1=0: a=2, b=-3, c=1" },
     ],
     examples: [
-      { problem: "Solve x² + 4x + 4 = 0 using the quadratic formula", steps: ["a=1, b=4, c=4", "Discriminant: 4² − 4(1)(4) = 16 − 16 = 0", "x = −4 / 2 = −2 (one solution)"], answer: "x = −2" },
-      { problem: "Solve x² − 5x + 6 = 0", steps: ["a=1, b=−5, c=6", "Discriminant: 25 − 24 = 1", "x = (5 ± 1) / 2", "x = 3 or x = 2"], answer: "x = 3 or x = 2" },
-      { problem: "How many solutions does x² + x + 1 = 0 have?", steps: ["Discriminant: 1² − 4(1)(1) = 1 − 4 = −3", "Discriminant < 0 → no real solutions"], answer: "No real solutions" },
-      { problem: "What is the discriminant of 2x² + 3x − 2 = 0?", steps: ["a=2, b=3, c=−2", "b² − 4ac = 9 − 4(2)(−2) = 9 + 16 = 25"], answer: "25 (two real solutions)" },
-      { problem: "Solve x² − 4 = 0 using the quadratic formula", steps: ["a=1, b=0, c=−4", "x = (0 ± √16) / 2 = ±4/2 = ±2"], answer: "x = 2 or x = −2" },
+      { problem: "Solve x² + 4x + 4 = 0 using the quadratic formula", steps: ["a=1, b=4, c=4", "Discriminant: 4² - 4(1)(4) = 16 - 16 = 0", "x = -4 / 2 = -2 (one solution)"], answer: "x = -2" },
+      { problem: "Solve x² - 5x + 6 = 0", steps: ["a=1, b=-5, c=6", "Discriminant: 25 - 24 = 1", "x = (5 ± 1) / 2", "x = 3 or x = 2"], answer: "x = 3 or x = 2" },
+      { problem: "How many solutions does x² + x + 1 = 0 have?", steps: ["Discriminant: 1² - 4(1)(1) = 1 - 4 = -3", "Discriminant < 0 → no real solutions"], answer: "No real solutions" },
+      { problem: "What is the discriminant of 2x² + 3x - 2 = 0?", steps: ["a=2, b=3, c=-2", "b² - 4ac = 9 - 4(2)(-2) = 9 + 16 = 25"], answer: "25 (two real solutions)" },
+      { problem: "Solve x² - 4 = 0 using the quadratic formula", steps: ["a=1, b=0, c=-4", "x = (0 ± √16) / 2 = ±4/2 = ±2"], answer: "x = 2 or x = -2" },
     ],
   };
 }
@@ -700,18 +700,18 @@ function quadraticFormulaTutorial(): TutorialContent {
 function parabolasTutorial(): TutorialContent {
   return {
     skillName: "Graphing Parabolas",
-    intro: "The parabola y = a(x−h)² + k has vertex (h,k). If a>0 it opens up; if a<0 it opens down.",
+    intro: "The parabola y = a(x-h)² + k has vertex (h,k). If a>0 it opens up; if a<0 it opens down.",
     concepts: [
-      { title: "Vertex Form", formula: "y = a(x−h)² + k   →   vertex = (h, k)", explanation: "Vertex form shows the vertex directly. h is x of the turning point, k is y.", tip: "y=(x−3)²+2: vertex=(3,2)" },
-      { title: "Opens Up or Down?", formula: "a > 0: opens UP (smiley ∪)    a < 0: opens DOWN (frowny ∩)", explanation: "The sign of 'a' determines which way the parabola opens.", tip: "y=−2x² opens downward (a=−2 < 0)" },
-      { title: "Axis of Symmetry", formula: "x = h  (vertical line through the vertex)", explanation: "Every parabola is perfectly symmetric about the vertical line x=h.", tip: "y=(x−4)²+1: axis of symmetry is x=4" },
+      { title: "Vertex Form", formula: "y = a(x-h)² + k   →   vertex = (h, k)", explanation: "Vertex form shows the vertex directly. h is x of the turning point, k is y.", tip: "y=(x-3)²+2: vertex=(3,2)" },
+      { title: "Opens Up or Down?", formula: "a > 0: opens UP (smiley ∪)    a < 0: opens DOWN (frowny ∩)", explanation: "The sign of 'a' determines which way the parabola opens.", tip: "y=-2x² opens downward (a=-2 < 0)" },
+      { title: "Axis of Symmetry", formula: "x = h  (vertical line through the vertex)", explanation: "Every parabola is perfectly symmetric about the vertical line x=h.", tip: "y=(x-4)²+1: axis of symmetry is x=4" },
     ],
     examples: [
-      { problem: "Find the vertex of y = (x − 3)² + 2", steps: ["In y = a(x−h)² + k, h=3, k=2", "Vertex = (3, 2)"], answer: "Vertex: (3, 2)" },
-      { problem: "Does y = −2(x+1)² + 5 open up or down?", steps: ["a = −2 (negative)", "Negative a → opens downward"], answer: "Downward" },
-      { problem: "Find the vertex of y = x² − 6x + 8", steps: ["Complete the square or use h = −b/2a", "h = 6/2 = 3", "k = 3² − 6(3) + 8 = 9 − 18 + 8 = −1", "Vertex = (3, −1)"], answer: "Vertex: (3, −1)" },
-      { problem: "What is the axis of symmetry of y = (x − 4)² + 1?", steps: ["Axis of symmetry passes through vertex x-coordinate.", "x = 4"], answer: "x = 4" },
-      { problem: "Find the y-intercept of y = x² − 4x + 3", steps: ["Set x = 0: y = 0 − 0 + 3 = 3", "y-intercept = (0, 3)"], answer: "(0, 3)" },
+      { problem: "Find the vertex of y = (x - 3)² + 2", steps: ["In y = a(x-h)² + k, h=3, k=2", "Vertex = (3, 2)"], answer: "Vertex: (3, 2)" },
+      { problem: "Does y = -2(x+1)² + 5 open up or down?", steps: ["a = -2 (negative)", "Negative a → opens downward"], answer: "Downward" },
+      { problem: "Find the vertex of y = x² - 6x + 8", steps: ["Complete the square or use h = -b/2a", "h = 6/2 = 3", "k = 3² - 6(3) + 8 = 9 - 18 + 8 = -1", "Vertex = (3, -1)"], answer: "Vertex: (3, -1)" },
+      { problem: "What is the axis of symmetry of y = (x - 4)² + 1?", steps: ["Axis of symmetry passes through vertex x-coordinate.", "x = 4"], answer: "x = 4" },
+      { problem: "Find the y-intercept of y = x² - 4x + 3", steps: ["Set x = 0: y = 0 - 0 + 3 = 3", "y-intercept = (0, 3)"], answer: "(0, 3)" },
     ],
   };
 }
@@ -722,14 +722,14 @@ function functionNotationTutorial(): TutorialContent {
     intro: "f(x) means 'the function f evaluated at x'. Simply substitute the value for x.",
     concepts: [
       { title: "Function Notation", formula: "f(x) = [expression]    f(a) = substitute x = a", explanation: "f(x) is just a name for an expression. To evaluate, replace every x with the given value.", tip: "f(x)=2x+1: f(3)=2(3)+1=7" },
-      { title: "Input → Output", formula: "x (input) → function machine → f(x) (output)", explanation: "Same input always gives same output. Think of it as a machine.", tip: "f(x)=x²: f(4)=16 and f(−4)=16 — same output for different inputs!" },
+      { title: "Input → Output", formula: "x (input) → function machine → f(x) (output)", explanation: "Same input always gives same output. Think of it as a machine.", tip: "f(x)=x²: f(4)=16 and f(-4)=16 — same output for different inputs!" },
       { title: "Multiple Functions", formula: "f(x), g(x), h(x) are different machines", explanation: "Different letter = different function = different rule.", tip: "f(x)=x+1, g(x)=2x: f(3)=4 but g(3)=6" },
     ],
     examples: [
       { problem: "If f(x) = 2x + 3, find f(4)", steps: ["Substitute x = 4:", "f(4) = 2(4) + 3 = 8 + 3 = 11"], answer: "11" },
-      { problem: "If g(x) = x² − 1, find g(3)", steps: ["g(3) = 3² − 1 = 9 − 1 = 8"], answer: "8" },
-      { problem: "If h(x) = 3x − 7, find h(0)", steps: ["h(0) = 3(0) − 7 = −7"], answer: "−7" },
-      { problem: "If f(x) = x² + 2x, find f(−2)", steps: ["f(−2) = (−2)² + 2(−2) = 4 − 4 = 0"], answer: "0" },
+      { problem: "If g(x) = x² - 1, find g(3)", steps: ["g(3) = 3² - 1 = 9 - 1 = 8"], answer: "8" },
+      { problem: "If h(x) = 3x - 7, find h(0)", steps: ["h(0) = 3(0) - 7 = -7"], answer: "-7" },
+      { problem: "If f(x) = x² + 2x, find f(-2)", steps: ["f(-2) = (-2)² + 2(-2) = 4 - 4 = 0"], answer: "0" },
       { problem: "If f(x) = 5 (constant function), find f(100)", steps: ["A constant function always returns the same value.", "f(100) = 5"], answer: "5" },
     ],
   };
@@ -742,13 +742,13 @@ function domainRangeTutorial(): TutorialContent {
     concepts: [
       { title: "Domain = Valid Inputs", formula: "domain = all x where f(x) is defined", explanation: "Some inputs are forbidden: dividing by zero, taking a root of a negative, or log of non-positive.", tip: "f(x)=1/x: x=0 is banned → domain: all x≠0" },
       { title: "Range = Possible Outputs", formula: "range = all y-values f(x) can actually produce", explanation: "The range is every y-value the function can output. Some functions can never produce certain values.", tip: "f(x)=x²: output always ≥0 → range: y≥0" },
-      { title: "Common Restrictions", formula: "No ÷ by 0    No √(negative)    log(positive only)", explanation: "Three main domain restrictions to check for.", tip: "f(x)=√(x−4): need x−4≥0 → domain: x≥4" },
+      { title: "Common Restrictions", formula: "No ÷ by 0    No √(negative)    log(positive only)", explanation: "Three main domain restrictions to check for.", tip: "f(x)=√(x-4): need x-4≥0 → domain: x≥4" },
     ],
     examples: [
       { problem: "What is the domain of f(x) = 1/x?", steps: ["x cannot be 0 (division by zero is undefined)", "Domain: all real numbers except x = 0"], answer: "All real numbers except x = 0" },
       { problem: "What is the domain of f(x) = √x?", steps: ["Square root of a negative number is not real.", "x must be ≥ 0", "Domain: x ≥ 0"], answer: "x ≥ 0" },
       { problem: "What is the range of f(x) = x²?", steps: ["x² is always ≥ 0 for any real x", "Range: y ≥ 0"], answer: "y ≥ 0" },
-      { problem: "What is the domain of f(x) = √(x − 4)?", steps: ["x − 4 ≥ 0", "x ≥ 4"], answer: "x ≥ 4" },
+      { problem: "What is the domain of f(x) = √(x - 4)?", steps: ["x - 4 ≥ 0", "x ≥ 4"], answer: "x ≥ 4" },
       { problem: "What is the range of f(x) = |x| + 2?", steps: ["|x| ≥ 0 always", "So |x| + 2 ≥ 2 always", "Range: y ≥ 2"], answer: "y ≥ 2" },
     ],
   };
@@ -759,15 +759,15 @@ function inverseFunctionsTutorial(): TutorialContent {
     skillName: "Inverse Functions",
     intro: "The inverse function f⁻¹ reverses what f does. To find it: swap x and y, then solve for y.",
     concepts: [
-      { title: "What is an Inverse?", formula: "f⁻¹(f(x)) = x    and    f(f⁻¹(x)) = x", explanation: "The inverse completely undoes the original. If f adds 3, f⁻¹ subtracts 3.", tip: "f(x)=x+5: f⁻¹(x)=x−5" },
-      { title: "How to Find the Inverse", formula: "Step 1: replace f(x) with y    Step 2: swap x and y    Step 3: solve for y", explanation: "This three-step method finds the inverse of any function.", tip: "y=2x+4 → swap → x=2y+4 → y=(x−4)/2" },
+      { title: "What is an Inverse?", formula: "f⁻¹(f(x)) = x    and    f(f⁻¹(x)) = x", explanation: "The inverse completely undoes the original. If f adds 3, f⁻¹ subtracts 3.", tip: "f(x)=x+5: f⁻¹(x)=x-5" },
+      { title: "How to Find the Inverse", formula: "Step 1: replace f(x) with y    Step 2: swap x and y    Step 3: solve for y", explanation: "This three-step method finds the inverse of any function.", tip: "y=2x+4 → swap → x=2y+4 → y=(x-4)/2" },
       { title: "Graphical Meaning", formula: "f and f⁻¹ are mirror images across y = x", explanation: "Every point (a,b) on f becomes (b,a) on f⁻¹.", tip: "If (2,7) is on f, then (7,2) is on f⁻¹" },
     ],
     examples: [
-      { problem: "Find the inverse of f(x) = 2x + 4", steps: ["Write y = 2x + 4", "Swap x and y: x = 2y + 4", "Solve for y: 2y = x − 4, y = (x−4)/2", "f⁻¹(x) = (x−4)/2"], answer: "f⁻¹(x) = (x−4)/2" },
+      { problem: "Find the inverse of f(x) = 2x + 4", steps: ["Write y = 2x + 4", "Swap x and y: x = 2y + 4", "Solve for y: 2y = x - 4, y = (x-4)/2", "f⁻¹(x) = (x-4)/2"], answer: "f⁻¹(x) = (x-4)/2" },
       { problem: "Find the inverse of f(x) = 3x", steps: ["y = 3x → swap → x = 3y", "y = x/3", "f⁻¹(x) = x/3"], answer: "f⁻¹(x) = x/3" },
-      { problem: "Verify: if f(x) = 5x − 2, does f⁻¹(f(3)) = 3?", steps: ["f(3) = 5(3) − 2 = 13", "f⁻¹(13) = (13+2)/5 = 3 ✓"], answer: "Yes, f⁻¹(f(3)) = 3" },
-      { problem: "Find the inverse of f(x) = x + 7", steps: ["y = x + 7 → x = y + 7", "y = x − 7", "f⁻¹(x) = x − 7"], answer: "f⁻¹(x) = x − 7" },
+      { problem: "Verify: if f(x) = 5x - 2, does f⁻¹(f(3)) = 3?", steps: ["f(3) = 5(3) - 2 = 13", "f⁻¹(13) = (13+2)/5 = 3 ✓"], answer: "Yes, f⁻¹(f(3)) = 3" },
+      { problem: "Find the inverse of f(x) = x + 7", steps: ["y = x + 7 → x = y + 7", "y = x - 7", "f⁻¹(x) = x - 7"], answer: "f⁻¹(x) = x - 7" },
       { problem: "What is the relationship between a function and its inverse graphically?", steps: ["They are reflections of each other across the line y = x."], answer: "Reflections across y = x" },
     ],
   };
@@ -806,7 +806,7 @@ function unitCircleTutorial(): TutorialContent {
       { problem: "What is sin(90°) and cos(90°)?", steps: ["At 90°, the point is (0, 1)", "cos(90°) = 0, sin(90°) = 1"], answer: "sin(90°)=1, cos(90°)=0" },
       { problem: "What is sin(45°)?", steps: ["At 45°, the point is (√2/2, √2/2)", "sin(45°) = √2/2 ≈ 0.707"], answer: "√2/2" },
       { problem: "What is cos(60°)?", steps: ["At 60°, the point is (1/2, √3/2)", "cos(60°) = 1/2"], answer: "1/2" },
-      { problem: "In which quadrant is sin(θ) negative and cos(θ) positive?", steps: ["Quadrant I: both positive", "Quadrant II: sin+, cos−", "Quadrant III: both negative", "Quadrant IV: sin−, cos+"], answer: "Quadrant IV" },
+      { problem: "In which quadrant is sin(θ) negative and cos(θ) positive?", steps: ["Quadrant I: both positive", "Quadrant II: sin+, cos-", "Quadrant III: both negative", "Quadrant IV: sin-, cos+"], answer: "Quadrant IV" },
     ],
   };
 }
@@ -816,13 +816,13 @@ function trigIdentitiesTutorial(): TutorialContent {
     skillName: "Trig Identities",
     intro: "Trig identities are equations that are true for all angles. The most important: sin²θ + cos²θ = 1.",
     concepts: [
-      { title: "Pythagorean Identity", formula: "sin²θ + cos²θ = 1", explanation: "The fundamental identity. Comes from the Pythagorean theorem applied to the unit circle.", tip: "Rearrange: sin²θ=1−cos²θ   or   cos²θ=1−sin²θ" },
+      { title: "Pythagorean Identity", formula: "sin²θ + cos²θ = 1", explanation: "The fundamental identity. Comes from the Pythagorean theorem applied to the unit circle.", tip: "Rearrange: sin²θ=1-cos²θ   or   cos²θ=1-sin²θ" },
       { title: "Derived Pythagorean Identities", formula: "1+tan²θ=sec²θ    1+cot²θ=csc²θ", explanation: "Divide the main identity by cos²θ or sin²θ to get these two variations.", tip: "Appear constantly in calculus and integration" },
-      { title: "Double Angle Formulas", formula: "sin(2θ)=2sinθcosθ    cos(2θ)=cos²θ−sin²θ", explanation: "Double angle formulas reduce functions of 2θ to functions of θ.", tip: "cos(2θ) has three equivalent forms — choose the most useful" },
+      { title: "Double Angle Formulas", formula: "sin(2θ)=2sinθcosθ    cos(2θ)=cos²θ-sin²θ", explanation: "Double angle formulas reduce functions of 2θ to functions of θ.", tip: "cos(2θ) has three equivalent forms — choose the most useful" },
     ],
     examples: [
       { problem: "Complete: sin²θ + ___ = 1", steps: ["This is the Pythagorean identity.", "sin²θ + cos²θ = 1"], answer: "cos²θ" },
-      { problem: "Simplify: 1 − cos²θ", steps: ["From sin²θ + cos²θ = 1", "Rearrange: sin²θ = 1 − cos²θ"], answer: "sin²θ" },
+      { problem: "Simplify: 1 - cos²θ", steps: ["From sin²θ + cos²θ = 1", "Rearrange: sin²θ = 1 - cos²θ"], answer: "sin²θ" },
       { problem: "What is tan θ in terms of sin and cos?", steps: ["tan θ = sin θ / cos θ"], answer: "sin θ / cos θ" },
       { problem: "Simplify: sin²θ / cos²θ", steps: ["= (sin θ / cos θ)²", "= tan²θ"], answer: "tan²θ" },
       { problem: "What is sin(2θ)?", steps: ["Double angle formula:", "sin(2θ) = 2 sin θ cos θ"], answer: "2 sin θ cos θ" },
@@ -837,7 +837,7 @@ function logarithmsTutorial(): TutorialContent {
     concepts: [
       { title: "Definition", formula: "log_b(x) = y  ⟺  bʸ = x", explanation: "A logarithm asks: what power do I raise the base to, to get this number? It is the inverse of exponentiation.", tip: "log₂(8)=3 because 2³=8" },
       { title: "Product Rule", formula: "log_b(MN) = log_b(M) + log_b(N)", explanation: "The log of a product equals the sum of the logs.", tip: "log(6×5) = log6 + log5" },
-      { title: "Quotient Rule", formula: "log_b(M/N) = log_b(M) − log_b(N)", explanation: "The log of a quotient equals the difference of the logs.", tip: "log(8/2) = log8 − log2" },
+      { title: "Quotient Rule", formula: "log_b(M/N) = log_b(M) - log_b(N)", explanation: "The log of a quotient equals the difference of the logs.", tip: "log(8/2) = log8 - log2" },
       { title: "Power Rule", formula: "log_b(Mⁿ) = n · log_b(M)", explanation: "The log of a power brings the exponent down as a multiplier.", tip: "log(x³) = 3·log(x)" },
       { title: "Special Values", formula: "log_b(1)=0    log_b(b)=1    log_b(bⁿ)=n", explanation: "Four key values every student must know. The log of 1 is always 0. The log of the base is always 1.", tip: "log₃(3)=1   log₅(5⁴)=4   10^(log 7)=7" },
     ],
@@ -873,18 +873,18 @@ function exponentialFunctionsTutorial(): TutorialContent {
 function complexNumbersTutorial(): TutorialContent {
   return {
     skillName: "Complex Numbers",
-    intro: "Complex numbers have the form a + bi, where i = √(−1) and i² = −1. 'a' is the real part; 'b' is the imaginary part.",
+    intro: "Complex numbers have the form a + bi, where i = √(-1) and i² = -1. 'a' is the real part; 'b' is the imaginary part.",
     concepts: [
-      { title: "The Imaginary Unit i", formula: "i = √(−1)    i² = −1    i³ = −i    i⁴ = 1", explanation: "We define i as the square root of −1. Powers of i cycle through 4 values.", tip: "Cycle: i, −1, −i, 1, i, −1, −i, 1..." },
+      { title: "The Imaginary Unit i", formula: "i = √(-1)    i² = -1    i³ = -i    i⁴ = 1", explanation: "We define i as the square root of -1. Powers of i cycle through 4 values.", tip: "Cycle: i, -1, -i, 1, i, -1, -i, 1..." },
       { title: "Complex Number Form", formula: "z = a + bi    a=real part    b=imaginary part", explanation: "Every complex number has a real part and an imaginary part. They cannot be combined.", tip: "3+4i: real=3, imaginary=4" },
-      { title: "Conjugate and Modulus", formula: "conjugate of a+bi = a−bi    |a+bi| = √(a²+b²)", explanation: "The conjugate flips the sign of the imaginary part. The modulus is the distance from origin.", tip: "Conjugate of 3+4i = 3−4i    |3+4i|=5" },
+      { title: "Conjugate and Modulus", formula: "conjugate of a+bi = a-bi    |a+bi| = √(a²+b²)", explanation: "The conjugate flips the sign of the imaginary part. The modulus is the distance from origin.", tip: "Conjugate of 3+4i = 3-4i    |3+4i|=5" },
     ],
     examples: [
-      { problem: "What is i²?", steps: ["By definition: i = √(−1)", "i² = (√(−1))² = −1"], answer: "−1" },
+      { problem: "What is i²?", steps: ["By definition: i = √(-1)", "i² = (√(-1))² = -1"], answer: "-1" },
       { problem: "Add: (3 + 2i) + (4 + 5i)", steps: ["Add real parts: 3 + 4 = 7", "Add imaginary parts: 2i + 5i = 7i", "Answer: 7 + 7i"], answer: "7 + 7i" },
-      { problem: "Simplify: √(−9)", steps: ["√(−9) = √(9 × −1) = √9 × √(−1) = 3i"], answer: "3i" },
-      { problem: "What is the conjugate of (5 + 3i)?", steps: ["The conjugate flips the sign of the imaginary part.", "Conjugate of (5 + 3i) = (5 − 3i)"], answer: "5 − 3i" },
-      { problem: "Multiply: (2 + 3i)(2 − 3i)", steps: ["Use difference of squares: (a+b)(a−b) = a² − b²", "= 4 − (3i)² = 4 − 9i² = 4 − 9(−1) = 4 + 9 = 13"], answer: "13" },
+      { problem: "Simplify: √(-9)", steps: ["√(-9) = √(9 × -1) = √9 × √(-1) = 3i"], answer: "3i" },
+      { problem: "What is the conjugate of (5 + 3i)?", steps: ["The conjugate flips the sign of the imaginary part.", "Conjugate of (5 + 3i) = (5 - 3i)"], answer: "5 - 3i" },
+      { problem: "Multiply: (2 + 3i)(2 - 3i)", steps: ["Use difference of squares: (a+b)(a-b) = a² - b²", "= 4 - (3i)² = 4 - 9i² = 4 - 9(-1) = 4 + 9 = 13"], answer: "13" },
     ],
   };
 }
@@ -896,12 +896,12 @@ function limitsTutorial(): TutorialContent {
     concepts: [
       { title: "Limit Definition", formula: "lim(x→a) f(x) = L", explanation: "The limit is about the journey, not the destination. What value does the function APPROACH as x gets close to a?", tip: "A limit can exist even if f(a) is undefined!" },
       { title: "Direct Substitution", formula: "If f is continuous at a: lim(x→a) f(x) = f(a)", explanation: "For well-behaved functions, just substitute x=a. Use more advanced methods only when you get 0/0 or ∞/∞.", tip: "lim(x→3) x²+1 = 10 (direct substitution)" },
-      { title: "0/0 Form: Factor and Cancel", formula: "If 0/0: factor, cancel the problematic term", explanation: "When direct substitution gives 0/0, factor and cancel the term causing the zero.", tip: "lim(x→2)(x²−4)/(x−2) = lim(x+2) = 4" },
+      { title: "0/0 Form: Factor and Cancel", formula: "If 0/0: factor, cancel the problematic term", explanation: "When direct substitution gives 0/0, factor and cancel the term causing the zero.", tip: "lim(x→2)(x²-4)/(x-2) = lim(x+2) = 4" },
     ],
     examples: [
       { problem: "Find lim(x→3) of x + 2", steps: ["Simply substitute x = 3:", "3 + 2 = 5"], answer: "5" },
       { problem: "Find lim(x→0) of x²", steps: ["As x → 0: x² → 0² = 0"], answer: "0" },
-      { problem: "Find lim(x→2) of (x² − 4)/(x − 2)", steps: ["Direct substitution gives 0/0 (indeterminate form)", "Factor numerator: (x+2)(x−2)/(x−2)", "Cancel (x−2): lim = x + 2 as x→2 = 4"], answer: "4" },
+      { problem: "Find lim(x→2) of (x² - 4)/(x - 2)", steps: ["Direct substitution gives 0/0 (indeterminate form)", "Factor numerator: (x+2)(x-2)/(x-2)", "Cancel (x-2): lim = x + 2 as x→2 = 4"], answer: "4" },
       { problem: "Find lim(x→∞) of 1/x", steps: ["As x gets very large, 1/x gets very small", "lim(x→∞) of 1/x = 0"], answer: "0" },
       { problem: "Find lim(x→0) of sin(x)/x", steps: ["This is a famous limit.", "lim(x→0) sin(x)/x = 1"], answer: "1" },
     ],
@@ -913,15 +913,15 @@ function sequencesTutorial(): TutorialContent {
     skillName: "Sequences and Series",
     intro: "A sequence is an ordered list of numbers. An arithmetic sequence adds a constant; a geometric sequence multiplies by a constant.",
     concepts: [
-      { title: "Arithmetic Sequence", formula: "aₙ = a₁ + (n−1)d    d = common difference", explanation: "Add the same number (d) each step. The nth term formula jumps directly to any term.", tip: "3,7,11,15: d=4    a₁₀ = 3+9×4 = 39" },
+      { title: "Arithmetic Sequence", formula: "aₙ = a₁ + (n-1)d    d = common difference", explanation: "Add the same number (d) each step. The nth term formula jumps directly to any term.", tip: "3,7,11,15: d=4    a₁₀ = 3+9×4 = 39" },
       { title: "Geometric Sequence", formula: "aₙ = a₁ × rⁿ⁻¹    r = common ratio", explanation: "Multiply by the same number (r) each step.", tip: "2,6,18,54: r=3    a₅=2×3⁴=162" },
       { title: "Identify the Type", formula: "Constant difference → arithmetic    Constant ratio → geometric", explanation: "Subtract consecutive terms: constant → arithmetic. Divide consecutive terms: constant → geometric.", tip: "1,4,7,10: diff=3 (arithmetic)    2,6,18: ratio=3 (geometric)" },
     ],
     examples: [
-      { problem: "Find the next term: 3, 7, 11, 15, ___", steps: ["Common difference: 7−3 = 4", "Next term: 15 + 4 = 19"], answer: "19" },
-      { problem: "Find the 10th term of: 2, 5, 8, 11, ...", steps: ["First term a = 2, common difference d = 3", "aₙ = a + (n−1)d", "a₁₀ = 2 + (10−1)×3 = 2 + 27 = 29"], answer: "29" },
+      { problem: "Find the next term: 3, 7, 11, 15, ___", steps: ["Common difference: 7-3 = 4", "Next term: 15 + 4 = 19"], answer: "19" },
+      { problem: "Find the 10th term of: 2, 5, 8, 11, ...", steps: ["First term a = 2, common difference d = 3", "aₙ = a + (n-1)d", "a₁₀ = 2 + (10-1)×3 = 2 + 27 = 29"], answer: "29" },
       { problem: "Find the next term: 3, 6, 12, 24, ___", steps: ["Common ratio: 6/3 = 2", "Next term: 24 × 2 = 48"], answer: "48" },
-      { problem: "Find the sum of an infinite geometric series: a=2, r=1/2", steps: ["Formula: S = a/(1−r)", "S = 2/(1−0.5) = 2/0.5 = 4"], answer: "4" },
+      { problem: "Find the sum of an infinite geometric series: a=2, r=1/2", steps: ["Formula: S = a/(1-r)", "S = 2/(1-0.5) = 2/0.5 = 4"], answer: "4" },
       { problem: "Find the sum of first 5 terms: 1, 3, 5, 7, 9", steps: ["Arithmetic series sum: S = n/2 × (first + last)", "S = 5/2 × (1 + 9) = 5/2 × 10 = 25"], answer: "25" },
     ],
   };
@@ -940,7 +940,7 @@ function vectorsTutorial(): TutorialContent {
       { problem: "Add vectors: (3, 4) + (1, 2)", steps: ["Add x components: 3 + 1 = 4", "Add y components: 4 + 2 = 6", "Result: (4, 6)"], answer: "(4, 6)" },
       { problem: "Find the magnitude of (3, 4)", steps: ["magnitude = √(x² + y²)", "= √(9 + 16) = √25 = 5"], answer: "5" },
       { problem: "Find the dot product of (2, 3) and (4, 5)", steps: ["Dot product = x₁x₂ + y₁y₂", "= 2×4 + 3×5 = 8 + 15 = 23"], answer: "23" },
-      { problem: "Subtract: (5, 3) − (2, 1)", steps: ["Subtract components:", "(5−2, 3−1) = (3, 2)"], answer: "(3, 2)" },
+      { problem: "Subtract: (5, 3) - (2, 1)", steps: ["Subtract components:", "(5-2, 3-1) = (3, 2)"], answer: "(3, 2)" },
       { problem: "If two vectors have dot product 0, what does that mean?", steps: ["Dot product = 0 means the vectors are perpendicular (90° angle)"], answer: "They are perpendicular" },
     ],
   };
@@ -953,7 +953,7 @@ function derivativesTutorial(): TutorialContent {
     concepts: [
       { title: "Power Rule", formula: "d/dx[xⁿ] = nxⁿ⁻¹", explanation: "Bring the exponent down as a multiplier, then reduce the exponent by 1.", tip: "d/dx[x⁵]=5x⁴    d/dx[x²]=2x    d/dx[x]=1" },
       { title: "Sum Rule", formula: "d/dx[f±g] = f'±g'", explanation: "Differentiate each term separately. The derivative distributes over addition.", tip: "d/dx[x³+2x]=3x²+2" },
-      { title: "Key Derivatives", formula: "d/dx[eˣ]=eˣ    d/dx[ln x]=1/x    d/dx[sin x]=cos x    d/dx[cos x]=−sin x", explanation: "These fundamental derivatives must be memorised.", tip: "eˣ is its own derivative!" },
+      { title: "Key Derivatives", formula: "d/dx[eˣ]=eˣ    d/dx[ln x]=1/x    d/dx[sin x]=cos x    d/dx[cos x]=-sin x", explanation: "These fundamental derivatives must be memorised.", tip: "eˣ is its own derivative!" },
     ],
     examples: [
       { problem: "Find d/dx[x³]", steps: ["Power rule: bring down exponent, reduce by 1", "d/dx[x³] = 3x²"], answer: "3x²" },
@@ -970,14 +970,14 @@ function integralsTutorial(): TutorialContent {
     skillName: "Integrals",
     intro: "Integration is the reverse of differentiation. Power rule: ∫xⁿ dx = xⁿ⁺¹/(n+1) + C.",
     concepts: [
-      { title: "Power Rule for Integration", formula: "∫xⁿ dx = xⁿ⁺¹/(n+1) + C    (n ≠ −1)", explanation: "Increase the exponent by 1, then divide by the new exponent. Always add +C.", tip: "∫x² dx = x³/3 + C" },
-      { title: "The +C", formula: "∫f(x)dx = F(x) + C", explanation: "The indefinite integral always has +C because there are infinitely many antiderivatives.", tip: "Both x²+5 and x²−3 differentiate to 2x" },
-      { title: "Fundamental Theorem", formula: "∫[a to b] f(x)dx = F(b) − F(a)", explanation: "To evaluate a definite integral: find the antiderivative, then substitute and subtract.", tip: "∫[0 to 3] x dx = [x²/2] from 0 to 3 = 4.5" },
+      { title: "Power Rule for Integration", formula: "∫xⁿ dx = xⁿ⁺¹/(n+1) + C    (n ≠ -1)", explanation: "Increase the exponent by 1, then divide by the new exponent. Always add +C.", tip: "∫x² dx = x³/3 + C" },
+      { title: "The +C", formula: "∫f(x)dx = F(x) + C", explanation: "The indefinite integral always has +C because there are infinitely many antiderivatives.", tip: "Both x²+5 and x²-3 differentiate to 2x" },
+      { title: "Fundamental Theorem", formula: "∫[a to b] f(x)dx = F(b) - F(a)", explanation: "To evaluate a definite integral: find the antiderivative, then substitute and subtract.", tip: "∫[0 to 3] x dx = [x²/2] from 0 to 3 = 4.5" },
     ],
     examples: [
       { problem: "Find ∫x² dx", steps: ["Power rule: increase exponent by 1, divide by new exponent", "∫x² dx = x³/3 + C"], answer: "x³/3 + C" },
       { problem: "Find ∫4x dx", steps: ["∫4x dx = 4 × x²/2 + C = 2x² + C"], answer: "2x² + C" },
-      { problem: "Evaluate ∫[0 to 2] x dx", steps: ["∫x dx = x²/2 + C", "Evaluate from 0 to 2:", "[x²/2] from 0 to 2 = 4/2 − 0/2 = 2"], answer: "2" },
+      { problem: "Evaluate ∫[0 to 2] x dx", steps: ["∫x dx = x²/2 + C", "Evaluate from 0 to 2:", "[x²/2] from 0 to 2 = 4/2 - 0/2 = 2"], answer: "2" },
       { problem: "Find ∫cos x dx", steps: ["Standard integral: ∫cos x dx = sin x + C"], answer: "sin x + C" },
       { problem: "Find ∫e^x dx", steps: ["The exponential integral: ∫e^x dx = e^x + C"], answer: "e^x + C" },
     ],
@@ -989,17 +989,17 @@ function calculusApplicationsTutorial(): TutorialContent {
     skillName: "Calculus Applications",
     intro: "Derivatives find rates of change and extrema. Integrals find areas. Set f'(x) = 0 to find max/min points.",
     concepts: [
-      { title: "Critical Points", formula: "Set f'(x)=0 and solve for x", explanation: "Critical points are where the slope is zero — possible local maxima or minima. Always check the second derivative to classify them.", tip: "f(x)=x²−4x: f'(x)=2x−4=0 → x=2 is a critical point" },
+      { title: "Critical Points", formula: "Set f'(x)=0 and solve for x", explanation: "Critical points are where the slope is zero — possible local maxima or minima. Always check the second derivative to classify them.", tip: "f(x)=x²-4x: f'(x)=2x-4=0 → x=2 is a critical point" },
       { title: "Second Derivative Test", formula: "f''(x)>0: local min    f''(x)<0: local max", explanation: "Positive second derivative = concave up = bowl = minimum. Negative = concave down = hill = maximum.", tip: "Think: bowl (min) vs hill (max)" },
-      { title: "Area Under a Curve", formula: "Area = ∫[a to b] f(x) dx = F(b) − F(a)", explanation: "The definite integral gives the area between the curve and x-axis from a to b.", tip: "Area under y=x from 0 to 4: [x²/2] = 8" },
+      { title: "Area Under a Curve", formula: "Area = ∫[a to b] f(x) dx = F(b) - F(a)", explanation: "The definite integral gives the area between the curve and x-axis from a to b.", tip: "Area under y=x from 0 to 4: [x²/2] = 8" },
     ],
 
     examples: [
       { problem: "If f(x) = x², at what x is the slope of the tangent = 4?", steps: ["f'(x) = 2x", "Set 2x = 4: x = 2"], answer: "x = 2" },
-      { problem: "Find the critical points of f(x) = x³ − 3x", steps: ["f'(x) = 3x² − 3", "Set f'(x) = 0: 3x² − 3 = 0", "x² = 1 → x = ±1"], answer: "x = 1 and x = −1" },
+      { problem: "Find the critical points of f(x) = x³ - 3x", steps: ["f'(x) = 3x² - 3", "Set f'(x) = 0: 3x² - 3 = 0", "x² = 1 → x = ±1"], answer: "x = 1 and x = -1" },
       { problem: "If f''(x) > 0 at a critical point, is it a max or min?", steps: ["f''(x) > 0 means the function is concave up at that point.", "It is a local MINIMUM."], answer: "Local minimum" },
-      { problem: "Find the area under y = 2x from x=0 to x=3.", steps: ["∫[0 to 3] 2x dx = [x²] from 0 to 3 = 9 − 0 = 9"], answer: "9 square units" },
-      { problem: "A ball has position s(t) = −5t² + 20t. When is velocity = 0?", steps: ["Velocity = s'(t) = −10t + 20", "Set to 0: −10t + 20 = 0 → t = 2 seconds"], answer: "t = 2 seconds" },
+      { problem: "Find the area under y = 2x from x=0 to x=3.", steps: ["∫[0 to 3] 2x dx = [x²] from 0 to 3 = 9 - 0 = 9"], answer: "9 square units" },
+      { problem: "A ball has position s(t) = -5t² + 20t. When is velocity = 0?", steps: ["Velocity = s'(t) = -10t + 20", "Set to 0: -10t + 20 = 0 → t = 2 seconds"], answer: "t = 2 seconds" },
     ],
   };
 }
@@ -1012,7 +1012,7 @@ function genericMathTutorial(skillName: string): TutorialContent {
       { problem: "Example 1: Start with the basics", steps: ["Read the problem carefully.", "Identify what you know and what you need to find.", "Choose the right method."], answer: "Follow the steps" },
       { problem: "Example 2: Apply the method", steps: ["Write down the formula or method.", "Substitute your values.", "Simplify step by step."], answer: "Check your work" },
       { problem: "Example 3: Check your answer", steps: ["After solving, verify your answer makes sense.", "Substitute back to check."], answer: "Verified" },
-      { problem: "Example 4: Common mistakes to avoid", steps: ["Always show your working.", "Don't skip steps.", "Check signs (+ and −) carefully."], answer: "Take care with signs" },
+      { problem: "Example 4: Common mistakes to avoid", steps: ["Always show your working.", "Don't skip steps.", "Check signs (+ and -) carefully."], answer: "Take care with signs" },
       { problem: "Example 5: Practice tip", steps: ["The more you practise, the faster you'll get.", "Focus on accuracy first, then speed."], answer: "Practice makes perfect" },
     ],
   };
@@ -1197,7 +1197,7 @@ function verbsTutorial(): TutorialContent {
     intro: "A verb expresses an action (run, eat) or a state of being (is, are, was). Every sentence needs a verb.",
     concepts: [
       { title: "Action vs Linking Verbs", formula: "Action = something happening    Linking = connects subject to description", explanation: "Action verbs describe what the subject does. Linking verbs (is, are, was, seem) connect the subject to an adjective or noun.", tip: "'She runs' = action    'She is tall' = linking" },
-      { title: "Verb Tenses", formula: "Past: −ed    Present: base form    Future: will + verb", explanation: "Tense tells you WHEN the action happens. Most verbs add -ed for past tense. Irregular verbs change completely.", tip: "walk→walked (regular)    go→went (irregular)" },
+      { title: "Verb Tenses", formula: "Past: -ed    Present: base form    Future: will + verb", explanation: "Tense tells you WHEN the action happens. Most verbs add -ed for past tense. Irregular verbs change completely.", tip: "walk→walked (regular)    go→went (irregular)" },
       { title: "Subject-Verb Agreement", formula: "Singular subject → verb +s    Plural subject → no +s", explanation: "The verb must match its subject in number.", tip: "'She run' is WRONG    'She runs' is CORRECT" },
     ],
     examples: [
@@ -1498,12 +1498,12 @@ function chemistryTutorial(): TutorialContent {
     skillName: "Chemistry",
     intro: "Chemistry studies matter and how it changes. Atoms are the building blocks of all matter.",
     concepts: [
-      { title: "Atomic Structure", formula: "Atom = protons (+) + neutrons (0) in nucleus + electrons (−) in shells", explanation: "All matter is made of atoms. Atomic number = number of protons = number of electrons (neutral atom).", tip: "Mass number = protons + neutrons    Atomic number = protons" },
+      { title: "Atomic Structure", formula: "Atom = protons (+) + neutrons (0) in nucleus + electrons (-) in shells", explanation: "All matter is made of atoms. Atomic number = number of protons = number of electrons (neutral atom).", tip: "Mass number = protons + neutrons    Atomic number = protons" },
       { title: "Chemical Bonds", formula: "Ionic = transfer electrons (metal+non-metal)    Covalent = share electrons (non-metal+non-metal)", explanation: "Ionic bonds form when atoms transfer electrons. Covalent bonds form when atoms share electrons.", tip: "NaCl (salt) = ionic    H₂O (water) = covalent" },
       { title: "Acids, Bases, pH Scale", formula: "pH 0–6: acid    pH 7: neutral    pH 8–14: base", explanation: "The pH scale measures acidity. Below 7 = acid. Above 7 = base. 7 = neutral.", tip: "Lemon ≈ pH2 (acid)    Water = pH7 (neutral)    Bleach ≈ pH13 (base)" },
     ],
     examples: [
-      { problem: "What are the three subatomic particles?", steps: ["Protons: positive charge, in nucleus", "Neutrons: no charge, in nucleus", "Electrons: negative charge, orbit around nucleus"], answer: "Protons (+), neutrons (neutral), electrons (−)" },
+      { problem: "What are the three subatomic particles?", steps: ["Protons: positive charge, in nucleus", "Neutrons: no charge, in nucleus", "Electrons: negative charge, orbit around nucleus"], answer: "Protons (+), neutrons (neutral), electrons (-)" },
       { problem: "What is the difference between an ionic and covalent bond?", steps: ["Ionic bond: electrons are TRANSFERRED from one atom to another", "Example: NaCl (table salt) — Na gives electron to Cl", "Covalent bond: electrons are SHARED between atoms", "Example: H₂O — oxygen and hydrogen share electrons"], answer: "Ionic = transfer electrons; Covalent = share electrons" },
       { problem: "What does pH measure?", steps: ["pH measures how acidic or alkaline (basic) a solution is.", "Scale: 0–14", "0–6: acidic (lemon juice = 2)", "7: neutral (pure water)", "8–14: alkaline/basic (bleach = 13)"], answer: "0–6 acidic, 7 neutral, 8–14 alkaline" },
       { problem: "What is the difference between an exothermic and endothermic reaction?", steps: ["Exothermic: releases ENERGY (usually as heat)", "Example: burning wood, explosions", "Endothermic: absorbs ENERGY", "Example: photosynthesis, melting ice"], answer: "Exothermic = releases heat; Endothermic = absorbs heat" },
