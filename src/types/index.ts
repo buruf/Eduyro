@@ -103,12 +103,29 @@ export type ProblemType =
   | "label_diagram"
   | "sentence_complete";
 
+// How the student INPUTS an answer. The practice renderer keys off this to pick
+// the right input component — it never guesses from the question text. Classified
+// server-side (where the answer is known) so the client gets the type but not
+// the answer.
+export type AnswerType =
+  | "integer"
+  | "decimal"
+  | "fraction"
+  | "mixedFraction"
+  | "percent"
+  | "comparison"
+  | "multipleChoice"
+  | "trueFalse"
+  | "expression"   // algebra: "5x", "3(x+4)" — keyboard text, sized (not a paragraph)
+  | "text";        // short non-numeric fallback (sized input, never a paragraph)
+
 export interface Problem {
   id: string;
   type: ProblemType;
   question: string;
   options?: string[];   // for multiple_choice
   answer: string | number;
+  answerType?: AnswerType;
   points: number;
   hint?: string;
   explanation?: string;

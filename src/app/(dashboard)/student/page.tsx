@@ -30,6 +30,11 @@ import { Card, StatCard, Progress, Modal, EmptyState } from "@/components/ui";
 import { StudentRealtime } from "@/components/realtime/StudentRealtime";
 import { ConceptTutorialModal } from "@/components/tutorial/ConceptTutorialModal";
 import { cn, formatTime } from "@/lib/utils";
+import type { AnswerType } from "@/types";
+import {
+  NumberInput, FractionInput, MixedFractionInput, ComparisonSelector,
+  TrueFalse, MultipleChoice, ShortTextInput,
+} from "@/components/practice/MathInputs";
 import { conceptForSkill, type ConceptTutorial } from "@/lib/tutorials/concepts";
 import type { StudentDashboard, TodaySheet } from "@/types";
 
@@ -583,6 +588,7 @@ interface PracticeProblem {
   question: string;
   type?: string;        // "short_answer" | "multiple_choice" | "written_response"
   options?: string[] | null;
+  answerType?: AnswerType; // drives which input component renders
   points?: number;
   // The correct answer is NOT returned by the preview API to the student.
   // Grading happens server-side via submit-sheet.
@@ -681,6 +687,7 @@ function PracticeModal({
           question: p.question ?? "",
           type: p.type,
           options: p.options ?? null,
+          answerType: p.answerType,
           points: p.points,
         })));
       })
@@ -780,18 +787,13 @@ function PracticeModal({
     const v = answers[cur.id] ?? "";
     setAnswers((a) => ({ ...a, [cur.id]: k === "del" ? v.slice(0, -1) : v + k }));
   };
-  // Expression-heavy levels (pre-algebra → calculus, M10–M18) have answers like
-  // "5x" or "3(x+4)" that a digit pad can't type — use the keyboard text field there.
-  const exprLevel = /^M1[0-8]$/.test(levelCode);
-  const showPad = !!cur && subjectSlug === "MATH" && !(cur.options && cur.options.length) && !exprLevel;
-  // Only surface the symbols this question needs.
-  const padQ = cur?.question ?? "";
-  const padExtras = [
-    /\\frac|\d\s*\/\s*\d/.test(padQ) && "/",   // fractions
-    (/\d\.\d/.test(padQ) || levelCode === "M8") && ".", // decimals
-    /:/.test(padQ) && ":",                      // ratios
-    /percent|%/.test(padQ) && "%",              // percent answers
-  ].filter(Boolean) as string[];
+  // The on-screen number pad is only for SINGLE-FIELD numeric answers. Fractions,
+  // comparisons, choices, true/false and algebraic expressions have their own
+  // typed controls (or a keyboard), so the pad would be wrong there.
+  const padType = cur?.answerType;
+  const showPad = !!cur && subjectSlug === "MATH" &&
+    (padType === "integer" || padType === "decimal" || padType === "percent");
+  const padExtras = padType === "decimal" ? ["."] : [];
 
   // Renders the answer body for a problem — reused stacked / long-division / MC /
   // visual / plain renderers, sized up for the focused single-question card.
@@ -830,28 +832,36 @@ function PracticeModal({
         </div>
       );
     }
+    // Pick the input component purely from answerType (classified server-side).
+    const at = p.answerType;
+    const val = answers[p.id] ?? "";
+    const isChoice = !!(opts && opts.length) && at !== "trueFalse";
+    const control = (() => {
+      if (opts && opts.length) {
+        return at === "trueFalse"
+          ? <TrueFalse value={val} onChange={set} />
+          : <MultipleChoice options={opts} value={val} onChange={set} />;
+      }
+      switch (at) {
+        case "comparison":    return <ComparisonSelector value={val} onChange={set} />;
+        case "trueFalse":     return <TrueFalse value={val} onChange={set} />;
+        case "fraction":      return <FractionInput value={val} onChange={set} />;
+        case "mixedFraction": return <MixedFractionInput value={val} onChange={set} />;
+        case "percent":       return <NumberInput value={val} onChange={set} mode="percent" />;
+        case "decimal":       return <NumberInput value={val} onChange={set} mode="decimal" />;
+        case "integer":       return <NumberInput value={val} onChange={set} mode="integer" />;
+        case "expression":    return <ShortTextInput value={val} onChange={set} mode="expression" />;
+        default:              return <ShortTextInput value={val} onChange={set} mode={subjectSlug === "MATH" ? "expression" : "text"} />;
+      }
+    })();
     return (
       <div className="text-center">
         <div className="flex justify-center">
           <QuestionWithViz text={questionText} size={96} className="font-serif font-semibold text-xl leading-snug" />
         </div>
-        {opts && opts.length > 0 ? (
-          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
-            {opts.map((opt) => {
-              const selected = answers[p.id] === opt;
-              return (
-                <button key={opt} type="button" onClick={() => set(opt)}
-                  className={cn("text-sm rounded-lg border-[1.5px] px-4 py-3 font-medium transition-colors",
-                    selected ? "border-brand-blue bg-brand-blue/10 text-brand-blue" : "border-border-mid bg-cream-dark/20 hover:border-brand-blue/50")}>
-                  {opt}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <input type="text" inputMode={subjectSlug === "MATH" ? "numeric" : "text"} value={answers[p.id] ?? ""} onChange={(e) => set(e.target.value)} placeholder="Your answer"
-            className="mt-4 w-40 h-12 mx-auto block border-[1.5px] rounded-md text-xl text-center font-bold font-serif outline-none border-border-mid bg-cream-dark/30 focus:border-brand-blue" />
-        )}
+        {isChoice
+          ? <div className="mt-5">{control}</div>
+          : <div className="mt-6 flex justify-center">{control}</div>}
       </div>
     );
   };

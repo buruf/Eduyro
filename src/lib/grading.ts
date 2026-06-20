@@ -3,7 +3,11 @@
 // and the per-question "check as I go" endpoint so both grade identically.
 
 export function normalizeAnswer(answer: string | number): string {
-  return String(answer).trim().toLowerCase().replace(/\s+/g, " ");
+  return String(answer)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/\s*%$/, ""); // "75%" and "75" grade the same (the percent input omits %)
 }
 
 export function answersMatch(submitted: string | number, correct: string | number): boolean {

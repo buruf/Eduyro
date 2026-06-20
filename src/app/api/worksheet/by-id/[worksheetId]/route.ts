@@ -8,6 +8,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { ok, notFound, handleRouteError, withAuth } from "@/lib/api/helpers";
 import { generateProblems } from "@/lib/worksheet/generator";
+import { classifyAnswerType } from "@/lib/practice/answer-type";
 
 export async function GET(
   req: NextRequest,
@@ -72,12 +73,23 @@ export async function GET(
       // server-side by submit-sheet, never exposed to the client. `type` and
       // `options` are surfaced so the practice UI can size inputs per answer
       // shape (number vs. long text) and render multiple-choice as buttons.
+      const subjectSlug2 = worksheet.level.subject.slug;
+      const levelCode2 = worksheet.level.code;
       const problems = storedProblems.map((p) => ({
         id: p.id,
         question: p.question,
         type: p.type,
         options: p.options ?? null,
         points: p.points,
+        // Classified server-side from the (private) answer; the client receives
+        // only the input type so the renderer never guesses.
+        answerType: classifyAnswerType({
+          question: p.question,
+          options: p.options ?? null,
+          answer: p.answer,
+          subjectSlug: subjectSlug2,
+          levelCode: levelCode2,
+        }),
       }));
 
       return ok({
