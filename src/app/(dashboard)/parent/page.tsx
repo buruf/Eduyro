@@ -227,13 +227,30 @@ function AddChildModal({ open, onClose, onSuccess }: { open: boolean; onClose: (
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [grade, setGrade] = useState("");
+  const [dob, setDob] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Live age (for the COPPA reassurance note shown to the parent).
+  const age = (() => {
+    if (!dob) return null;
+    const d = new Date(dob);
+    if (isNaN(d.getTime())) return null;
+    const now = new Date();
+    let a = now.getFullYear() - d.getFullYear();
+    const m = now.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < d.getDate())) a--;
+    return a;
+  })();
 
   async function handleSubmit() {
     setError(null);
     if (!firstName.trim()) return setError("First name is required");
     if (!lastName.trim()) return setError("Last name is required");
+    if (!dob) return setError("Date of birth is required");
+    if (age === null) return setError("Please enter a valid date of birth");
+    if (new Date(dob) > new Date()) return setError("Date of birth can't be in the future");
+    if (age < 2 || age > 120) return setError("Please enter a realistic date of birth");
     if (!email.includes("@")) return setError("Valid email is required");
     if (password.length < 8) return setError("Password must be at least 8 characters");
     if (!/[A-Z]/.test(password)) return setError("Password must have at least one uppercase letter");
@@ -244,7 +261,7 @@ function AddChildModal({ open, onClose, onSuccess }: { open: boolean; onClose: (
       const res = await fetch("/api/parents/me/children", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email, password, grade: grade || undefined }),
+        body: JSON.stringify({ firstName, lastName, email, password, grade: grade || undefined, dateOfBirth: dob }),
       });
       const data = await res.json();
       if (!data.success) {
@@ -253,7 +270,7 @@ function AddChildModal({ open, onClose, onSuccess }: { open: boolean; onClose: (
         return;
       }
       // Reset form
-      setFirstName(""); setLastName(""); setEmail(""); setPassword(""); setGrade("");
+      setFirstName(""); setLastName(""); setEmail(""); setPassword(""); setGrade(""); setDob("");
       // Redirect to Stripe checkout for first child
       if (data.data?.checkoutUrl) {
         window.location.href = data.data.checkoutUrl;
@@ -291,6 +308,17 @@ function AddChildModal({ open, onClose, onSuccess }: { open: boolean; onClose: (
             {GRADES.map((g) => <option key={g}>{g}</option>)}
           </select>
         </div>
+
+        <Input
+          label="Child's date of birth"
+          type="date"
+          value={dob}
+          max={new Date().toISOString().slice(0, 10)}
+          onChange={(e) => setDob(e.target.value)}
+          hint={age !== null && age < 13
+            ? "Under 13 — by adding your child you're providing verifiable parental consent (COPPA)."
+            : "Used to set age-appropriate content."}
+        />
 
         <Input
           label="Child's email (used to sign in)"

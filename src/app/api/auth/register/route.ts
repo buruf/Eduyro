@@ -75,11 +75,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Send emails (non-blocking) — but skip welcome to children awaiting COPPA
+    // Send verification email (non-blocking).
     sendVerificationEmail({ email, firstName: firstName ?? "there", token }).catch(console.error);
-    if (!needsCoppa) {
-
-    }
 
     return ok(
       {

@@ -16,6 +16,8 @@ import {
   createCheckoutSession,
   addChildToSubscription,
 } from "@/lib/stripe";
+import { requiresParentalConsent, calculateAge } from "@/lib/coppa";
+import { nanoid } from "nanoid";
 
 const AddChildSchema = z.object({
   firstName: z.string().min(1).max(50),
@@ -52,6 +54,11 @@ export async function POST(req: NextRequest) {
       if (existing) return conflict("An account with this email already exists");
 
       const dob = dateOfBirth ? new Date(dateOfBirth) : null;
+      // COPPA: when a parent creates a child's account under their own (paid)
+      // subscription, the parent IS the verifiable consent-giver — so for an
+      // under-13 child we mark consent VERIFIED and log the evidence rather than
+      // sending the separate micro-charge verification email.
+      const needsCoppa = !!dob && requiresParentalConsent(dob);
       const passwordHash = await bcrypt.hash(password, 12);
 
       // Create user + student + parent link in a transaction
@@ -67,8 +74,41 @@ export async function POST(req: NextRequest) {
             provider: "EMAIL",
             dateOfBirth: dob,
             emailVerified: new Date(), // Parent created the account — verified
+            requiresCoppaConsent: needsCoppa,
+            coppaConsentStatus: needsCoppa ? "VERIFIED" : null,
           },
         });
+
+        if (needsCoppa && dob) {
+          await tx.coppaConsentRequest.create({
+            data: {
+              studentUserId: newUser.id,
+              childFirstName: firstName,
+              childDateOfBirth: dob,
+              parentEmail: parent.user.email,
+              parentFullName: parent.user.name ?? `${firstName}'s parent`,
+              consentMethod: "CREDIT_CARD_MICROCHARGE",
+              verificationToken: nanoid(32),
+              status: "VERIFIED",
+              verifiedAt: new Date(),
+              verificationEvidence: {
+                basis: "parent-managed account",
+                parentUserId: ctx.userId,
+                note: "Parent created the child account under their own paid subscription.",
+              },
+              expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+            },
+          });
+          await tx.auditLog.create({
+            data: {
+              userId: ctx.userId,
+              action: "coppa.parental_consent_recorded",
+              entityId: newUser.id,
+              entityType: "User",
+              metadata: { childAge: calculateAge(dob), method: "parent-managed account" },
+            },
+          });
+        }
 
         const newStudent = await tx.student.create({
           data: {
