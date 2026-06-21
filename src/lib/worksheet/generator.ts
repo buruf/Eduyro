@@ -2523,7 +2523,7 @@ function generateAdaptationProblems(count: number): Problem[] {
     { q: "Why do polar bears have thick fur?", a: "To stay warm in their cold habitat" },
     { q: "How does a cactus survive in the desert?", a: "It stores water and has spines instead of leaves to reduce water loss" },
     { q: "A camel's hump helps it by storing:", a: "Fat for energy", opts: ["Water", "Fat for energy", "Air", "Food it ate"], type: "multiple_choice" },
-    { q: "Camouflage helps an animal by:", a: "Blending in to hide from predators or prey", opts: ["Making it faster", "Blending in to hide", "Keeping it warm", "Helping it fly"], type: "multiple_choice" },
+    { q: "Camouflage helps an animal by:", a: "Blending in to hide", opts: ["Making it faster", "Blending in to hide", "Keeping it warm", "Helping it fly"], type: "multiple_choice" },
     { q: "Why do many desert animals come out at night?", a: "To avoid the daytime heat" },
     { q: "A duck's webbed feet are an adaptation for:", a: "Swimming", opts: ["Running", "Swimming", "Climbing", "Digging"], type: "multiple_choice" },
     { q: "What is a behavioural adaptation? Give an example.", a: "An action that aids survival — e.g. birds migrating or animals hibernating" },
@@ -2533,7 +2533,7 @@ function generateAdaptationProblems(count: number): Problem[] {
     { q: "A chameleon changing colour is an example of:", a: "Camouflage", opts: ["Migration", "Camouflage", "Hibernation", "Photosynthesis"], type: "multiple_choice" },
     { q: "What happens to organisms that are NOT well adapted to their habitat?", a: "They are less likely to survive and reproduce" },
     { q: "Why do fish have gills?", a: "To take oxygen from water so they can breathe underwater" },
-    { q: "Migration is when animals:", a: "Move to a new area as seasons change", opts: ["Sleep all winter", "Move to a new area seasonally", "Change colour", "Make their own food"], type: "multiple_choice" },
+    { q: "Migration is when animals:", a: "Move to a new area seasonally", opts: ["Sleep all winter", "Move to a new area seasonally", "Change colour", "Make their own food"], type: "multiple_choice" },
     { q: "A giraffe's long neck helps it:", a: "Reach leaves high in trees" },
   ], count);
 }
