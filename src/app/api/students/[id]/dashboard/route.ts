@@ -305,7 +305,10 @@ async function buildTodayPacket(
       worksheetId: ws.id,
       title: ws.title,
       skillName: unitOf(ws.sheetNumber, ws.skill.name),
-      problemCount: ws.problemCount,
+      // Use the actual stored content length — the cached `problemCount` field can
+      // be stale (e.g. a seeded "10" when the sheet really has 7), which showed a
+      // wrong count on the card before the sheet was opened.
+      problemCount: Array.isArray(ws.problems) ? (ws.problems as any[]).length : ws.problemCount,
       status: i === 0 ? "IN_PROGRESS" : "NOT_STARTED",
     });
   });
