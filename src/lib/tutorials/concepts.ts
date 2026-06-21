@@ -4,6 +4,8 @@
 // script written in a warm human teacher voice (read aloud by the narrator),
 // and key-insight bullets. Math levels M1–M12 map onto ~14 concept families.
 
+import { nonMathConcept } from "./concepts-nonmath";
+
 export interface ConceptTutorial {
   id: string;
   title: string;
@@ -277,6 +279,12 @@ export const CONCEPTS: Record<string, ConceptTutorial> = {
 export function conceptForSkill(levelCode: string | undefined, skillName: string): ConceptTutorial | null {
   const name = (skillName ?? "").toLowerCase();
   const level = (levelCode ?? "").toUpperCase();
+
+  // Reading / Writing / Science have a per-skill lesson (text-forward) so a
+  // student always learns before they practice — the norm across every subject.
+  if (/^[RWS]/.test(level)) {
+    return nonMathConcept(levelCode, skillName);
+  }
 
   switch (level) {
     case "M1": return CONCEPTS["counting"];

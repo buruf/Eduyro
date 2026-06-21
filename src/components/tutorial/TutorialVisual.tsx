@@ -433,9 +433,69 @@ function PolynomialsVisual() {
   );
 }
 
+// ── Subject lesson illustrations (Reading / Writing / Science) ──────────────────
+// Calm, static illustrations shown behind the narrated lesson for non-math skills
+// (which don't have bespoke animations). They give the lesson card a clear,
+// on-topic visual without implying interactivity.
+function LessonFrame({ children, tint }: { children: React.ReactNode; tint: string }) {
+  return (
+    <svg viewBox="0 0 360 150" width="100%" style={{ display: "block" }} role="img">
+      <rect x={0} y={0} width={360} height={150} rx={12} fill={tint} />
+      {children}
+    </svg>
+  );
+}
+
+function ReadingLessonVisual() {
+  return (
+    <LessonFrame tint="rgba(27,79,138,0.06)">
+      {/* open book */}
+      <path d="M180 38 C150 26 110 26 86 36 L86 112 C110 102 150 102 180 114 Z" fill="#fff" stroke="#1B4F8A" strokeWidth={2.5} />
+      <path d="M180 38 C210 26 250 26 274 36 L274 112 C250 102 210 102 180 114 Z" fill="#fff" stroke="#1B4F8A" strokeWidth={2.5} />
+      <line x1={180} y1={38} x2={180} y2={114} stroke="#1B4F8A" strokeWidth={2.5} />
+      {[52, 64, 76, 88].map((y) => <line key={`l${y}`} x1={100} y1={y} x2={166} y2={y - 4} stroke="#9DB4CE" strokeWidth={3} strokeLinecap="round" />)}
+      {[52, 64, 76, 88].map((y) => <line key={`r${y}`} x1={194} y1={y - 4} x2={260} y2={y} stroke="#9DB4CE" strokeWidth={3} strokeLinecap="round" />)}
+    </LessonFrame>
+  );
+}
+
+function WritingLessonVisual() {
+  return (
+    <LessonFrame tint="rgba(45,106,63,0.06)">
+      {/* lined paper */}
+      <rect x={92} y={28} width={130} height={96} rx={6} fill="#fff" stroke="#2D6A3F" strokeWidth={2.5} />
+      {[48, 64, 80, 96, 112].map((y) => <line key={y} x1={104} y1={y} x2={210} y2={y} stroke="#BcD3C2" strokeWidth={2.5} strokeLinecap="round" />)}
+      {/* pencil */}
+      <g transform="rotate(38 250 78)">
+        <rect x={232} y={44} width={20} height={70} fill="#C8902A" stroke="#1A1612" strokeWidth={2} />
+        <polygon points="232,114 252,114 242,132" fill="#F5E6C8" stroke="#1A1612" strokeWidth={2} />
+        <polygon points="237,126 247,126 242,132" fill="#1A1612" />
+        <rect x={232} y={44} width={20} height={10} fill="#C23B22" stroke="#1A1612" strokeWidth={2} />
+      </g>
+    </LessonFrame>
+  );
+}
+
+function ScienceLessonVisual() {
+  return (
+    <LessonFrame tint="rgba(194,59,34,0.06)">
+      {/* flask */}
+      <path d="M168 34 L168 64 L140 110 A8 8 0 0 0 147 122 L213 122 A8 8 0 0 0 220 110 L192 64 L192 34 Z" fill="#fff" stroke="#C23B22" strokeWidth={2.5} />
+      <path d="M152 96 L208 96 A8 8 0 0 1 213 122 L147 122 A8 8 0 0 1 152 96 Z" fill="rgba(45,106,63,0.35)" stroke="#C23B22" strokeWidth={2} />
+      <line x1={162} y1={34} x2={198} y2={34} stroke="#C23B22" strokeWidth={3.5} strokeLinecap="round" />
+      <circle cx={170} cy={108} r={3} fill="#fff" /><circle cx={188} cy={112} r={2.5} fill="#fff" /><circle cx={196} cy={104} r={2} fill="#fff" />
+      {/* sparkle */}
+      <text x={232} y={60} fontSize={22}>✨</text>
+    </LessonFrame>
+  );
+}
+
 // ── Dispatcher ────────────────────────────────────────────────────────────────
 export function TutorialVisual({ visual }: { visual: string }) {
   switch (visual) {
+    case "readingLesson":  return <ReadingLessonVisual />;
+    case "writingLesson":  return <WritingLessonVisual />;
+    case "scienceLesson":  return <ScienceLessonVisual />;
     case "counting":       return <CountingVisual />;
     case "placeValue":     return <PlaceValueVisual />;
     case "addition":       return <AdditionVisual />;
