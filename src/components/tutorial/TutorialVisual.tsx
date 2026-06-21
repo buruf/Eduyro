@@ -490,12 +490,29 @@ function ScienceLessonVisual() {
   );
 }
 
+function AdvancedMathLessonVisual() {
+  // Coordinate plane with a parabola — a calm, on-topic backdrop for the
+  // advanced-math lessons (quadratics → calculus) that don't have bespoke
+  // animations yet.
+  return (
+    <LessonFrame tint="rgba(27,79,138,0.06)">
+      <line x1={40} y1={75} x2={320} y2={75} stroke="#9DB4CE" strokeWidth={2} />
+      <line x1={180} y1={18} x2={180} y2={132} stroke="#9DB4CE" strokeWidth={2} />
+      <path d="M96 28 Q180 150 264 28" fill="none" stroke="#1B4F8A" strokeWidth={3} strokeLinecap="round" />
+      <circle cx={180} cy={118} r={4} fill="#C8902A" />
+      <text x={300} y={70} fontSize={13} fill="#7A6E5F" fontFamily="Georgia, serif">x</text>
+      <text x={186} y={28} fontSize={13} fill="#7A6E5F" fontFamily="Georgia, serif">y</text>
+    </LessonFrame>
+  );
+}
+
 // ── Dispatcher ────────────────────────────────────────────────────────────────
 export function TutorialVisual({ visual }: { visual: string }) {
   switch (visual) {
     case "readingLesson":  return <ReadingLessonVisual />;
     case "writingLesson":  return <WritingLessonVisual />;
     case "scienceLesson":  return <ScienceLessonVisual />;
+    case "mathAdvanced":   return <AdvancedMathLessonVisual />;
     case "counting":       return <CountingVisual />;
     case "placeValue":     return <PlaceValueVisual />;
     case "addition":       return <AdditionVisual />;

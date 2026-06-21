@@ -273,6 +273,98 @@ export const CONCEPTS: Record<string, ConceptTutorial> = {
       "Multiplying: every term multiplies every term (FOIL)",
     ],
   },
+
+  // ── Advanced math (M13–M18): text-forward lessons, one per level ──
+  quadratics: {
+    id: "quadratics",
+    title: "Quadratics — equations that curve",
+    visual: "mathAdvanced",
+    narration:
+      "A quadratic has an x-squared in it, and that little square changes everything — instead of a straight line, you get a U-shaped curve called a parabola. " +
+      "To solve one, you're finding where that curve crosses zero — usually two answers, since a U can cross the x-axis twice. " +
+      "You've got tools: factoring when it's neat, and the quadratic formula when it isn't — that formula always works. Let's solve some curves.",
+    bullets: [
+      "Quadratic = has an x² term → a U-shaped parabola",
+      "Solving means finding where it equals zero (the roots)",
+      "Usually TWO solutions (the curve can cross twice)",
+      "Factor when neat; the quadratic formula always works",
+    ],
+  },
+  functions: {
+    id: "functions",
+    title: "Functions — a machine with one output",
+    visual: "mathAdvanced",
+    narration:
+      "Think of a function as a machine: you feed in an x, it does its rule, and out comes exactly one answer. That's the golden rule — one input, one output. " +
+      "f(x) is just a name tag: f(3) means 'put 3 into the machine.' The domain is every input you're allowed to use; the range is every output you can get. " +
+      "An inverse function just runs the machine backwards. Let's feed the machine.",
+    bullets: [
+      "A function gives exactly ONE output per input",
+      "f(x) notation: f(3) means 'plug in 3'",
+      "Domain = allowed inputs; Range = possible outputs",
+      "An inverse undoes the function (runs it backwards)",
+    ],
+  },
+  trigonometry: {
+    id: "trigonometry",
+    title: "Trigonometry — triangles and the circle",
+    visual: "mathAdvanced",
+    narration:
+      "Trig connects a triangle's angles to its sides. Three ratios do the work: sine, cosine, and tangent — remember SOH-CAH-TOA. " +
+      "Sine is opposite over hypotenuse, cosine is adjacent over hypotenuse, tangent is opposite over adjacent. " +
+      "The unit circle takes those same ratios and spins them all the way around, so trig works for any angle, not just inside a triangle. Let's measure some angles.",
+    bullets: [
+      "SOH-CAH-TOA: sin, cos, tan as side ratios",
+      "sin = opp/hyp, cos = adj/hyp, tan = opp/adj",
+      "The unit circle extends trig to ANY angle",
+      "Identities are equations true for every angle",
+    ],
+  },
+  "algebra-2": {
+    id: "algebra-2",
+    title: "Algebra II — exponents, logs & beyond",
+    visual: "mathAdvanced",
+    narration:
+      "Algebra II is about growth and its mirror image. Exponential functions grow by multiplying — they explode upward. " +
+      "A logarithm is the undo button for an exponent: it asks 'what power do I raise the base to?' Logs and exponents are inverses, so they cancel each other. " +
+      "You'll also meet complex numbers, where i stands for the square root of negative one. Let's build on your algebra.",
+    bullets: [
+      "Exponential functions grow by repeated multiplying",
+      "A logarithm undoes an exponent (they're inverses)",
+      "log_b(x) asks: 'b to what power gives x?'",
+      "Complex numbers use i = √(−1)",
+    ],
+  },
+  "pre-calculus": {
+    id: "pre-calculus",
+    title: "Pre-Calculus — the bridge to calculus",
+    visual: "mathAdvanced",
+    narration:
+      "Pre-calculus gathers the tools you'll need for calculus. A limit asks what value a function is heading toward as x approaches some point — even if it never quite arrives. " +
+      "Sequences and series are ordered lists of numbers and their sums, with patterns you can predict. Vectors carry both size and direction. " +
+      "Get comfortable here and calculus feels natural. Let's bridge the gap.",
+    bullets: [
+      "A limit = the value a function approaches",
+      "Sequences are ordered lists; series are their sums",
+      "Vectors have both magnitude and direction",
+      "These are the building blocks of calculus",
+    ],
+  },
+  calculus: {
+    id: "calculus",
+    title: "Calculus — change and accumulation",
+    visual: "mathAdvanced",
+    narration:
+      "Calculus has two big ideas. The derivative measures how fast something is changing right now — the slope of the curve at a single instant, like a speedometer. " +
+      "The integral does the opposite: it adds up tiny pieces to find a total — like the area under a curve, or distance from speed. " +
+      "Derivatives and integrals are inverses of each other. It sounds huge, but it all comes from one idea: zooming in until change becomes simple. Let's begin.",
+    bullets: [
+      "Derivative = instantaneous rate of change (the slope)",
+      "Integral = adding tiny pieces (area under the curve)",
+      "Derivatives and integrals are inverse operations",
+      "Both come from zooming in on change",
+    ],
+  },
 };
 
 /** Map a sheet's level + skill label to its concept-family tutorial. */
@@ -303,6 +395,12 @@ export function conceptForSkill(levelCode: string | undefined, skillName: string
     case "M10": return CONCEPTS["pre-algebra"];
     case "M11": return CONCEPTS["linear-equations"];
     case "M12": return CONCEPTS["polynomials"];
+    case "M13": return CONCEPTS["quadratics"];
+    case "M14": return CONCEPTS["functions"];
+    case "M15": return CONCEPTS["trigonometry"];
+    case "M16": return CONCEPTS["algebra-2"];
+    case "M17": return CONCEPTS["pre-calculus"];
+    case "M18": return CONCEPTS["calculus"];
     default: {
       // Fallback by keywords when level is unknown (e.g. older data)
       if (/fraction/.test(name)) return CONCEPTS["fraction-basics"];
