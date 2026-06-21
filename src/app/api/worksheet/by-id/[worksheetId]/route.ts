@@ -93,22 +93,44 @@ export async function GET(
       // shape (number vs. long text) and render multiple-choice as buttons.
       const subjectSlug2 = worksheet.level.subject.slug;
       const levelCode2 = worksheet.level.code;
-      const problems = storedProblems.map((p) => ({
-        id: p.id,
-        question: p.question,
-        type: p.type,
-        options: p.options ?? null,
-        points: p.points,
-        // Classified server-side from the (private) answer; the client receives
-        // only the input type so the renderer never guesses.
-        answerType: classifyAnswerType({
+      // Distractor pool for making symbolic math answers answerable as multiple
+      // choice: the distinct answers already on this sheet (similar shape, so the
+      // wrong options are plausible). Sorted for determinism, then sampled.
+      const sheetAnswers = Array.from(
+        new Set(storedProblems.map((p) => String(p.answer ?? "").trim()).filter((a) => a && a.length <= 28)),
+      ).sort();
+      const pick3 = (correct: string, seed: number): string[] => {
+        const pool = sheetAnswers.filter((a) => a !== correct);
+        // Deterministic rotating sample so a re-fetch is stable per problem.
+        const out: string[] = [];
+        for (let i = 0; i < pool.length && out.length < 3; i++) out.push(pool[(seed + i) % pool.length]);
+        return Array.from(new Set(out)).slice(0, 3);
+      };
+
+      const problems = storedProblems.map((p, i) => {
+        const ans = String(p.answer ?? "").trim();
+        let options: string[] | null = p.options ?? null;
+        let answerType = classifyAnswerType({
           question: p.question,
-          options: p.options ?? null,
-          answer: p.answer,
+          options,
+          answer: ans,
           subjectSlug: subjectSlug2,
           levelCode: levelCode2,
-        }),
-      }));
+        });
+        // Symbolic math answers (±7, √2/2, 3x², y ≥ 2 …) can't be typed on a
+        // number pad — serve them as multiple choice using sibling answers as
+        // distractors so the student can always respond. (PDFs are unaffected;
+        // this is the interactive-practice serving layer only. The correct answer
+        // is one of the options but never flagged — grading stays server-side.)
+        if (subjectSlug2 === "MATH" && answerType === "expression" && !options) {
+          const distractors = pick3(ans, i);
+          if (distractors.length === 3) {
+            options = [ans, ...distractors].sort();
+            answerType = "multipleChoice";
+          }
+        }
+        return { id: p.id, question: p.question, type: p.type, options, points: p.points, answerType };
+      });
 
       return ok({
         worksheetId: worksheet.id,
