@@ -6,20 +6,31 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ConceptTutorial } from "@/lib/tutorials/concepts";
+import { type ConceptTutorial, LESSON_FRAMING } from "@/lib/tutorials/concepts";
+import { getTutorial } from "@/lib/worksheet/tutorials";
 import { createNarrator } from "@/lib/tutorials/narrator";
 import { TutorialVisual } from "./TutorialVisual";
 
 interface Props {
   open: boolean;
   concept: ConceptTutorial;
+  subjectSlug: string;
+  skillName: string;
   mode: "first" | "review";
   onStart: () => void;  // "I get it — Start practising"
   onClose: () => void;  // X / backdrop (review mode mainly)
 }
 
-export function ConceptTutorialModal({ open, concept, mode, onStart, onClose }: Props) {
+export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, mode, onStart, onClose }: Props) {
   const narrator = useMemo(() => createNarrator(), []);
+  // Every lesson follows the same shape: 🎯 Goal · 💡 Big Idea · 📝 Worked
+  // Example (steps) · ✓ Check. Example/Check come from the per-skill worked
+  // examples; Goal/Big Idea from LESSON_FRAMING with sensible fallbacks.
+  const tutorial = useMemo(() => { try { return getTutorial(subjectSlug, skillName); } catch { return null; } }, [subjectSlug, skillName]);
+  const framing = LESSON_FRAMING[concept.id];
+  const goal = concept.goal ?? framing?.goal ?? `Understand and practise ${skillName}.`;
+  const bigIdea = concept.bigIdea ?? framing?.bigIdea ?? tutorial?.concepts?.[0]?.explanation ?? tutorial?.intro ?? concept.bullets[0];
+  const example = tutorial?.examples?.[0] ?? null;
   const [speaking, setSpeaking] = useState(false);
   const [paused, setPaused] = useState(false);
   const startedRef = useRef(false);
@@ -72,6 +83,20 @@ export function ConceptTutorialModal({ open, concept, mode, onStart, onClose }: 
         </div>
 
         <div className="p-6">
+          {/* 🎯 Goal */}
+          <section className="mb-3">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-brand-blue mb-1">🎯 Goal</div>
+            <p className="text-sm text-ink leading-snug">{goal}</p>
+          </section>
+
+          {/* 💡 Big Idea */}
+          {bigIdea && (
+            <section className="mb-4 rounded-xl border border-brand-blue/20 p-3" style={{ backgroundColor: "rgba(27,79,138,0.05)" }}>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-brand-blue mb-1">💡 Big Idea</div>
+              <p className="text-sm text-ink leading-snug">{bigIdea}</p>
+            </section>
+          )}
+
           {/* Animated visual */}
           <div className="bg-cream-dark border border-border rounded-xl p-3 mb-4">
             <TutorialVisual visual={concept.visual} />
@@ -102,6 +127,30 @@ export function ConceptTutorialModal({ open, concept, mode, onStart, onClose }: 
               </span>
             )}
           </div>
+
+          {/* 📝 Worked Example + ✓ Check */}
+          {example && (
+            <section className="mb-5 border border-border rounded-xl overflow-hidden">
+              <div className="bg-ink/[0.04] px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted">📝 Worked Example</div>
+              <div className="p-4">
+                <p className="font-serif font-semibold text-ink mb-2">{example.problem}</p>
+                <ol className="space-y-1.5">
+                  {example.steps.map((s, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-ink leading-snug">
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-brand-blue text-white text-[11px] font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
+                      <span>{s}</span>
+                    </li>
+                  ))}
+                </ol>
+                {example.answer && (
+                  <div className="mt-3 flex items-center gap-2 text-sm">
+                    <span className="font-bold text-brand-green">✓ Check</span>
+                    <span className="text-ink">Answer: <span className="font-semibold">{example.answer}</span></span>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
 
           {/* Key insights */}
           <div className="bg-gold/8 border border-gold/30 rounded-xl p-4 mb-5" style={{ backgroundColor: "rgba(200,144,42,0.07)" }}>

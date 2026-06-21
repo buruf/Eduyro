@@ -441,6 +441,11 @@ export default function StudentDashboardPage() {
         <ConceptTutorialModal
           open={true}
           concept={conceptModal.concept}
+          subjectSlug={subjectNameToSlug(data.levelProgress?.subjectName)}
+          // Use the real skill name (the worked-example lookup needs it). Math sheet
+          // titles are cosmetic UNIT labels ("Solve x² = k"), so prefer the active
+          // skill-tree node's name ("Quadratic equations").
+          skillName={data.skillTree?.find((s) => s.status === "IN_PROGRESS")?.skillName ?? conceptModal.sheet?.skillName ?? currentSheet?.skillName ?? ""}
           mode={conceptModal.mode}
           onStart={onConceptTutorialDone}
           onClose={() => setConceptModal(null)}

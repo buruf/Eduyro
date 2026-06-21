@@ -17,6 +17,10 @@ export interface ConceptTutorial {
   narration: string;
   /** On-screen key insights. */
   bullets: string[];
+  /** 🎯 One-line objective. Falls back to LESSON_FRAMING / a derived line. */
+  goal?: string;
+  /** 💡 The single key principle. Falls back to LESSON_FRAMING / tutorial intro. */
+  bigIdea?: string;
 }
 
 export const CONCEPTS: Record<string, ConceptTutorial> = {
@@ -365,6 +369,36 @@ export const CONCEPTS: Record<string, ConceptTutorial> = {
       "Both come from zooming in on change",
     ],
   },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Lesson framing — every lesson follows the same shape:
+//   🎯 Goal   💡 Big Idea   📝 Worked Example (steps)   ✓ Check
+// The Example + Check are pulled from the per-skill worked examples in
+// tutorials.ts; the Goal + Big Idea live here, keyed by concept id. (R/W/S fall
+// back to their tutorial intro — see the modal.)
+// ─────────────────────────────────────────────────────────────────────────────
+export const LESSON_FRAMING: Record<string, { goal: string; bigIdea: string }> = {
+  counting:          { goal: "Count objects and say how many.",                         bigIdea: "Each number is exactly one more than the number before it." },
+  "place-value":     { goal: "Read and compare numbers up to 100.",                      bigIdea: "A digit's place tells its value — tens are worth ten times the ones." },
+  addition:          { goal: "Add two numbers to find the total.",                       bigIdea: "Adding combines groups; start from the ones and carry when needed." },
+  subtraction:       { goal: "Subtract to find how many are left or the difference.",    bigIdea: "Subtraction takes away; borrow from the next place when you can't subtract." },
+  multiplication:    { goal: "Multiply using the times tables.",                         bigIdea: "Multiplication is repeated addition — 3 × 4 is four groups of three." },
+  division:          { goal: "Divide a number into equal groups.",                       bigIdea: "Division is sharing equally — it undoes multiplication." },
+  "fraction-basics": { goal: "Identify, compare, and simplify fractions.",               bigIdea: "A fraction is parts of a whole: the bottom counts the pieces, the top counts how many you have." },
+  "fraction-operations": { goal: "Add, subtract, multiply, and divide fractions.",       bigIdea: "Add and subtract only with a common denominator; multiply straight across." },
+  decimals:          { goal: "Work with decimal place value and operations.",           bigIdea: "Decimals are fractions of ten — line up the decimal points before you add or subtract." },
+  percents:          { goal: "Convert between percents, fractions, and decimals.",       bigIdea: "Percent means 'out of 100', so 25% is 25/100 is 0.25." },
+  ratios:            { goal: "Use ratios, rates, and proportions.",                      bigIdea: "A ratio compares two quantities; equal ratios form a proportion you can cross-multiply." },
+  "pre-algebra":     { goal: "Solve equations for an unknown.",                          bigIdea: "Whatever you do to one side of an equation, do to the other to keep it balanced." },
+  "linear-equations":{ goal: "Graph and solve linear equations.",                        bigIdea: "y = mx + b — m is the slope (steepness), b is where the line crosses the y-axis." },
+  polynomials:       { goal: "Add, subtract, and multiply polynomials.",                 bigIdea: "Only like terms combine — x's with x's, numbers with numbers." },
+  quadratics:        { goal: "Solve quadratic equations.",                               bigIdea: "If two factors multiply to zero, at least one of them must be zero." },
+  functions:         { goal: "Use function notation, domain, and range.",               bigIdea: "A function is a machine: one input gives exactly one output." },
+  trigonometry:      { goal: "Relate angles and sides with sine, cosine, and tangent.",  bigIdea: "SOH-CAH-TOA: each ratio links an angle to two sides of a right triangle." },
+  "algebra-2":       { goal: "Work with exponents, logarithms, and growth.",             bigIdea: "A logarithm is the inverse of an exponent — it asks 'what power gives this number?'" },
+  "pre-calculus":    { goal: "Build the tools calculus needs.",                          bigIdea: "A limit is the value a function approaches, even if it never quite arrives." },
+  calculus:          { goal: "Measure change and accumulation.",                         bigIdea: "The derivative is the slope at an instant; the integral adds up tiny pieces." },
 };
 
 /** Map a sheet's level + skill label to its concept-family tutorial. */
