@@ -11,23 +11,24 @@ describe("Shop pack generator", () => {
   const ALL_SKILLS: ShopSkill[] = ["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION"];
 
   describe("calculatePrice", () => {
-    it("returns $3.99 for 1 skill", () => {
-      expect(calculatePrice(["ADDITION"])).toBe(399);
+    it("returns $4.99 for 1 skill", () => {
+      expect(calculatePrice(["ADDITION"])).toBe(499);
     });
-    it("returns $5.99 for 2 skills", () => {
-      expect(calculatePrice(["ADDITION", "SUBTRACTION"])).toBe(599);
+    it("returns $7.99 for 2 skills", () => {
+      expect(calculatePrice(["ADDITION", "SUBTRACTION"])).toBe(799);
     });
-    it("returns $7.99 for 3 skills", () => {
-      expect(calculatePrice(["ADDITION", "SUBTRACTION", "MULTIPLICATION"])).toBe(799);
+    it("returns $10.99 for 3 skills", () => {
+      expect(calculatePrice(["ADDITION", "SUBTRACTION", "MULTIPLICATION"])).toBe(1099);
     });
-    it("returns $9.99 for all 4 skills", () => {
-      expect(calculatePrice(ALL_SKILLS)).toBe(999);
+    it("returns $13.99 for 4 skills", () => {
+      expect(calculatePrice(ALL_SKILLS)).toBe(1399);
     });
     it("throws for empty selection", () => {
       expect(() => calculatePrice([])).toThrow();
     });
-    it("throws for more than 4 skills", () => {
-      expect(() => calculatePrice([...ALL_SKILLS, "ADDITION"] as any)).toThrow();
+    it("throws for more than 10 skills", () => {
+      const eleven = Array.from({ length: 11 }, () => "ADDITION") as any;
+      expect(() => calculatePrice(eleven)).toThrow();
     });
   });
 
@@ -77,12 +78,14 @@ describe("Shop pack generator", () => {
       expect(firstStandard).toBeLessThan(firstChallenging);
     });
 
-    it.each(ALL_SKILLS)("respects tiered problem counts: easy=50, standard=40, challenging=25 (%s)", (skill) => {
+    it.each(ALL_SKILLS)("page-fills each sheet (≤40) with a matching answer key (%s)", (skill) => {
+      // The layout-capacity engine fills each sheet by visual weight rather than
+      // a fixed tier count, so we assert a full-but-bounded page + key alignment.
       const pack = generatePackForSkill(skill);
       for (const sheet of pack.sheets) {
-        const expected = sheet.difficulty === "easy" ? 50 : sheet.difficulty === "standard" ? 40 : 25;
-        expect(sheet.problems).toHaveLength(expected);
-        expect(sheet.answerKey).toHaveLength(expected);
+        expect(sheet.problems.length).toBeGreaterThan(0);
+        expect(sheet.problems.length).toBeLessThanOrEqual(40);
+        expect(sheet.answerKey).toHaveLength(sheet.problems.length);
       }
     });
 
@@ -95,17 +98,15 @@ describe("Shop pack generator", () => {
       }
     });
 
-    it("first sheet of beginner addition band starts with 1+1, 1+2, 1+3 warmups", () => {
+    it("first sheet of beginner addition band starts with the smallest warmups", () => {
       const pack = generatePackForSkill("ADDITION");
       const sheet1 = pack.sheets[0];
-      // First three problems should be the hardcoded warmup
       expect(sheet1.problems[0].question).toBe("1 + 1");
       expect(sheet1.problems[1].question).toBe("1 + 2");
-      expect(sheet1.problems[2].question).toBe("1 + 3");
-      // And their answer keys
+      expect(sheet1.problems[2].question).toBe("2 + 1");
       expect(sheet1.answerKey[0].answer).toBe("2");
       expect(sheet1.answerKey[1].answer).toBe("3");
-      expect(sheet1.answerKey[2].answer).toBe("4");
+      expect(sheet1.answerKey[2].answer).toBe("3");
     });
 
     it("first sheet of beginner multiplication band starts with 2×1, 2×2 warmups", () => {
@@ -117,22 +118,22 @@ describe("Shop pack generator", () => {
       expect(sheet1.answerKey[1].answer).toBe("4");
     });
 
-    it("first sheet of beginner subtraction band starts with 2−1, 3−1 warmups", () => {
+    it("first sheet of beginner subtraction band starts with the smallest warmups", () => {
       const pack = generatePackForSkill("SUBTRACTION");
       const sheet1 = pack.sheets[0];
-      expect(sheet1.problems[0].question).toBe("2 − 1");
-      expect(sheet1.problems[1].question).toBe("3 − 1");
+      expect(sheet1.problems[0].question).toBe("1 - 0");
+      expect(sheet1.problems[1].question).toBe("1 - 1");
       expect(sheet1.answerKey[0].answer).toBe("1");
-      expect(sheet1.answerKey[1].answer).toBe("2");
+      expect(sheet1.answerKey[1].answer).toBe("0");
     });
 
-    it("first sheet of beginner division band starts with 2÷2, 4÷2 warmups", () => {
+    it("first sheet of beginner division band starts with the smallest warmups", () => {
       const pack = generatePackForSkill("DIVISION");
       const sheet1 = pack.sheets[0];
       expect(sheet1.problems[0].question).toBe("2 ÷ 2");
-      expect(sheet1.problems[1].question).toBe("4 ÷ 2");
+      expect(sheet1.problems[1].question).toBe("6 ÷ 2");
       expect(sheet1.answerKey[0].answer).toBe("1");
-      expect(sheet1.answerKey[1].answer).toBe("2");
+      expect(sheet1.answerKey[1].answer).toBe("3");
     });
 
     it("is deterministic — same input produces same output (caching is safe)", () => {

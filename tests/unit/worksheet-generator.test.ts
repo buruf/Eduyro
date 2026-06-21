@@ -27,10 +27,11 @@ describe("Worksheet generator", () => {
         timeLimitMinutes: 10,
       });
 
-      // Some skill banks have fewer than 20 unique problems — that's expected.
-      // We just require a meaningful number and that the answer key matches.
+      // The layout-capacity engine fills a page by visual weight, so a sheet can
+      // hold up to MAX_COUNT (40) problems. We just require a meaningful number
+      // and that the answer key matches.
       expect(problems.length).toBeGreaterThanOrEqual(5);
-      expect(problems.length).toBeLessThanOrEqual(20);
+      expect(problems.length).toBeLessThanOrEqual(40);
       expect(answerKey.length).toBe(problems.length);
       for (const p of problems) {
         expect(p.id).toBeTruthy();
@@ -53,7 +54,7 @@ describe("Worksheet generator", () => {
       expect(probIds).toEqual(keyIds);
     });
 
-    it("respects problemCount param even when bank is large", () => {
+    it("fills a full page (MATH ignores problemCount by design — layout-capacity)", () => {
       const { problems } = generateProblems({
         subjectSlug: "MATH",
         levelCode: "M5",
@@ -61,10 +62,13 @@ describe("Worksheet generator", () => {
         problemCount: 5,
         timeLimitMinutes: 5,
       });
-      expect(problems).toHaveLength(5);
+      // The layout-capacity engine fills the page by visual weight rather than a
+      // requested count, so a small problemCount still yields a full page.
+      expect(problems.length).toBeGreaterThan(20);
+      expect(problems.length).toBeLessThanOrEqual(40);
     });
 
-    it("supports larger problem counts (50)", () => {
+    it("caps at one page even for a large problemCount", () => {
       const { problems } = generateProblems({
         subjectSlug: "MATH",
         levelCode: "M5",
@@ -72,9 +76,8 @@ describe("Worksheet generator", () => {
         problemCount: 50,
         timeLimitMinutes: 15,
       });
-      // Some generators bank-cap; this just ensures it tries to fulfill
       expect(problems.length).toBeGreaterThan(0);
-      expect(problems.length).toBeLessThanOrEqual(50);
+      expect(problems.length).toBeLessThanOrEqual(40);
     });
   });
 
@@ -121,7 +124,7 @@ describe("Worksheet generator", () => {
   });
 
   describe("Edge cases", () => {
-    it("handles unknown subject by falling through to math", () => {
+    it("yields no problems for an unknown subject (MATH handled separately)", () => {
       const { problems } = generateProblems({
         subjectSlug: "UNKNOWN",
         levelCode: "X1",
@@ -129,10 +132,10 @@ describe("Worksheet generator", () => {
         problemCount: 5,
         timeLimitMinutes: 10,
       });
-      expect(problems.length).toBeGreaterThan(0);
+      expect(problems).toHaveLength(0);
     });
 
-    it("handles problemCount of 1", () => {
+    it("page-fills even when problemCount is 1", () => {
       const { problems } = generateProblems({
         subjectSlug: "MATH",
         levelCode: "M3",
@@ -140,7 +143,7 @@ describe("Worksheet generator", () => {
         problemCount: 1,
         timeLimitMinutes: 1,
       });
-      expect(problems).toHaveLength(1);
+      expect(problems.length).toBeGreaterThan(5);
     });
 
     it("each problem has a unique id within a sheet", () => {

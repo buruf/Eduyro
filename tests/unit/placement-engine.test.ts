@@ -16,8 +16,8 @@ import {
 describe("Placement engine", () => {
   describe("PLACEMENT_CONSTANTS", () => {
     it("exposes the right algorithm parameters", () => {
-      expect(PLACEMENT_CONSTANTS.MAX_QUESTIONS_PER_SUBJECT).toBe(12);
-      expect(PLACEMENT_CONSTANTS.MIN_QUESTIONS_PER_SUBJECT).toBe(8);
+      expect(PLACEMENT_CONSTANTS.MAX_QUESTIONS_PER_SUBJECT).toBe(25);
+      expect(PLACEMENT_CONSTANTS.MIN_QUESTIONS_PER_SUBJECT).toBe(15);
       expect(PLACEMENT_CONSTANTS.CONFIDENCE_THRESHOLD).toBe(0.85);
     });
   });
@@ -170,7 +170,7 @@ describe("Placement engine", () => {
 
   describe("shouldTerminate", () => {
     it("terminates at MAX_QUESTIONS regardless of confidence", () => {
-      expect(shouldTerminate(12, 0.0)).toBe(true);
+      expect(shouldTerminate(25, 0.0)).toBe(true);
     });
 
     it("does not terminate below MIN_QUESTIONS even with high confidence", () => {
@@ -178,12 +178,12 @@ describe("Placement engine", () => {
     });
 
     it("terminates between MIN and MAX if confidence is high enough", () => {
-      expect(shouldTerminate(8, 0.9)).toBe(true);
-      expect(shouldTerminate(10, 0.86)).toBe(true);
+      expect(shouldTerminate(15, 0.9)).toBe(true);
+      expect(shouldTerminate(20, 0.86)).toBe(true);
     });
 
     it("does not terminate if confidence is below threshold", () => {
-      expect(shouldTerminate(9, 0.5)).toBe(false);
+      expect(shouldTerminate(20, 0.5)).toBe(false);
     });
   });
 

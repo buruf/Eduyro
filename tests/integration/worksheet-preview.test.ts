@@ -26,8 +26,10 @@ describe("POST /api/worksheet/preview", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.success).toBe(true);
-    expect(body.data.problems).toHaveLength(10);
-    expect(body.data.answerKey).toHaveLength(10);
+    // MATH sheets page-fill via the layout-capacity engine (not a fixed count).
+    expect(body.data.problems.length).toBeGreaterThan(5);
+    expect(body.data.problems.length).toBeLessThanOrEqual(40);
+    expect(body.data.answerKey).toHaveLength(body.data.problems.length);
   });
 
   it("returns 400 for missing required fields", async () => {

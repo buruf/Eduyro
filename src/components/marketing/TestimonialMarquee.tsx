@@ -21,7 +21,7 @@ function Card({ t }: { t: typeof TESTIMONIALS[0] }) {
           </svg>
         ))}
       </div>
-      <p className="font-serif italic font-light text-sm leading-relaxed mb-4 text-ink">"{t.q}"</p>
+      <p className="font-serif italic font-light text-sm leading-relaxed mb-4 text-ink">&ldquo;{t.q}&rdquo;</p>
       <div className="flex items-center gap-2.5">
         <div className="w-8 h-8 rounded-full text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0"
           style={{ background: t.color }}>

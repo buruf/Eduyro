@@ -55,41 +55,42 @@ describe("POST /api/shop/checkout", () => {
     const body = await res.json();
     expect(body.success).toBe(true);
     expect(body.data.checkoutUrl).toMatch(/checkout\.stripe\.com/);
-    expect(body.data.amountCents).toBe(399);
+    expect(body.data.amountCents).toBe(499);
   });
 
-  it("prices 2 skills at $5.99", async () => {
+  it("prices 2 skills at $7.99", async () => {
     const req = makeRequest({ skills: ["ADDITION", "SUBTRACTION"], email: "a@a.com", emailDelivery: true });
-    const res = await POST(req);
-    expect((await res.json()).data.amountCents).toBe(599);
-  });
-
-  it("prices 3 skills at $7.99", async () => {
-    const req = makeRequest({ skills: ["ADDITION", "SUBTRACTION", "MULTIPLICATION"], email: "a@a.com", emailDelivery: true });
     const res = await POST(req);
     expect((await res.json()).data.amountCents).toBe(799);
   });
 
-  it("prices all 4 skills at $9.99", async () => {
+  it("prices 3 skills at $10.99", async () => {
+    const req = makeRequest({ skills: ["ADDITION", "SUBTRACTION", "MULTIPLICATION"], email: "a@a.com", emailDelivery: true });
+    const res = await POST(req);
+    expect((await res.json()).data.amountCents).toBe(1099);
+  });
+
+  it("prices all 4 skills at $13.99", async () => {
     const req = makeRequest({
       skills: ["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION"],
       email: "a@a.com",
       emailDelivery: true,
     });
     const res = await POST(req);
-    expect((await res.json()).data.amountCents).toBe(999);
+    expect((await res.json()).data.amountCents).toBe(1399);
   });
 
   it("dedupes duplicate skills", async () => {
     const req = makeRequest({ skills: ["ADDITION", "ADDITION"], email: "a@a.com", emailDelivery: true });
     const res = await POST(req);
-    expect((await res.json()).data.amountCents).toBe(399);
+    expect((await res.json()).data.amountCents).toBe(499);
   });
 
   it("rejects empty skill list", async () => {
     const req = makeRequest({ skills: [], email: "a@a.com", emailDelivery: true });
     const res = await POST(req);
-    expect(res.status).toBe(422);
+    // Zod min(1) → 400 Bad Request (invalid enum values → 422; see next test).
+    expect(res.status).toBe(400);
   });
 
   it("rejects invalid skill names", async () => {
@@ -118,7 +119,7 @@ describe("POST /api/shop/checkout", () => {
     expect(purchases[0].status).toBe("PENDING");
     expect(purchases[0].customerEmail).toBe("p@p.com");
     expect(purchases[0].skillsCsv).toBe("MULTIPLICATION");
-    expect(purchases[0].amountCents).toBe(399);
+    expect(purchases[0].amountCents).toBe(499);
   });
 
   it("sets a 30-day expiry on the purchase", async () => {

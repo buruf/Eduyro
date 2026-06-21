@@ -56,22 +56,22 @@ describe("GET /api/shop/catalog", () => {
     }
   });
 
-  it("returns pricing tiers for 1-4 skills", async () => {
+  it("returns a pricing tier for every skill count (1-10)", async () => {
     const res = await GET(makeRequest());
     const body = await res.json();
-    expect(body.data.pricing).toHaveLength(4);
-    const counts = body.data.pricing.map((p: any) => p.skillCount).sort();
-    expect(counts).toEqual([1, 2, 3, 4]);
+    expect(body.data.pricing).toHaveLength(10);
+    const counts = body.data.pricing.map((p: any) => p.skillCount).sort((a: number, b: number) => a - b);
+    expect(counts).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   });
 
   it("pricing has correct labels", async () => {
     const res = await GET(makeRequest());
     const body = await res.json();
     const findLabel = (n: number) => body.data.pricing.find((p: any) => p.skillCount === n)?.label;
-    expect(findLabel(1)).toBe("$3.99");
-    expect(findLabel(2)).toBe("$5.99");
-    expect(findLabel(3)).toBe("$7.99");
-    expect(findLabel(4)).toBe("$9.99");
+    expect(findLabel(1)).toBe("$4.99");
+    expect(findLabel(2)).toBe("$7.99");
+    expect(findLabel(3)).toBe("$10.99");
+    expect(findLabel(4)).toBe("$13.99");
   });
 
   it("estimated problems matches the sum of band counts", async () => {

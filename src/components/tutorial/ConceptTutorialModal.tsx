@@ -77,7 +77,7 @@ export function ConceptTutorialModal({ open, concept, mode, onStart, onClose }: 
             <TutorialVisual visual={concept.visual} />
             {concept.interactive && (
               <p className="text-center text-[11px] text-gold-dark font-semibold mt-1">
-                ☝ This one's interactive — try the slider{concept.visual === "linearGraph" ? "s" : ""}!
+                ☝ This one&rsquo;s interactive — try the slider{concept.visual === "linearGraph" ? "s" : ""}!
               </p>
             )}
           </div>
