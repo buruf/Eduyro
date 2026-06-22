@@ -15,11 +15,11 @@ export async function GET(req: NextRequest) {
       });
       if (!student) return notFound("Student profile");
 
-      // Redirect to the canonical dashboard endpoint
-      return NextResponse.redirect(
-        new URL(`/api/students/${student.id}/dashboard`, req.url),
-        307
-      );
+      // Redirect to the canonical dashboard endpoint, preserving query params
+      // (e.g. ?subject=READING from the child's subject switcher).
+      const target = new URL(`/api/students/${student.id}/dashboard`, req.url);
+      target.search = req.nextUrl.search;
+      return NextResponse.redirect(target, 307);
     } catch (error) {
       return handleRouteError(error);
     }

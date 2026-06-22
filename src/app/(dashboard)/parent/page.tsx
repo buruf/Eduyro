@@ -189,6 +189,14 @@ function ParentDashboardInner() {
             <>
               {activeChild && <ChildOverviewCard child={activeChild} colorIndex={activeChildIndex} />}
 
+              {activeChild?.student?.id && (
+                <SubjectsManagerCard
+                  key={activeChild.student.id}
+                  studentId={activeChild.student.id}
+                  childName={activeChild.student.user.firstName ?? activeChild.student.user.name ?? "your child"}
+                />
+              )}
+
               <div className="grid lg:grid-cols-3 gap-5">
                 <RecentPdfsCard pdfs={activeChild?.recentPdfs ?? []} />
                 <WeaknessChartCard child={activeChild} />
@@ -437,6 +445,127 @@ function ChildOverviewCard({ child, colorIndex }: { child: ChildSummary; colorIn
           <div className="text-[10px] text-muted uppercase tracking-wider mt-0.5">Weekly target</div>
         </div>
       </div>
+    </Card>
+  );
+}
+
+interface ManagedSubject {
+  subjectId: string;
+  slug: string;
+  name: string;
+  iconEmoji: string | null;
+  enabled: boolean;
+  placementStatus: string | null;
+  placedLevelCode: string | null;
+}
+
+// Parent-only control over which subjects a child can see. Subjects are included
+// in the subscription — toggling is free. All on by default; turning one OFF
+// instantly removes it from the child's dashboard (Kumon-style focus). The child
+// can never enrol themselves.
+function SubjectsManagerCard({ studentId, childName }: { studentId: string; childName: string }) {
+  const [subjects, setSubjects] = useState<ManagedSubject[] | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/parents/me/children/${studentId}/subjects`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (!cancelled && j?.success) setSubjects(j.data.subjects); })
+      .catch(() => { if (!cancelled) setError("Couldn't load subjects."); });
+    return () => { cancelled = true; };
+  }, [studentId]);
+
+  async function toggle(s: ManagedSubject, next: boolean) {
+    setSaving(s.slug);
+    setError(null);
+    // Optimistic update
+    setSubjects((prev) => prev?.map((x) => (x.slug === s.slug ? { ...x, enabled: next } : x)) ?? prev);
+    try {
+      const res = await fetch(`/api/parents/me/children/${studentId}/subjects`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: s.slug, enabled: next }),
+      });
+      const j = await res.json();
+      if (!j.success) throw new Error(j.error ?? "Failed");
+    } catch (e: any) {
+      // Roll back on failure
+      setSubjects((prev) => prev?.map((x) => (x.slug === s.slug ? { ...x, enabled: !next } : x)) ?? prev);
+      setError(e.message ?? "Couldn't update subject.");
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  const enabledCount = subjects?.filter((s) => s.enabled).length ?? 0;
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-sm font-semibold">Subjects</h3>
+        {subjects && <span className="text-[11px] text-muted">{enabledCount} of {subjects.length} on</span>}
+      </div>
+      <p className="text-[11px] text-muted mb-3 leading-relaxed">
+        Choose which subjects {childName} can access. All subjects are included in your plan — turn one off to help them focus.
+      </p>
+
+      {error && <div className="bg-brand-red-light border border-brand-red/30 text-brand-red text-xs rounded-md p-2 mb-3">{error}</div>}
+
+      {!subjects ? (
+        <div className="text-xs text-muted py-4 text-center">Loading subjects…</div>
+      ) : (
+        <div className="space-y-2">
+          {subjects.map((s) => {
+            const status = !s.enabled
+              ? "Hidden from dashboard"
+              : s.placedLevelCode
+              ? `Placed · Level ${s.placedLevelCode}`
+              : s.placementStatus === "IN_PROGRESS"
+              ? "Placement in progress"
+              : "Needs placement";
+            return (
+              <div
+                key={s.subjectId}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 border rounded-lg transition-colors",
+                  s.enabled ? "border-border bg-white" : "border-border bg-cream-dark opacity-70"
+                )}
+              >
+                <span className="text-lg">{s.iconEmoji ?? "📚"}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium">{s.name}</div>
+                  <div className="text-[11px] text-muted">{status}</div>
+                </div>
+                <button
+                  role="switch"
+                  aria-checked={s.enabled}
+                  aria-label={`${s.enabled ? "Disable" : "Enable"} ${s.name} for ${childName}`}
+                  disabled={saving === s.slug}
+                  onClick={() => toggle(s, !s.enabled)}
+                  className={cn(
+                    "relative w-11 h-6 rounded-full transition-colors flex-shrink-0 disabled:opacity-50",
+                    s.enabled ? "bg-brand-green" : "bg-border"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform",
+                      s.enabled && "translate-x-5"
+                    )}
+                  />
+                </button>
+              </div>
+            );
+          })}
+          {enabledCount === 0 && (
+            <div className="text-[11px] text-gold-dark bg-gold-light border border-gold/30 rounded-md p-2 mt-1">
+              ⚠ No subjects are enabled — {childName}'s dashboard will be empty until you turn one on.
+            </div>
+          )}
+        </div>
+      )}
     </Card>
   );
 }

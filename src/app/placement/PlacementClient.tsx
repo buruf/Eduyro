@@ -14,7 +14,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BrandLogo } from "@/components/layout";
@@ -61,6 +61,33 @@ export default function PlacementPage() {
   const [screen, setScreen] = useState<Screen>("intro");
   // #PT1 FIX: single subject at a time, not array. Multi-subject is broken.
   const [selectedSubject, setSelectedSubject] = useState<Subject>("MATH");
+  // Subjects the signed-in child is ALLOWED to place into (parent-enabled).
+  // null = anonymous/marketing demo → show all four as a sample.
+  const [allowedSubjects, setAllowedSubjects] = useState<Subject[] | null>(null);
+
+  // On mount, learn which subjects this child may place into. Anonymous users
+  // (no student profile / 401) keep the full sample. A deep-link (?subject=MATH
+  // from the dashboard) preselects that subject if it's enabled.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/students/me/subjects");
+        if (!res.ok) return; // anonymous or no profile → leave allowedSubjects null
+        const data = await res.json();
+        const slugs: Subject[] = (data?.data?.subjects ?? []).map((s: any) => s.slug);
+        if (cancelled || slugs.length === 0) return;
+        setAllowedSubjects(slugs);
+        const param = new URLSearchParams(window.location.search).get("subject") as Subject | null;
+        const target = param && slugs.includes(param) ? param : slugs[0];
+        setSelectedSubject(target);
+        if (param && slugs.includes(param)) setScreen("subjects"); // jump past intro when deep-linked
+      } catch {
+        /* network error → leave as anonymous demo */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const [questionState, setQuestionState] = useState<QuestionState | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -286,11 +313,13 @@ export default function PlacementPage() {
             </div>
             <h2 className="font-serif text-2xl font-bold mb-2">Choose your subject.</h2>
             <p className="text-sm text-muted mb-6 leading-relaxed">
-              Pick the subject you want placed first. You can come back later to take placement in other subjects.
+              {allowedSubjects
+                ? "Pick a subject to get placed. These are the subjects your parent has enabled for you."
+                : "Pick the subject you want placed first. You can come back later to take placement in other subjects."}
             </p>
 
             <div className="grid grid-cols-2 gap-3 mb-6">
-              {SUBJECTS.map((s) => {
+              {(allowedSubjects ? SUBJECTS.filter((s) => allowedSubjects.includes(s.id)) : SUBJECTS).map((s) => {
                 const isSelected = selectedSubject === s.id;
                 return (
                   <button
@@ -441,18 +470,20 @@ export default function PlacementPage() {
             >
               Go to my dashboard
             </Button>
-            <Button
-              variant="secondary"
-              fullWidth
-              className="mt-2"
-              onClick={() => {
-                // #PT5 FIX: clear selection so user picks a different subject
-                setScreen("subjects");
-                setResult(null);
-              }}
-            >
-              Take placement in another subject
-            </Button>
+            {(allowedSubjects === null || allowedSubjects.length > 1) && (
+              <Button
+                variant="secondary"
+                fullWidth
+                className="mt-2"
+                onClick={() => {
+                  // #PT5 FIX: clear selection so user picks a different subject
+                  setScreen("subjects");
+                  setResult(null);
+                }}
+              >
+                Take placement in another subject
+              </Button>
+            )}
           </div>
         )}
 

@@ -8,6 +8,7 @@ import { startOfDay, subDays, format } from "date-fns";
 import { generateProblems, getMathSheetMeta, nonMathDistinctSheets, nonMathBankQuestions } from "@/lib/worksheet/generator";
 import { computeItemMastery, type ItemMastery } from "@/lib/worksheet/item-mastery";
 import { masteryTarget, isSkillMastered } from "@/lib/mastery";
+import { enabledSubjectSlugs } from "@/lib/enrollment";
 import type { StudentDashboard, TodaySheet, SkillTreeNode } from "@/types";
 
 export async function GET(
@@ -61,10 +62,20 @@ export async function GET(
 
       if (!isOwn && !isParent && !isAdmin && !isTeacher) return forbidden();
 
-      // ── Find current active level (first IN_PROGRESS, or highest MASTERED) ──
-      const activeProgress = student.progress.find(
-        (p) => p.status === "IN_PROGRESS"
+      // ── Find current active level ──
+      // Subjects are parent-controlled: never surface a level for a subject the
+      // parent has DISABLED, even if progress exists. Among the enabled subjects,
+      // honour an optional ?subject= switch (the child's "My subjects" picker);
+      // otherwise default to the first IN_PROGRESS enabled level.
+      const enabled = await enabledSubjectSlugs(student.id);
+      const requestedSubject = req.nextUrl.searchParams.get("subject")?.toUpperCase();
+      const inProgressEnabled = student.progress.filter(
+        (p) => p.status === "IN_PROGRESS" && enabled.has(p.level.subject.slug)
       );
+      const activeProgress =
+        (requestedSubject
+          ? inProgressEnabled.find((p) => p.level.subject.slug === requestedSubject)
+          : undefined) ?? inProgressEnabled[0];
 
       // ── Build today's packet ──
       const todayPacket = await buildTodayPacket(student.id, activeProgress);

@@ -17,6 +17,7 @@ import {
   addChildToSubscription,
 } from "@/lib/stripe";
 import { requiresParentalConsent, calculateAge } from "@/lib/coppa";
+import { ensureDefaultEnrollments } from "@/lib/enrollment";
 import { nanoid } from "nanoid";
 
 const AddChildSchema = z.object({
@@ -124,6 +125,10 @@ export async function POST(req: NextRequest) {
             studentId: newStudent.id,
           },
         });
+
+        // Enrol the child in ALL subjects by default (parent paid for the whole
+        // child). The parent can later mute any subject from their dashboard.
+        await ensureDefaultEnrollments(newStudent.id, tx);
 
         await tx.notification.create({
           data: {

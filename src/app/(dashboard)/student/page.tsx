@@ -20,7 +20,7 @@ import { QuestionWithViz } from "@/components/FractionViz";
 import { buildScaffold } from "@/lib/tutor/scaffold";
 import { parseColumnar, parseLongDivision } from "@/lib/math/columnar";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -49,6 +49,13 @@ export default function StudentDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [practiceOpen, setPracticeOpen] = useState(false);
   const [practiceSheet, setPracticeSheet] = useState<TodaySheet | null>(null);
+
+  // Parent-enabled subjects for the "My subjects" switcher. The child can only
+  // ever see/switch among subjects the parent enabled; enrollment is not
+  // self-serve. `activeSubjectRef` keeps the chosen subject sticky across the
+  // no-arg refreshes triggered by notifications / sheet completion.
+  const [subjects, setSubjects] = useState<SubjectCard[] | null>(null);
+  const activeSubjectRef = useRef<string | null>(null);
 
   // Concept tutorials — DB-tracked per student (localStorage as offline/demo fallback)
   const [completedConcepts, setCompletedConcepts] = useState<Set<string>>(new Set());
@@ -112,17 +119,44 @@ export default function StudentDashboardPage() {
     return () => clearInterval(interval);
   }, [timerRunning]);
 
-  async function fetchDashboard() {
+  async function fetchDashboard(subject?: string) {
     setLoading(true);
+    const slug = subject ?? activeSubjectRef.current;
     try {
-      const res = await fetch("/api/students/me/dashboard").catch(() => null);
+      const url = slug
+        ? `/api/students/me/dashboard?subject=${encodeURIComponent(slug)}`
+        : "/api/students/me/dashboard";
+      const res = await fetch(url).catch(() => null);
       if (res?.ok) {
         const data = await res.json();
-        if (data.success) setDashboard(data.data);
+        if (data.success) {
+          setDashboard(data.data);
+          // Seed the sticky active subject from the first load so refreshes stay
+          // on the same subject the child is currently working in.
+          if (!activeSubjectRef.current && data.data?.levelProgress?.subjectName) {
+            activeSubjectRef.current = data.data.levelProgress.subjectName;
+          }
+        }
       }
     } finally {
       setLoading(false);
     }
+  }
+
+  // Load the parent-enabled subjects for the switcher.
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    fetch("/api/students/me/subjects")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (j?.success) setSubjects(j.data.subjects); })
+      .catch(() => {});
+  }, [session]);
+
+  // Switch the dashboard to a different (placed) subject.
+  function switchSubject(slug: string) {
+    if (activeSubjectRef.current === slug) return;
+    activeSubjectRef.current = slug;
+    fetchDashboard(slug);
   }
 
   // Load which concept tutorials this student has already completed (DB),
@@ -289,6 +323,16 @@ export default function StudentDashboardPage() {
               color="red"
             />
           </div>
+
+          {/* My subjects — parent-enabled subjects only. Placed subjects switch
+              the dashboard; not-yet-placed subjects link to placement. */}
+          {subjects && subjects.length > 0 && (
+            <SubjectSwitcher
+              subjects={subjects}
+              activeSlug={data.levelProgress?.subjectName ?? null}
+              onSwitch={switchSubject}
+            />
+          )}
 
           {/* Today's packet + skill tree */}
           <div className="grid lg:grid-cols-[1fr_320px] gap-6">
@@ -505,6 +549,77 @@ function EmptyStudentDashboard({ isSignedIn }: { isSignedIn: boolean }) {
 // ─────────────────────────────────────────────────────────────
 // Sub-components
 // ─────────────────────────────────────────────────────────────
+
+interface SubjectCard {
+  subjectId: string;
+  slug: string;
+  name: string;
+  iconEmoji: string | null;
+  colorHex: string | null;
+  placed: boolean;
+  activeLevelCode: string | null;
+  activeLevelName: string | null;
+  placementStatus: string | null;
+}
+
+// "My subjects" — the parent-enabled subjects. Placed subjects switch the
+// dashboard view; not-yet-placed subjects deep-link into the placement test.
+// The child can never add a subject here; enrollment is parent-controlled.
+function SubjectSwitcher({
+  subjects,
+  activeSlug,
+  onSwitch,
+}: {
+  subjects: SubjectCard[];
+  activeSlug: string | null;
+  onSwitch: (slug: string) => void;
+}) {
+  return (
+    <div>
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted mb-2">My subjects</div>
+      <div className="flex flex-wrap gap-2.5">
+        {subjects.map((s) => {
+          const isActive = activeSlug === s.slug;
+          if (!s.placed) {
+            return (
+              <a
+                key={s.subjectId}
+                href={`/placement?subject=${s.slug}`}
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-dashed border-brand-blue/40 bg-brand-blue-light/40 hover:bg-brand-blue-light transition-colors"
+              >
+                <span className="text-lg">{s.iconEmoji ?? "📚"}</span>
+                <span className="text-left">
+                  <span className="block text-sm font-semibold text-ink">{s.name}</span>
+                  <span className="block text-[11px] text-brand-blue font-medium">Take placement →</span>
+                </span>
+              </a>
+            );
+          }
+          return (
+            <button
+              key={s.subjectId}
+              onClick={() => onSwitch(s.slug)}
+              className={cn(
+                "flex items-center gap-2 px-3.5 py-2.5 rounded-xl border transition-all text-left",
+                isActive
+                  ? "border-brand-blue bg-brand-blue-light ring-1 ring-brand-blue/30"
+                  : "border-border bg-white hover:border-brand-blue/50"
+              )}
+            >
+              <span className="text-lg">{s.iconEmoji ?? "📚"}</span>
+              <span>
+                <span className="block text-sm font-semibold text-ink">{s.name}</span>
+                <span className="block text-[11px] text-muted">
+                  {s.activeLevelCode ? `Level ${s.activeLevelCode}` : "In progress"}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function SheetRow({ sheet, onClick }: { sheet: TodaySheet; onClick: () => void }) {
   // #S6 FIX: "NOT_STARTED" is "Up next" (or sheet number), not "Locked"

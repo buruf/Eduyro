@@ -6,6 +6,7 @@ import {
 } from "@/lib/api/helpers";
 import { StartPlacementSchema } from "@/lib/validation/schemas";
 import { pickNextQuestion } from "@/lib/placement/engine";
+import { enabledSubjectSlugs } from "@/lib/enrollment";
 
 export async function POST(req: NextRequest) {
   return withAuth(req, async (ctx) => {
@@ -17,9 +18,18 @@ export async function POST(req: NextRequest) {
       const student = await db.student.findUnique({ where: { userId: ctx.userId } });
       if (!student) return notFound("Student profile");
 
-      // Find subjects in DB
+      // Enforce parent-controlled enrollment: a child may ONLY take placement in
+      // subjects the parent has enabled. This blocks self-provisioning even if a
+      // request is crafted directly against the API.
+      const enabled = await enabledSubjectSlugs(student.id);
+      const allowedSlugs = (subjectSlugs as string[]).filter((s) => enabled.has(s as any));
+      if (allowedSlugs.length === 0) {
+        return err("This subject isn't enabled for this student. Ask your parent to turn it on.", 403);
+      }
+
+      // Find subjects in DB (only the allowed ones)
       const subjects = await db.subject.findMany({
-        where: { slug: { in: subjectSlugs as any[] } },
+        where: { slug: { in: allowedSlugs as any[] } },
       });
       if (!subjects.length) return err("Invalid subjects", 400);
 
