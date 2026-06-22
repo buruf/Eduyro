@@ -9,7 +9,7 @@
 
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { ok, forbidden, notFound, handleRouteError, withAuth, parseRequest } from "@/lib/api/helpers";
+import { ok, err, forbidden, notFound, handleRouteError, withAuth, parseRequest } from "@/lib/api/helpers";
 import { ensureDefaultEnrollments } from "@/lib/enrollment";
 import { z } from "zod";
 
@@ -94,11 +94,21 @@ export async function PATCH(req: NextRequest, { params }: { params: { studentId:
         : await db.subject.findUnique({ where: { slug: slug! }, select: { id: true, slug: true, name: true } });
       if (!subject) return notFound("Subject");
 
-      const row = await db.studentSubject.upsert({
-        where: { studentId_subjectId: { studentId: params.studentId, subjectId: subject.id } },
-        update: { enabled },
-        create: { studentId: params.studentId, subjectId: subject.id, enabled },
-      });
+      let row;
+      try {
+        row = await db.studentSubject.upsert({
+          where: { studentId_subjectId: { studentId: params.studentId, subjectId: subject.id } },
+          update: { enabled },
+          create: { studentId: params.studentId, subjectId: subject.id, enabled },
+        });
+      } catch (e) {
+        // Table not migrated yet (deploy ran before `prisma db push`). Give a
+        // clear, actionable message instead of a generic 500.
+        if ((e as any)?.code === "P2021") {
+          return err("Subject controls aren't live yet — the database update is still pending. Try again shortly.", 503);
+        }
+        throw e;
+      }
 
       return ok({ subjectId: subject.id, slug: subject.slug, name: subject.name, enabled: row.enabled });
     } catch (error) {
