@@ -15,6 +15,7 @@ import { figureDiagram, isFigureKind } from "@/lib/math/angle-shapes";
 import { workedArithmeticSteps, workedDivisionSteps } from "@/lib/math/worked-steps";
 import { buildScaffold } from "@/lib/tutor/scaffold";
 import { computeLayout } from "./layout-engine";
+import { getTutorial } from "@/lib/worksheet/tutorials";
 import type { WorksheetData, WorksheetProblem, WorkedExample } from "@/lib/shop/progressive-generator";
 
 // ── Body font ─────────────────────────────────────────────────────────────────
@@ -121,6 +122,16 @@ const s = StyleSheet.create({
   lessonTitle:   { fontSize:9, fontFamily:"BodySans-Bold", color:C.gold, textTransform:"uppercase", letterSpacing:0.5, marginBottom:6 },
   lessonCard:    { width:"48%", marginRight:"2%", marginBottom:9, backgroundColor:C.grey1, borderWidth:0.5, borderColor:C.grey2, borderRadius:4, padding:9 },
   lessonCardNum: { fontSize:7, fontFamily:"BodySans-Bold", color:C.gold, textTransform:"uppercase", letterSpacing:0.5, marginBottom:3 },
+
+  // Big Idea + Key Ideas (lesson page, mirrors the on-screen lesson)
+  bigIdeaBox:   { backgroundColor:C.grey1, borderLeftWidth:2, borderLeftColor:C.green, paddingHorizontal:10, paddingVertical:6, marginBottom:8 },
+  bigIdeaLabel: { fontSize:7, fontFamily:"BodySans-Bold", color:C.green, textTransform:"uppercase", letterSpacing:0.5, marginBottom:2 },
+  bigIdeaText:  { fontSize:8.5, color:C.black, lineHeight:1.35 },
+  keyIdeasWrap: { flexDirection:"row", flexWrap:"wrap", marginBottom:8 },
+  keyIdeaCard:  { width:"48%", marginRight:"2%", marginBottom:6, backgroundColor:C.white, borderWidth:0.5, borderColor:C.grey2, borderRadius:3, padding:7 },
+  keyIdeaTitle: { fontSize:8, fontFamily:"BodySans-Bold", color:C.ink, marginBottom:2 },
+  keyIdeaFormula:{ fontSize:7.5, fontFamily:"BodySans-Bold", color:C.gold, marginBottom:2 },
+  keyIdeaText:  { fontSize:7.5, color:C.numInk, lineHeight:1.3 },
 });
 
 // ── Answer line ───────────────────────────────────────────────────────────────
@@ -400,6 +411,31 @@ function buildExamples(sheet: WorksheetData): WorkedExample[] {
 // ── Lesson Page (full page of worked examples, first sheet of a new skill) ─────
 function LessonPage({ sheet, examples, watermark }: { sheet: WorksheetData; examples: WorkedExample[]; watermark?: string }) {
   const { meta } = sheet;
+  // Pull the same curated teaching content the on-screen lesson uses, so the
+  // printout follows one standard shape: 🎯 Goal · 💡 Big Idea · Key Ideas ·
+  // 📝 Worked Examples. Shop is MATH-only; the subSkillLabel keyword-matches the
+  // tutorial bank (e.g. "Addition — sums to 10" → addition tutorial).
+  // Try the specific unit label first (catches granular units like "Comparing
+  // fractions" or "Slope-intercept"); if that yields the generic fallback (no
+  // concepts), retry with a canonical name for the skill family so e.g.
+  // FRACTIONS' "Part of a whole" still resolves to the fractions tutorial.
+  const SKILL_TUTORIAL_KEY: Partial<Record<string, string>> = {
+    ADDITION: "addition", SUBTRACTION: "subtraction", MULTIPLICATION: "multiplication",
+    DIVISION: "division", FRACTIONS: "fractions", DECIMALS: "decimals", RATIOS: "ratios",
+    LINEAR_EQUATIONS: "slope-intercept", POLYNOMIALS: "adding polynomials",
+  };
+  const tut = (name: string) => { try { return getTutorial("MATH", name); } catch { return null; } };
+  let tutorial = tut(meta.subSkillLabel);
+  if (!tutorial?.concepts?.length) {
+    const fallbackKey = SKILL_TUTORIAL_KEY[meta.skill];
+    if (fallbackKey) { const t = tut(fallbackKey); if (t?.concepts?.length) tutorial = t; }
+  }
+  const keyIdeas = (tutorial?.concepts ?? []).slice(0, 4);
+  // Only show curated teaching text. The generic fallback has no concepts and a
+  // filler intro ("Let's learn … step by step"); for those skills (e.g. some
+  // geometry units) we let the sheet's own worked examples carry the lesson
+  // rather than printing bland boilerplate.
+  const bigIdea = keyIdeas.length > 0 ? tutorial?.intro : undefined;
   return (
     <Page size="LETTER" style={s.page}>
       {watermark ? <Watermark text={watermark} /> : null}
@@ -418,11 +454,34 @@ function LessonPage({ sheet, examples, watermark }: { sheet: WorksheetData; exam
       </View>
 
       <View style={s.objectiveBox}>
-        <Text style={s.objectiveLabel}>Goal:</Text>
+        <Text style={s.objectiveLabel}>🎯 Goal:</Text>
         <Text style={s.objectiveText}>{meta.learningObjective}.</Text>
       </View>
 
-      <Text style={s.lessonTitle}>Worked Examples — study these before you practise</Text>
+      {bigIdea ? (
+        <View style={s.bigIdeaBox}>
+          <Text style={s.bigIdeaLabel}>💡 Big Idea</Text>
+          <Text style={s.bigIdeaText}>{bigIdea}</Text>
+        </View>
+      ) : null}
+
+      {keyIdeas.length > 0 ? (
+        <>
+          <Text style={s.lessonTitle}>Key Ideas</Text>
+          <View style={s.keyIdeasWrap}>
+            {keyIdeas.map((c, i) => (
+              <View key={i} style={s.keyIdeaCard}>
+                <Text style={s.keyIdeaTitle}>{c.title}</Text>
+                {c.formula ? <PdfMathText text={c.formula} fontSize={7.5} /> : null}
+                <Text style={s.keyIdeaText}>{c.explanation}</Text>
+                {c.tip ? <Text style={{ ...s.keyIdeaText, fontStyle: "italic", marginTop: 2 }}>Tip: {c.tip}</Text> : null}
+              </View>
+            ))}
+          </View>
+        </>
+      ) : null}
+
+      <Text style={s.lessonTitle}>📝 Worked Examples — study these before you practise</Text>
 
       <View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap", alignContent: "flex-start" }}>
         {examples.map((ex, i) => {
