@@ -100,6 +100,23 @@ function tfXP(key: string, q: string, correct: "True" | "False", diff: number): 
 // ═════════════════════════════════════════════════════════════════════════════
 const isPerfectSquare = (n: number): boolean => Number.isInteger(Math.sqrt(n));
 
+// ── Micro-skill 0: Meet the parabola — an interactive hands-on intro. Students
+// DRAG the vertex to a target point on a live coordinate plane, so M13 opens
+// with a visual, exploratory hook before any symbolic work. Graded by value
+// ("x,y"); the matching lesson is a free-explore demo of the same plane. ──
+function qMeetParabola(): XP[] {
+  const out: XP[] = [];
+  let i = 0;
+  for (const h of [-3, -2, -1, 0, 1, 2, 3]) for (const k of [-2, -1, 0, 1, 2])
+    out.push({
+      q: `Drag the orange vertex of the parabola to the point (${h}, ${k}).`,
+      a: `${h},${k}`, diff: 1 + i++ * 0.02, key: `mp:${h}_${k}`, type: "short_answer", fmt: "vertex-drag",
+      answerType: "point",
+      interactive: { kind: "vertex-drag", a: 1, xRange: [-8, 8], yRange: [-8, 8], snap: 0.5 },
+    });
+  return out;
+}
+
 // ── Micro-skill 1: recognize perfect squares & square roots ──
 function qRecognize(): XP[] {
   const out: XP[] = [];
@@ -459,9 +476,10 @@ interface Unit {
 
 const CURRICULA: Record<string, Unit[]> = {
   M13: [
-    { id: "q-recognize", label: "Perfect squares & square roots", objective: "Student recognizes perfect squares and finds square roots", grade: "Grade 9", stars: 1, range: [1, 12], multiFormat: true, pool: qRecognize, example: { problem: "Is 49 a perfect square?", steps: ["7 × 7 = 49, so yes", "√49 = 7"], answer: "True" } },
-    { id: "q-solve-perfect", label: "Solve x² = k (perfect squares)", objective: "Student solves x² = k and finds BOTH the positive and negative root", grade: "Grade 9", stars: 2, range: [13, 30], multiFormat: true, pool: qSolvePerfect, example: { problem: "Solve x² = 49", steps: ["Take the square root of both sides", "Remember both signs", "x = ±7"], answer: "±7" } },
-    { id: "q-larger", label: "Larger, estimate & simplify roots", objective: "Student solves larger squares and estimates/simplifies non-perfect roots", grade: "Grade 9-10", stars: 3, range: [31, 48], multiFormat: true, pool: qLargerNonPerfect, example: { problem: "Simplify the square root of 50.", steps: ["50 = 25 × 2", "√25 × √2 = 5√2"], answer: "5√2" } },
+    { id: "q-meet", label: "Meet the parabola", objective: "Student explores a parabola by dragging its vertex on a coordinate plane", grade: "Grade 9", stars: 1, range: [1, 4], multiFormat: true, pool: qMeetParabola, example: { problem: "Drag the vertex to the point (2, 1).", steps: ["The vertex is the turning point of the parabola", "Move it to x = 2, y = 1"], answer: "2,1" } },
+    { id: "q-recognize", label: "Perfect squares & square roots", objective: "Student recognizes perfect squares and finds square roots", grade: "Grade 9", stars: 1, range: [5, 16], multiFormat: true, pool: qRecognize, example: { problem: "Is 49 a perfect square?", steps: ["7 × 7 = 49, so yes", "√49 = 7"], answer: "True" } },
+    { id: "q-solve-perfect", label: "Solve x² = k (perfect squares)", objective: "Student solves x² = k and finds BOTH the positive and negative root", grade: "Grade 9", stars: 2, range: [17, 32], multiFormat: true, pool: qSolvePerfect, example: { problem: "Solve x² = 49", steps: ["Take the square root of both sides", "Remember both signs", "x = ±7"], answer: "±7" } },
+    { id: "q-larger", label: "Larger, estimate & simplify roots", objective: "Student solves larger squares and estimates/simplifies non-perfect roots", grade: "Grade 9-10", stars: 3, range: [33, 48], multiFormat: true, pool: qLargerNonPerfect, example: { problem: "Simplify the square root of 50.", steps: ["50 = 25 × 2", "√25 × √2 = 5√2"], answer: "5√2" } },
     { id: "q-zero", label: "Zero-product property", objective: "Student solves factored quadratics", grade: "Grade 9", stars: 3, range: [49, 62], multiFormat: true, pool: qZeroProduct, example: { problem: "Solve (x - 2)(x - 5) = 0", steps: ["Set each factor to 0", "x = 2 or x = 5"], answer: "2, 5" } },
     { id: "q-factor", label: "Solve by factoring", objective: "Student factors and solves x² - Sx + P = 0", grade: "Grade 9-10", stars: 4, range: [63, 76], multiFormat: true, pool: qFactor, example: { problem: "Solve x² - 7x + 12 = 0", steps: ["Find two numbers that multiply to 12, add to 7: 3 and 4", "x = 3 or x = 4"], answer: "3, 4" } },
     { id: "q-disc", label: "Discriminant & # of solutions", objective: "Student computes b² - 4ac and reads its sign", grade: "Grade 10", stars: 4, range: [77, 90], multiFormat: true, pool: qDiscriminant, example: { problem: "How many real solutions? x² + 2x + 5 = 0", steps: ["b² - 4ac = 4 - 20 = -16", "Negative → no real solutions"], answer: "0" } },
