@@ -117,7 +117,18 @@ export type AnswerType =
   | "multipleChoice"
   | "trueFalse"
   | "expression"   // algebra: "5x", "3(x+4)" — keyboard text, sized (not a paragraph)
+  | "point"        // a coordinate (x,y) placed on an interactive plane (drag/plot)
   | "text";        // short non-numeric fallback (sized input, never a paragraph)
+
+// Spec for an interactive (graphing) question. Sent to the client to RENDER the
+// plane; it never contains the answer (the target lives only in the answer key).
+export interface InteractiveSpec {
+  kind: "vertex-drag";          // first interaction: drag a parabola's vertex
+  a: number;                    // fixed leading coefficient (curve shape)
+  xRange: [number, number];
+  yRange: [number, number];
+  snap: number;                 // grid snap step, e.g. 0.5
+}
 
 export interface Problem {
   id: string;
@@ -126,6 +137,7 @@ export interface Problem {
   options?: string[];   // for multiple_choice
   answer: string | number;
   answerType?: AnswerType;
+  interactive?: InteractiveSpec; // present for graphing items (answerType "point")
   points: number;
   hint?: string;
   explanation?: string;

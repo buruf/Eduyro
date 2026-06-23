@@ -42,6 +42,10 @@ interface XP {
   type?: "short_answer" | "multiple_choice" | "true_false";
   options?: string[];
   fmt?: string; // human label for the format (variety accounting / debugging)
+  // Interactive graphing items (answerType "point"): the answer is the snapped
+  // "x,y" string; `interactive` tells the client what plane/curve to render.
+  answerType?: string;
+  interactive?: { kind: string; a: number; xRange: [number, number]; yRange: [number, number]; snap: number };
 }
 
 // ── Seeded RNG + deterministic shuffle (per sheet, so regeneration is stable) ──
@@ -233,6 +237,18 @@ function qEvaluateAxis(): XP[] {
     out.push({ q: `Evaluate x² + ${term(b, "x")} + ${c} when x = ${v}`, a: `${v * v + b * v + c}`, diff: 9 + (b + c + v) * 0.03, key: `ev:${b}_${c}_${v}`, type: "short_answer", fmt: "evaluate" });
   for (let b = 2; b <= 40; b += 2)
     out.push({ q: `Find the axis of symmetry of y = x² + ${b}x.`, a: `x = ${-b / 2}`, diff: 9.5 + b * 0.02, key: `ax:${b}`, type: "short_answer", fmt: "axis" });
+  // INTERACTIVE: drag the parabola's vertex to a target point. The answer is the
+  // snapped "x,y" string; grading reuses the standard value match. Shape a = 1.
+  const VERTS: [number, number][] = [
+    [2, -3], [-1, 4], [3, 1], [-2, -5], [0, 2], [1, -4], [-3, 2], [4, -1], [-4, -2], [2, 5], [-2, 3], [3, -4],
+  ];
+  for (const [h, k] of VERTS)
+    out.push({
+      q: `Drag the vertex of the parabola to the point (${h}, ${k}).`,
+      a: `${h},${k}`, diff: 9.3, key: `vd:${h}_${k}`, type: "short_answer", fmt: "vertex-drag",
+      answerType: "point",
+      interactive: { kind: "vertex-drag", a: 1, xRange: [-8, 8], yRange: [-8, 8], snap: 0.5 },
+    });
   return out;
 }
 
@@ -605,6 +621,8 @@ export function generateHigherMathSheet(
     type: (p.type ?? "short_answer") as "short_answer" | "multiple_choice" | "true_false",
     question: p.q, answer: p.a, points: 1,
     ...(p.options ? { options: p.options } : {}),
+    ...(p.answerType ? { answerType: p.answerType } : {}),
+    ...(p.interactive ? { interactive: p.interactive } : {}),
     zone: (Math.floor(i / Math.ceil(problemCount / 5)) + 1) as 1 | 2 | 3 | 4 | 5,
   }));
   const answerKey = problems.map((p) => ({ id: p.id, answer: p.answer }));

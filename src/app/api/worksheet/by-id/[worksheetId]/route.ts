@@ -110,6 +110,11 @@ export async function GET(
       const problems = storedProblems.map((p, i) => {
         const ans = String(p.answer ?? "").trim();
         let options: string[] | null = p.options ?? null;
+        // Interactive graphing items declare their own answer type and carry a
+        // render spec (never the answer). Serve as-is — no number pad / MC.
+        if (p.interactive) {
+          return { id: p.id, question: p.question, type: p.type, options: null, points: p.points, answerType: "point", interactive: p.interactive };
+        }
         let answerType = classifyAnswerType({
           question: p.question,
           options,

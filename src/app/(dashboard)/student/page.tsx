@@ -30,7 +30,13 @@ import { Card, StatCard, Progress, Modal, EmptyState } from "@/components/ui";
 import { StudentRealtime } from "@/components/realtime/StudentRealtime";
 import { ConceptTutorialModal } from "@/components/tutorial/ConceptTutorialModal";
 import { cn, formatTime } from "@/lib/utils";
-import type { AnswerType } from "@/types";
+import type { AnswerType, InteractiveSpec } from "@/types";
+import dynamic from "next/dynamic";
+// Mafs touches the DOM — load the graphing input client-only (no SSR).
+const VertexDragInput = dynamic(
+  () => import("@/components/practice/VertexDragInput").then((m) => m.VertexDragInput),
+  { ssr: false, loading: () => <div className="py-10 text-center text-muted text-sm">Loading graph…</div> },
+);
 import {
   NumberInput, FractionInput, MixedFractionInput, ComparisonSelector,
   TrueFalse, MultipleChoice, ShortTextInput,
@@ -729,6 +735,7 @@ interface PracticeProblem {
   type?: string;        // "short_answer" | "multiple_choice" | "written_response"
   options?: string[] | null;
   answerType?: AnswerType; // drives which input component renders
+  interactive?: InteractiveSpec; // render spec for graphing items (answerType "point")
   points?: number;
   // The correct answer is NOT returned by the preview API to the student.
   // Grading happens server-side via submit-sheet.
@@ -828,6 +835,7 @@ function PracticeModal({
           type: p.type,
           options: p.options ?? null,
           answerType: p.answerType,
+          interactive: p.interactive,
           points: p.points,
         })));
       })
@@ -944,6 +952,18 @@ function PracticeModal({
     const stack = opts ? null : parseColumnar(p.question);
     const ld = opts || stack ? null : parseLongDivision(p.question);
     const set = (v: string) => setAnswers((a) => ({ ...a, [p.id]: v }));
+
+    // Interactive graphing item — drag the parabola's vertex on a plane.
+    if (p.interactive && p.answerType === "point") {
+      return (
+        <div className="text-center">
+          <div className="flex justify-center mb-3">
+            <QuestionWithViz text={p.question} size={64} className="font-serif font-semibold text-lg leading-snug" />
+          </div>
+          <VertexDragInput spec={p.interactive} value={answers[p.id] ?? ""} onChange={set} />
+        </div>
+      );
+    }
 
     if (stack) {
       return (

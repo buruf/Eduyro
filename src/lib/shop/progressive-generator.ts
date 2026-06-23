@@ -49,6 +49,10 @@ export interface WorksheetProblem {
   /** Present for multiple_choice / true_false items — the selectable option VALUES
    *  (not letters), so grading stays a plain value match. */
   options?: string[];
+  /** Answer-input shape ("point" for interactive graphing items). */
+  answerType?: string;
+  /** Render spec for an interactive graphing item (never includes the answer). */
+  interactive?: { kind: string; a: number; xRange: [number, number]; yRange: [number, number]; snap: number };
   points: number;
   zone: 1 | 2 | 3 | 4 | 5;
 }
