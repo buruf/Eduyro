@@ -22,6 +22,37 @@ export interface TutorialContent {
   examples: WorkedExample[];
 }
 
+import { getHigherMathMicroLesson, type MicroLesson } from "@/lib/shop/higher-math-engine";
+
+export type { MicroLesson };
+
+/**
+ * The lesson for the EXACT micro-skill a student is about to practice. The
+ * worked example here must match the upcoming questions (council rule), so we
+ * key off the micro-skill label (the practiced unit), NOT the broad level skill.
+ *   • Higher math (M13–M18): pull the unit's objective + matching worked example.
+ *   • Everything else: getTutorial keyed by the micro-skill label (now stage-
+ *     aware, e.g. "Addition — sums to 10" → single-digit examples).
+ * Returns null only if no example can be resolved (caller falls back to concept).
+ */
+export function getMicroSkillLesson(
+  subjectSlug: string,
+  levelCode: string,
+  microSkillLabel: string,
+): MicroLesson | null {
+  const hm = getHigherMathMicroLesson(levelCode, microSkillLabel);
+  if (hm) return hm;
+  const t = getTutorial(subjectSlug, microSkillLabel);
+  const example = t.examples?.[0];
+  if (!example) return null;
+  return {
+    goal: t.intro,
+    bigIdea: t.concepts?.[0]?.explanation ?? t.intro,
+    example,
+    umbrella: t.skillName,
+  };
+}
+
 export function getTutorial(subjectSlug: string, skillName: string): TutorialContent {
   const skill = skillName.toLowerCase();
 

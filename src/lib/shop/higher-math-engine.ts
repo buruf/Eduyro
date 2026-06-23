@@ -661,3 +661,39 @@ export function validateHigherMathPack(code: string, totalSheets = 100): {
 }
 
 export { CODE_LABEL as HIGHER_MATH_LABELS };
+
+// ── Per-micro-skill lesson (for the pre-practice tutorial) ────────────────────
+// The tutorial a student sees must teach the micro-skill they're about to
+// practice (council rule: the worked example must match the first question's
+// type). These big ideas pair with each M13 unit's objective + worked example.
+const M13_BIGIDEA: Record<string, string> = {
+  "q-recognize": "A perfect square is a whole number times itself; its square root is that number.",
+  "q-solve-perfect": "If x² = k, then x = ±√k — every positive number has TWO square roots, one positive and one negative.",
+  "q-larger": "Pull out the largest perfect-square factor to simplify a root; estimate by finding the nearest perfect squares.",
+  "q-zero": "If two factors multiply to zero, at least one of them must be zero.",
+  "q-factor": "Factor the quadratic into two binomials, then set each factor equal to zero.",
+  "q-disc": "The discriminant b² − 4ac reveals the number of real solutions: positive → 2, zero → 1, negative → 0.",
+  "q-evalaxis": "A parabola is symmetric about the vertical line x = −b/2a.",
+};
+
+export interface MicroLesson {
+  goal: string;
+  bigIdea: string;
+  example: WorkedExample;
+  umbrella: string; // one-line orientation to the parent level
+}
+
+/** Resolve a micro-skill's lesson by its practice label (e.g. "Solve x² = k
+ *  (perfect squares)"). Returns null if the code/label isn't a higher-math unit. */
+export function getHigherMathMicroLesson(code: string, label: string): MicroLesson | null {
+  const units = CURRICULA[code];
+  if (!units) return null;
+  const u = units.find((x) => x.label === label) ?? units.find((x) => label.includes(x.label));
+  if (!u) return null;
+  return {
+    goal: u.objective.replace(/^Student /, "").replace(/^./, (c) => c.toUpperCase()),
+    bigIdea: M13_BIGIDEA[u.id] ?? u.objective,
+    example: u.example,
+    umbrella: CODE_LABEL[code] ?? code,
+  };
+}

@@ -7,7 +7,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type ConceptTutorial, LESSON_FRAMING } from "@/lib/tutorials/concepts";
-import { getTutorial } from "@/lib/worksheet/tutorials";
+import { getTutorial, type MicroLesson } from "@/lib/worksheet/tutorials";
 import { createNarrator } from "@/lib/tutorials/narrator";
 import { TutorialVisual } from "./TutorialVisual";
 
@@ -16,21 +16,35 @@ interface Props {
   concept: ConceptTutorial;
   subjectSlug: string;
   skillName: string;
+  /** The EXACT micro-skill the student is about to practice. When present its
+   *  goal / big idea / worked example drive the lesson, so the tutorial always
+   *  matches the upcoming questions (council rule). */
+  microLesson?: MicroLesson | null;
   mode: "first" | "review";
   onStart: () => void;  // "I get it — Start practising"
   onClose: () => void;  // X / backdrop (review mode mainly)
 }
 
-export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, mode, onStart, onClose }: Props) {
+export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, microLesson, mode, onStart, onClose }: Props) {
   const narrator = useMemo(() => createNarrator(), []);
   // Every lesson follows the same shape: 🎯 Goal · 💡 Big Idea · 📝 Worked
-  // Example (steps) · ✓ Check. Example/Check come from the per-skill worked
-  // examples; Goal/Big Idea from LESSON_FRAMING with sensible fallbacks.
+  // Example (steps) · ✓ Check. When a micro-skill lesson is supplied it wins
+  // (its example matches the practice); otherwise fall back to the broad concept.
   const tutorial = useMemo(() => { try { return getTutorial(subjectSlug, skillName); } catch { return null; } }, [subjectSlug, skillName]);
   const framing = LESSON_FRAMING[concept.id];
-  const goal = concept.goal ?? framing?.goal ?? `Understand and practise ${skillName}.`;
-  const bigIdea = concept.bigIdea ?? framing?.bigIdea ?? tutorial?.concepts?.[0]?.explanation ?? tutorial?.intro ?? concept.bullets[0];
-  const example = tutorial?.examples?.[0] ?? null;
+  const goal = microLesson?.goal ?? concept.goal ?? framing?.goal ?? `Understand and practise ${skillName}.`;
+  const bigIdea = microLesson?.bigIdea ?? concept.bigIdea ?? framing?.bigIdea ?? tutorial?.concepts?.[0]?.explanation ?? tutorial?.intro ?? concept.bullets[0];
+  const example = microLesson?.example ?? tutorial?.examples?.[0] ?? null;
+  // One-line orientation to the parent level (council: keep the "why" cheap).
+  const umbrella = microLesson?.umbrella && microLesson.umbrella !== skillName ? microLesson.umbrella : null;
+  // Narrate the micro-skill (goal → big idea → worked example) when supplied, so
+  // what the student HEARS matches what they'll practise; else the concept script.
+  const narrationText = useMemo(() => {
+    if (!microLesson) return concept.narration;
+    const ex = microLesson.example;
+    const steps = ex?.steps?.length ? ` Here's an example. ${ex.problem}. ${ex.steps.join(". ")}. The answer is ${ex.answer}.` : "";
+    return `${goal} ${bigIdea}${steps}`;
+  }, [microLesson, concept.narration, goal, bigIdea]);
   const [speaking, setSpeaking] = useState(false);
   const [paused, setPaused] = useState(false);
   const startedRef = useRef(false);
@@ -42,11 +56,11 @@ export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, mo
     if (!startedRef.current) {
       startedRef.current = true;
       setSpeaking(true);
-      narrator.speak(concept.narration, () => { setSpeaking(false); setPaused(false); });
+      narrator.speak(narrationText, () => { setSpeaking(false); setPaused(false); });
     }
     return () => narrator.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, concept.id]);
+  }, [open, concept.id, skillName]);
 
   if (!open) return null;
 
@@ -69,9 +83,9 @@ export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, mo
         <div className="bg-ink text-cream px-6 py-4 rounded-t-2xl flex items-start justify-between gap-4">
           <div>
             <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gold-mid mb-1">
-              {mode === "first" ? "New skill — quick lesson first" : "Tutorial review"}
+              {umbrella ? `${umbrella} · ` : ""}{mode === "first" ? "quick lesson first" : "lesson review"}
             </div>
-            <h2 className="font-serif text-xl font-bold leading-tight">{concept.title}</h2>
+            <h2 className="font-serif text-xl font-bold leading-tight">{microLesson ? skillName : concept.title}</h2>
           </div>
           <button
             onClick={() => { narrator.stop(); onClose(); }}

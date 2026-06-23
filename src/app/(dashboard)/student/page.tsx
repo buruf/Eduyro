@@ -36,6 +36,7 @@ import {
   TrueFalse, MultipleChoice, ShortTextInput,
 } from "@/components/practice/MathInputs";
 import { conceptForSkill, type ConceptTutorial } from "@/lib/tutorials/concepts";
+import { getMicroSkillLesson, type MicroLesson } from "@/lib/worksheet/tutorials";
 import type { StudentDashboard, TodaySheet } from "@/types";
 
 const TIMER_STORAGE_KEY = "bs:practice-timer";
@@ -63,6 +64,8 @@ export default function StudentDashboardPage() {
     concept: ConceptTutorial;
     sheet: TodaySheet | null;
     mode: "first" | "review";
+    microLesson?: MicroLesson | null;
+    key?: string; // per-micro-skill completion key
   } | null>(null);
 
   // Timer state — persisted across refreshes
@@ -214,19 +217,33 @@ export default function StudentDashboardPage() {
     if (!timerRunning) setTimerRunning(true);
   }
 
+  // Per-MICRO-SKILL tutorial key, so each micro-skill teaches once (council rule:
+  // a fresh lesson fires when the student first reaches each micro-skill's sheets,
+  // not once per whole level).
+  const microKey = (levelCode: string | undefined, microSkillLabel: string) =>
+    `${levelCode ?? "?"}::${microSkillLabel}`;
+
   function openPractice(sheet: TodaySheet) {
     if (sheet.status !== "IN_PROGRESS") return;
-    const concept = conceptForSkill(data.levelProgress?.levelCode, sheet.skillName);
-    // First visit to this concept → teach before any questions appear.
-    if (concept && !completedConcepts.has(concept.id)) {
-      setConceptModal({ concept, sheet, mode: "first" });
+    const levelCode = data.levelProgress?.levelCode;
+    const concept = conceptForSkill(levelCode, sheet.skillName);
+    const subjectSlug = subjectNameToSlug(data.levelProgress?.subjectName);
+    const microLesson = getMicroSkillLesson(subjectSlug, levelCode ?? "", sheet.skillName);
+    const key = microKey(levelCode, sheet.skillName);
+    // First visit to THIS micro-skill → teach the matching lesson before questions.
+    if (concept && !completedConcepts.has(key)) {
+      setConceptModal({ concept, sheet, mode: "first", microLesson, key });
     } else {
       beginPractice(sheet);
     }
   }
 
   function openTutorialReview() {
-    if (currentConcept) setConceptModal({ concept: currentConcept, sheet: null, mode: "review" });
+    if (!currentConcept) return;
+    const levelCode = data.levelProgress?.levelCode;
+    const label = currentSheet?.skillName ?? "";
+    const microLesson = getMicroSkillLesson(subjectNameToSlug(data.levelProgress?.subjectName), levelCode ?? "", label);
+    setConceptModal({ concept: currentConcept, sheet: null, mode: "review", microLesson, key: microKey(levelCode, label) });
   }
 
   async function onConceptTutorialDone() {
@@ -235,8 +252,10 @@ export default function StudentDashboardPage() {
     setConceptModal(null);
 
     if (mode === "first") {
-      // Optimistic local update + persist (DB first, localStorage fallback)
-      const next = new Set(completedConcepts).add(concept.id);
+      // Mark THIS micro-skill's lesson done (composite key), persist (DB first,
+      // localStorage fallback). Falls back to concept.id if no key was set.
+      const doneId = conceptModal.key ?? concept.id;
+      const next = new Set(completedConcepts).add(doneId);
       setCompletedConcepts(next);
       try { localStorage.setItem("eduyro:tutorials-done", JSON.stringify([...next])); } catch { /* ignore */ }
       const sid = data.student?.id;
@@ -244,7 +263,7 @@ export default function StudentDashboardPage() {
         fetch(`/api/students/${sid}/tutorials`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ conceptId: concept.id }),
+          body: JSON.stringify({ conceptId: doneId }),
         }).catch(() => { /* localStorage already has it */ });
       }
       if (sheet) beginPractice(sheet);
@@ -486,10 +505,11 @@ export default function StudentDashboardPage() {
           open={true}
           concept={conceptModal.concept}
           subjectSlug={subjectNameToSlug(data.levelProgress?.subjectName)}
-          // Use the real skill name (the worked-example lookup needs it). Math sheet
-          // titles are cosmetic UNIT labels ("Solve x² = k"), so prefer the active
-          // skill-tree node's name ("Quadratic equations").
-          skillName={data.skillTree?.find((s) => s.status === "IN_PROGRESS")?.skillName ?? conceptModal.sheet?.skillName ?? currentSheet?.skillName ?? ""}
+          // The lesson must teach the MICRO-SKILL the student is about to practise
+          // (the unit label, e.g. "Perfect squares & square roots"), not the broad
+          // skill-tree node — so the worked example matches the upcoming questions.
+          skillName={conceptModal.sheet?.skillName ?? currentSheet?.skillName ?? ""}
+          microLesson={conceptModal.microLesson}
           mode={conceptModal.mode}
           onStart={onConceptTutorialDone}
           onClose={() => setConceptModal(null)}
