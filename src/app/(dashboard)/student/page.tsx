@@ -860,7 +860,8 @@ function PracticeModal({
         body: JSON.stringify({
           worksheetId: sheet.worksheetId,
           answers: submissionAnswers,
-          timeSeconds: timerSeconds,
+          // Clamp to the server's 2h cap so a long-open session never gets rejected.
+          timeSeconds: Math.min(Math.max(0, Math.round(timerSeconds)), 7200),
         }),
       });
       const data = await res.json();

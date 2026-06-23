@@ -16,7 +16,10 @@ export async function POST(
   return withAuth(req, async (ctx) => {
     const parsed = await parseRequest(req, SubmitSheetSchema);
     if ("status" in parsed) return parsed;
-    const { worksheetId, answers, timeSeconds } = parsed.data;
+    const { worksheetId, answers } = parsed.data;
+    // Clamp wall-clock time to a 2h cap (a student may leave the modal open for
+    // hours); never reject a valid submission over elapsed time.
+    const timeSeconds = Math.min(Math.max(0, Math.round(parsed.data.timeSeconds)), 7200);
 
     try {
       // Verify student ownership

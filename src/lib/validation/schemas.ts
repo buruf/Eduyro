@@ -58,7 +58,11 @@ export const SubmitSheetSchema = z.object({
       })
     )
     .min(1, "No answers submitted"),
-  timeSeconds: z.number().min(0).max(7200), // max 2 hours
+  // Wall-clock elapsed time. A student can leave the modal open for hours, so we
+  // accept any non-negative value and CLAMP it in the handler rather than
+  // rejecting the whole submission — a long idle session must never discard
+  // correct work. (Recorded time is for stats/badges only, not grading.)
+  timeSeconds: z.number().min(0),
 });
 
 // ─────────────────────────────────────────────
