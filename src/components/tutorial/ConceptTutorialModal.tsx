@@ -99,7 +99,7 @@ export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, mo
 
           {/* Animated visual */}
           <div className="bg-cream-dark border border-border rounded-xl p-3 mb-4">
-            <TutorialVisual visual={concept.visual} />
+            <TutorialVisual visual={concept.visual} paused={paused} />
             {concept.interactive && (
               <p className="text-center text-[11px] text-gold-dark font-semibold mt-1">
                 ☝ This one&rsquo;s interactive — try the slider{concept.visual === "linearGraph" ? "s" : ""}!

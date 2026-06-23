@@ -3,7 +3,12 @@
 // Pure SVG + CSS transitions driven by a simple step ticker — no animation libs.
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+
+// When the learner pauses the lesson, the narration AND the animation should
+// freeze together. The modal feeds its paused state in via this context; every
+// animated visual reads it through useTick.
+const TutorialPaused = createContext(false);
 
 const INK = "#1A1612";
 const GOLD = "#C8902A";
@@ -13,11 +18,16 @@ const GREEN = "#2D6A3F";
 const GREY = "#E8E0D0";
 const MUTED = "#7A6E5F";
 
-/** Cycles 0..steps-1 forever. */
+/** Cycles 0..steps-1 forever — but holds its current step while paused. */
 function useTick(steps: number, ms: number): number {
+  const paused = useContext(TutorialPaused);
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
   const [step, setStep] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setStep((s) => (s + 1) % steps), ms);
+    const id = setInterval(() => {
+      if (!pausedRef.current) setStep((s) => (s + 1) % steps); // freeze on pause
+    }, ms);
     return () => clearInterval(id);
   }, [steps, ms]);
   return step;
@@ -508,7 +518,11 @@ function AdvancedMathLessonVisual() {
 }
 
 // ── Dispatcher ────────────────────────────────────────────────────────────────
-export function TutorialVisual({ visual }: { visual: string }) {
+export function TutorialVisual({ visual, paused = false }: { visual: string; paused?: boolean }) {
+  return <TutorialPaused.Provider value={paused}>{renderVisual(visual)}</TutorialPaused.Provider>;
+}
+
+function renderVisual(visual: string) {
   switch (visual) {
     case "readingLesson":  return <ReadingLessonVisual />;
     case "writingLesson":  return <WritingLessonVisual />;

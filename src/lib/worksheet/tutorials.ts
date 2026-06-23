@@ -43,10 +43,7 @@ function getMathTutorial(skill: string, skillName: string): TutorialContent {
   if (skill.includes("more") || skill.includes("less")) return moreLessTutorial();
   if (skill.includes("number pattern")) return numberPatternsTutorial();
   if (skill.includes("number bond")) return numberBondsTutorial();
-  if (skill.includes("addition within 5")) return additionTutorial(5);
-  if (skill.includes("addition within 10")) return additionTutorial(10);
-  if (skill.includes("addition within 20") || skill.includes("2-digit addition")) return additionTutorial(20);
-  if (skill.includes("addition")) return additionTutorial(99);
+  if (skill.includes("addition") || skill.includes("sums") || skill.includes("adding")) return additionTutorial(additionMaxFor(skill));
   if (skill.includes("missing number")) return missingNumbersTutorial();
   if (skill.includes("subtraction")) return subtractionTutorial();
   if (skill.includes("×2") || skill.includes("×3") || skill.includes("×4") || skill.includes("×5") || skill.includes("x2") || skill.includes("x5") || (skill.includes("multiplication") && !skill.includes("polynomial"))) return multiplicationTutorial();
@@ -170,7 +167,68 @@ function numberBondsTutorial(): TutorialContent {
   };
 }
 
+// Infer the addition bound from the skill/unit label so the lesson matches the
+// stage. Labels vary ("Addition — sums to 10", "Addition within 5", "2-digit
+// addition with regrouping", …), so we look for the number/keywords rather than
+// an exact phrase. Defaults to single-digit (10) — the safe early-grades choice —
+// not 3-digit carrying, which used to show "14 + 23" to a child learning 1–10.
+function additionMaxFor(skill: string): number {
+  if (/\b(within|to|sums? to|up to)\s*5\b/.test(skill) || /\bto 5\b/.test(skill)) return 5;
+  if (/\b(within|to|sums? to|up to)\s*10\b/.test(skill) || /single.?digit/.test(skill)) return 10;
+  if (/\b(within|to|sums? to|up to)\s*20\b/.test(skill) || /\bteen|2-digit|two-digit\b/.test(skill)) return 20;
+  if (/3-?digit|three-?digit|hundred|regroup|carry|column/.test(skill)) return 999;
+  return 10;
+}
+
 function additionTutorial(max: number): TutorialContent {
+  // Single-digit stage (sums to 5 or 10): NO carrying — count on, bonds, order.
+  if (max <= 10) {
+    const big = max <= 5
+      ? [
+          { problem: "2 + 1 = ?", steps: ["Start at 2.", "Count on 1 more: 3.", "2 + 1 = 3"], answer: "3" },
+          { problem: "2 + 2 = ?", steps: ["Start at 2.", "Count on 2 more: 3, 4.", "2 + 2 = 4"], answer: "4" },
+          { problem: "3 + 1 = ?", steps: ["Start at 3.", "Count on 1 more: 4.", "3 + 1 = 4"], answer: "4" },
+          { problem: "3 + 2 = ?", steps: ["Start at 3.", "Count on 2 more: 4, 5.", "3 + 2 = 5"], answer: "5" },
+          { problem: "1 + 4 = ?", steps: ["The bigger number is 4 — start there.", "Count on 1 more: 5.", "1 + 4 = 5"], answer: "5" },
+        ]
+      : [
+          { problem: "3 + 2 = ?", steps: ["Start at 3.", "Count on 2 more: 4, 5.", "3 + 2 = 5"], answer: "5" },
+          { problem: "4 + 4 = ?", steps: ["Start at 4.", "Count on 4 more: 5, 6, 7, 8.", "4 + 4 = 8"], answer: "8" },
+          { problem: "6 + 3 = ?", steps: ["Start at the bigger number, 6.", "Count on 3 more: 7, 8, 9.", "6 + 3 = 9"], answer: "9" },
+          { problem: "5 + 5 = ?", steps: ["Double 5.", "5 + 5 = 10 — a bond to 10!"], answer: "10" },
+          { problem: "2 + 7 = ?", steps: ["Start at the bigger number, 7.", "Count on 2 more: 8, 9.", "2 + 7 = 9"], answer: "9" },
+        ];
+    return {
+      skillName: "Addition",
+      intro: "Addition means putting two groups together and counting how many there are in all.",
+      concepts: [
+        { title: "Count On", formula: "start at the bigger number, then count up", explanation: "To add, start at the bigger number and count on the smaller one — much faster than counting both groups from 1.", tip: "6 + 3 → say 6, then 7, 8, 9" },
+        { title: "Order Doesn't Matter", formula: "a + b = b + a", explanation: "You can add in any order and get the same total.", tip: "2 + 7 is the same as 7 + 2" },
+        { title: "Bonds to 10", formula: "1+9, 2+8, 3+7, 4+6, 5+5", explanation: "Pairs that make 10 are worth memorising — they make bigger sums easy later.", tip: "5 + 5 = 10" },
+      ],
+      examples: big,
+    };
+  }
+  // Within 20: introduce "make ten" to cross the tens boundary (still no columns).
+  if (max <= 20) {
+    return {
+      skillName: "Addition",
+      intro: "When a sum passes 10, make a ten first, then add what's left.",
+      concepts: [
+        { title: "Make Ten", formula: "split the smaller number to reach 10 first", explanation: "Fill up to 10, then add the rest — it keeps the numbers easy.", tip: "8 + 5 → 8 + 2 = 10, then + 3 = 13" },
+        { title: "Doubles", formula: "near-doubles use a double you know", explanation: "If you know 7 + 7 = 14, then 7 + 8 is just one more.", tip: "7 + 8 = 14 + 1 = 15" },
+        { title: "Order Doesn't Matter", formula: "a + b = b + a", explanation: "Start with the bigger number to count on less.", tip: "4 + 9 → start at 9" },
+      ],
+      examples: [
+        { problem: "8 + 5 = ?", steps: ["8 + 2 makes 10.", "5 is 2 + 3, so 3 left.", "10 + 3 = 13"], answer: "13" },
+        { problem: "9 + 4 = ?", steps: ["9 + 1 makes 10.", "4 is 1 + 3, so 3 left.", "10 + 3 = 13"], answer: "13" },
+        { problem: "7 + 6 = ?", steps: ["7 + 3 makes 10.", "6 is 3 + 3, so 3 left.", "10 + 3 = 13"], answer: "13" },
+        { problem: "7 + 8 = ?", steps: ["Double 7 = 14.", "8 is one more than 7.", "14 + 1 = 15"], answer: "15" },
+        { problem: "9 + 9 = ?", steps: ["9 + 1 makes 10.", "Second 9 is 1 + 8.", "10 + 8 = 18"], answer: "18" },
+      ],
+    };
+  }
+  // Multi-digit (regrouping): the column method with carrying.
   return {
     skillName: "Addition",
     intro: "Addition means combining two numbers to find the total.",

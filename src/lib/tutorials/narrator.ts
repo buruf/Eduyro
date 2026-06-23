@@ -21,24 +21,29 @@ export interface Narrator {
   readonly isFallback: boolean;
 }
 
-/** Pick the most natural-sounding voice the browser offers. */
+// Known FEMALE voice names across Windows/Edge, Chrome, macOS/iOS, Android.
+const FEMALE_NAMES = /\b(aria|jenny|jane|nancy|sara|michelle|monica|ava|emma|amber|ashley|cora|elizabeth|libby|sonia|natasha|clara|zira|hazel|susan|linda|heera|samantha|karen|victoria|tessa|moira|fiona|serena|allison|kate|catherine|female)\b/i;
+const NATURAL = /\b(natural|neural|online|premium|enhanced|wavenet)\b/i;
+
+/** Pick the most natural-sounding FEMALE English voice the browser offers.
+ *  Scores every English voice (female + natural weighted highest) so we get the
+ *  warmest available voice rather than the OS default robotic one. Still a
+ *  browser voice — a studio-human voice needs a cloud TTS key (see header). */
 function pickBestVoice(): SpeechSynthesisVoice | null {
   if (typeof window === "undefined" || !window.speechSynthesis) return null;
-  const voices = window.speechSynthesis.getVoices();
+  const voices = window.speechSynthesis.getVoices().filter((v) => v.lang.startsWith("en"));
   if (!voices.length) return null;
 
-  // Ranked preferences — neural/natural voices first, then well-known decent ones.
-  const prefer = [
-    /natural/i, /neural/i,
-    /Google US English/i, /Google UK English Female/i,
-    /Microsoft (Aria|Jenny|Guy|Emma)/i,
-    /Samantha/i, /Karen/i, /Daniel/i,
-  ];
-  for (const re of prefer) {
-    const v = voices.find((v) => re.test(v.name) && v.lang.startsWith("en"));
-    if (v) return v;
-  }
-  return voices.find((v) => v.lang.startsWith("en")) ?? voices[0];
+  const score = (v: SpeechSynthesisVoice): number => {
+    let s = 0;
+    if (FEMALE_NAMES.test(v.name)) s += 5;
+    if (NATURAL.test(v.name)) s += 4;
+    if (/Google US English/i.test(v.name)) s += 2; // Google's default is female & decent
+    if (/en-US/i.test(v.lang)) s += 1;
+    if (/\b(male|david|mark|guy|daniel|alex|fred|george|james|paul|ravi)\b/i.test(v.name)) s -= 6; // avoid male
+    return s;
+  };
+  return [...voices].sort((a, b) => score(b) - score(a))[0] ?? voices[0];
 }
 
 class WebSpeechNarrator implements Narrator {

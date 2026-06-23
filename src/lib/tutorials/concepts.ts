@@ -381,7 +381,7 @@ export const CONCEPTS: Record<string, ConceptTutorial> = {
 export const LESSON_FRAMING: Record<string, { goal: string; bigIdea: string }> = {
   counting:          { goal: "Count objects and say how many.",                         bigIdea: "Each number is exactly one more than the number before it." },
   "place-value":     { goal: "Read and compare numbers up to 100.",                      bigIdea: "A digit's place tells its value — tens are worth ten times the ones." },
-  addition:          { goal: "Add two numbers to find the total.",                       bigIdea: "Adding combines groups; start from the ones and carry when needed." },
+  addition:          { goal: "Add two numbers to find the total.",                       bigIdea: "Addition combines two groups into one total — start from the bigger number and count on." },
   subtraction:       { goal: "Subtract to find how many are left or the difference.",    bigIdea: "Subtraction takes away; borrow from the next place when you can't subtract." },
   multiplication:    { goal: "Multiply using the times tables.",                         bigIdea: "Multiplication is repeated addition — 3 × 4 is four groups of three." },
   division:          { goal: "Divide a number into equal groups.",                       bigIdea: "Division is sharing equally — it undoes multiplication." },
