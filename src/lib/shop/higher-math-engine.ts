@@ -105,7 +105,7 @@ function qRecognize(): XP[] {
     const near = k + (n % 2 === 0 ? 1 : -1);
     if (near > 0 && !isPerfectSquare(near))
       out.push(tfXP(`rec:tfn:${near}`, `Is ${near} a perfect square?`, "False", 1 + n * 0.05));
-    out.push({ q: `What is √${k}?`, a: `${n}`, diff: 1 + n * 0.05, key: `rec:sqrt:${n}`, type: "short_answer", fmt: "square-root" });
+    out.push({ q: `What is the square root of ${k}?`, a: `${n}`, diff: 1 + n * 0.05, key: `rec:sqrt:${n}`, type: "short_answer", fmt: "square-root" });
   }
   // "which is a perfect square?" MC
   for (let n = 2; n <= 12; n++) {
@@ -124,7 +124,7 @@ function qSolvePerfect(): XP[] {
     const k = n * n;
     const d = 2 + n * 0.12;
     out.push({ q: `Solve x² = ${k}`, a: `±${n}`, diff: d, key: `sp:dir:${n}`, type: "short_answer", fmt: "direct" });
-    out.push({ q: `x² = ${k},  x = ±___`, a: `${n}`, diff: d, key: `sp:miss:${n}`, type: "short_answer", fmt: "missing-value" });
+    out.push({ q: `Solve x² = ${k}. Fill in the missing value:  x = ±___`, a: `${n}`, diff: d, key: `sp:miss:${n}`, type: "short_answer", fmt: "missing-value" });
     const mc = mcXP(`sp:mc:${n}`, "multiple-choice", `Solve x² = ${k}. Which is correct?`,
       `±${n}`, [`${n}`, `-${n}`, `±${2 * n}`], d + 0.4);
     if (mc) out.push(mc);
@@ -158,20 +158,20 @@ function qLargerNonPerfect(): XP[] {
   for (let n = 13; n <= 20; n++) {
     const k = n * n, d = 4 + (n - 13) * 0.1;
     out.push({ q: `Solve x² = ${k}`, a: `±${n}`, diff: d, key: `ln:dir:${n}`, type: "short_answer", fmt: "direct" });
-    out.push({ q: `x² = ${k},  x = ±___`, a: `${n}`, diff: d, key: `ln:miss:${n}`, type: "short_answer", fmt: "missing-value" });
+    out.push({ q: `Solve x² = ${k}. Fill in the missing value:  x = ±___`, a: `${n}`, diff: d, key: `ln:miss:${n}`, type: "short_answer", fmt: "missing-value" });
   }
   for (const [k, a] of SIMPLIFY)
-    out.push({ q: `Simplify √${k}`, a, diff: 5 + k * 0.002, key: `ln:simp:${k}`, type: "short_answer", fmt: "simplify" });
+    out.push({ q: `Simplify the square root of ${k}.`, a, diff: 5 + k * 0.002, key: `ln:simp:${k}`, type: "short_answer", fmt: "simplify" });
   for (const k of [5, 7, 10, 11, 13, 17, 19, 23, 29, 31, 37, 43]) {
     const lo = Math.floor(Math.sqrt(k));
     const near = (k - lo * lo) < ((lo + 1) ** 2 - k) ? lo : lo + 1;
-    const mc = mcXP(`ln:est:${k}`, "estimate", `Estimate √${k} to the nearest whole number.`,
+    const mc = mcXP(`ln:est:${k}`, "estimate", `Estimate the square root of ${k} to the nearest whole number.`,
       `${near}`, [`${lo}`, `${lo + 1}`, `${lo + 2}`].filter((x) => x !== `${near}`), 5.5 + k * 0.003);
     if (mc) out.push(mc);
   }
   for (const [a, b] of [[10, 17], [26, 37], [50, 65], [82, 101], [40, 55]]) {
-    const mc = mcXP(`ln:cmp:${a}_${b}`, "compare", `Which is larger: √${a} or √${b}?`,
-      `√${b}`, [`√${a}`, "They are equal"], 5.5);
+    const mc = mcXP(`ln:cmp:${a}_${b}`, "compare", `Which is larger: the square root of ${a} or the square root of ${b}?`,
+      `the square root of ${b}`, [`the square root of ${a}`, "They are equal"], 5.5);
     if (mc) out.push(mc);
   }
   return out;
@@ -232,7 +232,7 @@ function qEvaluateAxis(): XP[] {
   for (let b = 1; b <= 6; b++) for (let c = 1; c <= 6; c++) for (let v = 1; v <= 6; v++)
     out.push({ q: `Evaluate x² + ${term(b, "x")} + ${c} when x = ${v}`, a: `${v * v + b * v + c}`, diff: 9 + (b + c + v) * 0.03, key: `ev:${b}_${c}_${v}`, type: "short_answer", fmt: "evaluate" });
   for (let b = 2; b <= 40; b += 2)
-    out.push({ q: `Axis of symmetry of y = x² + ${b}x`, a: `x = ${-b / 2}`, diff: 9.5 + b * 0.02, key: `ax:${b}`, type: "short_answer", fmt: "axis" });
+    out.push({ q: `Find the axis of symmetry of y = x² + ${b}x.`, a: `x = ${-b / 2}`, diff: 9.5 + b * 0.02, key: `ax:${b}`, type: "short_answer", fmt: "axis" });
   return out;
 }
 
@@ -445,7 +445,7 @@ const CURRICULA: Record<string, Unit[]> = {
   M13: [
     { id: "q-recognize", label: "Perfect squares & square roots", objective: "Student recognizes perfect squares and finds square roots", grade: "Grade 9", stars: 1, range: [1, 12], multiFormat: true, pool: qRecognize, example: { problem: "Is 49 a perfect square?", steps: ["7 × 7 = 49, so yes", "√49 = 7"], answer: "True" } },
     { id: "q-solve-perfect", label: "Solve x² = k (perfect squares)", objective: "Student solves x² = k and finds BOTH the positive and negative root", grade: "Grade 9", stars: 2, range: [13, 30], multiFormat: true, pool: qSolvePerfect, example: { problem: "Solve x² = 49", steps: ["Take the square root of both sides", "Remember both signs", "x = ±7"], answer: "±7" } },
-    { id: "q-larger", label: "Larger, estimate & simplify roots", objective: "Student solves larger squares and estimates/simplifies non-perfect roots", grade: "Grade 9-10", stars: 3, range: [31, 48], multiFormat: true, pool: qLargerNonPerfect, example: { problem: "Simplify √50", steps: ["50 = 25 × 2", "√25 × √2 = 5√2"], answer: "5√2" } },
+    { id: "q-larger", label: "Larger, estimate & simplify roots", objective: "Student solves larger squares and estimates/simplifies non-perfect roots", grade: "Grade 9-10", stars: 3, range: [31, 48], multiFormat: true, pool: qLargerNonPerfect, example: { problem: "Simplify the square root of 50.", steps: ["50 = 25 × 2", "√25 × √2 = 5√2"], answer: "5√2" } },
     { id: "q-zero", label: "Zero-product property", objective: "Student solves factored quadratics", grade: "Grade 9", stars: 3, range: [49, 62], multiFormat: true, pool: qZeroProduct, example: { problem: "Solve (x - 2)(x - 5) = 0", steps: ["Set each factor to 0", "x = 2 or x = 5"], answer: "2, 5" } },
     { id: "q-factor", label: "Solve by factoring", objective: "Student factors and solves x² - Sx + P = 0", grade: "Grade 9-10", stars: 4, range: [63, 76], multiFormat: true, pool: qFactor, example: { problem: "Solve x² - 7x + 12 = 0", steps: ["Find two numbers that multiply to 12, add to 7: 3 and 4", "x = 3 or x = 4"], answer: "3, 4" } },
     { id: "q-disc", label: "Discriminant & # of solutions", objective: "Student computes b² - 4ac and reads its sign", grade: "Grade 10", stars: 4, range: [77, 90], multiFormat: true, pool: qDiscriminant, example: { problem: "How many real solutions? x² + 2x + 5 = 0", steps: ["b² - 4ac = 4 - 20 = -16", "Negative → no real solutions"], answer: "0" } },
