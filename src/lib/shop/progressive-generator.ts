@@ -43,9 +43,12 @@ import type { ShopSkill } from "./skills";
 
 export interface WorksheetProblem {
   id: string;
-  type: "arithmetic" | "fill_blank" | "short_answer";
+  type: "arithmetic" | "fill_blank" | "short_answer" | "multiple_choice" | "true_false";
   question: string;
   answer: string;
+  /** Present for multiple_choice / true_false items — the selectable option VALUES
+   *  (not letters), so grading stays a plain value match. */
+  options?: string[];
   points: number;
   zone: 1 | 2 | 3 | 4 | 5;
 }

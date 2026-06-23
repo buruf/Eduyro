@@ -36,53 +36,203 @@ const frac = (n: number, d: number): string => {
   return dd === 1 ? String(nn) : `${nn}/${dd}`;
 };
 
-interface XP { q: string; a: string; diff: number; key: string; }
+interface XP {
+  q: string; a: string; diff: number; key: string;
+  // Multi-format authoring (M13). Older units omit these → plain short-answer.
+  type?: "short_answer" | "multiple_choice" | "true_false";
+  options?: string[];
+  fmt?: string; // human label for the format (variety accounting / debugging)
+}
+
+// ── Seeded RNG + deterministic shuffle (per sheet, so regeneration is stable) ──
+function mulberry32(seed: number): () => number {
+  return () => {
+    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hashStr(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+// Order options deterministically per key so the correct answer isn't always in
+// the same position, but a re-fetch of the same problem is stable.
+function shuffleByKey<T>(arr: T[], key: string): T[] {
+  const rng = mulberry32(hashStr(key));
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+// Build a multiple-choice XP. Distractors are de-duplicated against the correct
+// answer AND each other (collision guard — no "A. x²=1  B. x²=1"); extras are
+// dropped and we keep up to 4 distinct options. Returns null if we cannot field
+// at least 3 distinct options, so callers can skip a degenerate item.
+function mcXP(
+  key: string, fmt: string, q: string, correct: string, rawDistractors: string[], diff: number,
+): XP | null {
+  const opts: string[] = [correct];
+  for (const d of rawDistractors) {
+    if (opts.length >= 4) break;
+    if (!opts.includes(d)) opts.push(d);
+  }
+  if (opts.length < 3) return null;
+  return { q, a: correct, diff, key, type: "multiple_choice", fmt, options: shuffleByKey(opts, key) };
+}
+function tfXP(key: string, q: string, correct: "True" | "False", diff: number): XP {
+  return { q, a: correct, diff, key, type: "true_false", fmt: "true/false", options: ["True", "False"] };
+}
 
 // ═════════════════════════════════════════════════════════════════════════════
-// M13 — QUADRATICS
+// M13 — QUADRATICS  (multi-format, hundreds of variants per micro-skill)
+// Each micro-skill teaches ONE idea through many representations: direct solve,
+// missing-value, multiple choice, true/false, find-the-mistake, find-the-equation,
+// complete-the-pattern, match-as-MC. Difficulty rises by reasoning, not by number
+// size. All MC options are VALUES (graded by a plain match); distractors are
+// collision-guarded.
 // ═════════════════════════════════════════════════════════════════════════════
-function qSquareRoot(): XP[] {
+const isPerfectSquare = (n: number): boolean => Number.isInteger(Math.sqrt(n));
+
+// ── Micro-skill 1: recognize perfect squares & square roots ──
+function qRecognize(): XP[] {
   const out: XP[] = [];
-  for (let n = 1; n <= 30; n++) out.push({ q: `Solve x² = ${n * n}`, a: `±${n}`, diff: n, key: `qsr:${n}` });
+  for (let n = 1; n <= 20; n++) {
+    const k = n * n;
+    out.push(tfXP(`rec:tf:${k}`, `Is ${k} a perfect square?`, "True", 1 + n * 0.05));
+    const near = k + (n % 2 === 0 ? 1 : -1);
+    if (near > 0 && !isPerfectSquare(near))
+      out.push(tfXP(`rec:tfn:${near}`, `Is ${near} a perfect square?`, "False", 1 + n * 0.05));
+    out.push({ q: `What is √${k}?`, a: `${n}`, diff: 1 + n * 0.05, key: `rec:sqrt:${n}`, type: "short_answer", fmt: "square-root" });
+  }
+  // "which is a perfect square?" MC
+  for (let n = 2; n <= 12; n++) {
+    const k = n * n;
+    const mc = mcXP(`rec:mc:${n}`, "which-is-square", "Which of these is a perfect square?",
+      `${k}`, [`${k + 1}`, `${k - 1}`, `${k + 2}`], 1.5 + n * 0.05);
+    if (mc) out.push(mc);
+  }
   return out;
 }
+
+// ── Micro-skill 2: solve x² = k for perfect squares (the user's spec) ──
+function qSolvePerfect(): XP[] {
+  const out: XP[] = [];
+  for (let n = 1; n <= 12; n++) {
+    const k = n * n;
+    const d = 2 + n * 0.12;
+    out.push({ q: `Solve x² = ${k}`, a: `±${n}`, diff: d, key: `sp:dir:${n}`, type: "short_answer", fmt: "direct" });
+    out.push({ q: `x² = ${k},  x = ±___`, a: `${n}`, diff: d, key: `sp:miss:${n}`, type: "short_answer", fmt: "missing-value" });
+    const mc = mcXP(`sp:mc:${n}`, "multiple-choice", `Solve x² = ${k}. Which is correct?`,
+      `±${n}`, [`${n}`, `-${n}`, `±${2 * n}`], d + 0.4);
+    if (mc) out.push(mc);
+    out.push(tfXP(`sp:tf:${n}`, `If x² = ${k}, then x = ${n} is the ONLY solution. True or False?`, "False", d + 0.4));
+    const mis = mcXP(`sp:mis:${n}`, "find-the-mistake",
+      `A student solved x² = ${k} and wrote x = ${n}. What is the mistake?`,
+      "Forgot the negative solution", ["Multiplied incorrectly", "Used the wrong square root", "No mistake"], d + 0.6);
+    if (mis) out.push(mis);
+    // find-the-equation (collision-guarded: skip the n=1 degenerate where k≈n)
+    const fe = mcXP(`sp:fe:${n}`, "find-the-equation", `Which equation has the solution x = ±${n}?`,
+      `x² = ${k}`, [`x² = ${n}`, `x² = ${k + 1}`, `x² = ${2 * k}`], d + 0.6);
+    if (fe) out.push(fe);
+    // match-as-MC
+    const ma = mcXP(`sp:ma:${n}`, "match→MC", `Match x² = ${k} to its solution.`,
+      `±${n}`, [`±${n - 1}`, `±${n + 1}`, `${n}`], d + 0.5);
+    if (ma) out.push(ma);
+  }
+  // complete-the-pattern
+  for (let n = 3; n <= 12; n++)
+    out.push({ q: `Complete the pattern:  x²=${(n - 2) ** 2} → x=±${n - 2};  x²=${(n - 1) ** 2} → x=±${n - 1};  x²=${n * n} → x=±___`, a: `${n}`, diff: 3 + n * 0.1, key: `sp:pat:${n}`, type: "short_answer", fmt: "pattern" });
+  return out;
+}
+
+// ── Micro-skill 3: larger & non-perfect squares — estimate, compare, simplify ──
+const SIMPLIFY: [number, string][] = [
+  [8, "2√2"], [12, "2√3"], [18, "3√2"], [20, "2√5"], [27, "3√3"], [32, "4√2"],
+  [45, "3√5"], [48, "4√3"], [50, "5√2"], [72, "6√2"], [75, "5√3"], [98, "7√2"], [200, "10√2"],
+];
+function qLargerNonPerfect(): XP[] {
+  const out: XP[] = [];
+  for (let n = 13; n <= 20; n++) {
+    const k = n * n, d = 4 + (n - 13) * 0.1;
+    out.push({ q: `Solve x² = ${k}`, a: `±${n}`, diff: d, key: `ln:dir:${n}`, type: "short_answer", fmt: "direct" });
+    out.push({ q: `x² = ${k},  x = ±___`, a: `${n}`, diff: d, key: `ln:miss:${n}`, type: "short_answer", fmt: "missing-value" });
+  }
+  for (const [k, a] of SIMPLIFY)
+    out.push({ q: `Simplify √${k}`, a, diff: 5 + k * 0.002, key: `ln:simp:${k}`, type: "short_answer", fmt: "simplify" });
+  for (const k of [5, 7, 10, 11, 13, 17, 19, 23, 29, 31, 37, 43]) {
+    const lo = Math.floor(Math.sqrt(k));
+    const near = (k - lo * lo) < ((lo + 1) ** 2 - k) ? lo : lo + 1;
+    const mc = mcXP(`ln:est:${k}`, "estimate", `Estimate √${k} to the nearest whole number.`,
+      `${near}`, [`${lo}`, `${lo + 1}`, `${lo + 2}`].filter((x) => x !== `${near}`), 5.5 + k * 0.003);
+    if (mc) out.push(mc);
+  }
+  for (const [a, b] of [[10, 17], [26, 37], [50, 65], [82, 101], [40, 55]]) {
+    const mc = mcXP(`ln:cmp:${a}_${b}`, "compare", `Which is larger: √${a} or √${b}?`,
+      `√${b}`, [`√${a}`, "They are equal"], 5.5);
+    if (mc) out.push(mc);
+  }
+  return out;
+}
+
+// ── Micro-skill 4: zero-product property ──
 function qZeroProduct(): XP[] {
   const out: XP[] = [];
-  for (let a = 1; a <= 9; a++) for (let b = a; b <= 9; b++)
-    out.push({ q: `Solve (x - ${a})(x - ${b}) = 0`, a: a === b ? `${a}` : `${a}, ${b}`, diff: a + b, key: `qzp:${a}_${b}` });
+  for (let a = 1; a <= 9; a++) for (let b = a; b <= 9; b++) {
+    const ans = a === b ? `${a}` : `${a}, ${b}`, d = 6 + (a + b) * 0.1;
+    out.push({ q: `Solve (x - ${a})(x - ${b}) = 0`, a: ans, diff: d, key: `zp:dir:${a}_${b}`, type: "short_answer", fmt: "direct" });
+    if (a !== b) {
+      const mc = mcXP(`zp:mc:${a}_${b}`, "multiple-choice", `Solve (x - ${a})(x - ${b}) = 0. Which is correct?`,
+        `${a}, ${b}`, [`${-a}, ${-b}`, `${a}, ${-b}`, `${a + b}`], d + 0.3);
+      if (mc) out.push(mc);
+    }
+  }
+  for (let a = 1; a <= 9; a++) {
+    out.push(tfXP(`zp:tf:${a}`, `Is x = ${a} a solution of (x - ${a})(x + 2) = 0?  True or False?`, "True", 6.2 + a * 0.05));
+  }
   return out;
 }
+
+// ── Micro-skill 5: solve by factoring ──
 function qFactor(): XP[] {
   const out: XP[] = [];
   for (let p = 1; p <= 9; p++) for (let q = p; q <= 9; q++) {
-    const s = p + q, prod = p * q;
-    out.push({ q: `Solve x² - ${s}x + ${prod} = 0`, a: p === q ? `${p}` : `${p}, ${q}`, diff: s + prod / 4, key: `qf:${p}_${q}` });
+    const s = p + q, prod = p * q, ans = p === q ? `${p}` : `${p}, ${q}`, d = 7 + (s + prod / 4) * 0.05;
+    out.push({ q: `Solve x² - ${s}x + ${prod} = 0`, a: ans, diff: d, key: `fac:dir:${p}_${q}`, type: "short_answer", fmt: "direct" });
+    if (p !== q) {
+      const mc = mcXP(`fac:fe:${p}_${q}`, "find-the-equation",
+        `For which value of k can x² + kx + ${prod} be factored as (x + ${p})(x + ${q})?`,
+        `k = ${s}`, [`k = ${prod}`, `k = ${-s}`, `k = ${Math.abs(p - q) || prod}`], d + 0.4);
+      if (mc) out.push(mc);
+    }
   }
   return out;
 }
+
+// ── Micro-skill 6: the discriminant & number of real solutions ──
 function qDiscriminant(): XP[] {
   const out: XP[] = [];
-  for (let b = 1; b <= 9; b++) for (let c = 1; c <= 9; c++)
-    out.push({ q: `Find the discriminant of x² + ${term(b, "x")} + ${c}`, a: `${b * b - 4 * c}`, diff: b + c + 6, key: `qd:${b}_${c}` });
-  return out;
-}
-function qEvaluate(): XP[] {
-  const out: XP[] = [];
-  for (let b = 1; b <= 6; b++) for (let c = 1; c <= 6; c++) for (let v = 1; v <= 6; v++)
-    out.push({ q: `Evaluate x² + ${term(b, "x")} + ${c} when x = ${v}`, a: `${v * v + b * v + c}`, diff: b + c + v, key: `qe:${b}_${c}_${v}` });
-  return out;
-}
-function qNumSolutions(): XP[] {
-  const out: XP[] = [];
   for (let b = 1; b <= 9; b++) for (let c = 1; c <= 9; c++) {
-    const d = b * b - 4 * c;
-    out.push({ q: `How many real solutions? x² + ${term(b, "x")} + ${c} = 0`, a: d > 0 ? "2" : d === 0 ? "1" : "0", diff: b + c + 9, key: `qns:${b}_${c}` });
+    const disc = b * b - 4 * c, d = 8 + (b + c) * 0.05;
+    out.push({ q: `Find the discriminant of x² + ${term(b, "x")} + ${c}`, a: `${disc}`, diff: d, key: `disc:dir:${b}_${c}`, type: "short_answer", fmt: "direct" });
+    const ns = disc > 0 ? "2" : disc === 0 ? "1" : "0";
+    const mc = mcXP(`disc:ns:${b}_${c}`, "multiple-choice",
+      `How many real solutions does x² + ${term(b, "x")} + ${c} = 0 have?`,
+      ns, ["0", "1", "2"].filter((x) => x !== ns), d + 0.3);
+    if (mc) out.push(mc);
   }
   return out;
 }
-function qAxis(): XP[] {
+
+// ── Micro-skill 7: evaluate quadratics & axis of symmetry (mixed mastery) ──
+function qEvaluateAxis(): XP[] {
   const out: XP[] = [];
-  for (let b = 2; b <= 60; b += 2) out.push({ q: `Axis of symmetry of y = x² + ${b}x`, a: `x = ${-b / 2}`, diff: b / 2 + 10, key: `qax:${b}` });
+  for (let b = 1; b <= 6; b++) for (let c = 1; c <= 6; c++) for (let v = 1; v <= 6; v++)
+    out.push({ q: `Evaluate x² + ${term(b, "x")} + ${c} when x = ${v}`, a: `${v * v + b * v + c}`, diff: 9 + (b + c + v) * 0.03, key: `ev:${b}_${c}_${v}`, type: "short_answer", fmt: "evaluate" });
+  for (let b = 2; b <= 40; b += 2)
+    out.push({ q: `Axis of symmetry of y = x² + ${b}x`, a: `x = ${-b / 2}`, diff: 9.5 + b * 0.02, key: `ax:${b}`, type: "short_answer", fmt: "axis" });
   return out;
 }
 
@@ -286,17 +436,20 @@ function caSlope(): XP[] {
 interface Unit {
   id: string; label: string; objective: string; grade: string; stars: number;
   range: [number, number]; pool: () => XP[]; example: WorkedExample;
+  /** Multi-format micro-skill (M13): use format-aware, seeded selection so a
+   *  sheet mixes representations and never floods one format. */
+  multiFormat?: boolean;
 }
 
 const CURRICULA: Record<string, Unit[]> = {
   M13: [
-    { id: "q-sqrt", label: "Solve x² = k", objective: "Student solves pure quadratics by square roots", grade: "Grade 9", stars: 2, range: [1, 15], pool: qSquareRoot, example: { problem: "Solve x² = 49", steps: ["Take the square root of both sides", "x = ±7"], answer: "±7" } },
-    { id: "q-zero", label: "Zero-product property", objective: "Student solves factored quadratics", grade: "Grade 9", stars: 3, range: [16, 30], pool: qZeroProduct, example: { problem: "Solve (x - 2)(x - 5) = 0", steps: ["Set each factor to 0", "x = 2 or x = 5"], answer: "2, 5" } },
-    { id: "q-factor", label: "Solve by factoring", objective: "Student factors and solves x² - Sx + P = 0", grade: "Grade 9-10", stars: 4, range: [31, 45], pool: qFactor, example: { problem: "Solve x² - 7x + 12 = 0", steps: ["Find two numbers that multiply to 12, add to 7: 3 and 4", "x = 3 or x = 4"], answer: "3, 4" } },
-    { id: "q-disc", label: "The discriminant", objective: "Student computes b² - 4ac", grade: "Grade 10", stars: 3, range: [46, 60], pool: qDiscriminant, example: { problem: "Discriminant of x² + 5x + 6", steps: ["b² - 4ac = 25 - 24"], answer: "1" } },
-    { id: "q-nsol", label: "Number of real solutions", objective: "Student reads the discriminant's sign", grade: "Grade 10", stars: 4, range: [61, 74], pool: qNumSolutions, example: { problem: "How many real solutions? x² + 2x + 5 = 0", steps: ["Discriminant = 4 - 20 = -16 < 0"], answer: "0" } },
-    { id: "q-eval", label: "Evaluate a quadratic", objective: "Student evaluates x² + bx + c", grade: "Grade 9", stars: 3, range: [75, 88], pool: qEvaluate, example: { problem: "Evaluate x² + 2x + 1 when x = 3", steps: ["9 + 6 + 1"], answer: "16" } },
-    { id: "q-axis", label: "Axis of symmetry", objective: "Student finds the parabola's axis x = -b/2a", grade: "Grade 10", stars: 5, range: [89, 100], pool: qAxis, example: { problem: "Axis of symmetry of y = x² + 6x", steps: ["x = -b/2 = -6/2"], answer: "x = -3" } },
+    { id: "q-recognize", label: "Perfect squares & square roots", objective: "Student recognizes perfect squares and finds square roots", grade: "Grade 9", stars: 1, range: [1, 12], multiFormat: true, pool: qRecognize, example: { problem: "Is 49 a perfect square?", steps: ["7 × 7 = 49, so yes", "√49 = 7"], answer: "True" } },
+    { id: "q-solve-perfect", label: "Solve x² = k (perfect squares)", objective: "Student solves x² = k and finds BOTH the positive and negative root", grade: "Grade 9", stars: 2, range: [13, 30], multiFormat: true, pool: qSolvePerfect, example: { problem: "Solve x² = 49", steps: ["Take the square root of both sides", "Remember both signs", "x = ±7"], answer: "±7" } },
+    { id: "q-larger", label: "Larger, estimate & simplify roots", objective: "Student solves larger squares and estimates/simplifies non-perfect roots", grade: "Grade 9-10", stars: 3, range: [31, 48], multiFormat: true, pool: qLargerNonPerfect, example: { problem: "Simplify √50", steps: ["50 = 25 × 2", "√25 × √2 = 5√2"], answer: "5√2" } },
+    { id: "q-zero", label: "Zero-product property", objective: "Student solves factored quadratics", grade: "Grade 9", stars: 3, range: [49, 62], multiFormat: true, pool: qZeroProduct, example: { problem: "Solve (x - 2)(x - 5) = 0", steps: ["Set each factor to 0", "x = 2 or x = 5"], answer: "2, 5" } },
+    { id: "q-factor", label: "Solve by factoring", objective: "Student factors and solves x² - Sx + P = 0", grade: "Grade 9-10", stars: 4, range: [63, 76], multiFormat: true, pool: qFactor, example: { problem: "Solve x² - 7x + 12 = 0", steps: ["Find two numbers that multiply to 12, add to 7: 3 and 4", "x = 3 or x = 4"], answer: "3, 4" } },
+    { id: "q-disc", label: "Discriminant & # of solutions", objective: "Student computes b² - 4ac and reads its sign", grade: "Grade 10", stars: 4, range: [77, 90], multiFormat: true, pool: qDiscriminant, example: { problem: "How many real solutions? x² + 2x + 5 = 0", steps: ["b² - 4ac = 4 - 20 = -16", "Negative → no real solutions"], answer: "0" } },
+    { id: "q-evalaxis", label: "Evaluate & axis of symmetry", objective: "Student evaluates quadratics and finds the axis x = -b/2a", grade: "Grade 10", stars: 5, range: [91, 100], multiFormat: true, pool: qEvaluateAxis, example: { problem: "Axis of symmetry of y = x² + 6x", steps: ["x = -b/2 = -6/2"], answer: "x = -3" } },
   ],
   M14: [
     { id: "f-lin", label: "Evaluate f(x) = mx + b", objective: "Student evaluates a linear function", grade: "Grade 8-9", stars: 2, range: [1, 16], pool: fEvalLinear, example: { problem: "f(x) = 2x + 3. Find f(4)", steps: ["2(4) + 3"], answer: "11" } },
@@ -387,6 +540,46 @@ function selectProblems(pool: XP[], t: number, count: number): XP[] {
   return chosen.sort((a, b) => a.diff - b.diff);
 }
 
+// Format-aware selection for multi-format micro-skills (M13). Picks an ascending
+// difficulty window (so the unit's reasoning progresses), shuffles within equal
+// difficulty (seeded → unpredictable order but stable per sheet), and caps any
+// single format so a sheet always MIXES representations instead of flooding one.
+function selectMultiFormat(pool: XP[], t: number, count: number, seed: number): XP[] {
+  const rng = mulberry32(seed);
+  const seen = new Set<string>();
+  const uniq = pool.filter((p) => (seen.has(p.key) ? false : (seen.add(p.key), true)));
+  // shuffle, then stable-sort by difficulty → random order within equal-diff ties
+  for (let i = uniq.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [uniq[i], uniq[j]] = [uniq[j], uniq[i]]; }
+  const sorted = uniq.sort((a, b) => a.diff - b.diff);
+  const N = sorted.length;
+  if (N <= count) { const out: XP[] = []; for (let i = 0; i < count; i++) out.push(sorted[i % N]); return out; }
+  // Keep the window only modestly larger than a sheet so it SLIDES a long way as
+  // t grows → consecutive sheets in the same micro-skill draw largely different
+  // questions (high cross-sheet variety) while difficulty still rises with t.
+  const W = Math.min(N, Math.max(count + 6, Math.round(N * 0.45)));
+  const start = Math.round(t * (N - W));
+  const win = sorted.slice(start, start + W);
+  const cap = Math.max(3, Math.ceil(count / 3)); // ≤ ~1/3 of a sheet per format
+  const counts: Record<string, number> = {};
+  const usedText = new Set<string>();           // never repeat a STEM within a sheet
+  const out: XP[] = [];
+  for (const v of win) {
+    const f = v.fmt ?? "_";
+    if (usedText.has(v.q)) continue;            // same stem (e.g. MC with new options) → skip
+    if ((counts[f] ?? 0) >= cap) continue;
+    counts[f] = (counts[f] ?? 0) + 1;
+    usedText.add(v.q);
+    out.push(v);
+    if (out.length >= count) break;
+  }
+  // If caps left us short (narrow window), backfill ignoring the cap (still no
+  // repeated stems).
+  if (out.length < count) {
+    for (const v of win) { if (usedText.has(v.q)) continue; usedText.add(v.q); out.push(v); if (out.length >= count) break; }
+  }
+  return out.sort((a, b) => a.diff - b.diff);
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 export function isHigherMathLevel(code: string): boolean {
   return code in CURRICULA;
@@ -400,9 +593,18 @@ export function generateHigherMathSheet(
   const span = unit.range[1] - unit.range[0];
   const t = span === 0 ? 0.5 : (sheetNumber - unit.range[0]) / span;
 
-  const selected = selectProblems(buildScoredPool(code, ui), t, problemCount);
+  const scored = buildScoredPool(code, ui);
+  // Multi-format micro-skills use seeded, format-aware selection (deterministic
+  // per sheet so self-heal/regeneration stays stable). Single-format units keep
+  // the original spread selection.
+  const selected = unit.multiFormat
+    ? selectMultiFormat(scored, t, problemCount, hashStr(`${code}:${sheetNumber}`))
+    : selectProblems(scored, t, problemCount);
   const problems = selected.map((p, i) => ({
-    id: nanoid(8), type: "short_answer" as const, question: p.q, answer: p.a, points: 1,
+    id: nanoid(8),
+    type: (p.type ?? "short_answer") as "short_answer" | "multiple_choice" | "true_false",
+    question: p.q, answer: p.a, points: 1,
+    ...(p.options ? { options: p.options } : {}),
     zone: (Math.floor(i / Math.ceil(problemCount / 5)) + 1) as 1 | 2 | 3 | 4 | 5,
   }));
   const answerKey = problems.map((p) => ({ id: p.id, answer: p.answer }));
@@ -433,7 +635,11 @@ export function validateHigherMathPack(code: string, totalSheets = 100): {
     const unit = CURRICULA[code][ui];
     const span = unit.range[1] - unit.range[0];
     const t = span === 0 ? 0.5 : (s - unit.range[0]) / span;
-    const sel = selectProblems(buildScoredPool(code, ui), t, 30);
+    // Validate the SAME selection path the engine actually uses for this unit.
+    const scored = buildScoredPool(code, ui);
+    const sel = unit.multiFormat
+      ? selectMultiFormat(scored, t, 30, hashStr(`${code}:${s}`))
+      : selectProblems(scored, t, 30);
     const qs = sel.map((p) => p.q);
     const poolSize = new Set(unit.pool().map((p) => p.key)).size;
     const dupes = qs.length - new Set(qs).size;
