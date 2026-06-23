@@ -87,15 +87,16 @@ function AdditionVisual() {
   const merged = step >= 2;
   return (
     <svg viewBox="0 0 360 200" className="w-full">
-      {/* 3 blue dots */}
+      {/* 3 blue dots — base 60,96,132; merged → 108,144,180 (+48) */}
       {[0, 1, 2].map((i) => (
-        <g key={`b${i}`} style={move(merged ? 60 : 0, 0)}>
+        <g key={`b${i}`} style={move(merged ? 48 : 0, 0)}>
           <circle cx={60 + i * 36} cy={80} r={15} fill={BLUE} style={fade(true)} />
         </g>
       ))}
-      {/* 2 gold dots */}
+      {/* 2 gold dots — base 256,292; merged → 216,252 (−40) so all 5 dots sit
+          evenly spaced (36px apart) with NO overlap onto the last blue dot. */}
       {[0, 1].map((i) => (
-        <g key={`g${i}`} style={move(merged ? -64 : 0, 0)}>
+        <g key={`g${i}`} style={move(merged ? -40 : 0, 0)}>
           <circle cx={256 + i * 36} cy={80} r={15} fill={GOLD} />
         </g>
       ))}
