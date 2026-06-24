@@ -84,9 +84,9 @@ function enumConvert(): XP[] {
   const out: XP[] = [];
   const fd: [number, number, string][] = [[1,2,"0.5"],[1,4,"0.25"],[3,4,"0.75"],[1,5,"0.2"],[2,5,"0.4"],[3,5,"0.6"],[4,5,"0.8"],[1,10,"0.1"],[3,10,"0.3"],[7,10,"0.7"],[1,20,"0.05"]];
   for (const [n,d,dec] of fd) {
-    out.push({ q: `${F(n,d)} → decimal`, a: dec, diff: d + 30, key: `cfd:${n}/${d}` });
-    out.push({ q: `${dec} → fraction`, a: F(n,d), diff: d + 32, key: `cdf:${dec}` });
-    out.push({ q: `${dec} → percent`, a: `${Math.round(parseFloat(dec)*100)}%`, diff: d + 34, key: `cdp:${dec}` });
+    out.push({ q: `Write ${F(n,d)} as a decimal.`, a: dec, diff: d + 30, key: `cfd:${n}/${d}` });
+    out.push({ q: `Write ${dec} as a fraction.`, a: F(n,d), diff: d + 32, key: `cdf:${dec}` });
+    out.push({ q: `Write ${dec} as a percent.`, a: `${Math.round(parseFloat(dec)*100)}%`, diff: d + 34, key: `cdp:${dec}` });
   }
   return out;
 }
@@ -97,7 +97,7 @@ function enumRatioSimplify(): XP[] {
   for (let a = 2; a <= 24; a++) for (let b = 2; b <= 24; b++) {
     const g = gcd(a, b); if (g === 1) continue;
     const key = `${a}:${b}`;
-    out.push({ q: `${a} : ${b}`, a: `${a/g} : ${b/g}`, diff: a + b + g, key: `rs:${key}` });
+    out.push({ q: `Simplify the ratio ${a} : ${b}.`, a: `${a/g} : ${b/g}`, diff: a + b + g, key: `rs:${key}` });
   }
   void seen; return out;
 }
@@ -106,7 +106,7 @@ function enumRatioEquiv(): XP[] {
   for (let a = 1; a <= 9; a++) for (let b = 1; b <= 9; b++) {
     if (gcd(a, b) !== 1) continue;          // start from a reduced ratio
     for (let k = 2; k <= 6; k++)
-      out.push({ q: `${a} : ${b} = ${a*k} : ___`, a: String(b*k), diff: (a+b) + k * 4, key: `re:${a}:${b}x${k}` });
+      out.push({ q: `Find the missing number:  ${a} : ${b} = ${a*k} : ___`, a: String(b*k), diff: (a+b) + k * 4, key: `re:${a}:${b}x${k}` });
   }
   return out;
 }
@@ -117,14 +117,14 @@ function enumProportion(): XP[] {
   for (let a = 1; a <= 9; a++) for (let b = 1; b <= 9; b++) {
     if (gcd(a, b) !== 1) continue;
     for (let k = 2; k <= 6; k++)
-      out.push({ q: `${a} : ${b} = ___ : ${b*k}`, a: String(a*k), diff: (a + b) + k * 5 + 8, key: `pr:${a}_${b}_${k}` });
+      out.push({ q: `Find the missing number:  ${a} : ${b} = ___ : ${b*k}`, a: String(a*k), diff: (a + b) + k * 5 + 8, key: `pr:${a}_${b}_${k}` });
   }
   return out;
 }
 function enumScale(): XP[] {
   const out: XP[] = [];
   for (let a = 2; a <= 12; a++) for (let k = 2; k <= 8; k++)
-    out.push({ q: `${a} : ${a+1}  × ${k}`, a: `${a*k} : ${(a+1)*k}`, diff: a + k * 5 + 12, key: `sc:${a}x${k}` });
+    out.push({ q: `Write an equivalent ratio: scale ${a} : ${a+1} by ${k}.`, a: `${a*k} : ${(a+1)*k}`, diff: a + k * 5 + 12, key: `sc:${a}x${k}` });
   return out;
 }
 
@@ -133,32 +133,32 @@ function enumEvaluate(opSym: "+" | "-", ): XP[] {
   const out: XP[] = [];
   for (let v = 1; v <= 12; v++) for (let b = 1; b <= 12; b++) {
     const ans = opSym === "+" ? v + b : v - b;
-    out.push({ q: `x ${opSym} ${b},  x = ${v}`, a: String(ans), diff: v + b + 5, key: `ev${opSym}:${v}_${b}` });
+    out.push({ q: `Evaluate x ${opSym} ${b} when x = ${v}.`, a: String(ans), diff: v + b + 5, key: `ev${opSym}:${v}_${b}` });
   }
   return out;
 }
 function enumEvaluateMul(): XP[] {
   const out: XP[] = [];
   for (let v = 1; v <= 12; v++) for (let m = 2; m <= 9; m++)
-    out.push({ q: `${m}x,  x = ${v}`, a: String(m*v), diff: v + m * 2 + 10, key: `evm:${m}_${v}` });
+    out.push({ q: `Evaluate ${m}x when x = ${v}.`, a: String(m*v), diff: v + m * 2 + 10, key: `evm:${m}_${v}` });
   return out;
 }
 function enumCombine(): XP[] {
   const out: XP[] = [];
   for (let m = 1; m <= 9; m++) for (let n = 1; n <= 9; n++)
-    out.push({ q: `${term(m,"x")} + ${term(n,"x")}`, a: term(m+n,"x"), diff: m + n + 8, key: `cl:${m}+${n}` });
+    out.push({ q: `Simplify ${term(m,"x")} + ${term(n,"x")}.`, a: term(m+n,"x"), diff: m + n + 8, key: `cl:${m}+${n}` });
   return out;
 }
 function enumOneStep(op: "+" | "-" | "×"): XP[] {
   const out: XP[] = [];
   if (op === "×") {
     for (let m = 2; m <= 9; m++) for (let x = 2; x <= 12; x++)
-      out.push({ q: `${m}x = ${m*x}`, a: String(x), diff: m + x + 16, key: `os×:${m}_${x}` });
+      out.push({ q: `Solve for x:  ${m}x = ${m*x}`, a: String(x), diff: m + x + 16, key: `os×:${m}_${x}` });
   } else {
     for (let x = 1; x <= 20; x++) for (let b = 1; b <= 15; b++) {
       const c = op === "+" ? x + b : x + b; // x + b = c → x=c-b ;  x - b = c → here present as x - b
-      if (op === "+") out.push({ q: `x + ${b} = ${x+b}`, a: String(x), diff: x + b + 12, key: `os+:${x}_${b}` });
-      else out.push({ q: `x - ${b} = ${x}`, a: String(x+b), diff: x + b + 13, key: `os-:${x}_${b}` });
+      if (op === "+") out.push({ q: `Solve for x:  x + ${b} = ${x+b}`, a: String(x), diff: x + b + 12, key: `os+:${x}_${b}` });
+      else out.push({ q: `Solve for x:  x - ${b} = ${x}`, a: String(x+b), diff: x + b + 13, key: `os-:${x}_${b}` });
     }
   }
   return out;
@@ -187,28 +187,28 @@ function enumTwoStep(sign: 1 | -1): XP[] {
     const c = m * x + sign * b;
     if (c <= 0) continue;
     const op = sign === 1 ? "+" : "-";
-    out.push({ q: `${m}x ${op} ${b} = ${c}`, a: String(x), diff: m + x + b + (sign === 1 ? 6 : 8), key: `ts${op}:${m}_${x}_${b}` });
+    out.push({ q: `Solve for x:  ${m}x ${op} ${b} = ${c}`, a: String(x), diff: m + x + b + (sign === 1 ? 6 : 8), key: `ts${op}:${m}_${x}_${b}` });
   }
   return out;
 }
 function enumDistribute(): XP[] {
   const out: XP[] = [];
   for (let k = 2; k <= 6; k++) for (let b = 1; b <= 9; b++) for (let x = 1; x <= 9; x++)
-    out.push({ q: `${k}(x + ${b}) = ${k*(x+b)}`, a: String(x), diff: k + b + x + 18, key: `dist:${k}_${b}_${x}` });
+    out.push({ q: `Solve for x:  ${k}(x + ${b}) = ${k*(x+b)}`, a: String(x), diff: k + b + x + 18, key: `dist:${k}_${b}_${x}` });
   return out;
 }
 function enumBothSides(): XP[] {
   const out: XP[] = [];
   for (let m = 2; m <= 6; m++) for (let x = 1; x <= 12; x++) {
     const b = (m - 1) * x;                  // mx = x + b  → x = b/(m-1)
-    out.push({ q: `${m}x = x + ${b}`, a: String(x), diff: m + x + 22, key: `bs:${m}_${x}` });
+    out.push({ q: `Solve for x:  ${m}x = x + ${b}`, a: String(x), diff: m + x + 22, key: `bs:${m}_${x}` });
   }
   return out;
 }
 function enumDivEq(): XP[] {
   const out: XP[] = [];
   for (let d = 2; d <= 9; d++) for (let q = 1; q <= 15; q++)
-    out.push({ q: `${BS}frac{x}{${d}} = ${q}`, a: String(d*q), diff: d + q + 14, key: `de:${d}_${q}` });
+    out.push({ q: `Solve for x:  ${BS}frac{x}{${d}} = ${q}`, a: String(d*q), diff: d + q + 14, key: `de:${d}_${q}` });
   return out;
 }
 
@@ -216,7 +216,7 @@ function enumDivEq(): XP[] {
 function enumPolyCombine(): XP[] {
   const out: XP[] = [];
   for (let m = 1; m <= 9; m++) for (let n = 1; n <= 9; n++)
-    out.push({ q: `${term(m,"x²")} + ${term(n,"x²")}`, a: term(m+n,"x²"), diff: m + n + 6, key: `pc:${m}+${n}` });
+    out.push({ q: `Simplify ${term(m,"x²")} + ${term(n,"x²")}.`, a: term(m+n,"x²"), diff: m + n + 6, key: `pc:${m}+${n}` });
   return out;
 }
 function enumPolyAdd(sub: boolean): XP[] {
@@ -225,32 +225,32 @@ function enumPolyAdd(sub: boolean): XP[] {
     if (sub && (a - c <= 0 || b - d <= 0)) continue;
     const xc = sub ? a - c : a + c, k = sub ? b - d : b + d;
     const op = sub ? "-" : "+";
-    out.push({ q: `(${term(a,"x")} + ${b}) ${op} (${term(c,"x")} + ${d})`, a: `${term(xc,"x")} + ${k}`, diff: a + b + c + d + (sub ? 16 : 12), key: `pa${op}:${a}_${b}_${c}_${d}` });
+    out.push({ q: `Simplify (${term(a,"x")} + ${b}) ${op} (${term(c,"x")} + ${d}).`, a: `${term(xc,"x")} + ${k}`, diff: a + b + c + d + (sub ? 16 : 12), key: `pa${op}:${a}_${b}_${c}_${d}` });
   }
   return out;
 }
 function enumMonomialMul(): XP[] {
   const out: XP[] = [];
   for (let m = 2; m <= 9; m++) for (let n = 2; n <= 9; n++)
-    out.push({ q: `${m}x · ${n}x`, a: `${m*n}x²`, diff: m + n + 20, key: `mm:${m}_${n}` });
+    out.push({ q: `Multiply ${m}x · ${n}x.`, a: `${m*n}x²`, diff: m + n + 20, key: `mm:${m}_${n}` });
   return out;
 }
 function enumMonoDistribute(): XP[] {
   const out: XP[] = [];
   for (let m = 2; m <= 6; m++) for (let b = 1; b <= 9; b++)
-    out.push({ q: `${m}x(x + ${b})`, a: `${m}x² + ${m*b}x`, diff: m + b + 26, key: `md:${m}_${b}` });
+    out.push({ q: `Expand ${m}x(x + ${b}).`, a: `${m}x² + ${m*b}x`, diff: m + b + 26, key: `md:${m}_${b}` });
   return out;
 }
 function enumFoil(): XP[] {
   const out: XP[] = [];
   for (let a = 1; a <= 9; a++) for (let b = 1; b <= 9; b++)
-    out.push({ q: `(x + ${a})(x + ${b})`, a: `x² + ${a+b}x + ${a*b}`, diff: a + b + 32, key: `foil:${a}_${b}` });
+    out.push({ q: `Expand (x + ${a})(x + ${b}).`, a: `x² + ${a+b}x + ${a*b}`, diff: a + b + 32, key: `foil:${a}_${b}` });
   return out;
 }
 function enumFactorGcf(): XP[] {
   const out: XP[] = [];
   for (let g = 2; g <= 9; g++) for (let b = 1; b <= 9; b++)
-    out.push({ q: `${g}x + ${g*b}`, a: `${g}(x + ${b})`, diff: g + b + 30, key: `fg:${g}_${b}` });
+    out.push({ q: `Factor ${g}x + ${g*b}.`, a: `${g}(x + ${b})`, diff: g + b + 30, key: `fg:${g}_${b}` });
   return out;
 }
 

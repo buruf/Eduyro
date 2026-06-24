@@ -28,6 +28,9 @@ import { addCarries, subBorrows } from "@/lib/math/regroup";
 
 const BS = String.fromCharCode(92);                 // single backslash
 const F = (n: number, d: number) => `${BS}frac{${n}}{${d}}`;
+// Instruction verb for a fraction operation, so every operation question reads
+// as a clear instruction ("Add the fractions:  …") rather than a bare expression.
+const FRAC_VERB: Record<string, string> = { "+": "Add", "-": "Subtract", "×": "Multiply", "÷": "Divide" };
 const gcd = (a: number, b: number): number => (b === 0 ? Math.abs(a) : gcd(b, a % b));
 const lcm = (a: number, b: number) => (a * b) / gcd(a, b);
 
@@ -127,7 +130,7 @@ const equivFillDen: Builder = () => {
 const equivFind: Builder = () => {
   const out: XP[] = [];
   for (const [n, d] of fracPairs([2, 3, 4, 5, 6, 8])) {
-    out.push({ q: `${F(n, d)}`, a: F(n * 2, d * 2), diff: d + 4, form: "eq-find", key: `eqf:${n}/${d}` });
+    out.push({ q: `Write an equivalent fraction for ${F(n, d)}.`, a: F(n * 2, d * 2), diff: d + 4, form: "eq-find", key: `eqf:${n}/${d}` });
   }
   return out;
 };
@@ -146,7 +149,7 @@ const cmpSymbol: Builder = () => {
       : (d2 % d1 === 0 || d1 % d2 === 0) ? 1
       : (n1 === 1 && n2 === 1) ? 2
       : 3;
-    out.push({ q: `${F(n1, d1)} ___ ${F(n2, d2)}`, a: sym, diff: tier * 14 + Math.max(d1, d2), form: "cmp-sym", key: `cmps:${n1}/${d1}:${n2}/${d2}` });
+    out.push({ q: `Compare with <, >, or =:  ${F(n1, d1)} ___ ${F(n2, d2)}`, a: sym, diff: tier * 14 + Math.max(d1, d2), form: "cmp-sym", key: `cmps:${n1}/${d1}:${n2}/${d2}` });
   }
   return out;
 };
@@ -189,7 +192,7 @@ function simplifyForm(_verb: string, formId: string): Builder {
     const out: XP[] = [];
     for (const d of [4, 6, 8, 9, 10, 12, 14, 15, 16, 18, 20, 21, 24]) for (let n = 2; n < d; n++) {
       if (gcd(n, d) === 1) continue;                 // only reducible
-      out.push({ q: `${F(n, d)}`, a: reduced(n, d), diff: d + Math.log2(gcd(n, d)) * 4, form: formId, key: `${formId}:${n}/${d}` });
+      out.push({ q: `Simplify ${F(n, d)}.`, a: reduced(n, d), diff: d + Math.log2(gcd(n, d)) * 4, form: formId, key: `${formId}:${n}/${d}` });
     }
     return out;
   };
@@ -199,7 +202,7 @@ const toMixed: Builder = () => {
   const out: XP[] = [];
   for (const d of [2, 3, 4, 5, 6, 8]) for (let w = 1; w <= 4; w++) for (let n = 1; n < d; n++) {
     const imp = w * d + n;
-    out.push({ q: `${F(imp, d)}`, a: `${w} ${F(n, d)}`, diff: d + w * 2, form: "to-mixed", key: `mx:${imp}/${d}` });
+    out.push({ q: `Write ${F(imp, d)} as a mixed number.`, a: `${w} ${F(n, d)}`, diff: d + w * 2, form: "to-mixed", key: `mx:${imp}/${d}` });
   }
   return out;
 };
@@ -214,14 +217,14 @@ const toImproper: Builder = () => {
 const addSame: Builder = () => {
   const out: XP[] = [];
   for (const d of DENOMS) for (let a = 1; a < d; a++) for (let b = 1; b < d; b++) {
-    out.push({ q: `${F(a, d)} + ${F(b, d)}`, a: reduced(a + b, d), diff: d * 2 + (a + b >= d ? 3 : 0), form: "add-same", key: `as:${a}/${d}+${b}/${d}` });
+    out.push({ q: `Add the fractions:  ${F(a, d)} + ${F(b, d)}`, a: reduced(a + b, d), diff: d * 2 + (a + b >= d ? 3 : 0), form: "add-same", key: `as:${a}/${d}+${b}/${d}` });
   }
   return out;
 };
 const subSame: Builder = () => {
   const out: XP[] = [];
   for (const d of DENOMS) for (let a = 2; a < d; a++) for (let b = 1; b < a; b++) {
-    out.push({ q: `${F(a, d)} - ${F(b, d)}`, a: reduced(a - b, d), diff: d * 2, form: "sub-same", key: `ss:${a}/${d}-${b}/${d}` });
+    out.push({ q: `Subtract the fractions:  ${F(a, d)} - ${F(b, d)}`, a: reduced(a - b, d), diff: d * 2, form: "sub-same", key: `ss:${a}/${d}-${b}/${d}` });
   }
   return out;
 };
@@ -241,7 +244,7 @@ function binUnlike(op: "+" | "-" | "×" | "÷", formId: string): Builder {
       // These sit ABOVE the same-denominator form (addSame/subSame, tier 0) so a
       // sheet never mixes "add the tops" with "find a common denominator".
       const tier = isAddSub ? ((d1 % d2 === 0 || d2 % d1 === 0) ? 1 : 2) : 0;
-      out.push({ q: `${F(n1, d1)} ${op} ${F(n2, d2)}`, a: reduced(an, ad), diff: tier * 100 + Math.max(d1, d2) * 2 + (isAddSub ? Math.log2(lcm(d1, d2)) : 0), form: formId, key: `${formId}:${n1}/${d1}:${n2}/${d2}` });
+      out.push({ q: `${FRAC_VERB[op]} the fractions:  ${F(n1, d1)} ${op} ${F(n2, d2)}`, a: reduced(an, ad), diff: tier * 100 + Math.max(d1, d2) * 2 + (isAddSub ? Math.log2(lcm(d1, d2)) : 0), form: formId, key: `${formId}:${n1}/${d1}:${n2}/${d2}` });
     }
     return out;
   };
@@ -264,7 +267,7 @@ function fracOp(op: "+" | "-", formId: string): Builder {
       const an = op === "+" ? n1 * (L / d1) + n2 * (L / d2) : n1 * (L / d1) - n2 * (L / d2);
       if (op === "-" && an <= 0) continue;
       const tier = d1 === d2 ? 0 : (d1 % d2 === 0 || d2 % d1 === 0) ? 1 : 2;
-      out.push({ q: `${F(n1, d1)} ${op} ${F(n2, d2)}`, a: reduced(an, L), diff: tier * 100 + Math.max(d1, d2) * 2 + Math.log2(L), form: formId, key: `${formId}:${n1}/${d1}:${n2}/${d2}` });
+      out.push({ q: `${FRAC_VERB[op]} the fractions:  ${F(n1, d1)} ${op} ${F(n2, d2)}`, a: reduced(an, L), diff: tier * 100 + Math.max(d1, d2) * 2 + Math.log2(L), form: formId, key: `${formId}:${n1}/${d1}:${n2}/${d2}` });
     }
     return out;
   };
@@ -362,7 +365,7 @@ const fracToPct: Builder = () => {
   ];
   // score by the percent VALUE (not denominator) so this form interleaves with
   // pctToFrac on a shared difficulty scale rather than clustering at one end.
-  for (const [n, d] of fr) out.push({ q: `${F(n, d)} → percent`, a: `${Math.round((n / d) * 100)}%`, diff: Math.round((n / d) * 100), form: "frac-pct", key: `fp:${n}/${d}` });
+  for (const [n, d] of fr) out.push({ q: `Write ${F(n, d)} as a percent.`, a: `${Math.round((n / d) * 100)}%`, diff: Math.round((n / d) * 100), form: "frac-pct", key: `fp:${n}/${d}` });
   return out;
 };
 const pctToFrac: Builder = () => {
