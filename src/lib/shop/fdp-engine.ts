@@ -547,6 +547,17 @@ function selectProblems(pool: XP[], t: number, count: number): XP[] {
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
+export interface FdpMicroLesson { goal: string; bigIdea: string; example: WorkedExample; umbrella: string; }
+
+/** Resolve a fraction micro-skill's lesson by its practice label so the
+ *  pre-practice worked example matches the upcoming questions. */
+export function getFdpMicroLesson(label: string): FdpMicroLesson | null {
+  const u = CURRICULUM.find((x) => x.label === label) ?? CURRICULUM.find((x) => label.includes(x.label));
+  if (!u) return null;
+  const goal = u.objective.replace(/^Student /, "").replace(/^./, (c) => c.toUpperCase());
+  return { goal, bigIdea: goal, example: u.example, umbrella: "Fractions" };
+}
+
 export function generateFdpSheet(sheetNumber: number, totalSheets: number, problemCount = 30): WorksheetData {
   const ui = unitIndexForSheet(sheetNumber);
   const unit = CURRICULUM[ui];

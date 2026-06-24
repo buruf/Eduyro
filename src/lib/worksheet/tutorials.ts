@@ -23,6 +23,8 @@ export interface TutorialContent {
 }
 
 import { getHigherMathMicroLesson, type MicroLesson } from "@/lib/shop/higher-math-engine";
+import { getAdvancedMicroLesson } from "@/lib/shop/advanced-engine";
+import { getFdpMicroLesson } from "@/lib/shop/fdp-engine";
 
 export type { MicroLesson };
 
@@ -40,8 +42,16 @@ export function getMicroSkillLesson(
   levelCode: string,
   microSkillLabel: string,
 ): MicroLesson | null {
+  // Each math engine carries a per-micro-skill objective + matching worked
+  // example; prefer those so the lesson matches the EXACT practice questions.
   const hm = getHigherMathMicroLesson(levelCode, microSkillLabel);
   if (hm) return hm;
+  if (subjectSlug === "MATH") {
+    const adv = getAdvancedMicroLesson(microSkillLabel); // M8–M12
+    if (adv) return adv;
+    const fdp = getFdpMicroLesson(microSkillLabel);      // M7 fractions
+    if (fdp) return fdp;
+  }
   const t = getTutorial(subjectSlug, microSkillLabel);
   const example = t.examples?.[0];
   if (!example) return null;

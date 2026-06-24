@@ -366,6 +366,32 @@ export function isAdvancedSkill(skill: string): boolean {
   return skill in CURRICULA;
 }
 
+// Friendly parent-level name for the lesson's one-line orientation.
+const SKILL_UMBRELLA: Record<string, string> = {
+  DECIMALS: "Decimals & Percentages", RATIOS: "Ratios & Proportions",
+  PRE_ALGEBRA: "Pre-Algebra", LINEAR_EQUATIONS: "Linear Equations", POLYNOMIALS: "Polynomials",
+};
+
+export interface AdvancedMicroLesson {
+  goal: string; bigIdea: string; example: WorkedExample; umbrella: string;
+}
+
+/** Resolve a micro-skill's lesson by its practice label (e.g. "Ratios — solve a
+ *  proportion"), so the pre-practice lesson's worked example MATCHES the upcoming
+ *  questions. Scans every advanced curriculum (labels are unit-unique). */
+export function getAdvancedMicroLesson(label: string): AdvancedMicroLesson | null {
+  for (const [skill, units] of Object.entries(CURRICULA)) {
+    const u = units.find((x) => x.label === label) ?? units.find((x) => label.includes(x.label));
+    if (u) return {
+      goal: u.objective.replace(/^Student /, "").replace(/^./, (c) => c.toUpperCase()),
+      bigIdea: u.objective.replace(/^Student /, "").replace(/^./, (c) => c.toUpperCase()),
+      example: u.example,
+      umbrella: SKILL_UMBRELLA[skill] ?? skill,
+    };
+  }
+  return null;
+}
+
 export function generateAdvancedSheet(
   skill: ShopSkill, sheetNumber: number, totalSheets: number, problemCount = 30,
 ): WorksheetData {
