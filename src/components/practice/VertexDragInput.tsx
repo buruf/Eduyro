@@ -27,15 +27,15 @@ export function VertexDragInput({
   onChange: (v: string) => void;
 }) {
   const step = spec.snap || 0.5;
-  const vertex = useMovablePoint([0, 0], {
+  const point = useMovablePoint([0, 0], {
     constrain: ([x, y]) => [snapTo(x, step), snapTo(y, step)],
   });
-  const [hx, hy] = [vertex.point[0], vertex.point[1]];
+  const [hx, hy] = [point.point[0], point.point[1]];
 
-  // Publish the snapped vertex as the answer whenever it moves.
+  // Publish the snapped point as the answer whenever it moves.
   useEffect(() => { onChange(`${fmt(hx)},${fmt(hy)}`); }, [hx, hy]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const nudge = (dx: number, dy: number) => vertex.setPoint([snapTo(hx + dx, step), snapTo(hy + dy, step)]);
+  const nudge = (dx: number, dy: number) => point.setPoint([snapTo(hx + dx, step), snapTo(hy + dy, step)]);
 
   return (
     <div className="select-none" style={{ touchAction: "none" }}>
@@ -46,8 +46,15 @@ export function VertexDragInput({
           preserveAspectRatio={false}
         >
           <Coordinates.Cartesian />
-          <Plot.OfX y={(x) => spec.a * (x - hx) ** 2 + hy} />
-          {vertex.element}
+          {/* vertex-drag: the parabola follows the dragged vertex.
+              plot-point: optionally show a fixed read-only reference curve. */}
+          {spec.kind === "vertex-drag" && (
+            <Plot.OfX y={(x) => (spec.a ?? 1) * (x - hx) ** 2 + hy} />
+          )}
+          {spec.kind === "plot-point" && spec.curve && (
+            <Plot.OfX y={(x) => spec.curve!.a * (x - spec.curve!.h) ** 2 + spec.curve!.k} />
+          )}
+          {point.element}
         </Mafs>
       </div>
 
@@ -66,7 +73,7 @@ export function VertexDragInput({
           <button className="w-8 h-8 rounded-md border border-border hover:bg-cream-dark" onClick={() => nudge(0, step)} aria-label="Move vertex up">+</button>
         </div>
       </div>
-      <p className="mt-2 text-center text-[11px] text-muted">Drag the orange vertex, or use the + / − buttons.</p>
+      <p className="mt-2 text-center text-[11px] text-muted">Drag the orange point, or use the + / − buttons.</p>
     </div>
   );
 }

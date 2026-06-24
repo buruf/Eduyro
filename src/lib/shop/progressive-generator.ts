@@ -52,7 +52,7 @@ export interface WorksheetProblem {
   /** Answer-input shape ("point" for interactive graphing items). */
   answerType?: string;
   /** Render spec for an interactive graphing item (never includes the answer). */
-  interactive?: { kind: string; a: number; xRange: [number, number]; yRange: [number, number]; snap: number };
+  interactive?: { kind: "vertex-drag" | "plot-point"; a?: number; curve?: { a: number; h: number; k: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
   points: number;
   zone: 1 | 2 | 3 | 4 | 5;
 }

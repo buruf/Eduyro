@@ -123,8 +123,12 @@ export type AnswerType =
 // Spec for an interactive (graphing) question. Sent to the client to RENDER the
 // plane; it never contains the answer (the target lives only in the answer key).
 export interface InteractiveSpec {
-  kind: "vertex-drag";          // first interaction: drag a parabola's vertex
-  a: number;                    // fixed leading coefficient (curve shape)
+  // "vertex-drag": drag a parabola's vertex (the curve follows the point).
+  // "plot-point":  drag a single point to a target (optionally reading it off a
+  //                read-only reference curve, e.g. plotting the y-intercept).
+  kind: "vertex-drag" | "plot-point";
+  a?: number;                   // vertex-drag: fixed leading coefficient (curve shape)
+  curve?: { a: number; h: number; k: number }; // plot-point: optional read-only parabola y=a(x−h)²+k
   xRange: [number, number];
   yRange: [number, number];
   snap: number;                 // grid snap step, e.g. 0.5

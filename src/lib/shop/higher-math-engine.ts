@@ -45,7 +45,7 @@ interface XP {
   // Interactive graphing items (answerType "point"): the answer is the snapped
   // "x,y" string; `interactive` tells the client what plane/curve to render.
   answerType?: string;
-  interactive?: { kind: string; a: number; xRange: [number, number]; yRange: [number, number]; snap: number };
+  interactive?: { kind: "vertex-drag" | "plot-point"; a?: number; curve?: { a: number; h: number; k: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
 }
 
 // ── Seeded RNG + deterministic shuffle (per sheet, so regeneration is stable) ──
@@ -132,12 +132,29 @@ const isPerfectSquare = (n: number): boolean => Number.isInteger(Math.sqrt(n));
 function qMeetParabola(): XP[] {
   const out: XP[] = [];
   let i = 0;
+  // (a) Plot a point on the coordinate plane — read/place coordinates.
+  for (const [x, y] of [[3, 2], [-2, 1], [1, -3], [-3, -1], [2, 4], [-1, -2]] as [number, number][])
+    out.push({
+      q: `Plot the point (${x}, ${y}) on the coordinate plane.`,
+      a: `${x},${y}`, diff: 0.6 + i++ * 0.02, key: `mp:pt:${x}_${y}`, type: "short_answer", fmt: "plot-point",
+      answerType: "point",
+      interactive: { kind: "plot-point", xRange: [-8, 8], yRange: [-8, 8], snap: 0.5 },
+    });
+  // (b) Drag the parabola's vertex to a target (the curve follows the point).
   for (const h of [-3, -2, -1, 0, 1, 2, 3]) for (const k of [-2, -1, 0, 1, 2])
     out.push({
       q: `Drag the orange vertex of the parabola to the point (${h}, ${k}).`,
       a: `${h},${k}`, diff: 1 + i++ * 0.02, key: `mp:${h}_${k}`, type: "short_answer", fmt: "vertex-drag",
       answerType: "point",
       interactive: { kind: "vertex-drag", a: 1, xRange: [-8, 8], yRange: [-8, 8], snap: 0.5 },
+    });
+  // (c) Read a graph: plot the y-intercept of a shown parabola y = x² + c → (0, c).
+  for (const c of [-3, -2, -1, 1, 2, 3])
+    out.push({
+      q: `The parabola y = x² ${c < 0 ? `− ${-c}` : `+ ${c}`} is shown. Plot its y-intercept.`,
+      a: `0,${c}`, diff: 2 + i++ * 0.02, key: `mp:yint:${c}`, type: "short_answer", fmt: "plot-intercept",
+      answerType: "point",
+      interactive: { kind: "plot-point", curve: { a: 1, h: 0, k: c }, xRange: [-8, 8], yRange: [-8, 8], snap: 0.5 },
     });
   return out;
 }
