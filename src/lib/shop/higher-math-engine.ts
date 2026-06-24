@@ -90,6 +90,31 @@ function tfXP(key: string, q: string, correct: "True" | "False", diff: number): 
   return { q, a: correct, diff, key, type: "true_false", fmt: "true/false", options: ["True", "False"] };
 }
 
+// Turn a single-format pool (plain "direct" short-answer items) into a
+// multi-format one: keeps every direct item AND adds a multiple-choice variant
+// for ~half of them, using NEARBY answers as plausible same-shape distractors
+// (collision-guarded). One generic mechanism so every M14–M18 micro-skill mixes
+// representations — direct entry + reasoning-style MC — instead of one repeated
+// format. (M13 authors its own richer formats and does NOT use this.)
+function diversify(base: XP[]): XP[] {
+  return base.map((b, i) => {
+    // CONVERT every other item to multiple choice (don't add a twin — that would
+    // duplicate the question text and could put both on one sheet). MC keeps the
+    // SAME difficulty so the unit's difficulty curve is unchanged.
+    if (i % 2 === 0) {
+      const near: string[] = [];
+      for (const d of [1, -1, 2, -2, 3, -3, 4]) {
+        const j = i + d;
+        if (j >= 0 && j < base.length) { const a = base[j].a; if (a !== b.a && !near.includes(a)) near.push(a); }
+        if (near.length >= 3) break;
+      }
+      const mc = mcXP(`${b.key}:mc`, "multiple-choice", b.q, b.a, near, b.diff);
+      if (mc) return mc;
+    }
+    return { ...b, type: b.type ?? "short_answer", fmt: b.fmt ?? "direct" };
+  });
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // M13 — QUADRATICS  (multi-format, hundreds of variants per micro-skill)
 // Each micro-skill teaches ONE idea through many representations: direct solve,
@@ -332,9 +357,9 @@ const TAN: Record<number, string> = { 0: "0", 30: "√3/3", 45: "1", 60: "√3" 
 function tUnitCircle(): XP[] {
   const out: XP[] = [];
   let i = 0;
-  for (const deg of [0, 30, 45, 60, 90]) { out.push({ q: `sin ${deg}°`, a: SIN[deg], diff: 14 + i++, key: `tus:${deg}` }); }
-  for (const deg of [0, 30, 45, 60, 90]) { out.push({ q: `cos ${deg}°`, a: COS[deg], diff: 14 + i++, key: `tuc:${deg}` }); }
-  for (const deg of [0, 30, 45, 60]) { out.push({ q: `tan ${deg}°`, a: TAN[deg], diff: 14 + i++, key: `tut:${deg}` }); }
+  for (const deg of [0, 30, 45, 60, 90]) { out.push({ q: `Evaluate sin ${deg}°.`, a: SIN[deg], diff: 14 + i++, key: `tus:${deg}` }); }
+  for (const deg of [0, 30, 45, 60, 90]) { out.push({ q: `Evaluate cos ${deg}°.`, a: COS[deg], diff: 14 + i++, key: `tuc:${deg}` }); }
+  for (const deg of [0, 30, 45, 60]) { out.push({ q: `Evaluate tan ${deg}°.`, a: TAN[deg], diff: 14 + i++, key: `tut:${deg}` }); }
   return out;
 }
 const RAD: Record<number, string> = { 30: "π/6", 45: "π/4", 60: "π/3", 90: "π/2", 120: "2π/3", 135: "3π/4", 150: "5π/6", 180: "π", 270: "3π/2", 360: "2π" };
@@ -356,7 +381,7 @@ function tPythagIdentity(): XP[] {
 function a2Log(): XP[] {
   const out: XP[] = [];
   for (const b of [2, 3, 5, 10]) for (let k = 1; k <= 5; k++)
-    out.push({ q: `log_${b}(${b ** k})`, a: `${k}`, diff: b + k, key: `lg:${b}_${k}` });
+    out.push({ q: `Evaluate log_${b}(${b ** k}).`, a: `${k}`, diff: b + k, key: `lg:${b}_${k}` });
   return out;
 }
 function a2ExpEval(): XP[] {
@@ -380,7 +405,7 @@ function a2PowersOfI(): XP[] {
 function a2ComplexAdd(): XP[] {
   const out: XP[] = [];
   for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) for (let c = 1; c <= 4; c++) for (let d = 1; d <= 4; d++)
-    out.push({ q: `(${a} + ${imag(b)}) + (${c} + ${imag(d)})`, a: `${a + c} + ${imag(b + d)}`, diff: a + b + c + d + 24, key: `ca:${a}_${b}_${c}_${d}` });
+    out.push({ q: `Add: (${a} + ${imag(b)}) + (${c} + ${imag(d)})`, a: `${a + c} + ${imag(b + d)}`, diff: a + b + c + d + 24, key: `ca:${a}_${b}_${c}_${d}` });
   return out;
 }
 
@@ -425,7 +450,7 @@ function pcVectorMag(): XP[] {
 function pcVectorAdd(): XP[] {
   const out: XP[] = [];
   for (let a = 1; a <= 5; a++) for (let b = 1; b <= 5; b++) for (let c = 1; c <= 5; c++) for (let d = 1; d <= 5; d++)
-    out.push({ q: `(${a}, ${b}) + (${c}, ${d})`, a: `(${a + c}, ${b + d})`, diff: a + b + c + d + 30, key: `va:${a}_${b}_${c}_${d}` });
+    out.push({ q: `Add the vectors: (${a}, ${b}) + (${c}, ${d})`, a: `(${a + c}, ${b + d})`, diff: a + b + c + d + 30, key: `va:${a}_${b}_${c}_${d}` });
   return out;
 }
 
@@ -486,42 +511,42 @@ const CURRICULA: Record<string, Unit[]> = {
     { id: "q-evalaxis", label: "Evaluate & axis of symmetry", objective: "Student evaluates quadratics and finds the axis x = -b/2a", grade: "Grade 10", stars: 5, range: [91, 100], multiFormat: true, pool: qEvaluateAxis, example: { problem: "Axis of symmetry of y = x² + 6x", steps: ["x = -b/2 = -6/2"], answer: "x = -3" } },
   ],
   M14: [
-    { id: "f-lin", label: "Evaluate f(x) = mx + b", objective: "Student evaluates a linear function", grade: "Grade 8-9", stars: 2, range: [1, 16], pool: fEvalLinear, example: { problem: "f(x) = 2x + 3. Find f(4)", steps: ["2(4) + 3"], answer: "11" } },
-    { id: "f-quad", label: "Evaluate a quadratic function", objective: "Student evaluates f(x) = x² + c", grade: "Grade 9", stars: 3, range: [17, 32], pool: fEvalQuad, example: { problem: "f(x) = x² + 5. Find f(3)", steps: ["9 + 5"], answer: "14" } },
-    { id: "f-compose", label: "Composition of functions", objective: "Student evaluates f(g(x))", grade: "Grade 10", stars: 4, range: [33, 50], pool: fCompose, example: { problem: "f(x) = x + 1, g(x) = 2x. Find f(g(3))", steps: ["g(3) = 6", "f(6) = 7"], answer: "7" } },
-    { id: "f-domain", label: "Domain of a rational function", objective: "Student finds excluded x-values", grade: "Grade 10", stars: 4, range: [51, 68], pool: fDomain, example: { problem: "Domain of f(x) = 1/(x - 4)", steps: ["Denominator ≠ 0"], answer: "x ≠ 4" } },
-    { id: "f-range", label: "Range of a quadratic", objective: "Student finds the minimum of x² + c", grade: "Grade 10", stars: 4, range: [69, 84], pool: fRange, example: { problem: "Range of f(x) = x² + 2", steps: ["x² ≥ 0, so y ≥ 2"], answer: "y ≥ 2" } },
-    { id: "f-inverse", label: "Inverse functions", objective: "Student evaluates an inverse function", grade: "Grade 10-11", stars: 5, range: [85, 100], pool: fInverseLinear, example: { problem: "f(x) = x + 5. Find f⁻¹(12)", steps: ["Inverse undoes +5", "12 - 5"], answer: "7" } },
+    { id: "f-lin", label: "Evaluate f(x) = mx + b", objective: "Student evaluates a linear function", grade: "Grade 8-9", stars: 2, range: [1, 16], multiFormat: true, pool: () => diversify(fEvalLinear()), example: { problem: "f(x) = 2x + 3. Find f(4)", steps: ["2(4) + 3"], answer: "11" } },
+    { id: "f-quad", label: "Evaluate a quadratic function", objective: "Student evaluates f(x) = x² + c", grade: "Grade 9", stars: 3, range: [17, 32], multiFormat: true, pool: () => diversify(fEvalQuad()), example: { problem: "f(x) = x² + 5. Find f(3)", steps: ["9 + 5"], answer: "14" } },
+    { id: "f-compose", label: "Composition of functions", objective: "Student evaluates f(g(x))", grade: "Grade 10", stars: 4, range: [33, 50], multiFormat: true, pool: () => diversify(fCompose()), example: { problem: "f(x) = x + 1, g(x) = 2x. Find f(g(3))", steps: ["g(3) = 6", "f(6) = 7"], answer: "7" } },
+    { id: "f-domain", label: "Domain of a rational function", objective: "Student finds excluded x-values", grade: "Grade 10", stars: 4, range: [51, 68], multiFormat: true, pool: () => diversify(fDomain()), example: { problem: "Domain of f(x) = 1/(x - 4)", steps: ["Denominator ≠ 0"], answer: "x ≠ 4" } },
+    { id: "f-range", label: "Range of a quadratic", objective: "Student finds the minimum of x² + c", grade: "Grade 10", stars: 4, range: [69, 84], multiFormat: true, pool: () => diversify(fRange()), example: { problem: "Range of f(x) = x² + 2", steps: ["x² ≥ 0, so y ≥ 2"], answer: "y ≥ 2" } },
+    { id: "f-inverse", label: "Inverse functions", objective: "Student evaluates an inverse function", grade: "Grade 10-11", stars: 5, range: [85, 100], multiFormat: true, pool: () => diversify(fInverseLinear()), example: { problem: "f(x) = x + 5. Find f⁻¹(12)", steps: ["Inverse undoes +5", "12 - 5"], answer: "7" } },
   ],
   M15: [
-    { id: "t-hyp", label: "Pythagorean theorem", objective: "Student finds a hypotenuse", grade: "Grade 9", stars: 2, range: [1, 16], pool: tHypotenuse, example: { problem: "Legs 3 and 4. Find the hypotenuse", steps: ["√(9 + 16) = √25"], answer: "5" } },
-    { id: "t-ratio", label: "Right-triangle ratios", objective: "Student writes sin, cos, tan as ratios", grade: "Grade 10", stars: 3, range: [17, 34], pool: tRatio, example: { problem: "opposite = 3, hypotenuse = 5. Find sin θ", steps: ["sin = opp/hyp"], answer: "3/5" } },
-    { id: "t-unit", label: "Unit-circle values", objective: "Student recalls sin/cos/tan of standard angles", grade: "Grade 11", stars: 4, range: [35, 56], pool: tUnitCircle, example: { problem: "sin 30°", steps: ["Standard angle"], answer: "1/2" } },
-    { id: "t-rad", label: "Degrees to radians", objective: "Student converts degrees to radians", grade: "Grade 11", stars: 4, range: [57, 78], pool: tDegRad, example: { problem: "Convert 90° to radians", steps: ["90 × π/180"], answer: "π/2" } },
-    { id: "t-ident", label: "Pythagorean identity", objective: "Student uses sin²θ + cos²θ = 1", grade: "Grade 11-12", stars: 5, range: [79, 100], pool: tPythagIdentity, example: { problem: "sin θ = 3/5. Find cos θ (acute)", steps: ["cos = √(1 - 9/25) = 4/5"], answer: "4/5" } },
+    { id: "t-hyp", label: "Pythagorean theorem", objective: "Student finds a hypotenuse", grade: "Grade 9", stars: 2, range: [1, 16], multiFormat: true, pool: () => diversify(tHypotenuse()), example: { problem: "Legs 3 and 4. Find the hypotenuse", steps: ["√(9 + 16) = √25"], answer: "5" } },
+    { id: "t-ratio", label: "Right-triangle ratios", objective: "Student writes sin, cos, tan as ratios", grade: "Grade 10", stars: 3, range: [17, 34], multiFormat: true, pool: () => diversify(tRatio()), example: { problem: "opposite = 3, hypotenuse = 5. Find sin θ", steps: ["sin = opp/hyp"], answer: "3/5" } },
+    { id: "t-unit", label: "Unit-circle values", objective: "Student recalls sin/cos/tan of standard angles", grade: "Grade 11", stars: 4, range: [35, 56], multiFormat: true, pool: () => diversify(tUnitCircle()), example: { problem: "Evaluate sin 30°.", steps: ["Standard angle"], answer: "1/2" } },
+    { id: "t-rad", label: "Degrees to radians", objective: "Student converts degrees to radians", grade: "Grade 11", stars: 4, range: [57, 78], multiFormat: true, pool: () => diversify(tDegRad()), example: { problem: "Convert 90° to radians", steps: ["90 × π/180"], answer: "π/2" } },
+    { id: "t-ident", label: "Pythagorean identity", objective: "Student uses sin²θ + cos²θ = 1", grade: "Grade 11-12", stars: 5, range: [79, 100], multiFormat: true, pool: () => diversify(tPythagIdentity()), example: { problem: "sin θ = 3/5. Find cos θ (acute)", steps: ["cos = √(1 - 9/25) = 4/5"], answer: "4/5" } },
   ],
   M16: [
-    { id: "a-log", label: "Evaluate logarithms", objective: "Student evaluates log_b(bᵏ)", grade: "Grade 10-11", stars: 3, range: [1, 16], pool: a2Log, example: { problem: "log_2(8)", steps: ["2³ = 8"], answer: "3" } },
-    { id: "a-exp", label: "Evaluate exponentials", objective: "Student evaluates powers", grade: "Grade 9-10", stars: 2, range: [17, 32], pool: a2ExpEval, example: { problem: "Evaluate 2⁴", steps: ["2×2×2×2"], answer: "16" } },
-    { id: "a-expsolve", label: "Solve exponential equations", objective: "Student solves bˣ = bᵏ", grade: "Grade 11", stars: 4, range: [33, 52], pool: a2ExpSolve, example: { problem: "Solve 3x = 81", steps: ["3⁴ = 81"], answer: "4" } },
-    { id: "a-poweri", label: "Powers of i", objective: "Student simplifies powers of i", grade: "Grade 11", stars: 4, range: [53, 76], pool: a2PowersOfI, example: { problem: "Simplify i³", steps: ["i² = -1, so i³ = -i"], answer: "-i" } },
-    { id: "a-complex", label: "Add complex numbers", objective: "Student adds complex numbers", grade: "Grade 11-12", stars: 5, range: [77, 100], pool: a2ComplexAdd, example: { problem: "(2 + 3i) + (1 + 1i)", steps: ["Add real, add imaginary"], answer: "3 + 4i" } },
+    { id: "a-log", label: "Evaluate logarithms", objective: "Student evaluates log_b(bᵏ)", grade: "Grade 10-11", stars: 3, range: [1, 16], multiFormat: true, pool: () => diversify(a2Log()), example: { problem: "Evaluate log_2(8)", steps: ["2³ = 8"], answer: "3" } },
+    { id: "a-exp", label: "Evaluate exponentials", objective: "Student evaluates powers", grade: "Grade 9-10", stars: 2, range: [17, 32], multiFormat: true, pool: () => diversify(a2ExpEval()), example: { problem: "Evaluate 2⁴", steps: ["2×2×2×2"], answer: "16" } },
+    { id: "a-expsolve", label: "Solve exponential equations", objective: "Student solves bˣ = bᵏ", grade: "Grade 11", stars: 4, range: [33, 52], multiFormat: true, pool: () => diversify(a2ExpSolve()), example: { problem: "Solve 3ˣ = 81", steps: ["3⁴ = 81"], answer: "4" } },
+    { id: "a-poweri", label: "Powers of i", objective: "Student simplifies powers of i", grade: "Grade 11", stars: 4, range: [53, 76], multiFormat: true, pool: () => diversify(a2PowersOfI()), example: { problem: "Simplify i³", steps: ["i² = -1, so i³ = -i"], answer: "-i" } },
+    { id: "a-complex", label: "Add complex numbers", objective: "Student adds complex numbers", grade: "Grade 11-12", stars: 5, range: [77, 100], multiFormat: true, pool: () => diversify(a2ComplexAdd()), example: { problem: "Add: (2 + 3i) + (1 + i)", steps: ["Add real, add imaginary"], answer: "3 + 4i" } },
   ],
   M17: [
-    { id: "p-anth", label: "Arithmetic sequences", objective: "Student finds the nth term", grade: "Grade 10-11", stars: 3, range: [1, 18], pool: pcArithNth, example: { problem: "First term 3, common difference 2. Find term 5", steps: ["3 + 4×2"], answer: "11" } },
-    { id: "p-asum", label: "Arithmetic series", objective: "Student sums an arithmetic series", grade: "Grade 11", stars: 4, range: [19, 38], pool: pcArithSum, example: { problem: "Sum of the first 4 terms: first term 2, common difference 3", steps: ["4/2 × (4 + 9)"], answer: "26" } },
-    { id: "p-geo", label: "Geometric sequences", objective: "Student finds a geometric term", grade: "Grade 11", stars: 4, range: [39, 56], pool: pcGeoNth, example: { problem: "First term 2, ratio 3. Find term 3", steps: ["2 × 3²"], answer: "18" } },
-    { id: "p-limpoly", label: "Limits of polynomials", objective: "Student evaluates limits by substitution", grade: "Grade 12", stars: 4, range: [57, 74], pool: pcLimitPoly, example: { problem: "lim(x→2) (x² + 3x + 1)", steps: ["Substitute x = 2"], answer: "11" } },
-    { id: "p-limfac", label: "Limits by factoring", objective: "Student resolves 0/0 limits", grade: "Grade 12", stars: 5, range: [75, 88], pool: pcLimitFactor, example: { problem: "lim(x→3) (x² - 9)/(x - 3)", steps: ["Factor → (x + 3)", "Substitute 3"], answer: "6" } },
-    { id: "p-vec", label: "Vectors", objective: "Student finds vector magnitude and sums", grade: "Grade 12", stars: 5, range: [89, 100], pool: () => [...pcVectorMag(), ...pcVectorAdd()], example: { problem: "Magnitude of (3, 4)", steps: ["√(9 + 16)"], answer: "5" } },
+    { id: "p-anth", label: "Arithmetic sequences", objective: "Student finds the nth term", grade: "Grade 10-11", stars: 3, range: [1, 18], multiFormat: true, pool: () => diversify(pcArithNth()), example: { problem: "First term 3, common difference 2. Find term 5", steps: ["3 + 4×2"], answer: "11" } },
+    { id: "p-asum", label: "Arithmetic series", objective: "Student sums an arithmetic series", grade: "Grade 11", stars: 4, range: [19, 38], multiFormat: true, pool: () => diversify(pcArithSum()), example: { problem: "Sum of the first 4 terms: first term 2, common difference 3", steps: ["4/2 × (4 + 9)"], answer: "26" } },
+    { id: "p-geo", label: "Geometric sequences", objective: "Student finds a geometric term", grade: "Grade 11", stars: 4, range: [39, 56], multiFormat: true, pool: () => diversify(pcGeoNth()), example: { problem: "First term 2, ratio 3. Find term 3", steps: ["2 × 3²"], answer: "18" } },
+    { id: "p-limpoly", label: "Limits of polynomials", objective: "Student evaluates limits by substitution", grade: "Grade 12", stars: 4, range: [57, 74], multiFormat: true, pool: () => diversify(pcLimitPoly()), example: { problem: "lim(x→2) (x² + 3x + 1)", steps: ["Substitute x = 2"], answer: "11" } },
+    { id: "p-limfac", label: "Limits by factoring", objective: "Student resolves 0/0 limits", grade: "Grade 12", stars: 5, range: [75, 88], multiFormat: true, pool: () => diversify(pcLimitFactor()), example: { problem: "lim(x→3) (x² - 9)/(x - 3)", steps: ["Factor → (x + 3)", "Substitute 3"], answer: "6" } },
+    { id: "p-vec", label: "Vectors", objective: "Student finds vector magnitude and sums", grade: "Grade 12", stars: 5, range: [89, 100], multiFormat: true, pool: () => diversify([...pcVectorMag(), ...pcVectorAdd()]), example: { problem: "Magnitude of (3, 4)", steps: ["√(9 + 16)"], answer: "5" } },
   ],
   M18: [
-    { id: "c-dpow", label: "Power rule", objective: "Student differentiates xⁿ", grade: "Grade 12", stars: 3, range: [1, 16], pool: caDerivPower, example: { problem: "d/dx x³", steps: ["Bring down 3, reduce power"], answer: "3x²" } },
-    { id: "c-dmono", label: "Differentiate monomials", objective: "Student differentiates axⁿ", grade: "Grade 12", stars: 4, range: [17, 36], pool: caDerivMono, example: { problem: "d/dx 3x²", steps: ["3 × 2 = 6, reduce power"], answer: "6x" } },
-    { id: "c-deval", label: "Evaluate a derivative", objective: "Student evaluates f'(x) at a point", grade: "Grade 12", stars: 4, range: [37, 56], pool: caDerivEval, example: { problem: "f(x) = x² + 2x + 1. Find f'(3)", steps: ["f'(x) = 2x + 2", "2(3) + 2"], answer: "8" } },
-    { id: "c-ipow", label: "Integrate powers", objective: "Student integrates xⁿ", grade: "Grade 12", stars: 4, range: [57, 76], pool: caIntegralPower, example: { problem: "∫ x² dx", steps: ["Raise power, divide", "x³/3 + C"], answer: "x³/3 + C" } },
-    { id: "c-idef", label: "Definite integrals", objective: "Student evaluates a definite integral", grade: "Grade 12", stars: 5, range: [77, 90], pool: caIntegralDef, example: { problem: "∫₀^4 x dx", steps: ["x²/2 from 0 to 4", "16/2"], answer: "8" } },
-    { id: "c-slope", label: "Slope as a derivative", objective: "Student finds the slope of a curve", grade: "Grade 12", stars: 5, range: [91, 100], pool: caSlope, example: { problem: "Slope of y = x² at x = 5", steps: ["dy/dx = 2x = 2(5)"], answer: "10" } },
+    { id: "c-dpow", label: "Power rule", objective: "Student differentiates xⁿ", grade: "Grade 12", stars: 3, range: [1, 16], multiFormat: true, pool: () => diversify(caDerivPower()), example: { problem: "d/dx x³", steps: ["Bring down 3, reduce power"], answer: "3x²" } },
+    { id: "c-dmono", label: "Differentiate monomials", objective: "Student differentiates axⁿ", grade: "Grade 12", stars: 4, range: [17, 36], multiFormat: true, pool: () => diversify(caDerivMono()), example: { problem: "d/dx 3x²", steps: ["3 × 2 = 6, reduce power"], answer: "6x" } },
+    { id: "c-deval", label: "Evaluate a derivative", objective: "Student evaluates f'(x) at a point", grade: "Grade 12", stars: 4, range: [37, 56], multiFormat: true, pool: () => diversify(caDerivEval()), example: { problem: "f(x) = x² + 2x + 1. Find f'(3)", steps: ["f'(x) = 2x + 2", "2(3) + 2"], answer: "8" } },
+    { id: "c-ipow", label: "Integrate powers", objective: "Student integrates xⁿ", grade: "Grade 12", stars: 4, range: [57, 76], multiFormat: true, pool: () => diversify(caIntegralPower()), example: { problem: "∫ x² dx", steps: ["Raise power, divide", "x³/3 + C"], answer: "x³/3 + C" } },
+    { id: "c-idef", label: "Definite integrals", objective: "Student evaluates a definite integral", grade: "Grade 12", stars: 5, range: [77, 90], multiFormat: true, pool: () => diversify(caIntegralDef()), example: { problem: "∫₀^4 x dx", steps: ["x²/2 from 0 to 4", "16/2"], answer: "8" } },
+    { id: "c-slope", label: "Slope as a derivative", objective: "Student finds the slope of a curve", grade: "Grade 12", stars: 5, range: [91, 100], multiFormat: true, pool: () => diversify(caSlope()), example: { problem: "Slope of y = x² at x = 5", steps: ["dy/dx = 2x = 2(5)"], answer: "10" } },
   ],
 };
 
