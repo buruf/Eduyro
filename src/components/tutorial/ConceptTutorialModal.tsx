@@ -10,6 +10,14 @@ import { type ConceptTutorial, LESSON_FRAMING } from "@/lib/tutorials/concepts";
 import { getTutorial, type MicroLesson } from "@/lib/worksheet/tutorials";
 import { createNarrator } from "@/lib/tutorials/narrator";
 import { TutorialVisual } from "./TutorialVisual";
+import dynamic from "next/dynamic";
+
+// Mafs is client-only; load the interactive parabola explorer lazily so it never
+// runs during SSR and doesn't bloat the modal for non-quadratics lessons.
+const ParabolaSliderExplorer = dynamic(
+  () => import("./ParabolaSliderExplorer").then((m) => m.ParabolaSliderExplorer),
+  { ssr: false, loading: () => <div className="h-[360px] grid place-items-center text-sm text-muted">Loading explorer…</div> },
+);
 
 interface Props {
   open: boolean;
@@ -111,13 +119,25 @@ export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, mi
             </section>
           )}
 
-          {/* Animated visual */}
+          {/* Visual — quadratics gets the live, draggable parabola explorer
+              (explore a/b/c); every other concept keeps its animated visual. */}
           <div className="bg-cream-dark border border-border rounded-xl p-3 mb-4">
-            <TutorialVisual visual={concept.visual} paused={paused} />
-            {concept.interactive && (
-              <p className="text-center text-[11px] text-gold-dark font-semibold mt-1">
-                ☝ This one&rsquo;s interactive — try the slider{concept.visual === "linearGraph" ? "s" : ""}!
-              </p>
+            {concept.id === "quadratics" ? (
+              <>
+                <ParabolaSliderExplorer />
+                <p className="text-center text-[11px] text-gold-dark font-semibold mt-1">
+                  ☝ This one&rsquo;s interactive — drag the sliders!
+                </p>
+              </>
+            ) : (
+              <>
+                <TutorialVisual visual={concept.visual} paused={paused} />
+                {concept.interactive && (
+                  <p className="text-center text-[11px] text-gold-dark font-semibold mt-1">
+                    ☝ This one&rsquo;s interactive — try the slider{concept.visual === "linearGraph" ? "s" : ""}!
+                  </p>
+                )}
+              </>
             )}
           </div>
 
