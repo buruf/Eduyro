@@ -18,6 +18,10 @@ const ParabolaSliderExplorer = dynamic(
   () => import("./ParabolaSliderExplorer").then((m) => m.ParabolaSliderExplorer),
   { ssr: false, loading: () => <div className="h-[360px] grid place-items-center text-sm text-muted">Loading explorer…</div> },
 );
+const UnitCircleExplorer = dynamic(
+  () => import("./UnitCircleExplorer").then((m) => m.UnitCircleExplorer),
+  { ssr: false, loading: () => <div className="h-[360px] grid place-items-center text-sm text-muted">Loading explorer…</div> },
+);
 
 interface Props {
   open: boolean;
@@ -127,6 +131,13 @@ export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, mi
                 <ParabolaSliderExplorer />
                 <p className="text-center text-[11px] text-gold-dark font-semibold mt-1">
                   ☝ This one&rsquo;s interactive — drag the sliders!
+                </p>
+              </>
+            ) : concept.id === "trigonometry" ? (
+              <>
+                <UnitCircleExplorer />
+                <p className="text-center text-[11px] text-gold-dark font-semibold mt-1">
+                  ☝ This one&rsquo;s interactive — drag the point around the circle!
                 </p>
               </>
             ) : (
