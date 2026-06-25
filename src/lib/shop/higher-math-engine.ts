@@ -324,6 +324,22 @@ function qEvaluateAxis(): XP[] {
     if (opts.length >= 3)
       out.push({ q: `Which graph matches y = ${base}²${kterm}?`, a: correct, diff: 9.8 + mi * 0.02, key: `mg:${h}_${k}`, type: "multiple_choice", options: shuffleByKey(opts, `mg:${h}_${k}`), fmt: "match-graph" });
   }
+  // GRAPH TRANSFORMATIONS: apply a transformation to a parabola and pick the
+  // resulting graph. Options are graph descriptors (reuses GraphChoice). Reflect
+  // across x-axis → (−a, h, −k); translate up n → k+n; translate left n → h−n.
+  const desc = (a: number, h: number, k: number) => `parab:${a},${h},${k}`;
+  const vf = (h: number, k: number) => `${h === 0 ? "x" : `(x ${h > 0 ? `− ${h}` : `+ ${-h}`})`}²${k === 0 ? "" : k > 0 ? ` + ${k}` : ` − ${-k}`}`;
+  const pushT = (key: string, q: string, correct: string, raw: string[], diff: number) => {
+    const opts = Array.from(new Set([correct, ...raw])).slice(0, 4);
+    if (opts.length >= 3) out.push({ q, a: correct, diff, key, type: "multiple_choice", options: shuffleByKey(opts, key), fmt: "transform" });
+  };
+  const BASES: [number, number, number][] = [[1, 0, 2], [1, 1, 0], [1, -2, 1], [1, 2, -1], [1, 0, -2], [1, -1, 3]];
+  let ti = 0;
+  for (const [a, h, k] of BASES) {
+    pushT(`tf:rx:${h}_${k}`, `Reflect y = ${vf(h, k)} across the x-axis. Which graph is the result?`, desc(-a, h, -k), [desc(a, h, -k), desc(-a, h, k), desc(a, -h, k)], 9.9 + ti++ * 0.01);
+    pushT(`tf:up:${h}_${k}`, `Translate y = ${vf(h, k)} up 3 units. Which graph is the result?`, desc(a, h, k + 3), [desc(a, h, k - 3), desc(a, h + 3, k), desc(a, h - 3, k)], 9.9 + ti++ * 0.01);
+    pushT(`tf:lf:${h}_${k}`, `Translate y = ${vf(h, k)} left 2 units. Which graph is the result?`, desc(a, h - 2, k), [desc(a, h + 2, k), desc(a, h, k + 2), desc(a, h, k - 2)], 9.9 + ti++ * 0.01);
+  }
   return out;
 }
 
