@@ -41,6 +41,11 @@ import {
   NumberInput, FractionInput, MixedFractionInput, ComparisonSelector,
   TrueFalse, MultipleChoice, ShortTextInput,
 } from "@/components/practice/MathInputs";
+import { GraphChoice } from "@/components/practice/GraphChoice";
+
+// "Match the equation to its graph" options are encoded graph descriptors
+// (e.g. "parab:1,2,1" / "line:2,-3") → render as graph thumbnails, not text.
+const isGraphOptions = (opts?: string[] | null) => !!opts?.length && opts.every((o) => /^(parab|line):/.test(o));
 import { conceptForSkill, type ConceptTutorial } from "@/lib/tutorials/concepts";
 import { getMicroSkillLesson, type MicroLesson } from "@/lib/worksheet/tutorials";
 import type { StudentDashboard, TodaySheet } from "@/types";
@@ -999,6 +1004,7 @@ function PracticeModal({
     const isChoice = !!(opts && opts.length) && at !== "trueFalse";
     const control = (() => {
       if (opts && opts.length) {
+        if (isGraphOptions(opts)) return <GraphChoice options={opts} value={val} onChange={set} />;
         return at === "trueFalse"
           ? <TrueFalse value={val} onChange={set} />
           : <MultipleChoice options={opts} value={val} onChange={set} />;

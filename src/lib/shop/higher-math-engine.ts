@@ -308,6 +308,22 @@ function qEvaluateAxis(): XP[] {
       answerType: "point",
       interactive: { kind: "vertex-drag", a: 1, xRange: [-8, 8], yRange: [-8, 8], snap: 0.5 },
     });
+  // MATCH GRAPH ↔ EQUATION: options are graph descriptors ("parab:a,h,k") shown
+  // as thumbnails; the answer is the correct descriptor (plain value match). The
+  // distractors are sibling vertices, so every option is a visibly distinct curve.
+  const MG: [number, number][] = [[0, 2], [0, -2], [2, 0], [-2, 0], [1, -3], [-1, 3], [2, 1], [-2, -1]];
+  for (let mi = 0; mi < MG.length; mi++) {
+    const [h, k] = MG[mi];
+    const base = h === 0 ? "x" : `(x ${h > 0 ? `− ${h}` : `+ ${-h}`})`;
+    const kterm = k === 0 ? "" : k > 0 ? ` + ${k}` : ` − ${-k}`;
+    const correct = `parab:1,${h},${k}`;
+    const others = MG.filter(([vh, vk]) => !(vh === h && vk === k));
+    const dist = [others[mi % others.length], others[(mi + 2) % others.length], others[(mi + 4) % others.length]]
+      .map(([vh, vk]) => `parab:1,${vh},${vk}`);
+    const opts = Array.from(new Set([correct, ...dist])).slice(0, 4);
+    if (opts.length >= 3)
+      out.push({ q: `Which graph matches y = ${base}²${kterm}?`, a: correct, diff: 9.8 + mi * 0.02, key: `mg:${h}_${k}`, type: "multiple_choice", options: shuffleByKey(opts, `mg:${h}_${k}`), fmt: "match-graph" });
+  }
   return out;
 }
 
