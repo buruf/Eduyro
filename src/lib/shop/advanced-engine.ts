@@ -23,7 +23,15 @@ const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(Math.abs(b), Ma
 // -1·x → "-x", 3·x → "3x". Keeps algebra notation conventional (never "1x²").
 const term = (c: number, v: string): string => (c === 1 ? v : c === -1 ? `-${v}` : `${c}${v}`);
 
-interface XP { q: string; a: string; diff: number; key: string; }
+interface XP {
+  q: string; a: string; diff: number; key: string;
+  // Optional interactive (graphing) item — e.g. "plot the point". Carries the
+  // render spec to the client; the target stays in the answer key. Graded by the
+  // standard value match on the canonical "x,y" string.
+  type?: "arithmetic" | "short_answer" | "multiple_choice";
+  options?: string[];
+  interactive?: { kind: "vertex-drag" | "plot-point"; a?: number; curve?: { a: number; h: number; k: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
+}
 
 // rounding helpers for decimals
 const r1 = (x: number) => (Math.round(x * 10) / 10).toFixed(1);
@@ -254,6 +262,21 @@ function enumFactorGcf(): XP[] {
   return out;
 }
 
+// Interactive coordinate-plane intro for Linear Equations: plot an ordered pair.
+// Reuses the "plot-point" graphing interaction (answerType "point"); graded by
+// the canonical "x,y" value match. Integer grid (snap 1) for clean plotting.
+function enumPlotPoints(): XP[] {
+  const out: XP[] = [];
+  let i = 0;
+  for (const x of [-3, -2, -1, 1, 2, 3]) for (const y of [-3, -2, -1, 1, 2, 3])
+    out.push({
+      q: `Plot the point (${x}, ${y}) on the coordinate plane.`,
+      a: `${x},${y}`, diff: 1 + i++ * 0.04, key: `pp:${x}_${y}`, type: "short_answer",
+      interactive: { kind: "plot-point", xRange: [-6, 6], yRange: [-6, 6], snap: 1 },
+    });
+  return out;
+}
+
 // ── Curricula ─────────────────────────────────────────────────────────────────
 interface Unit {
   id: string; label: string; objective: string; grade: string; stars: number;
@@ -296,12 +319,13 @@ const CURRICULA: Record<string, Unit[]> = {
   ],
 
   LINEAR_EQUATIONS: [
-    { id:"le-two-add", label:"Two-step equations (+)", objective:"Student solves ax + b = c", directive:"Solve for x.", grade:"Grade 7", stars:3, range:[1,16], pool:()=>enumTwoStep(1), example:{ problem:"2x + 3 = 11", steps:["11 - 3 = 8","8 ÷ 2 = 4"], answer:"4" } },
-    { id:"le-two-sub", label:"Two-step equations (-)", objective:"Student solves ax - b = c", directive:"Solve for x.", grade:"Grade 7-8", stars:4, range:[17,34], pool:()=>enumTwoStep(-1), example:{ problem:"3x - 5 = 16", steps:["16 + 5 = 21","21 ÷ 3 = 7"], answer:"7" } },
-    { id:"le-distribute", label:"Equations with distribution", objective:"Student solves k(x + b) = c", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[35,54], pool:()=>enumDistribute(), example:{ problem:"2(x + 3) = 14", steps:["14 ÷ 2 = 7","7 - 3 = 4"], answer:"4" } },
-    { id:"le-both-sides", label:"Variables on both sides", objective:"Student solves equations with variables on both sides", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[55,74], pool:()=>enumBothSides(), example:{ problem:"3x = x + 8", steps:["3x - x = 8 → 2x = 8","x = 4"], answer:"4" } },
-    { id:"le-fraction", label:"Equations with a fraction", objective:"Student solves x/d = q", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[75,90], pool:()=>enumDivEq(), example:{ problem:`${BS}frac{x}{3} = 4`, steps:["Multiply both sides by 3","x = 12"], answer:"12" } },
-    { id:"le-review", label:"Linear equations — mixed review", objective:"Student solves linear equations of every type", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[91,100], pool:()=>[...enumTwoStep(1),...enumTwoStep(-1),...enumDistribute()], example:{ problem:"4x - 6 = 10", steps:["10 + 6 = 16","16 ÷ 4 = 4"], answer:"4" } },
+    { id:"le-plot", label:"Plot points on the coordinate plane", objective:"Student plots an ordered pair (x, y) on a coordinate plane", directive:"Plot each point.", grade:"Grade 6", stars:1, range:[1,4], pool:()=>enumPlotPoints(), example:{ problem:"Plot the point (3, 2).", steps:["From the origin, move right 3 along the x-axis","Then move up 2 along the y-axis"], answer:"3,2" } },
+    { id:"le-two-add", label:"Two-step equations (+)", objective:"Student solves ax + b = c", directive:"Solve for x.", grade:"Grade 7", stars:3, range:[5,18], pool:()=>enumTwoStep(1), example:{ problem:"2x + 3 = 11", steps:["11 - 3 = 8","8 ÷ 2 = 4"], answer:"4" } },
+    { id:"le-two-sub", label:"Two-step equations (-)", objective:"Student solves ax - b = c", directive:"Solve for x.", grade:"Grade 7-8", stars:4, range:[19,34], pool:()=>enumTwoStep(-1), example:{ problem:"3x - 5 = 16", steps:["16 + 5 = 21","21 ÷ 3 = 7"], answer:"7" } },
+    { id:"le-distribute", label:"Equations with distribution", objective:"Student solves k(x + b) = c", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[35,52], pool:()=>enumDistribute(), example:{ problem:"2(x + 3) = 14", steps:["14 ÷ 2 = 7","7 - 3 = 4"], answer:"4" } },
+    { id:"le-both-sides", label:"Variables on both sides", objective:"Student solves equations with variables on both sides", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[53,72], pool:()=>enumBothSides(), example:{ problem:"3x = x + 8", steps:["3x - x = 8 → 2x = 8","x = 4"], answer:"4" } },
+    { id:"le-fraction", label:"Equations with a fraction", objective:"Student solves x/d = q", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[73,88], pool:()=>enumDivEq(), example:{ problem:`${BS}frac{x}{3} = 4`, steps:["Multiply both sides by 3","x = 12"], answer:"12" } },
+    { id:"le-review", label:"Linear equations — mixed review", objective:"Student solves linear equations of every type", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[89,100], pool:()=>[...enumTwoStep(1),...enumTwoStep(-1),...enumDistribute()], example:{ problem:"4x - 6 = 10", steps:["10 + 6 = 16","16 ÷ 4 = 4"], answer:"4" } },
   ],
 
   POLYNOMIALS: [
@@ -402,7 +426,11 @@ export function generateAdvancedSheet(
 
   const selected = selectProblems(buildScoredPool(skill, ui), t, problemCount);
   const problems = selected.map((p, i) => ({
-    id: nanoid(8), type: "arithmetic" as const, question: p.q, answer: p.a, points: 1,
+    id: nanoid(8),
+    type: (p.type ?? "arithmetic") as "arithmetic" | "short_answer" | "multiple_choice",
+    question: p.q, answer: p.a, points: 1,
+    ...(p.options ? { options: p.options } : {}),
+    ...(p.interactive ? { interactive: p.interactive } : {}),
     zone: (Math.floor(i / Math.ceil(problemCount / 5)) + 1) as 1 | 2 | 3 | 4 | 5,
   }));
   const answerKey = problems.map(p => ({ id: p.id, answer: p.answer }));

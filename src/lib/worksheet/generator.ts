@@ -88,6 +88,8 @@ export function generateProblems(config: GeneratorConfig): {
     const problems: Problem[] = ws.problems.map((p) => ({
       id: p.id, type: p.type as ProblemType, question: p.question,
       answer: p.answer, points: p.points,
+      ...((p as any).options ? { options: (p as any).options } : {}),
+      ...((p as any).interactive ? { interactive: (p as any).interactive } : {}),
     }));
     const answerKey: AnswerKeyEntry[] = ws.answerKey.map((a) => ({ id: a.id, answer: a.answer }));
     return { problems, answerKey };
