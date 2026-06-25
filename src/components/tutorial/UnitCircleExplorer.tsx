@@ -26,7 +26,9 @@ export function UnitCircleExplorer() {
   return (
     <div className="select-none" style={{ touchAction: "none" }}>
       <div className="rounded-xl overflow-hidden border border-border bg-white">
-        <Mafs height={280} viewBox={{ x: [-1.4, 1.4], y: [-1.4, 1.4] }} preserveAspectRatio={false}>
+        {/* preserveAspectRatio "contain" keeps the unit circle ROUND (a square
+            math region must not be stretched into the wide pixel box). */}
+        <Mafs height={280} viewBox={{ x: [-1.4, 1.4], y: [-1.4, 1.4] }} preserveAspectRatio="contain">
           <Coordinates.Cartesian subdivisions={2} />
           <Circle center={[0, 0]} radius={1} />
           <Line.Segment point1={[0, 0]} point2={[x, y]} />
