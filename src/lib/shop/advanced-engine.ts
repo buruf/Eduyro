@@ -30,7 +30,7 @@ interface XP {
   // standard value match on the canonical "x,y" string.
   type?: "arithmetic" | "short_answer" | "multiple_choice";
   options?: string[];
-  interactive?: { kind: "vertex-drag" | "plot-point"; a?: number; curve?: { a: number; h: number; k: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
+  interactive?: { kind: "vertex-drag" | "plot-point" | "plot-line"; a?: number; curve?: { a: number; h: number; k: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
 }
 
 // rounding helpers for decimals
@@ -288,6 +288,24 @@ function enumPlotPoints(): XP[] {
   return out;
 }
 
+// Interactive "graph a line": the student drags TWO points so the line through
+// them matches y = mx + b. Graded by canonical slope+intercept ("m,b") computed
+// from the snapped points — any two correct lattice points match.
+function enumPlotLine(): XP[] {
+  const out: XP[] = [];
+  let i = 0;
+  for (const m of [1, 2, -1, -2, 3]) for (const b of [-2, -1, 0, 1, 2]) {
+    const mTerm = m === 1 ? "x" : m === -1 ? "−x" : `${m}x`;
+    const bTerm = b === 0 ? "" : b < 0 ? ` − ${-b}` : ` + ${b}`;
+    out.push({
+      q: `Plot the line y = ${mTerm}${bTerm}.`,
+      a: `${m},${b}`, diff: 1 + i++ * 0.05, key: `gl:${m}_${b}`, type: "short_answer",
+      interactive: { kind: "plot-line", xRange: [-6, 6], yRange: [-6, 6], snap: 1 },
+    });
+  }
+  return out;
+}
+
 // ── Curricula ─────────────────────────────────────────────────────────────────
 interface Unit {
   id: string; label: string; objective: string; grade: string; stars: number;
@@ -331,12 +349,13 @@ const CURRICULA: Record<string, Unit[]> = {
 
   LINEAR_EQUATIONS: [
     { id:"le-plot", label:"Plot points on the coordinate plane", objective:"Student plots an ordered pair (x, y) on a coordinate plane", directive:"Plot each point.", grade:"Grade 6", stars:1, range:[1,4], pool:()=>enumPlotPoints(), example:{ problem:"Plot the point (3, 2).", steps:["From the origin, move right 3 along the x-axis","Then move up 2 along the y-axis"], answer:"3,2" } },
-    { id:"le-two-add", label:"Two-step equations (+)", objective:"Student solves ax + b = c", directive:"Solve for x.", grade:"Grade 7", stars:3, range:[5,18], pool:()=>enumTwoStep(1), example:{ problem:"2x + 3 = 11", steps:["11 - 3 = 8","8 ÷ 2 = 4"], answer:"4" } },
-    { id:"le-two-sub", label:"Two-step equations (-)", objective:"Student solves ax - b = c", directive:"Solve for x.", grade:"Grade 7-8", stars:4, range:[19,34], pool:()=>enumTwoStep(-1), example:{ problem:"3x - 5 = 16", steps:["16 + 5 = 21","21 ÷ 3 = 7"], answer:"7" } },
+    { id:"le-graphline", label:"Graph a line", objective:"Student graphs a line y = mx + b by plotting two points on it", directive:"Plot the line.", grade:"Grade 8", stars:3, range:[5,8], pool:()=>enumPlotLine(), example:{ problem:"Plot the line y = 2x − 1.", steps:["y-intercept (0, −1)","Slope 2 → up 2, right 1 → (1, 1)","Draw the line through both points"], answer:"2,-1" } },
+    { id:"le-two-add", label:"Two-step equations (+)", objective:"Student solves ax + b = c", directive:"Solve for x.", grade:"Grade 7", stars:3, range:[9,20], pool:()=>enumTwoStep(1), example:{ problem:"2x + 3 = 11", steps:["11 - 3 = 8","8 ÷ 2 = 4"], answer:"4" } },
+    { id:"le-two-sub", label:"Two-step equations (-)", objective:"Student solves ax - b = c", directive:"Solve for x.", grade:"Grade 7-8", stars:4, range:[21,34], pool:()=>enumTwoStep(-1), example:{ problem:"3x - 5 = 16", steps:["16 + 5 = 21","21 ÷ 3 = 7"], answer:"7" } },
     { id:"le-distribute", label:"Equations with distribution", objective:"Student solves k(x + b) = c", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[35,52], pool:()=>enumDistribute(), example:{ problem:"2(x + 3) = 14", steps:["14 ÷ 2 = 7","7 - 3 = 4"], answer:"4" } },
-    { id:"le-both-sides", label:"Variables on both sides", objective:"Student solves equations with variables on both sides", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[53,72], pool:()=>enumBothSides(), example:{ problem:"3x = x + 8", steps:["3x - x = 8 → 2x = 8","x = 4"], answer:"4" } },
-    { id:"le-fraction", label:"Equations with a fraction", objective:"Student solves x/d = q", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[73,88], pool:()=>enumDivEq(), example:{ problem:`${BS}frac{x}{3} = 4`, steps:["Multiply both sides by 3","x = 12"], answer:"12" } },
-    { id:"le-review", label:"Linear equations — mixed review", objective:"Student solves linear equations of every type", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[89,100], pool:()=>[...enumTwoStep(1),...enumTwoStep(-1),...enumDistribute()], example:{ problem:"4x - 6 = 10", steps:["10 + 6 = 16","16 ÷ 4 = 4"], answer:"4" } },
+    { id:"le-both-sides", label:"Variables on both sides", objective:"Student solves equations with variables on both sides", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[53,70], pool:()=>enumBothSides(), example:{ problem:"3x = x + 8", steps:["3x - x = 8 → 2x = 8","x = 4"], answer:"4" } },
+    { id:"le-fraction", label:"Equations with a fraction", objective:"Student solves x/d = q", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[71,86], pool:()=>enumDivEq(), example:{ problem:`${BS}frac{x}{3} = 4`, steps:["Multiply both sides by 3","x = 12"], answer:"12" } },
+    { id:"le-review", label:"Linear equations — mixed review", objective:"Student solves linear equations of every type", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[87,100], pool:()=>[...enumTwoStep(1),...enumTwoStep(-1),...enumDistribute()], example:{ problem:"4x - 6 = 10", steps:["10 + 6 = 16","16 ÷ 4 = 4"], answer:"4" } },
   ],
 
   POLYNOMIALS: [

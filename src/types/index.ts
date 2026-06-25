@@ -126,7 +126,9 @@ export interface InteractiveSpec {
   // "vertex-drag": drag a parabola's vertex (the curve follows the point).
   // "plot-point":  drag a single point to a target (optionally reading it off a
   //                read-only reference curve, e.g. plotting the y-intercept).
-  kind: "vertex-drag" | "plot-point";
+  // "plot-line": drag two points; the line through them is graded by canonical
+  //              slope+intercept ("m,b"), so any two correct lattice points match.
+  kind: "vertex-drag" | "plot-point" | "plot-line";
   a?: number;                   // vertex-drag: fixed leading coefficient (curve shape)
   curve?: { a: number; h: number; k: number }; // plot-point: optional read-only parabola y=a(x−h)²+k
   xRange: [number, number];
