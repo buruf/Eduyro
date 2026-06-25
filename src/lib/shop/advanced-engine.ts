@@ -274,6 +274,17 @@ function enumPlotPoints(): XP[] {
       a: `${x},${y}`, diff: 1 + i++ * 0.04, key: `pp:${x}_${y}`, type: "short_answer",
       interactive: { kind: "plot-point", xRange: [-6, 6], yRange: [-6, 6], snap: 1 },
     });
+  // Read a linear equation → plot its y-intercept (0, b). Higher difficulty so
+  // these appear after basic point-plotting within the intro unit.
+  let j = 0;
+  for (const m of [1, 2, -1, -2, 3]) for (const b of [-3, -2, -1, 1, 2, 3]) {
+    const mTerm = m === 1 ? "x" : m === -1 ? "−x" : `${m}x`;
+    out.push({
+      q: `Plot the y-intercept of the line y = ${mTerm} ${b < 0 ? `− ${-b}` : `+ ${b}`}.`,
+      a: `0,${b}`, diff: 3 + j++ * 0.03, key: `li:${m}_${b}`, type: "short_answer",
+      interactive: { kind: "plot-point", xRange: [-6, 6], yRange: [-6, 6], snap: 1 },
+    });
+  }
   return out;
 }
 
