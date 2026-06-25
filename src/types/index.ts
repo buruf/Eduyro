@@ -118,6 +118,7 @@ export type AnswerType =
   | "trueFalse"
   | "expression"   // algebra: "5x", "3(x+4)" — keyboard text, sized (not a paragraph)
   | "point"        // a coordinate (x,y) placed on an interactive plane (drag/plot)
+  | "ordering"     // drag/reorder a set of items; answer = the chosen order joined by commas
   | "text";        // short non-numeric fallback (sized input, never a paragraph)
 
 // Spec for an interactive (graphing) question. Sent to the client to RENDER the

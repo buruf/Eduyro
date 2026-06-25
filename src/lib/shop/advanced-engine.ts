@@ -306,6 +306,33 @@ function enumPlotLine(): XP[] {
   return out;
 }
 
+// Drag-and-drop ORDERING: arrange integers from least to greatest. Options are
+// the scrambled items; the answer is the correct order joined by commas. Served
+// & graded through the standard options/value pipeline (by-id detects that the
+// answer is a permutation of the options → ordering input).
+function enumOrderIntegers(): XP[] {
+  const sets: number[][] = [
+    [-3, 5, -1, 2], [4, -2, 1, -5], [-4, 0, 3, -1], [6, -3, 2, -6], [-2, 7, -5, 1],
+    [3, -7, 5, -1], [-8, 4, -2, 6], [2, -4, 8, -6], [-1, 9, -3, 5], [7, -5, 3, -9],
+    [0, -6, 4, -2], [-3, 3, -9, 9], [5, -1, -4, 2], [-2, 6, -8, 4],
+  ];
+  const out: XP[] = [];
+  let i = 0;
+  for (const s of sets) {
+    const correct = [...s].sort((a, b) => a - b);
+    // deterministic scramble so the shown order differs from the answer
+    let shown = [...s].sort((a, b) => (((a * 31 + i * 7) % 11) - ((b * 31 + i * 7) % 11)) || a - b);
+    if (shown.join(",") === correct.join(",")) shown = [...correct].reverse();
+    out.push({
+      q: `Order these from least to greatest:  ${shown.join(",  ")}`,
+      a: correct.join(","), diff: 1 + i * 0.05, key: `ordint:${s.join("_")}`,
+      type: "multiple_choice", options: shown.map(String),
+    });
+    i++;
+  }
+  return out;
+}
+
 // ── Curricula ─────────────────────────────────────────────────────────────────
 interface Unit {
   id: string; label: string; objective: string; grade: string; stars: number;
@@ -337,12 +364,13 @@ const CURRICULA: Record<string, Unit[]> = {
   ],
 
   PRE_ALGEBRA: [
-    { id:"pa-eval-add", label:"Evaluate expressions (+/-)", objective:"Student evaluates an expression by substitution", directive:"Evaluate each for the given value of x.", grade:"Grade 6", stars:2, range:[1,12], pool:()=>[...enumEvaluate("+"),...enumEvaluate("-")], example:{ problem:"x + 5,  x = 3", steps:["3 + 5 = 8"], answer:"8" } },
-    { id:"pa-eval-mul", label:"Evaluate expressions (×)", objective:"Student evaluates a product expression", directive:"Evaluate each for the given value of x.", grade:"Grade 6", stars:2, range:[13,24], pool:()=>enumEvaluateMul(), example:{ problem:"3x,  x = 4", steps:["3 × 4 = 12"], answer:"12" } },
-    { id:"pa-combine", label:"Combine like terms", objective:"Student combines like terms", directive:"Combine like terms.", grade:"Grade 6-7", stars:3, range:[25,36], pool:()=>enumCombine(), example:{ problem:"2x + 3x", steps:["Add coefficients: 2 + 3 = 5"], answer:"5x" } },
-    { id:"pa-onestep-add", label:"One-step equations (+/-)", objective:"Student solves one-step add/subtract equations", directive:"Solve for x.", grade:"Grade 7", stars:3, range:[37,50], pool:()=>[...enumOneStep("+"),...enumOneStep("-")], example:{ problem:"x + 5 = 12", steps:["12 - 5 = 7"], answer:"7" } },
-    { id:"pa-onestep-mul", label:"One-step equations (×)", objective:"Student solves one-step multiplication equations", directive:"Solve for x.", grade:"Grade 7", stars:4, range:[51,62], pool:()=>enumOneStep("×"), example:{ problem:"3x = 21", steps:["21 ÷ 3 = 7"], answer:"7" } },
-    { id:"pa-integers", label:"Integer addition & subtraction", objective:"Student adds and subtracts integers", directive:"Add or subtract.", grade:"Grade 7", stars:4, range:[63,78], pool:()=>[...enumInteger("+"),...enumInteger("-")], example:{ problem:"(-5) + 8", steps:["8 - 5 = 3"], answer:"3" } },
+    { id:"pa-order-int", label:"Order integers", objective:"Student orders integers from least to greatest on the number line", directive:"Order from least to greatest.", grade:"Grade 6", stars:2, range:[1,4], pool:()=>enumOrderIntegers(), example:{ problem:"Order from least to greatest:  2,  −3,  1", steps:["Negatives are smallest; the further left on the number line, the smaller","−3, then 1, then 2"], answer:"-3,1,2" } },
+    { id:"pa-eval-add", label:"Evaluate expressions (+/-)", objective:"Student evaluates an expression by substitution", directive:"Evaluate each for the given value of x.", grade:"Grade 6", stars:2, range:[5,16], pool:()=>[...enumEvaluate("+"),...enumEvaluate("-")], example:{ problem:"x + 5,  x = 3", steps:["3 + 5 = 8"], answer:"8" } },
+    { id:"pa-eval-mul", label:"Evaluate expressions (×)", objective:"Student evaluates a product expression", directive:"Evaluate each for the given value of x.", grade:"Grade 6", stars:2, range:[17,28], pool:()=>enumEvaluateMul(), example:{ problem:"3x,  x = 4", steps:["3 × 4 = 12"], answer:"12" } },
+    { id:"pa-combine", label:"Combine like terms", objective:"Student combines like terms", directive:"Combine like terms.", grade:"Grade 6-7", stars:3, range:[29,40], pool:()=>enumCombine(), example:{ problem:"2x + 3x", steps:["Add coefficients: 2 + 3 = 5"], answer:"5x" } },
+    { id:"pa-onestep-add", label:"One-step equations (+/-)", objective:"Student solves one-step add/subtract equations", directive:"Solve for x.", grade:"Grade 7", stars:3, range:[41,54], pool:()=>[...enumOneStep("+"),...enumOneStep("-")], example:{ problem:"x + 5 = 12", steps:["12 - 5 = 7"], answer:"7" } },
+    { id:"pa-onestep-mul", label:"One-step equations (×)", objective:"Student solves one-step multiplication equations", directive:"Solve for x.", grade:"Grade 7", stars:4, range:[55,66], pool:()=>enumOneStep("×"), example:{ problem:"3x = 21", steps:["21 ÷ 3 = 7"], answer:"7" } },
+    { id:"pa-integers", label:"Integer addition & subtraction", objective:"Student adds and subtracts integers", directive:"Add or subtract.", grade:"Grade 7", stars:4, range:[67,78], pool:()=>[...enumInteger("+"),...enumInteger("-")], example:{ problem:"(-5) + 8", steps:["8 - 5 = 3"], answer:"3" } },
     { id:"pa-order", label:"Order of operations", objective:"Student applies order of operations", directive:"Solve using order of operations.", grade:"Grade 7", stars:5, range:[79,90], pool:()=>enumOrderOps(), example:{ problem:"3 + 4 × 2", steps:["Multiply first: 4 × 2 = 8","3 + 8 = 11"], answer:"11" } },
     { id:"pa-review", label:"Pre-algebra — mixed review", objective:"Student works fluently across pre-algebra skills", directive:"Solve.", grade:"Grade 7", stars:5, range:[91,100], pool:()=>[...enumCombine(),...enumOneStep("+"),...enumOrderOps()], example:{ problem:"4x + 2x", steps:["4 + 2 = 6"], answer:"6x" } },
   ],

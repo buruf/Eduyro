@@ -42,6 +42,7 @@ import {
   TrueFalse, MultipleChoice, ShortTextInput,
 } from "@/components/practice/MathInputs";
 import { GraphChoice } from "@/components/practice/GraphChoice";
+import { OrderingInput } from "@/components/practice/OrderingInput";
 
 // "Match the equation to its graph" options are encoded graph descriptors
 // (e.g. "parab:1,2,1" / "line:2,-3") → render as graph thumbnails, not text.
@@ -1004,6 +1005,7 @@ function PracticeModal({
     const isChoice = !!(opts && opts.length) && at !== "trueFalse";
     const control = (() => {
       if (opts && opts.length) {
+        if (at === "ordering") return <OrderingInput items={opts} value={val} onChange={set} />;
         if (isGraphOptions(opts)) return <GraphChoice options={opts} value={val} onChange={set} />;
         return at === "trueFalse"
           ? <TrueFalse value={val} onChange={set} />

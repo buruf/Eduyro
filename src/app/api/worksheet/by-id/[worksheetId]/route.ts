@@ -115,6 +115,17 @@ export async function GET(
         if (p.interactive) {
           return { id: p.id, question: p.question, type: p.type, options: null, points: p.points, answerType: "point", interactive: p.interactive };
         }
+        // Drag-and-drop ORDERING items: the options are the items to arrange and
+        // the answer is their correct order joined by commas — i.e. the answer is
+        // a permutation of the options. Detect that server-side (the client gets
+        // the items but never the correct order) and serve as an ordering input.
+        if (options && options.length >= 3 && ans.includes(",")) {
+          const ansItems = ans.split(",").map((s) => s.trim()).sort();
+          const optItems = [...options].map((s) => s.trim()).sort();
+          if (ansItems.length === optItems.length && ansItems.every((v, k) => v === optItems[k])) {
+            return { id: p.id, question: p.question, type: p.type, options, points: p.points, answerType: "ordering" };
+          }
+        }
         let answerType = classifyAnswerType({
           question: p.question,
           options,
