@@ -45,7 +45,7 @@ interface XP {
   // Interactive graphing items (answerType "point"): the answer is the snapped
   // "x,y" string; `interactive` tells the client what plane/curve to render.
   answerType?: string;
-  interactive?: { kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder"; a?: number; curve?: { a: number; h: number; k: number }; line?: { m: number; b: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
+  interactive?: { kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder" | "angle-drag"; a?: number; curve?: { a: number; h: number; k: number }; line?: { m: number; b: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
 }
 
 // ── Seeded RNG + deterministic shuffle (per sheet, so regeneration is stable) ──
@@ -411,6 +411,19 @@ function tUnitCircle(): XP[] {
   for (const deg of [0, 30, 45, 60]) { out.push({ q: `Evaluate tan ${deg}°.`, a: TAN[deg], diff: 14 + i++, key: `tut:${deg}` }); }
   return out;
 }
+// INTERACTIVE GEOMETRY (graded): drag the point around the unit circle to a
+// target angle. Snaps to standard angles; answer is the degree value.
+function tAngleDrag(): XP[] {
+  const out: XP[] = [];
+  let i = 0;
+  for (const deg of [30, 45, 60, 90, 120, 135, 150, 180, 210, 225, 240, 270, 300, 330])
+    out.push({
+      q: `Drag the point around the circle so the angle θ = ${deg}°.`,
+      a: `${deg}`, diff: 14 + i++ * 0.1, key: `tad:${deg}`, type: "short_answer", answerType: "point",
+      interactive: { kind: "angle-drag", xRange: [-1.4, 1.4], yRange: [-1.4, 1.4], snap: 1 },
+    });
+  return out;
+}
 const RAD: Record<number, string> = { 30: "π/6", 45: "π/4", 60: "π/3", 90: "π/2", 120: "2π/3", 135: "3π/4", 150: "5π/6", 180: "π", 270: "3π/2", 360: "2π" };
 function tDegRad(): XP[] {
   return Object.entries(RAD).map(([deg, r], i) => ({ q: `Convert ${deg}° to radians`, a: r, diff: 22 + i, key: `tdr:${deg}` }));
@@ -570,7 +583,7 @@ const CURRICULA: Record<string, Unit[]> = {
   M15: [
     { id: "t-hyp", label: "Pythagorean theorem", objective: "Student finds a hypotenuse", grade: "Grade 9", stars: 2, range: [1, 16], multiFormat: true, pool: () => diversify(tHypotenuse()), example: { problem: "Legs 3 and 4. Find the hypotenuse", steps: ["√(9 + 16) = √25"], answer: "5" } },
     { id: "t-ratio", label: "Right-triangle ratios", objective: "Student writes sin, cos, tan as ratios", grade: "Grade 10", stars: 3, range: [17, 34], multiFormat: true, pool: () => diversify(tRatio()), example: { problem: "opposite = 3, hypotenuse = 5. Find sin θ", steps: ["sin = opp/hyp"], answer: "3/5" } },
-    { id: "t-unit", label: "Unit-circle values", objective: "Student recalls sin/cos/tan of standard angles", grade: "Grade 11", stars: 4, range: [35, 56], multiFormat: true, pool: () => diversify(tUnitCircle()), example: { problem: "Evaluate sin 30°.", steps: ["Standard angle"], answer: "1/2" } },
+    { id: "t-unit", label: "Unit-circle values", objective: "Student recalls sin/cos/tan of standard angles", grade: "Grade 11", stars: 4, range: [35, 56], multiFormat: true, pool: () => [...diversify(tUnitCircle()), ...tAngleDrag()], example: { problem: "Evaluate sin 30°.", steps: ["Standard angle"], answer: "1/2" } },
     { id: "t-rad", label: "Degrees to radians", objective: "Student converts degrees to radians", grade: "Grade 11", stars: 4, range: [57, 78], multiFormat: true, pool: () => diversify(tDegRad()), example: { problem: "Convert 90° to radians", steps: ["90 × π/180"], answer: "π/2" } },
     { id: "t-ident", label: "Pythagorean identity", objective: "Student uses sin²θ + cos²θ = 1", grade: "Grade 11-12", stars: 5, range: [79, 100], multiFormat: true, pool: () => diversify(tPythagIdentity()), example: { problem: "sin θ = 3/5. Find cos θ (acute)", steps: ["cos = √(1 - 9/25) = 4/5"], answer: "4/5" } },
   ],

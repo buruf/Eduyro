@@ -30,7 +30,7 @@ interface XP {
   // standard value match on the canonical "x,y" string.
   type?: "arithmetic" | "short_answer" | "multiple_choice";
   options?: string[];
-  interactive?: { kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder"; a?: number; curve?: { a: number; h: number; k: number }; line?: { m: number; b: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
+  interactive?: { kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder" | "angle-drag"; a?: number; curve?: { a: number; h: number; k: number }; line?: { m: number; b: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
 }
 
 // rounding helpers for decimals
