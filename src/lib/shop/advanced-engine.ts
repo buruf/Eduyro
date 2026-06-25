@@ -30,7 +30,7 @@ interface XP {
   // standard value match on the canonical "x,y" string.
   type?: "arithmetic" | "short_answer" | "multiple_choice";
   options?: string[];
-  interactive?: { kind: "vertex-drag" | "plot-point" | "plot-line"; a?: number; curve?: { a: number; h: number; k: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
+  interactive?: { kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder"; a?: number; curve?: { a: number; h: number; k: number }; line?: { m: number; b: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
 }
 
 // rounding helpers for decimals
@@ -306,6 +306,20 @@ function enumPlotLine(): XP[] {
   return out;
 }
 
+// EQUATION BUILDER: a line y = mx + b is shown; the student builds its equation
+// by selecting slope & intercept. Graded by canonical "m,b" (value match).
+function enumEquationBuilder(): XP[] {
+  const out: XP[] = [];
+  let i = 0;
+  for (const m of [1, 2, -1, -2, 3]) for (const b of [-3, -2, -1, 0, 1, 2, 3])
+    out.push({
+      q: `What is the equation of the line shown? Build it with the slope and intercept.`,
+      a: `${m},${b}`, diff: 2 + i++ * 0.04, key: `eqb:${m}_${b}`, type: "short_answer",
+      interactive: { kind: "equation-builder", line: { m, b }, xRange: [-6, 6], yRange: [-6, 6], snap: 1 },
+    });
+  return out;
+}
+
 // Drag-and-drop ORDERING: arrange integers from least to greatest. Options are
 // the scrambled items; the answer is the correct order joined by commas. Served
 // & graded through the standard options/value pipeline (by-id detects that the
@@ -377,7 +391,7 @@ const CURRICULA: Record<string, Unit[]> = {
 
   LINEAR_EQUATIONS: [
     { id:"le-plot", label:"Plot points on the coordinate plane", objective:"Student plots an ordered pair (x, y) on a coordinate plane", directive:"Plot each point.", grade:"Grade 6", stars:1, range:[1,4], pool:()=>enumPlotPoints(), example:{ problem:"Plot the point (3, 2).", steps:["From the origin, move right 3 along the x-axis","Then move up 2 along the y-axis"], answer:"3,2" } },
-    { id:"le-graphline", label:"Graph a line", objective:"Student graphs a line y = mx + b by plotting two points on it", directive:"Plot the line.", grade:"Grade 8", stars:3, range:[5,8], pool:()=>enumPlotLine(), example:{ problem:"Plot the line y = 2x − 1.", steps:["y-intercept (0, −1)","Slope 2 → up 2, right 1 → (1, 1)","Draw the line through both points"], answer:"2,-1" } },
+    { id:"le-graphline", label:"Graph a line", objective:"Student graphs a line y = mx + b by plotting two points on it", directive:"Plot the line.", grade:"Grade 8", stars:3, range:[5,8], pool:()=>[...enumPlotLine(), ...enumEquationBuilder()], example:{ problem:"Plot the line y = 2x − 1.", steps:["y-intercept (0, −1)","Slope 2 → up 2, right 1 → (1, 1)","Draw the line through both points"], answer:"2,-1" } },
     { id:"le-two-add", label:"Two-step equations (+)", objective:"Student solves ax + b = c", directive:"Solve for x.", grade:"Grade 7", stars:3, range:[9,20], pool:()=>enumTwoStep(1), example:{ problem:"2x + 3 = 11", steps:["11 - 3 = 8","8 ÷ 2 = 4"], answer:"4" } },
     { id:"le-two-sub", label:"Two-step equations (-)", objective:"Student solves ax - b = c", directive:"Solve for x.", grade:"Grade 7-8", stars:4, range:[21,34], pool:()=>enumTwoStep(-1), example:{ problem:"3x - 5 = 16", steps:["16 + 5 = 21","21 ÷ 3 = 7"], answer:"7" } },
     { id:"le-distribute", label:"Equations with distribution", objective:"Student solves k(x + b) = c", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[35,52], pool:()=>enumDistribute(), example:{ problem:"2(x + 3) = 14", steps:["14 ÷ 2 = 7","7 - 3 = 4"], answer:"4" } },

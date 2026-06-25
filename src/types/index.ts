@@ -129,9 +129,12 @@ export interface InteractiveSpec {
   //                read-only reference curve, e.g. plotting the y-intercept).
   // "plot-line": drag two points; the line through them is graded by canonical
   //              slope+intercept ("m,b"), so any two correct lattice points match.
-  kind: "vertex-drag" | "plot-point" | "plot-line";
+  // "equation-builder": a line is shown; the student BUILDS its equation by
+  //              selecting slope & intercept (graded "m,b").
+  kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder";
   a?: number;                   // vertex-drag: fixed leading coefficient (curve shape)
   curve?: { a: number; h: number; k: number }; // plot-point: optional read-only parabola y=a(x−h)²+k
+  line?: { m: number; b: number };              // equation-builder: the shown line y = mx + b
   xRange: [number, number];
   yRange: [number, number];
   snap: number;                 // grid snap step, e.g. 0.5

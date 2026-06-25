@@ -26,9 +26,9 @@ function curvePoints(spec: string): string {
   return pts.join(" ");
 }
 
-export function GraphThumb({ spec }: { spec: string }) {
+export function GraphThumb({ spec, height = 84 }: { spec: string; height?: number }) {
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="84" style={{ overflow: "hidden" }} aria-hidden>
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={height} style={{ overflow: "hidden" }} aria-hidden>
       {/* axes */}
       <line x1={PX(-R)} y1={PY(0)} x2={PX(R)} y2={PY(0)} stroke="#B8AC9C" strokeWidth={1} />
       <line x1={PX(0)} y1={PY(-R)} x2={PX(0)} y2={PY(R)} stroke="#B8AC9C" strokeWidth={1} />

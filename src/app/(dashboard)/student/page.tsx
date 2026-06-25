@@ -43,6 +43,7 @@ import {
 } from "@/components/practice/MathInputs";
 import { GraphChoice } from "@/components/practice/GraphChoice";
 import { OrderingInput } from "@/components/practice/OrderingInput";
+import { EquationBuilder } from "@/components/practice/EquationBuilder";
 
 // "Match the equation to its graph" options are encoded graph descriptors
 // (e.g. "parab:1,2,1" / "line:2,-3") → render as graph thumbnails, not text.
@@ -960,14 +961,16 @@ function PracticeModal({
     const ld = opts || stack ? null : parseLongDivision(p.question);
     const set = (v: string) => setAnswers((a) => ({ ...a, [p.id]: v }));
 
-    // Interactive graphing item — drag the parabola's vertex on a plane.
+    // Interactive graphing item — dispatch by the spec's kind.
     if (p.interactive && p.answerType === "point") {
       return (
         <div className="text-center">
           <div className="flex justify-center mb-3">
             <QuestionWithViz text={p.question} size={64} className="font-serif font-semibold text-lg leading-snug" />
           </div>
-          <VertexDragInput spec={p.interactive} value={answers[p.id] ?? ""} onChange={set} />
+          {p.interactive.kind === "equation-builder"
+            ? <EquationBuilder spec={p.interactive} value={answers[p.id] ?? ""} onChange={set} />
+            : <VertexDragInput spec={p.interactive} value={answers[p.id] ?? ""} onChange={set} />}
         </div>
       );
     }
