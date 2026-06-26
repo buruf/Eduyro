@@ -30,7 +30,7 @@ interface XP {
   // standard value match on the canonical "x,y" string.
   type?: "arithmetic" | "short_answer" | "multiple_choice";
   options?: string[];
-  interactive?: { kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder" | "angle-drag"; a?: number; curve?: { a: number; h: number; k: number }; line?: { m: number; b: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
+  interactive?: { kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder" | "angle-drag" | "area-model"; a?: number; curve?: { a: number; h: number; k: number }; line?: { m: number; b: number }; binomial?: { a: number; b: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
 }
 
 // rounding helpers for decimals
@@ -255,6 +255,18 @@ function enumFoil(): XP[] {
     out.push({ q: `Expand (x + ${a})(x + ${b}).`, a: `x² + ${a+b}x + ${a*b}`, diff: a + b + 32, key: `foil:${a}_${b}` });
   return out;
 }
+// INTERACTIVE AREA MODEL: fill the four regions of (x+a)(x+b). Answer is the four
+// partial products in fixed order (x², ax, bx, ab); graded by value match.
+function enumAreaModel(): XP[] {
+  const out: XP[] = []; let i = 0;
+  for (let a = 2; a <= 6; a++) for (let b = a; b <= 7; b++)
+    out.push({
+      q: `Fill in the area model for (x + ${a})(x + ${b}).`,
+      a: `x²,${a}x,${b}x,${a * b}`, diff: 28 + i++ * 0.1, key: `am:${a}_${b}`,
+      type: "short_answer", interactive: { kind: "area-model", binomial: { a, b }, xRange: [0, 1], yRange: [0, 1], snap: 1 },
+    });
+  return out;
+}
 // MULTI-SELECT (the "factor model"): select ALL binomial factors of x²+Sx+P.
 // Answer = the correct factors, sorted + comma-joined (order-independent).
 // Distractors are interleaved so the two correct factors are never adjacent.
@@ -425,7 +437,7 @@ const CURRICULA: Record<string, Unit[]> = {
     { id:"poly-sub", label:"Subtract polynomials", objective:"Student subtracts two binomials", directive:"Subtract.", grade:"Grade 8", stars:4, range:[31,46], pool:()=>enumPolyAdd(true), example:{ problem:"(5x + 6) - (2x + 1)", steps:["5x - 2x = 3x","6 - 1 = 5"], answer:"3x + 5" } },
     { id:"poly-mono", label:"Multiply monomials", objective:"Student multiplies monomials", directive:"Multiply.", grade:"Grade 8-9", stars:4, range:[47,60], pool:()=>enumMonomialMul(), example:{ problem:"3x · 4x", steps:["3 × 4 = 12","x · x = x²"], answer:"12x²" } },
     { id:"poly-distribute", label:"Distribute a monomial", objective:"Student distributes a monomial over a binomial", directive:"Expand.", grade:"Grade 9", stars:5, range:[61,74], pool:()=>enumMonoDistribute(), example:{ problem:"2x(x + 3)", steps:["2x · x = 2x²","2x · 3 = 6x"], answer:"2x² + 6x" } },
-    { id:"poly-foil", label:"Multiply binomials (FOIL)", objective:"Student expands (x + a)(x + b)", directive:"Expand.", grade:"Grade 9", stars:5, range:[75,88], pool:()=>[...enumFoil(), ...enumSelectFactors()], example:{ problem:"(x + 2)(x + 3)", steps:["First x·x = x²","Outer+Inner = 5x","Last 2·3 = 6"], answer:"x² + 5x + 6" } },
+    { id:"poly-foil", label:"Multiply binomials (FOIL)", objective:"Student expands (x + a)(x + b)", directive:"Expand.", grade:"Grade 9", stars:5, range:[75,88], pool:()=>[...enumFoil(), ...enumSelectFactors(), ...enumAreaModel()], example:{ problem:"(x + 2)(x + 3)", steps:["First x·x = x²","Outer+Inner = 5x","Last 2·3 = 6"], answer:"x² + 5x + 6" } },
     { id:"poly-factor", label:"Factor out the GCF", objective:"Student factors the GCF from a binomial", directive:"Factor out the GCF.", grade:"Grade 9", stars:5, range:[89,100], pool:()=>enumFactorGcf(), example:{ problem:"3x + 12", steps:["GCF = 3","3(x + 4)"], answer:"3(x + 4)" } },
   ],
 };

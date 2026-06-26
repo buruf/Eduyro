@@ -134,10 +134,13 @@ export interface InteractiveSpec {
   //              selecting slope & intercept (graded "m,b").
   // "angle-drag": drag a point around the unit circle to a target angle; it
   //              snaps to standard angles and is graded by the degree value.
-  kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder" | "angle-drag";
+  // "area-model": fill the four regions of the (x+a)(x+b) area model (dropdowns);
+  //              graded by the four partial products joined.
+  kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder" | "angle-drag" | "area-model";
   a?: number;                   // vertex-drag: fixed leading coefficient (curve shape)
   curve?: { a: number; h: number; k: number }; // plot-point: optional read-only parabola y=a(x−h)²+k
   line?: { m: number; b: number };              // equation-builder: the shown line y = mx + b
+  binomial?: { a: number; b: number };          // area-model: the product (x+a)(x+b)
   xRange: [number, number];
   yRange: [number, number];
   snap: number;                 // grid snap step, e.g. 0.5
