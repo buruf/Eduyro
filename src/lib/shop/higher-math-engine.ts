@@ -547,6 +547,30 @@ function pcVectorAdd(): XP[] {
     out.push({ q: `Add the vectors: (${a}, ${b}) + (${c}, ${d})`, a: `(${a + c}, ${b + d})`, diff: a + b + c + d + 30, key: `va:${a}_${b}_${c}_${d}` });
   return out;
 }
+// INTERACTIVE (M17 Pre-Calc conics): drag a parabola's vertex, and match a
+// parabola's equation to its graph. Reuses vertex-drag + match-graph (GraphChoice).
+function pcConics(): XP[] {
+  const out: XP[] = [];
+  let i = 0;
+  for (const [h, k] of [[2, 1], [-1, 3], [3, -2], [-2, -1], [0, 2], [1, -3], [-3, 1], [2, -4]] as [number, number][])
+    out.push({
+      q: `Drag the vertex of the parabola to the point (${h}, ${k}).`,
+      a: `${h},${k}`, diff: 1 + i++ * 0.05, key: `pcv:${h}_${k}`, type: "short_answer", answerType: "point",
+      interactive: { kind: "vertex-drag", a: 1, xRange: [-8, 8], yRange: [-8, 8], snap: 0.5 },
+    });
+  const MG: [number, number][] = [[0, 2], [2, 0], [-2, 0], [1, -3], [-1, 3], [2, 1]];
+  for (let mi = 0; mi < MG.length; mi++) {
+    const [h, k] = MG[mi];
+    const base = h === 0 ? "x" : `(x ${h > 0 ? `− ${h}` : `+ ${-h}`})`;
+    const kterm = k === 0 ? "" : k > 0 ? ` + ${k}` : ` − ${-k}`;
+    const correct = `parab:1,${h},${k}`;
+    const others = MG.filter(([vh, vk]) => !(vh === h && vk === k));
+    const dist = [others[mi % others.length], others[(mi + 2) % others.length], others[(mi + 3) % others.length]].map(([vh, vk]) => `parab:1,${vh},${vk}`);
+    const opts = Array.from(new Set([correct, ...dist])).slice(0, 4);
+    if (opts.length >= 3) out.push({ q: `Which graph matches y = ${base}²${kterm}?`, a: correct, diff: 3 + mi * 0.1, key: `pcmg:${h}_${k}`, type: "multiple_choice", options: shuffleByKey(opts, `pcmg:${h}_${k}`), fmt: "match-graph" });
+  }
+  return out;
+}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // M18 — CALCULUS
@@ -614,7 +638,7 @@ const CURRICULA: Record<string, Unit[]> = {
   ],
   M15: [
     { id: "t-hyp", label: "Pythagorean theorem", objective: "Student finds a hypotenuse", grade: "Grade 9", stars: 2, range: [1, 16], multiFormat: true, pool: () => diversify(tHypotenuse()), example: { problem: "Legs 3 and 4. Find the hypotenuse", steps: ["√(9 + 16) = √25"], answer: "5" } },
-    { id: "t-ratio", label: "Right-triangle ratios", objective: "Student writes sin, cos, tan as ratios", grade: "Grade 10", stars: 3, range: [17, 34], multiFormat: true, pool: () => diversify(tRatio()), example: { problem: "opposite = 3, hypotenuse = 5. Find sin θ", steps: ["sin = opp/hyp"], answer: "3/5" } },
+    { id: "t-ratio", label: "Right-triangle ratios", objective: "Student writes sin, cos, tan as ratios", grade: "Grade 10", stars: 3, range: [17, 34], multiFormat: true, pool: () => [...diversify(tRatio()), ...tAngleDrag()], example: { problem: "opposite = 3, hypotenuse = 5. Find sin θ", steps: ["sin = opp/hyp"], answer: "3/5" } },
     { id: "t-unit", label: "Unit-circle values", objective: "Student recalls sin/cos/tan of standard angles", grade: "Grade 11", stars: 4, range: [35, 56], multiFormat: true, pool: () => [...diversify(tUnitCircle()), ...tAngleDrag()], example: { problem: "Evaluate sin 30°.", steps: ["Standard angle"], answer: "1/2" } },
     { id: "t-rad", label: "Degrees to radians", objective: "Student converts degrees to radians", grade: "Grade 11", stars: 4, range: [57, 78], multiFormat: true, pool: () => [...diversify(tDegRad()), ...tAngleDragRad()], example: { problem: "Convert 90° to radians", steps: ["90 × π/180"], answer: "π/2" } },
     { id: "t-ident", label: "Pythagorean identity", objective: "Student uses sin²θ + cos²θ = 1", grade: "Grade 11-12", stars: 5, range: [79, 100], multiFormat: true, pool: () => diversify(tPythagIdentity()), example: { problem: "sin θ = 3/5. Find cos θ (acute)", steps: ["cos = √(1 - 9/25) = 4/5"], answer: "4/5" } },
@@ -627,12 +651,13 @@ const CURRICULA: Record<string, Unit[]> = {
     { id: "a-complex", label: "Add complex numbers", objective: "Student adds complex numbers", grade: "Grade 11-12", stars: 5, range: [77, 100], multiFormat: true, pool: () => diversify(a2ComplexAdd()), example: { problem: "Add: (2 + 3i) + (1 + i)", steps: ["Add real, add imaginary"], answer: "3 + 4i" } },
   ],
   M17: [
-    { id: "p-anth", label: "Arithmetic sequences", objective: "Student finds the nth term", grade: "Grade 10-11", stars: 3, range: [1, 18], multiFormat: true, pool: () => diversify(pcArithNth()), example: { problem: "First term 3, common difference 2. Find term 5", steps: ["3 + 4×2"], answer: "11" } },
-    { id: "p-asum", label: "Arithmetic series", objective: "Student sums an arithmetic series", grade: "Grade 11", stars: 4, range: [19, 38], multiFormat: true, pool: () => diversify(pcArithSum()), example: { problem: "Sum of the first 4 terms: first term 2, common difference 3", steps: ["4/2 × (4 + 9)"], answer: "26" } },
-    { id: "p-geo", label: "Geometric sequences", objective: "Student finds a geometric term", grade: "Grade 11", stars: 4, range: [39, 56], multiFormat: true, pool: () => diversify(pcGeoNth()), example: { problem: "First term 2, ratio 3. Find term 3", steps: ["2 × 3²"], answer: "18" } },
-    { id: "p-limpoly", label: "Limits of polynomials", objective: "Student evaluates limits by substitution", grade: "Grade 12", stars: 4, range: [57, 74], multiFormat: true, pool: () => diversify(pcLimitPoly()), example: { problem: "lim(x→2) (x² + 3x + 1)", steps: ["Substitute x = 2"], answer: "11" } },
-    { id: "p-limfac", label: "Limits by factoring", objective: "Student resolves 0/0 limits", grade: "Grade 12", stars: 5, range: [75, 88], multiFormat: true, pool: () => diversify(pcLimitFactor()), example: { problem: "lim(x→3) (x² - 9)/(x - 3)", steps: ["Factor → (x + 3)", "Substitute 3"], answer: "6" } },
-    { id: "p-vec", label: "Vectors", objective: "Student finds vector magnitude and sums", grade: "Grade 12", stars: 5, range: [89, 100], multiFormat: true, pool: () => diversify([...pcVectorMag(), ...pcVectorAdd()]), example: { problem: "Magnitude of (3, 4)", steps: ["√(9 + 16)"], answer: "5" } },
+    { id: "p-conics", label: "Parabolas & conics", objective: "Student graphs parabolas by vertex and matches equations to graphs", grade: "Grade 11", stars: 3, range: [1, 12], multiFormat: true, pool: () => pcConics(), example: { problem: "Drag the vertex of the parabola to the point (2, 1).", steps: ["The vertex of y = (x − 2)² + 1 is (2, 1)", "Move the vertex there"], answer: "2,1" } },
+    { id: "p-anth", label: "Arithmetic sequences", objective: "Student finds the nth term", grade: "Grade 10-11", stars: 3, range: [13, 28], multiFormat: true, pool: () => diversify(pcArithNth()), example: { problem: "First term 3, common difference 2. Find term 5", steps: ["3 + 4×2"], answer: "11" } },
+    { id: "p-asum", label: "Arithmetic series", objective: "Student sums an arithmetic series", grade: "Grade 11", stars: 4, range: [29, 44], multiFormat: true, pool: () => diversify(pcArithSum()), example: { problem: "Sum of the first 4 terms: first term 2, common difference 3", steps: ["4/2 × (4 + 9)"], answer: "26" } },
+    { id: "p-geo", label: "Geometric sequences", objective: "Student finds a geometric term", grade: "Grade 11", stars: 4, range: [45, 58], multiFormat: true, pool: () => diversify(pcGeoNth()), example: { problem: "First term 2, ratio 3. Find term 3", steps: ["2 × 3²"], answer: "18" } },
+    { id: "p-limpoly", label: "Limits of polynomials", objective: "Student evaluates limits by substitution", grade: "Grade 12", stars: 4, range: [59, 72], multiFormat: true, pool: () => diversify(pcLimitPoly()), example: { problem: "lim(x→2) (x² + 3x + 1)", steps: ["Substitute x = 2"], answer: "11" } },
+    { id: "p-limfac", label: "Limits by factoring", objective: "Student resolves 0/0 limits", grade: "Grade 12", stars: 5, range: [73, 86], multiFormat: true, pool: () => diversify(pcLimitFactor()), example: { problem: "lim(x→3) (x² - 9)/(x - 3)", steps: ["Factor → (x + 3)", "Substitute 3"], answer: "6" } },
+    { id: "p-vec", label: "Vectors", objective: "Student finds vector magnitude and sums", grade: "Grade 12", stars: 5, range: [87, 100], multiFormat: true, pool: () => diversify([...pcVectorMag(), ...pcVectorAdd()]), example: { problem: "Magnitude of (3, 4)", steps: ["√(9 + 16)"], answer: "5" } },
   ],
   M18: [
     { id: "c-dpow", label: "Power rule", objective: "Student differentiates xⁿ", grade: "Grade 12", stars: 3, range: [1, 16], multiFormat: true, pool: () => diversify(caDerivPower()), example: { problem: "d/dx x³", steps: ["Bring down 3, reduce power"], answer: "3x²" } },
