@@ -122,8 +122,14 @@ export async function GET(
         if (options && options.length >= 3 && ans.includes(",")) {
           const ansItems = ans.split(",").map((s) => s.trim()).sort();
           const optItems = [...options].map((s) => s.trim()).sort();
+          const optSet = new Set(optItems);
           if (ansItems.length === optItems.length && ansItems.every((v, k) => v === optItems[k])) {
+            // answer is a permutation of ALL options → drag-to-order
             return { id: p.id, question: p.question, type: p.type, options, points: p.points, answerType: "ordering" };
+          }
+          if (ansItems.every((v) => optSet.has(v)) && ansItems.length < optItems.length) {
+            // answer is a proper SUBSET of options → select-all-that-apply
+            return { id: p.id, question: p.question, type: p.type, options, points: p.points, answerType: "multiSelect" };
           }
         }
         let answerType = classifyAnswerType({

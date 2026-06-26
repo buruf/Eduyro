@@ -255,6 +255,25 @@ function enumFoil(): XP[] {
     out.push({ q: `Expand (x + ${a})(x + ${b}).`, a: `x² + ${a+b}x + ${a*b}`, diff: a + b + 32, key: `foil:${a}_${b}` });
   return out;
 }
+// MULTI-SELECT (the "factor model"): select ALL binomial factors of x²+Sx+P.
+// Answer = the correct factors, sorted + comma-joined (order-independent).
+// Distractors are interleaved so the two correct factors are never adjacent.
+function enumSelectFactors(): XP[] {
+  const out: XP[] = []; let i = 0;
+  for (let p = 2; p <= 6; p++) for (let q = p + 1; q <= 7; q++) {
+    const s = p + q, prod = p * q;
+    const c0 = `(x + ${p})`, c1 = `(x + ${q})`;
+    const d0 = `(x + ${p - 1})`, d1 = `(x + ${q + 1})`;   // p-1≥1, q+1>q → never equal p or q
+    const opts = [c0, d0, c1, d1];
+    if (new Set(opts).size < 4) continue;
+    out.push({
+      q: `Select all the factors of x² + ${s}x + ${prod}.`,
+      a: [c0, c1].sort().join(","), diff: 30 + i++ * 0.1, key: `selfac:${p}_${q}`,
+      type: "multiple_choice", options: opts,
+    });
+  }
+  return out;
+}
 function enumFactorGcf(): XP[] {
   const out: XP[] = [];
   for (let g = 2; g <= 9; g++) for (let b = 1; b <= 9; b++)
@@ -406,7 +425,7 @@ const CURRICULA: Record<string, Unit[]> = {
     { id:"poly-sub", label:"Subtract polynomials", objective:"Student subtracts two binomials", directive:"Subtract.", grade:"Grade 8", stars:4, range:[31,46], pool:()=>enumPolyAdd(true), example:{ problem:"(5x + 6) - (2x + 1)", steps:["5x - 2x = 3x","6 - 1 = 5"], answer:"3x + 5" } },
     { id:"poly-mono", label:"Multiply monomials", objective:"Student multiplies monomials", directive:"Multiply.", grade:"Grade 8-9", stars:4, range:[47,60], pool:()=>enumMonomialMul(), example:{ problem:"3x · 4x", steps:["3 × 4 = 12","x · x = x²"], answer:"12x²" } },
     { id:"poly-distribute", label:"Distribute a monomial", objective:"Student distributes a monomial over a binomial", directive:"Expand.", grade:"Grade 9", stars:5, range:[61,74], pool:()=>enumMonoDistribute(), example:{ problem:"2x(x + 3)", steps:["2x · x = 2x²","2x · 3 = 6x"], answer:"2x² + 6x" } },
-    { id:"poly-foil", label:"Multiply binomials (FOIL)", objective:"Student expands (x + a)(x + b)", directive:"Expand.", grade:"Grade 9", stars:5, range:[75,88], pool:()=>enumFoil(), example:{ problem:"(x + 2)(x + 3)", steps:["First x·x = x²","Outer+Inner = 5x","Last 2·3 = 6"], answer:"x² + 5x + 6" } },
+    { id:"poly-foil", label:"Multiply binomials (FOIL)", objective:"Student expands (x + a)(x + b)", directive:"Expand.", grade:"Grade 9", stars:5, range:[75,88], pool:()=>[...enumFoil(), ...enumSelectFactors()], example:{ problem:"(x + 2)(x + 3)", steps:["First x·x = x²","Outer+Inner = 5x","Last 2·3 = 6"], answer:"x² + 5x + 6" } },
     { id:"poly-factor", label:"Factor out the GCF", objective:"Student factors the GCF from a binomial", directive:"Factor out the GCF.", grade:"Grade 9", stars:5, range:[89,100], pool:()=>enumFactorGcf(), example:{ problem:"3x + 12", steps:["GCF = 3","3(x + 4)"], answer:"3(x + 4)" } },
   ],
 };

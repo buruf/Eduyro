@@ -43,6 +43,7 @@ import {
 } from "@/components/practice/MathInputs";
 import { GraphChoice } from "@/components/practice/GraphChoice";
 import { OrderingInput } from "@/components/practice/OrderingInput";
+import { MultiSelectInput } from "@/components/practice/MultiSelectInput";
 import { EquationBuilder } from "@/components/practice/EquationBuilder";
 import { AngleDragInput } from "@/components/practice/AngleDragInput";
 
@@ -1012,6 +1013,7 @@ function PracticeModal({
     const control = (() => {
       if (opts && opts.length) {
         if (at === "ordering") return <OrderingInput items={opts} value={val} onChange={set} />;
+        if (at === "multiSelect") return <MultiSelectInput options={opts} value={val} onChange={set} />;
         if (isGraphOptions(opts)) return <GraphChoice options={opts} value={val} onChange={set} />;
         return at === "trueFalse"
           ? <TrueFalse value={val} onChange={set} />

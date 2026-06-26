@@ -289,6 +289,26 @@ function qDiscriminant(): XP[] {
   return out;
 }
 
+// MULTI-SELECT: pick ALL the quadratic equations from a mixed list. Answer = the
+// quadratics, sorted + comma-joined (order-independent); options mix quadratics
+// with linears, so the answer is a proper subset (→ multiSelect at serve time).
+function qSelectQuadratics(): XP[] {
+  const quads = ["x² + 1 = 0", "x² − 4 = 0", "x² + 5x = 0", "2x² − 8 = 0", "x² − 9 = 0", "3x² + x = 0"];
+  const lins = ["2x + 3 = 0", "5x = 10", "x − 7 = 0", "4x + 1 = 0", "3x = 12", "x + 6 = 0"];
+  const out: XP[] = [];
+  for (let j = 0; j < 6; j++) {
+    const correct = Array.from(new Set([quads[j % quads.length], quads[(j + 2) % quads.length]]));
+    if (correct.length < 2) continue;
+    const opts = [...correct, lins[j % lins.length], lins[(j + 3) % lins.length]];
+    out.push({
+      q: `Select all the quadratic equations.`,
+      a: [...correct].sort().join(","), diff: 9.7 + j * 0.02, key: `selq:${j}`,
+      type: "multiple_choice", options: shuffleByKey(opts, `selq:${j}`), fmt: "multi-select",
+    });
+  }
+  return out;
+}
+
 // ── Micro-skill 7: evaluate quadratics & axis of symmetry (mixed mastery) ──
 function qEvaluateAxis(): XP[] {
   const out: XP[] = [];
@@ -626,7 +646,7 @@ const CURRICULA: Record<string, Unit[]> = {
     { id: "q-zero", label: "Zero-product property", objective: "Student solves factored quadratics", grade: "Grade 9", stars: 3, range: [49, 62], multiFormat: true, pool: qZeroProduct, example: { problem: "Solve (x - 2)(x - 5) = 0", steps: ["Set each factor to 0", "x = 2 or x = 5"], answer: "2, 5" } },
     { id: "q-factor", label: "Solve by factoring", objective: "Student factors and solves x² - Sx + P = 0", grade: "Grade 9-10", stars: 4, range: [63, 76], multiFormat: true, pool: qFactor, example: { problem: "Solve x² - 7x + 12 = 0", steps: ["Find two numbers that multiply to 12, add to 7: 3 and 4", "x = 3 or x = 4"], answer: "3, 4" } },
     { id: "q-disc", label: "Discriminant & # of solutions", objective: "Student computes b² - 4ac and reads its sign", grade: "Grade 10", stars: 4, range: [77, 90], multiFormat: true, pool: qDiscriminant, example: { problem: "How many real solutions? x² + 2x + 5 = 0", steps: ["b² - 4ac = 4 - 20 = -16", "Negative → no real solutions"], answer: "0" } },
-    { id: "q-evalaxis", label: "Evaluate & axis of symmetry", objective: "Student evaluates quadratics and finds the axis x = -b/2a", grade: "Grade 10", stars: 5, range: [91, 100], multiFormat: true, pool: qEvaluateAxis, example: { problem: "Axis of symmetry of y = x² + 6x", steps: ["x = -b/2 = -6/2"], answer: "x = -3" } },
+    { id: "q-evalaxis", label: "Evaluate & axis of symmetry", objective: "Student evaluates quadratics and finds the axis x = -b/2a", grade: "Grade 10", stars: 5, range: [91, 100], multiFormat: true, pool: () => [...qEvaluateAxis(), ...qSelectQuadratics()], example: { problem: "Axis of symmetry of y = x² + 6x", steps: ["x = -b/2 = -6/2"], answer: "x = -3" } },
   ],
   M14: [
     { id: "f-lin", label: "Evaluate f(x) = mx + b", objective: "Student evaluates a linear function", grade: "Grade 8-9", stars: 2, range: [1, 16], multiFormat: true, pool: () => [...diversify(fEvalLinear()), ...fGraphLinear()], example: { problem: "f(x) = 2x + 3. Find f(4)", steps: ["2(4) + 3"], answer: "11" } },
