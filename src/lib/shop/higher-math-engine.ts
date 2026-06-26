@@ -358,6 +358,28 @@ function fEvalQuad(): XP[] {
     out.push({ q: `f(x) = x² + ${c}. Find f(${v})`, a: `${v * v + c}`, diff: c + v + 6, key: `fq:${c}_${v}` });
   return out;
 }
+// INTERACTIVE (M14): build the equation of a shown linear function f(x)=mx+b.
+function fGraphLinear(): XP[] {
+  const out: XP[] = []; let i = 0;
+  for (const m of [1, 2, -1, -2, 3]) for (const b of [-2, -1, 0, 1, 2])
+    out.push({
+      q: `The graph of a linear function f(x) = mx + b is shown. Build its equation.`,
+      a: `${m},${b}`, diff: 2 + i++ * 0.05, key: `fgl:${m}_${b}`, type: "short_answer", answerType: "point",
+      interactive: { kind: "equation-builder", line: { m, b }, xRange: [-6, 6], yRange: [-6, 6], snap: 1 },
+    });
+  return out;
+}
+// INTERACTIVE (M14): drag the vertex of a quadratic function to a target point.
+function fVertexDrag(): XP[] {
+  const out: XP[] = []; let i = 0;
+  for (const h of [-3, -2, -1, 0, 1, 2, 3]) for (const k of [-2, -1, 0, 1, 2])
+    out.push({
+      q: `Drag the vertex of the parabola to the point (${h}, ${k}).`,
+      a: `${h},${k}`, diff: 6 + i++ * 0.02, key: `fvd:${h}_${k}`, type: "short_answer", answerType: "point",
+      interactive: { kind: "vertex-drag", a: 1, xRange: [-8, 8], yRange: [-8, 8], snap: 0.5 },
+    });
+  return out;
+}
 function fCompose(): XP[] {
   const out: XP[] = [];
   for (let a = 1; a <= 9; a++) for (let b = 1; b <= 9; b++) for (let v = 1; v <= 5; v++)
@@ -427,6 +449,16 @@ function tAngleDrag(): XP[] {
 const RAD: Record<number, string> = { 30: "π/6", 45: "π/4", 60: "π/3", 90: "π/2", 120: "2π/3", 135: "3π/4", 150: "5π/6", 180: "π", 270: "3π/2", 360: "2π" };
 function tDegRad(): XP[] {
   return Object.entries(RAD).map(([deg, r], i) => ({ q: `Convert ${deg}° to radians`, a: r, diff: 22 + i, key: `tdr:${deg}` }));
+}
+// INTERACTIVE: drag the unit-circle point to an angle given IN RADIANS (graded by
+// the equivalent degree value). Reuses the angle-drag input.
+function tAngleDragRad(): XP[] {
+  const RD: [string, number][] = [["π/6", 30], ["π/4", 45], ["π/3", 60], ["π/2", 90], ["2π/3", 120], ["3π/4", 135], ["5π/6", 150], ["π", 180], ["3π/2", 270]];
+  return RD.map(([r, deg], i) => ({
+    q: `Drag the point around the circle to the angle ${r} radians.`,
+    a: `${deg}`, diff: 22 + i * 0.1, key: `tadr:${deg}`, type: "short_answer", answerType: "point",
+    interactive: { kind: "angle-drag", xRange: [-1.4, 1.4], yRange: [-1.4, 1.4], snap: 1 },
+  }));
 }
 function tPythagIdentity(): XP[] {
   const out: XP[] = [];
@@ -573,8 +605,8 @@ const CURRICULA: Record<string, Unit[]> = {
     { id: "q-evalaxis", label: "Evaluate & axis of symmetry", objective: "Student evaluates quadratics and finds the axis x = -b/2a", grade: "Grade 10", stars: 5, range: [91, 100], multiFormat: true, pool: qEvaluateAxis, example: { problem: "Axis of symmetry of y = x² + 6x", steps: ["x = -b/2 = -6/2"], answer: "x = -3" } },
   ],
   M14: [
-    { id: "f-lin", label: "Evaluate f(x) = mx + b", objective: "Student evaluates a linear function", grade: "Grade 8-9", stars: 2, range: [1, 16], multiFormat: true, pool: () => diversify(fEvalLinear()), example: { problem: "f(x) = 2x + 3. Find f(4)", steps: ["2(4) + 3"], answer: "11" } },
-    { id: "f-quad", label: "Evaluate a quadratic function", objective: "Student evaluates f(x) = x² + c", grade: "Grade 9", stars: 3, range: [17, 32], multiFormat: true, pool: () => diversify(fEvalQuad()), example: { problem: "f(x) = x² + 5. Find f(3)", steps: ["9 + 5"], answer: "14" } },
+    { id: "f-lin", label: "Evaluate f(x) = mx + b", objective: "Student evaluates a linear function", grade: "Grade 8-9", stars: 2, range: [1, 16], multiFormat: true, pool: () => [...diversify(fEvalLinear()), ...fGraphLinear()], example: { problem: "f(x) = 2x + 3. Find f(4)", steps: ["2(4) + 3"], answer: "11" } },
+    { id: "f-quad", label: "Evaluate a quadratic function", objective: "Student evaluates f(x) = x² + c", grade: "Grade 9", stars: 3, range: [17, 32], multiFormat: true, pool: () => [...diversify(fEvalQuad()), ...fVertexDrag()], example: { problem: "f(x) = x² + 5. Find f(3)", steps: ["9 + 5"], answer: "14" } },
     { id: "f-compose", label: "Composition of functions", objective: "Student evaluates f(g(x))", grade: "Grade 10", stars: 4, range: [33, 50], multiFormat: true, pool: () => diversify(fCompose()), example: { problem: "f(x) = x + 1, g(x) = 2x. Find f(g(3))", steps: ["g(3) = 6", "f(6) = 7"], answer: "7" } },
     { id: "f-domain", label: "Domain of a rational function", objective: "Student finds excluded x-values", grade: "Grade 10", stars: 4, range: [51, 68], multiFormat: true, pool: () => diversify(fDomain()), example: { problem: "Domain of f(x) = 1/(x - 4)", steps: ["Denominator ≠ 0"], answer: "x ≠ 4" } },
     { id: "f-range", label: "Range of a quadratic", objective: "Student finds the minimum of x² + c", grade: "Grade 10", stars: 4, range: [69, 84], multiFormat: true, pool: () => diversify(fRange()), example: { problem: "Range of f(x) = x² + 2", steps: ["x² ≥ 0, so y ≥ 2"], answer: "y ≥ 2" } },
@@ -584,7 +616,7 @@ const CURRICULA: Record<string, Unit[]> = {
     { id: "t-hyp", label: "Pythagorean theorem", objective: "Student finds a hypotenuse", grade: "Grade 9", stars: 2, range: [1, 16], multiFormat: true, pool: () => diversify(tHypotenuse()), example: { problem: "Legs 3 and 4. Find the hypotenuse", steps: ["√(9 + 16) = √25"], answer: "5" } },
     { id: "t-ratio", label: "Right-triangle ratios", objective: "Student writes sin, cos, tan as ratios", grade: "Grade 10", stars: 3, range: [17, 34], multiFormat: true, pool: () => diversify(tRatio()), example: { problem: "opposite = 3, hypotenuse = 5. Find sin θ", steps: ["sin = opp/hyp"], answer: "3/5" } },
     { id: "t-unit", label: "Unit-circle values", objective: "Student recalls sin/cos/tan of standard angles", grade: "Grade 11", stars: 4, range: [35, 56], multiFormat: true, pool: () => [...diversify(tUnitCircle()), ...tAngleDrag()], example: { problem: "Evaluate sin 30°.", steps: ["Standard angle"], answer: "1/2" } },
-    { id: "t-rad", label: "Degrees to radians", objective: "Student converts degrees to radians", grade: "Grade 11", stars: 4, range: [57, 78], multiFormat: true, pool: () => diversify(tDegRad()), example: { problem: "Convert 90° to radians", steps: ["90 × π/180"], answer: "π/2" } },
+    { id: "t-rad", label: "Degrees to radians", objective: "Student converts degrees to radians", grade: "Grade 11", stars: 4, range: [57, 78], multiFormat: true, pool: () => [...diversify(tDegRad()), ...tAngleDragRad()], example: { problem: "Convert 90° to radians", steps: ["90 × π/180"], answer: "π/2" } },
     { id: "t-ident", label: "Pythagorean identity", objective: "Student uses sin²θ + cos²θ = 1", grade: "Grade 11-12", stars: 5, range: [79, 100], multiFormat: true, pool: () => diversify(tPythagIdentity()), example: { problem: "sin θ = 3/5. Find cos θ (acute)", steps: ["cos = √(1 - 9/25) = 4/5"], answer: "4/5" } },
   ],
   M16: [
