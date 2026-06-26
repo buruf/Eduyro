@@ -355,6 +355,21 @@ function enumEquationBuilder(): XP[] {
 // the scrambled items; the answer is the correct order joined by commas. Served
 // & graded through the standard options/value pipeline (by-id detects that the
 // answer is a permutation of the options → ordering input).
+// INTERACTIVE GEOMETRY: apply a transformation to a point and PLOT the image.
+// Reflect across an axis, translate, or rotate 90° about the origin. Reuses the
+// plot-point interaction; graded by the image coordinates "x,y".
+function enumTransformPoint(): XP[] {
+  const out: XP[] = []; let i = 0;
+  const I = { kind: "plot-point" as const, xRange: [-6, 6] as [number, number], yRange: [-6, 6] as [number, number], snap: 1 };
+  for (const [x, y] of [[3, 2], [-2, 3], [1, -4], [-3, -1], [2, 1], [-1, 2], [4, -2], [-2, -3]] as [number, number][]) {
+    out.push({ q: `Reflect the point (${x}, ${y}) across the x-axis. Plot the image.`, a: `${x},${-y}`, diff: 1 + i++ * 0.04, key: `trx:${x}_${y}`, type: "short_answer", interactive: I });
+    out.push({ q: `Reflect the point (${x}, ${y}) across the y-axis. Plot the image.`, a: `${-x},${y}`, diff: 1 + i++ * 0.04, key: `try:${x}_${y}`, type: "short_answer", interactive: I });
+    out.push({ q: `Translate the point (${x}, ${y}) by (2, −1). Plot the image.`, a: `${x + 2},${y - 1}`, diff: 1.4 + i++ * 0.04, key: `trt:${x}_${y}`, type: "short_answer", interactive: I });
+    out.push({ q: `Rotate the point (${x}, ${y}) 90° counterclockwise about the origin. Plot the image.`, a: `${-y},${x}`, diff: 2 + i++ * 0.04, key: `trr:${x}_${y}`, type: "short_answer", interactive: I });
+  }
+  return out;
+}
+
 function enumOrderIntegers(): XP[] {
   const sets: number[][] = [
     [-3, 5, -1, 2], [4, -2, 1, -5], [-4, 0, 3, -1], [6, -3, 2, -6], [-2, 7, -5, 1],
@@ -423,11 +438,12 @@ const CURRICULA: Record<string, Unit[]> = {
   LINEAR_EQUATIONS: [
     { id:"le-plot", label:"Plot points on the coordinate plane", objective:"Student plots an ordered pair (x, y) on a coordinate plane", directive:"Plot each point.", grade:"Grade 6", stars:1, range:[1,4], pool:()=>enumPlotPoints(), example:{ problem:"Plot the point (3, 2).", steps:["From the origin, move right 3 along the x-axis","Then move up 2 along the y-axis"], answer:"3,2" } },
     { id:"le-graphline", label:"Graph a line", objective:"Student graphs a line y = mx + b by plotting two points on it", directive:"Plot the line.", grade:"Grade 8", stars:3, range:[5,8], pool:()=>[...enumPlotLine(), ...enumEquationBuilder()], example:{ problem:"Plot the line y = 2x − 1.", steps:["y-intercept (0, −1)","Slope 2 → up 2, right 1 → (1, 1)","Draw the line through both points"], answer:"2,-1" } },
-    { id:"le-two-add", label:"Two-step equations (+)", objective:"Student solves ax + b = c", directive:"Solve for x.", grade:"Grade 7", stars:3, range:[9,20], pool:()=>enumTwoStep(1), example:{ problem:"2x + 3 = 11", steps:["11 - 3 = 8","8 ÷ 2 = 4"], answer:"4" } },
-    { id:"le-two-sub", label:"Two-step equations (-)", objective:"Student solves ax - b = c", directive:"Solve for x.", grade:"Grade 7-8", stars:4, range:[21,34], pool:()=>enumTwoStep(-1), example:{ problem:"3x - 5 = 16", steps:["16 + 5 = 21","21 ÷ 3 = 7"], answer:"7" } },
-    { id:"le-distribute", label:"Equations with distribution", objective:"Student solves k(x + b) = c", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[35,52], pool:()=>enumDistribute(), example:{ problem:"2(x + 3) = 14", steps:["14 ÷ 2 = 7","7 - 3 = 4"], answer:"4" } },
-    { id:"le-both-sides", label:"Variables on both sides", objective:"Student solves equations with variables on both sides", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[53,70], pool:()=>enumBothSides(), example:{ problem:"3x = x + 8", steps:["3x - x = 8 → 2x = 8","x = 4"], answer:"4" } },
-    { id:"le-fraction", label:"Equations with a fraction", objective:"Student solves x/d = q", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[71,86], pool:()=>enumDivEq(), example:{ problem:`${BS}frac{x}{3} = 4`, steps:["Multiply both sides by 3","x = 12"], answer:"12" } },
+    { id:"le-transform", label:"Transformations on the plane", objective:"Student reflects, translates and rotates points on the coordinate plane", directive:"Plot the image after the transformation.", grade:"Grade 8", stars:3, range:[9,12], pool:()=>enumTransformPoint(), example:{ problem:"Reflect the point (3, 2) across the x-axis. Plot the image.", steps:["Reflecting across the x-axis negates the y-coordinate","(3, 2) → (3, −2)"], answer:"3,-2" } },
+    { id:"le-two-add", label:"Two-step equations (+)", objective:"Student solves ax + b = c", directive:"Solve for x.", grade:"Grade 7", stars:3, range:[13,24], pool:()=>enumTwoStep(1), example:{ problem:"2x + 3 = 11", steps:["11 - 3 = 8","8 ÷ 2 = 4"], answer:"4" } },
+    { id:"le-two-sub", label:"Two-step equations (-)", objective:"Student solves ax - b = c", directive:"Solve for x.", grade:"Grade 7-8", stars:4, range:[25,38], pool:()=>enumTwoStep(-1), example:{ problem:"3x - 5 = 16", steps:["16 + 5 = 21","21 ÷ 3 = 7"], answer:"7" } },
+    { id:"le-distribute", label:"Equations with distribution", objective:"Student solves k(x + b) = c", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[39,54], pool:()=>enumDistribute(), example:{ problem:"2(x + 3) = 14", steps:["14 ÷ 2 = 7","7 - 3 = 4"], answer:"4" } },
+    { id:"le-both-sides", label:"Variables on both sides", objective:"Student solves equations with variables on both sides", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[55,72], pool:()=>enumBothSides(), example:{ problem:"3x = x + 8", steps:["3x - x = 8 → 2x = 8","x = 4"], answer:"4" } },
+    { id:"le-fraction", label:"Equations with a fraction", objective:"Student solves x/d = q", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[73,86], pool:()=>enumDivEq(), example:{ problem:`${BS}frac{x}{3} = 4`, steps:["Multiply both sides by 3","x = 12"], answer:"12" } },
     { id:"le-review", label:"Linear equations — mixed review", objective:"Student solves linear equations of every type", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[87,100], pool:()=>[...enumTwoStep(1),...enumTwoStep(-1),...enumDistribute()], example:{ problem:"4x - 6 = 10", steps:["10 + 6 = 16","16 ÷ 4 = 4"], answer:"4" } },
   ],
 
