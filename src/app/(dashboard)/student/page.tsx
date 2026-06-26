@@ -47,6 +47,7 @@ import { MultiSelectInput } from "@/components/practice/MultiSelectInput";
 import { EquationBuilder } from "@/components/practice/EquationBuilder";
 import { AngleDragInput } from "@/components/practice/AngleDragInput";
 import { AreaModelInput } from "@/components/practice/AreaModelInput";
+import { TriangleDragInput } from "@/components/practice/TriangleDragInput";
 
 // "Match the equation to its graph" options are encoded graph descriptors
 // (e.g. "parab:1,2,1" / "line:2,-3") → render as graph thumbnails, not text.
@@ -977,6 +978,8 @@ function PracticeModal({
             ? <AngleDragInput spec={p.interactive} value={answers[p.id] ?? ""} onChange={set} />
             : p.interactive.kind === "area-model"
             ? <AreaModelInput spec={p.interactive} value={answers[p.id] ?? ""} onChange={set} />
+            : p.interactive.kind === "triangle-drag"
+            ? <TriangleDragInput spec={p.interactive} value={answers[p.id] ?? ""} onChange={set} />
             : <VertexDragInput spec={p.interactive} value={answers[p.id] ?? ""} onChange={set} />}
         </div>
       );

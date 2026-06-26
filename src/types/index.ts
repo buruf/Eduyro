@@ -136,7 +136,9 @@ export interface InteractiveSpec {
   //              snaps to standard angles and is graded by the degree value.
   // "area-model": fill the four regions of the (x+a)(x+b) area model (dropdowns);
   //              graded by the four partial products joined.
-  kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder" | "angle-drag" | "area-model";
+  // "triangle-drag": drag a triangle's three vertices to a target/image figure;
+  //              graded by the (order-independent) set of vertices.
+  kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder" | "angle-drag" | "area-model" | "triangle-drag";
   a?: number;                   // vertex-drag: fixed leading coefficient (curve shape)
   curve?: { a: number; h: number; k: number }; // plot-point: optional read-only parabola y=a(x−h)²+k
   line?: { m: number; b: number };              // equation-builder: the shown line y = mx + b

@@ -45,7 +45,7 @@ interface XP {
   // Interactive graphing items (answerType "point"): the answer is the snapped
   // "x,y" string; `interactive` tells the client what plane/curve to render.
   answerType?: string;
-  interactive?: { kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder" | "angle-drag" | "area-model"; a?: number; curve?: { a: number; h: number; k: number }; line?: { m: number; b: number }; binomial?: { a: number; b: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
+  interactive?: { kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder" | "angle-drag" | "area-model" | "triangle-drag"; a?: number; curve?: { a: number; h: number; k: number }; line?: { m: number; b: number }; binomial?: { a: number; b: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
 }
 
 // ── Seeded RNG + deterministic shuffle (per sheet, so regeneration is stable) ──

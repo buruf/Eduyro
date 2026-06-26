@@ -30,7 +30,7 @@ interface XP {
   // standard value match on the canonical "x,y" string.
   type?: "arithmetic" | "short_answer" | "multiple_choice";
   options?: string[];
-  interactive?: { kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder" | "angle-drag" | "area-model"; a?: number; curve?: { a: number; h: number; k: number }; line?: { m: number; b: number }; binomial?: { a: number; b: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
+  interactive?: { kind: "vertex-drag" | "plot-point" | "plot-line" | "equation-builder" | "angle-drag" | "area-model" | "triangle-drag"; a?: number; curve?: { a: number; h: number; k: number }; line?: { m: number; b: number }; binomial?: { a: number; b: number }; xRange: [number, number]; yRange: [number, number]; snap: number };
 }
 
 // rounding helpers for decimals
@@ -370,6 +370,26 @@ function enumTransformPoint(): XP[] {
   return out;
 }
 
+// DRAGGABLE-FIGURE GEOMETRY: drag a triangle's three vertices to plot a given
+// figure, or its image after a reflection. Answer = the vertices sorted + joined
+// by ";" (vertex order doesn't matter). Reuses the triangle-drag interaction.
+function enumTriangle(): XP[] {
+  const out: XP[] = []; let i = 0;
+  const I = { kind: "triangle-drag" as const, xRange: [-7, 7] as [number, number], yRange: [-7, 7] as [number, number], snap: 1 };
+  const canon = (v: [number, number][]) => v.map(([x, y]) => `${x},${y}`).sort().join(";");
+  const show = (v: [number, number][]) => v.map(([x, y]) => `(${x}, ${y})`).join(", ");
+  const tris: [number, number][][] = [
+    [[1, 1], [4, 1], [1, 5]], [[-2, 1], [2, 1], [0, 4]], [[0, 0], [3, 0], [3, 4]],
+    [[-3, -1], [1, -1], [-1, 3]], [[2, 2], [5, 2], [2, 6]], [[-1, -2], [3, -2], [1, 2]],
+  ];
+  for (const t of tris) {
+    out.push({ q: `Plot a triangle with vertices ${show(t)}.`, a: canon(t), diff: 2 + i++ * 0.05, key: `tri:${t.flat().join("_")}`, type: "short_answer", interactive: I });
+    const img = t.map(([x, y]) => [x, -y]) as [number, number][];
+    out.push({ q: `Triangle ${show(t)} is reflected across the x-axis. Plot the image triangle.`, a: canon(img), diff: 3 + i++ * 0.05, key: `trif:${t.flat().join("_")}`, type: "short_answer", interactive: I });
+  }
+  return out;
+}
+
 function enumOrderIntegers(): XP[] {
   const sets: number[][] = [
     [-3, 5, -1, 2], [4, -2, 1, -5], [-4, 0, 3, -1], [6, -3, 2, -6], [-2, 7, -5, 1],
@@ -438,7 +458,7 @@ const CURRICULA: Record<string, Unit[]> = {
   LINEAR_EQUATIONS: [
     { id:"le-plot", label:"Plot points on the coordinate plane", objective:"Student plots an ordered pair (x, y) on a coordinate plane", directive:"Plot each point.", grade:"Grade 6", stars:1, range:[1,4], pool:()=>enumPlotPoints(), example:{ problem:"Plot the point (3, 2).", steps:["From the origin, move right 3 along the x-axis","Then move up 2 along the y-axis"], answer:"3,2" } },
     { id:"le-graphline", label:"Graph a line", objective:"Student graphs a line y = mx + b by plotting two points on it", directive:"Plot the line.", grade:"Grade 8", stars:3, range:[5,8], pool:()=>[...enumPlotLine(), ...enumEquationBuilder()], example:{ problem:"Plot the line y = 2x − 1.", steps:["y-intercept (0, −1)","Slope 2 → up 2, right 1 → (1, 1)","Draw the line through both points"], answer:"2,-1" } },
-    { id:"le-transform", label:"Transformations on the plane", objective:"Student reflects, translates and rotates points on the coordinate plane", directive:"Plot the image after the transformation.", grade:"Grade 8", stars:3, range:[9,12], pool:()=>enumTransformPoint(), example:{ problem:"Reflect the point (3, 2) across the x-axis. Plot the image.", steps:["Reflecting across the x-axis negates the y-coordinate","(3, 2) → (3, −2)"], answer:"3,-2" } },
+    { id:"le-transform", label:"Transformations on the plane", objective:"Student reflects, translates and rotates points on the coordinate plane", directive:"Plot the image after the transformation.", grade:"Grade 8", stars:3, range:[9,12], pool:()=>[...enumTransformPoint(), ...enumTriangle()], example:{ problem:"Reflect the point (3, 2) across the x-axis. Plot the image.", steps:["Reflecting across the x-axis negates the y-coordinate","(3, 2) → (3, −2)"], answer:"3,-2" } },
     { id:"le-two-add", label:"Two-step equations (+)", objective:"Student solves ax + b = c", directive:"Solve for x.", grade:"Grade 7", stars:3, range:[13,24], pool:()=>enumTwoStep(1), example:{ problem:"2x + 3 = 11", steps:["11 - 3 = 8","8 ÷ 2 = 4"], answer:"4" } },
     { id:"le-two-sub", label:"Two-step equations (-)", objective:"Student solves ax - b = c", directive:"Solve for x.", grade:"Grade 7-8", stars:4, range:[25,38], pool:()=>enumTwoStep(-1), example:{ problem:"3x - 5 = 16", steps:["16 + 5 = 21","21 ÷ 3 = 7"], answer:"7" } },
     { id:"le-distribute", label:"Equations with distribution", objective:"Student solves k(x + b) = c", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[39,54], pool:()=>enumDistribute(), example:{ problem:"2(x + 3) = 14", steps:["14 ÷ 2 = 7","7 - 3 = 4"], answer:"4" } },
