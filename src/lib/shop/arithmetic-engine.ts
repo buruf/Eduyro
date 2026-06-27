@@ -15,7 +15,7 @@
 import { nanoid } from "nanoid";
 import type { WorksheetData, WorkedExample, ShopSkill } from "./progressive-generator";
 
-interface AProblem { q: string; a: string; diff: number; key: string; type?: "arithmetic" | "multiple_choice" | "true_false"; options?: string[]; }
+interface AProblem { q: string; a: string; diff: number; key: string; type?: "arithmetic" | "multiple_choice" | "true_false"; options?: string[]; strat?: string; }
 
 // ── Difficulty helpers ────────────────────────────────────────────────────────
 const digits = (n: number) => String(Math.abs(n)).length;
@@ -38,13 +38,6 @@ function eachPair(
 }
 
 // ── ADDITION enumerators ──────────────────────────────────────────────────────
-function enumAddSum(maxSum: number): AProblem[] {
-  const out: AProblem[] = [];
-  for (let a = 1; a < maxSum; a++)
-    for (let b = 1; a + b <= maxSum; b++)
-      out.push({ q: `${a} + ${b}`, a: String(a + b), diff: (a + b) + Math.max(a, b) * 0.5, key: `${a}+${b}` });
-  return out;
-}
 function enumAdd(aLo: number, aHi: number, bLo: number, bHi: number, carry?: boolean): AProblem[] {
   const out: AProblem[] = [];
   eachPair(aLo, aHi, bLo, bHi, (a, b) => {
@@ -72,55 +65,7 @@ function enumThreeAdd(lo: number, hi: number): AProblem[] {
   return out;
 }
 
-// Rich ADDITION pool for the small single-digit units: blends direct facts with
-// missing-addend, make-ten number bonds, multiple-choice and true/false so each
-// sheet draws from a large, varied pool (not 45 bare facts). MC options are
-// seed-shuffled so the answer isn't always first.
-function enumAddRich(maxSum: number): AProblem[] {
-  const out: AProblem[] = [];
-  for (let a = 1; a < maxSum; a++) for (let b = 1; a + b <= maxSum; b++) {
-    const s = a + b, d = s + Math.max(a, b) * 0.5;
-    out.push({ q: `${a} + ${b}`, a: String(s), diff: d, key: `d:${a}+${b}` });
-    out.push({ q: `${a} + ___ = ${s}`, a: String(b), diff: d + 0.3, key: `ma:${a}_${s}` });
-    if ((a + b) % 3 === 0) {
-      const opts = shuffle([String(s), String(s + 1), String(Math.max(0, s - 1)), String(s + 2)], mulberry32(hashStr(`mc${a}+${b}`)));
-      if (new Set(opts).size === 4) out.push({ q: `${a} + ${b} = ?`, a: String(s), diff: d + 0.2, key: `mc:${a}+${b}`, type: "multiple_choice", options: opts });
-    }
-    if ((a * b) % 4 === 0) {
-      const shown = (a + b) % 2 === 0 ? s : s + 1;
-      out.push({ q: `True or False:  ${a} + ${b} = ${shown}`, a: shown === s ? "True" : "False", diff: d + 0.1, key: `tf:${a}+${b}`, type: "true_false", options: ["True", "False"] });
-    }
-  }
-  if (maxSum >= 10) for (let a = 1; a < 10; a++) out.push({ q: `Make 10:  ${a} + ___ = 10`, a: String(10 - a), diff: 4, key: `mt:${a}` });
-  return out;
-}
-// Rich SUBTRACTION pool (direct + missing number + multiple-choice + true/false).
-function enumSubRich(maxA: number): AProblem[] {
-  const out: AProblem[] = [];
-  for (let a = 1; a <= maxA; a++) for (let b = 0; b <= a; b++) {
-    const r = a - b, d = a + b * 0.5;
-    out.push({ q: `${a} - ${b}`, a: String(r), diff: d, key: `d:${a}-${b}` });
-    out.push({ q: `${a} - ___ = ${r}`, a: String(b), diff: d + 0.3, key: `ms:${a}_${r}` });
-    if ((a + b) % 3 === 0) {
-      const opts = shuffle([String(r), String(r + 1), String(Math.max(0, r - 1)), String(r + 2)], mulberry32(hashStr(`mc${a}-${b}`)));
-      if (new Set(opts).size === 4) out.push({ q: `${a} - ${b} = ?`, a: String(r), diff: d + 0.2, key: `mc:${a}-${b}`, type: "multiple_choice", options: opts });
-    }
-    if ((a * (b + 1)) % 4 === 0) {
-      const shown = (a + b) % 2 === 0 ? r : r + 1;
-      out.push({ q: `True or False:  ${a} - ${b} = ${shown}`, a: shown === r ? "True" : "False", diff: d + 0.1, key: `tf:${a}-${b}`, type: "true_false", options: ["True", "False"] });
-    }
-  }
-  return out;
-}
-
 // ── SUBTRACTION enumerators ───────────────────────────────────────────────────
-function enumSubWithin(maxA: number): AProblem[] {
-  const out: AProblem[] = [];
-  for (let a = 1; a <= maxA; a++)
-    for (let b = 0; b <= a; b++)
-      out.push({ q: `${a} - ${b}`, a: String(a - b), diff: a + b * 0.5, key: `${a}-${b}` });
-  return out;
-}
 function enumSub(aLo: number, aHi: number, bLo: number, bHi: number, borrow?: boolean): AProblem[] {
   const out: AProblem[] = [];
   eachPair(aLo, aHi, bLo, bHi, (a, b) => {
@@ -138,6 +83,77 @@ function enumMissingSub(aLo: number, aHi: number, bLo: number, bHi: number): APr
   });
   return out;
 }
+
+// ═════════════════════════════════════════════════════════════════════════════
+// STRATEGY-STAGED FOUNDATIONAL FACTS (curriculum-expert design)
+// Each early unit teaches ONE derivation that reuses the prior one:
+//   count-on → doubles → +0/commutativity → near-doubles → make-ten/bridging →
+//   fact families. Facts are TAGGED by strategy so a reviewer can certify a sheet
+//   teaches its target strategy, and so spiral review can interleave prior stages.
+// ═════════════════════════════════════════════════════════════════════════════
+type Fact = { a: number; b: number; diff: number; strat: string };
+
+// Wrap a strategy's base facts into a varied pool: direct + missing-addend +
+// occasional MC / true-false. (Same format mix as the small-unit enrichment.)
+function addFormats(items: Fact[]): AProblem[] {
+  const out: AProblem[] = [];
+  for (const { a, b, diff, strat } of items) {
+    const s = a + b;
+    out.push({ q: `${a} + ${b}`, a: String(s), diff, key: `d:${strat}:${a}+${b}`, strat });
+    out.push({ q: `${a} + ___ = ${s}`, a: String(b), diff: diff + 0.3, key: `ma:${strat}:${a}_${s}_${b}`, strat });
+    if ((a + b) % 3 === 0) {
+      const opts = shuffle([String(s), String(s + 1), String(Math.max(0, s - 1)), String(s + 2)], mulberry32(hashStr(`mc+${strat}${a}_${b}`)));
+      if (new Set(opts).size === 4) out.push({ q: `${a} + ${b} = ?`, a: String(s), diff: diff + 0.2, key: `mc:${strat}:${a}+${b}`, type: "multiple_choice", options: opts, strat });
+    }
+    if ((a * b) % 4 === 0) { const shown = (a + b) % 2 === 0 ? s : s + 1; out.push({ q: `True or False:  ${a} + ${b} = ${shown}`, a: shown === s ? "True" : "False", diff: diff + 0.1, key: `tf:${strat}:${a}+${b}`, type: "true_false", options: ["True", "False"], strat }); }
+  }
+  return out;
+}
+function subFormats(items: Fact[]): AProblem[] {
+  const out: AProblem[] = [];
+  for (const { a, b, diff, strat } of items) {
+    const r = a - b;
+    out.push({ q: `${a} - ${b}`, a: String(r), diff, key: `d:${strat}:${a}-${b}`, strat });
+    out.push({ q: `${a} - ___ = ${r}`, a: String(b), diff: diff + 0.3, key: `ms:${strat}:${a}_${r}_${b}`, strat });
+    if ((a + b) % 3 === 0) {
+      const opts = shuffle([String(r), String(r + 1), String(Math.max(0, r - 1)), String(r + 2)], mulberry32(hashStr(`mc-${strat}${a}_${b}`)));
+      if (new Set(opts).size === 4) out.push({ q: `${a} - ${b} = ?`, a: String(r), diff: diff + 0.2, key: `mc:${strat}:${a}-${b}`, type: "multiple_choice", options: opts, strat });
+    }
+    if ((a * (b + 1)) % 4 === 0) { const shown = (a + b) % 2 === 0 ? r : r + 1; out.push({ q: `True or False:  ${a} - ${b} = ${shown}`, a: shown === r ? "True" : "False", diff: diff + 0.1, key: `tf:${strat}:${a}-${b}`, type: "true_false", options: ["True", "False"], strat }); }
+  }
+  return out;
+}
+
+// Spiral: ~70% current strategy, ~25% prior stage(s), ~5% two-stages-back —
+// approximated by including those counts in the pool (the seeded sampler then
+// draws across them). Review facts keep their own keys so they're de-duped.
+function det<T>(arr: T[], k: number, seed: string): T[] { return shuffle(arr, mulberry32(hashStr(seed))).slice(0, Math.max(0, k)); }
+function spiral(current: AProblem[], prior: AProblem[], twoBack: AProblem[], tag: string): AProblem[] {
+  const n = current.length;
+  let lo = Infinity, hi = -Infinity; for (const p of current) { lo = Math.min(lo, p.diff); hi = Math.max(hi, p.diff); }
+  const span = (hi - lo) || 1;
+  // Spread review facts ACROSS the current stage's difficulty band so the
+  // per-sheet difficulty window mixes review throughout (not clustered on early
+  // sheets). Review keeps its own keys/strat tag for the acceptance checker.
+  const remap = (arr: AProblem[], k: number, seed: string) => det(arr, k, seed).map((p, i) => ({ ...p, diff: lo + ((i + 0.5) / Math.max(1, k)) * span }));
+  return [...current, ...remap(prior, Math.round((n * 25) / 70), tag + ":p"), ...remap(twoBack, Math.round((n * 5) / 70), tag + ":tb")];
+}
+
+// ── Addition strategy fact sets ──
+function fCountOn(): Fact[] { const o: Fact[] = []; for (let a = 1; a <= 9; a++) for (const b of [1, 2, 3]) if (a + b <= 10) { o.push({ a, b, diff: a + b, strat: "count-on" }); o.push({ a: b, b: a, diff: a + b + 0.1, strat: "count-on" }); } return o; }
+function fDoubles(): Fact[] { const o: Fact[] = []; for (let n = 1; n <= 9; n++) o.push({ a: n, b: n, diff: 2 * n, strat: "doubles" }); return o; }
+function fZeroComm(): Fact[] { const o: Fact[] = []; for (let a = 0; a <= 9; a++) { o.push({ a, b: 0, diff: a + 1, strat: "zero-comm" }); o.push({ a: 0, b: a, diff: a + 1.1, strat: "zero-comm" }); } for (let a = 2; a <= 8; a++) for (let b = a + 1; b <= 9 && a + b <= 12; b++) { o.push({ a, b, diff: a + b, strat: "zero-comm" }); o.push({ a: b, b: a, diff: a + b + 0.1, strat: "zero-comm" }); } return o; }
+function fNearDoubles(): Fact[] { const o: Fact[] = []; for (let n = 1; n <= 8; n++) { o.push({ a: n, b: n + 1, diff: 2 * n + 1, strat: "near-doubles" }); o.push({ a: n + 1, b: n, diff: 2 * n + 1.1, strat: "near-doubles" }); } return o; }
+function fMakeTen(): Fact[] { const o: Fact[] = []; for (let a = 1; a <= 9; a++) o.push({ a, b: 10 - a, diff: 10, strat: "make-ten" }); for (let a = 5; a <= 9; a++) for (let b = 11 - a; b <= 9 && a + b >= 11 && a + b <= 18; b++) o.push({ a, b, diff: a + b + 2, strat: "make-ten" }); return o; }
+function fFactFamily(): Fact[] { const o: Fact[] = []; for (let a = 1; a <= 9; a++) for (let b = 1; b <= 9 && a + b <= 18; b++) o.push({ a, b, diff: a + b + 3, strat: "fact-family" }); return o; }
+
+// ── Subtraction strategy fact sets ──
+function sCountBack(): Fact[] { const o: Fact[] = []; for (let a = 2; a <= 10; a++) for (const b of [1, 2, 3]) if (b <= a) o.push({ a, b, diff: a, strat: "count-back" }); return o; }
+function sZero(): Fact[] { const o: Fact[] = []; for (let a = 0; a <= 10; a++) { o.push({ a, b: 0, diff: a + 1, strat: "sub-zero" }); o.push({ a, b: a, diff: a + 1.1, strat: "sub-zero" }); } return o; }
+function sCountUp(): Fact[] { const o: Fact[] = []; for (let a = 4; a <= 10; a++) for (let b = 1; b < a; b++) if (a - b <= 4) o.push({ a, b, diff: a + 2, strat: "count-up" }); return o; }
+function sNearDoubles(): Fact[] { const o: Fact[] = []; for (let n = 1; n <= 9; n++) { o.push({ a: 2 * n, b: n, diff: 2 * n + 3, strat: "halves" }); if (2 * n + 1 <= 18) o.push({ a: 2 * n + 1, b: n, diff: 2 * n + 3.1, strat: "halves" }); } return o; }
+function sBridge(): Fact[] { const o: Fact[] = []; for (let a = 11; a <= 18; a++) for (let b = 2; b <= 9; b++) if (a - b >= 1 && (a % 10) < b) o.push({ a, b, diff: a + 4, strat: "bridge-down" }); return o; }
+function sFactFamily(): Fact[] { const o: Fact[] = []; for (let a = 2; a <= 18; a++) for (let b = 1; b < a && a - b <= 9 && b <= 9; b++) o.push({ a, b, diff: a + 5, strat: "fact-family" }); return o; }
 
 // ── MULTIPLICATION enumerators ────────────────────────────────────────────────
 function enumMul(aLo: number, aHi: number, bLo: number, bHi: number, carry?: boolean): AProblem[] {
@@ -192,30 +208,32 @@ interface Unit {
 }
 
 const CURRICULA: Record<string, Unit[]> = {
+  // Strategy-staged (curriculum-expert design): each early unit teaches ONE new
+  // derivation that reuses the prior, with ~70/25/5 spiral review interleaved.
   ADDITION: [
-    { id:"add-10", label:"Addition — sums to 10", objective:"Student adds single digits with sums up to 10", grade:"Grade 1", stars:1, range:[1,6], pool:()=>enumAddRich(10), example:{ problem:"3 + 4 =", steps:["Start at 3","Count up 4: 4, 5, 6, 7"], answer:"7" } },
-    { id:"add-18", label:"Addition — sums to 18", objective:"Student adds single digits with sums up to 18", grade:"Grade 1", stars:1, range:[7,13], pool:()=>enumAddRich(18), example:{ problem:"8 + 6 =", steps:["8 + 2 = 10","10 + 4 = 14"], answer:"14" } },
-    { id:"add-2d1d-nc", label:"Addition — 2-digit + 1-digit (no carry)", objective:"Student adds a 1-digit number to a 2-digit number without carrying", grade:"Grade 2", stars:2, range:[14,22], pool:()=>enumAdd(10,99,1,9,false), example:{ problem:"23 + 5 =", steps:["Ones: 3 + 5 = 8","Tens stay: 2","Answer: 28"], answer:"28" } },
-    { id:"add-2d1d-c", label:"Addition — 2-digit + 1-digit (carry)", objective:"Student adds with carrying into the tens", grade:"Grade 2", stars:2, range:[23,31], pool:()=>enumAdd(10,99,1,9,true), example:{ problem:"27 + 5 =", steps:["Ones: 7 + 5 = 12 → write 2, carry 1","Tens: 2 + 1 = 3","Answer: 32"], answer:"32" } },
-    { id:"add-2d2d-nc", label:"Addition — 2-digit + 2-digit (no carry)", objective:"Student adds two 2-digit numbers without carrying", grade:"Grade 2-3", stars:3, range:[32,42], pool:()=>enumAdd(10,99,10,99,false), example:{ problem:"34 + 25 =", steps:["Ones: 4 + 5 = 9","Tens: 3 + 2 = 5","Answer: 59"], answer:"59" } },
-    { id:"add-2d2d-c", label:"Addition — 2-digit + 2-digit (carry)", objective:"Student adds two 2-digit numbers with carrying", grade:"Grade 3", stars:3, range:[43,55], pool:()=>enumAdd(10,99,10,99,true), example:{ problem:"37 + 45 =", steps:["Ones: 7 + 5 = 12 → write 2, carry 1","Tens: 3 + 4 + 1 = 8","Answer: 82"], answer:"82" } },
-    { id:"add-3d", label:"Addition — 3-digit", objective:"Student adds 3-digit numbers with regrouping", grade:"Grade 3-4", stars:4, range:[56,68], pool:()=>enumAdd(100,999,100,999), example:{ problem:"248 + 167 =", steps:["Ones: 8+7=15 → 5 carry 1","Tens: 4+6+1=11 → 1 carry 1","Hundreds: 2+1+1=4","Answer: 415"], answer:"415" } },
-    { id:"add-missing", label:"Addition — missing number", objective:"Student finds the missing addend", grade:"Grade 3", stars:4, range:[69,80], pool:()=>enumMissingAdd(10,99,10,99), example:{ problem:"___ + 25 = 61", steps:["61 - 25 = 36"], answer:"36" } },
-    { id:"add-three", label:"Addition — three numbers", objective:"Student adds three numbers", grade:"Grade 3", stars:4, range:[81,92], pool:()=>enumThreeAdd(5,40), example:{ problem:"12 + 9 + 14 =", steps:["12 + 9 = 21","21 + 14 = 35"], answer:"35" } },
-    { id:"add-review", label:"Addition — mixed review", objective:"Student adds fluently across all addition types", grade:"Grade 4", stars:5, range:[93,100], pool:()=>[...enumAdd(10,99,10,99,true),...enumAdd(100,999,100,999),...enumMissingAdd(10,99,10,99)], example:{ problem:"156 + 78 =", steps:["Ones: 6+8=14","Tens: 5+7+1=13","Hundreds: 1+1=2","Answer: 234"], answer:"234" } },
+    { id:"add-count-on", label:"Adding by counting on (+1, +2, +3)", objective:"Student adds by counting on from the larger number", grade:"Grade 1", stars:1, range:[1,8], pool:()=>addFormats(fCountOn()), example:{ problem:"7 + 2 =", steps:["Start at 7, count on 2: 8, 9"], answer:"9" } },
+    { id:"add-doubles", label:"Doubles (1+1 … 9+9)", objective:"Student recalls the doubles facts", grade:"Grade 1", stars:1, range:[9,16], pool:()=>spiral(addFormats(fDoubles()), addFormats(fCountOn()), [], "ad2"), example:{ problem:"6 + 6 =", steps:["Double 6 is 12"], answer:"12" } },
+    { id:"add-zero-comm", label:"Adding zero & turnarounds", objective:"Student uses +0 and that order doesn't change the sum", grade:"Grade 1", stars:1, range:[17,22], pool:()=>spiral(addFormats(fZeroComm()), addFormats(fDoubles()), addFormats(fCountOn()), "ad3"), example:{ problem:"3 + 5 = 5 + ___", steps:["Order doesn't change the sum","3 + 5 = 8, so the blank is 3"], answer:"3" } },
+    { id:"add-near-doubles", label:"Near-doubles (use the double you know)", objective:"Student adds near-doubles using a known double", grade:"Grade 1-2", stars:2, range:[23,30], pool:()=>spiral(addFormats(fNearDoubles()), addFormats(fDoubles()), addFormats(fZeroComm()), "ad4"), example:{ problem:"6 + 7 =", steps:["6 + 6 = 12","12 + 1 = 13"], answer:"13" } },
+    { id:"add-make-ten", label:"Make ten & bridging through 10", objective:"Student makes ten then adds the rest (8+5 = 8+2+3)", grade:"Grade 2", stars:2, range:[31,42], pool:()=>spiral(addFormats(fMakeTen()), addFormats(fNearDoubles()), addFormats(fDoubles()), "ad5"), example:{ problem:"8 + 5 =", steps:["8 + 2 = 10","10 + 3 = 13"], answer:"13" } },
+    { id:"add-fact-family", label:"Fact families to 18", objective:"Student uses the add/subtract inverse and missing addends", grade:"Grade 2", stars:3, range:[43,52], pool:()=>spiral(addFormats(fFactFamily()), addFormats(fMakeTen()), addFormats(fNearDoubles()), "ad6"), example:{ problem:"7 + ___ = 12", steps:["12 - 7 = 5"], answer:"5" } },
+    { id:"add-2d-noregroup", label:"2-digit addition (no regrouping)", objective:"Student adds tens and ones separately", grade:"Grade 2-3", stars:3, range:[53,64], pool:()=>[...enumAdd(10,99,1,9,false), ...enumAdd(10,99,10,99,false), ...enumMissingAdd(10,99,1,40), ...det(addFormats(fFactFamily()), 20, "ad7p")], example:{ problem:"34 + 25 =", steps:["Ones: 4 + 5 = 9","Tens: 3 + 2 = 5","Answer: 59"], answer:"59" } },
+    { id:"add-2d-regroup", label:"2-digit addition (regrouping)", objective:"Student carries the ten when ones reach 10", grade:"Grade 3", stars:4, range:[65,78], pool:()=>[...enumAdd(10,99,1,9,true), ...enumAdd(10,99,10,99,true), ...enumMissingAdd(10,99,10,60), ...det(addFormats(fMakeTen()), 20, "ad8p")], example:{ problem:"37 + 45 =", steps:["Ones: 7 + 5 = 12 → write 2, carry 1","Tens: 3 + 4 + 1 = 8","Answer: 82"], answer:"82" } },
+    { id:"add-3d-three", label:"3-digit addition & three addends", objective:"Student adds across columns and chains three numbers", grade:"Grade 3-4", stars:4, range:[79,90], pool:()=>[...enumAdd(100,999,100,999), ...enumThreeAdd(5,40), ...enumMissingAdd(50,999,10,400), ...det(enumAdd(10,99,10,99,true), 18, "ad9p")], example:{ problem:"248 + 167 =", steps:["Ones: 8+7=15 → 5 carry 1","Tens: 4+6+1=11 → 1 carry 1","Hundreds: 2+1+1=4","Answer: 415"], answer:"415" } },
+    { id:"add-missing-review", label:"Missing addend & mixed review", objective:"Student solves for the unknown and reviews every addition type", grade:"Grade 4", stars:5, range:[91,100], pool:()=>[...enumMissingAdd(10,99,10,99), ...enumAdd(100,999,100,999), ...enumAdd(10,99,10,99,true)], example:{ problem:"___ + 25 = 61", steps:["61 - 25 = 36"], answer:"36" } },
   ],
 
   SUBTRACTION: [
-    { id:"sub-10", label:"Subtraction — within 10", objective:"Student subtracts within 10", grade:"Grade 1", stars:1, range:[1,6], pool:()=>enumSubRich(10), example:{ problem:"9 - 4 =", steps:["Count back 4 from 9: 8, 7, 6, 5"], answer:"5" } },
-    { id:"sub-18", label:"Subtraction — within 18", objective:"Student subtracts within 18", grade:"Grade 1-2", stars:1, range:[7,13], pool:()=>enumSubRich(18), example:{ problem:"15 - 7 =", steps:["15 - 5 = 10","10 - 2 = 8"], answer:"8" } },
-    { id:"sub-2d1d-nb", label:"Subtraction — 2-digit - 1-digit (no borrow)", objective:"Student subtracts a 1-digit number without borrowing", grade:"Grade 2", stars:2, range:[14,22], pool:()=>enumSub(10,99,1,9,false), example:{ problem:"38 - 5 =", steps:["Ones: 8 - 5 = 3","Tens stay: 3","Answer: 33"], answer:"33" } },
-    { id:"sub-2d1d-b", label:"Subtraction — 2-digit - 1-digit (borrow)", objective:"Student subtracts with borrowing", grade:"Grade 2", stars:3, range:[23,31], pool:()=>enumSub(10,99,1,9,true), example:{ problem:"32 - 7 =", steps:["Ones: 2 - 7 needs borrow → 12 - 7 = 5","Tens: 3 - 1 = 2","Answer: 25"], answer:"25" } },
-    { id:"sub-2d2d-nb", label:"Subtraction — 2-digit - 2-digit (no borrow)", objective:"Student subtracts two 2-digit numbers without borrowing", grade:"Grade 2-3", stars:3, range:[32,42], pool:()=>enumSub(10,99,10,99,false), example:{ problem:"58 - 23 =", steps:["Ones: 8 - 3 = 5","Tens: 5 - 2 = 3","Answer: 35"], answer:"35" } },
-    { id:"sub-2d2d-b", label:"Subtraction — 2-digit - 2-digit (borrow)", objective:"Student subtracts two 2-digit numbers with borrowing", grade:"Grade 3", stars:4, range:[43,55], pool:()=>enumSub(10,99,10,99,true), example:{ problem:"52 - 27 =", steps:["Ones: 2 - 7 borrow → 12 - 7 = 5","Tens: 4 - 2 = 2","Answer: 25"], answer:"25" } },
-    { id:"sub-3d", label:"Subtraction — 3-digit", objective:"Student subtracts 3-digit numbers with regrouping", grade:"Grade 3-4", stars:4, range:[56,68], pool:()=>enumSub(100,999,100,999), example:{ problem:"403 - 158 =", steps:["Borrow across to subtract ones and tens","Answer: 245"], answer:"245" } },
-    { id:"sub-missing", label:"Subtraction — missing number", objective:"Student finds the missing number in a subtraction", grade:"Grade 3", stars:4, range:[69,80], pool:()=>enumMissingSub(20,99,1,40), example:{ problem:"45 - ___ = 18", steps:["45 - 18 = 27"], answer:"27" } },
-    { id:"sub-3d2", label:"Subtraction — 3-digit (challenge)", objective:"Student subtracts larger 3-digit numbers", grade:"Grade 4", stars:5, range:[81,92], pool:()=>enumSub(200,999,100,800,true), example:{ problem:"612 - 389 =", steps:["Regroup ones and tens","Answer: 223"], answer:"223" } },
-    { id:"sub-review", label:"Subtraction — mixed review", objective:"Student subtracts fluently across all types", grade:"Grade 4", stars:5, range:[93,100], pool:()=>[...enumSub(10,99,10,99,true),...enumSub(100,999,100,999),...enumMissingSub(20,99,1,40)], example:{ problem:"304 - 176 =", steps:["Regroup as needed","Answer: 128"], answer:"128" } },
+    { id:"sub-count-back", label:"Subtracting by counting back (−1, −2, −3)", objective:"Student subtracts by counting back", grade:"Grade 1", stars:1, range:[1,8], pool:()=>subFormats(sCountBack()), example:{ problem:"9 - 2 =", steps:["Count back 2 from 9: 8, 7"], answer:"7" } },
+    { id:"sub-zero", label:"Subtract 0 and subtract all", objective:"Student subtracts 0 and a number from itself", grade:"Grade 1", stars:1, range:[9,14], pool:()=>spiral(subFormats(sZero()), subFormats(sCountBack()), [], "sb2"), example:{ problem:"8 - 8 =", steps:["Taking all away leaves 0"], answer:"0" } },
+    { id:"sub-count-up", label:"Find the difference (count up)", objective:"Student counts up from the smaller to the larger number", grade:"Grade 1-2", stars:2, range:[15,22], pool:()=>spiral(subFormats(sCountUp()), subFormats(sCountBack()), subFormats(sZero()), "sb3"), example:{ problem:"9 - 6 =", steps:["Count up from 6 to 9: 7, 8, 9 = 3 steps"], answer:"3" } },
+    { id:"sub-halves", label:"Halving & near-halves (using doubles)", objective:"Student subtracts using known doubles (12−6, 13−6)", grade:"Grade 2", stars:2, range:[23,30], pool:()=>spiral(subFormats(sNearDoubles()), subFormats(sCountUp()), subFormats(sCountBack()), "sb4"), example:{ problem:"12 - 6 =", steps:["6 + 6 = 12, so 12 - 6 = 6"], answer:"6" } },
+    { id:"sub-bridge", label:"Bridging down through 10", objective:"Student subtracts by going down to 10 first (15−7 = 15−5−2)", grade:"Grade 2", stars:3, range:[31,42], pool:()=>spiral(subFormats(sBridge()), subFormats(sNearDoubles()), subFormats(sCountUp()), "sb5"), example:{ problem:"15 - 7 =", steps:["15 - 5 = 10","10 - 2 = 8"], answer:"8" } },
+    { id:"sub-fact-family", label:"Fact families to 18", objective:"Student uses the subtract/add inverse", grade:"Grade 2-3", stars:3, range:[43,52], pool:()=>spiral(subFormats(sFactFamily()), subFormats(sBridge()), subFormats(sNearDoubles()), "sb6"), example:{ problem:"13 - ___ = 5", steps:["13 - 5 = 8"], answer:"8" } },
+    { id:"sub-2d-noborrow", label:"2-digit subtraction (no borrowing)", objective:"Student subtracts tens and ones separately", grade:"Grade 2-3", stars:3, range:[53,64], pool:()=>[...enumSub(10,99,1,9,false), ...enumSub(10,99,10,99,false), ...enumMissingSub(10,99,1,40), ...det(subFormats(sFactFamily()), 20, "sb7p")], example:{ problem:"58 - 23 =", steps:["Ones: 8 - 3 = 5","Tens: 5 - 2 = 3","Answer: 35"], answer:"35" } },
+    { id:"sub-2d-borrow", label:"2-digit subtraction (borrowing)", objective:"Student borrows a ten when needed", grade:"Grade 3", stars:4, range:[65,78], pool:()=>[...enumSub(10,99,1,9,true), ...enumSub(10,99,10,99,true), ...enumMissingSub(20,99,1,50), ...det(subFormats(sBridge()), 20, "sb8p")], example:{ problem:"52 - 27 =", steps:["Ones: 2 - 7 borrow → 12 - 7 = 5","Tens: 4 - 2 = 2","Answer: 25"], answer:"25" } },
+    { id:"sub-3d", label:"3-digit subtraction (regrouping)", objective:"Student regroups across columns", grade:"Grade 3-4", stars:4, range:[79,90], pool:()=>[...enumSub(100,999,100,999), ...enumMissingSub(100,999,10,400), ...det(enumSub(10,99,10,99,true), 18, "sb9p")], example:{ problem:"403 - 158 =", steps:["Borrow across to subtract ones and tens","Answer: 245"], answer:"245" } },
+    { id:"sub-missing-review", label:"Missing number & mixed review", objective:"Student solves for the unknown and reviews every subtraction type", grade:"Grade 4", stars:5, range:[91,100], pool:()=>[...enumMissingSub(20,99,1,40), ...enumSub(100,999,100,999), ...enumSub(10,99,10,99,true)], example:{ problem:"45 - ___ = 18", steps:["45 - 18 = 27"], answer:"27" } },
   ],
 
   MULTIPLICATION: [
@@ -309,7 +327,8 @@ function selectProblems(pool: AProblem[], t: number, count: number, seed: number
   const win = N <= count ? sorted : sorted.slice(start, start + W);
   // Seeded sample of `count` distinct items from the window (round-robin if the
   // window is smaller than a sheet — small fact sets must repeat).
-  const bag = shuffle(win, rng);
+  const bag = shuffle(win.length ? win : sorted, rng);
+  if (!bag.length) return [];
   const chosen: AProblem[] = [];
   for (let i = 0; i < count; i++) chosen.push(bag[i % bag.length]);
   // Interleave + de-pattern so nothing is fillable from a sequence.
@@ -388,4 +407,48 @@ export function validateArithmetic(skill: string, totalSheets = 100): {
     prev = Math.max(prev, mean);
   }
   return { ok: issues.length === 0, issues, gpi };
+}
+
+// ── Curriculum acceptance checks (curriculum-expert certification) ─────────────
+// Certifies a GENERATED sheet is pedagogically sound, not merely non-repetitive:
+//   • non-predictability: no equal-adjacent answers, no 3-in-a-row monotonic,
+//     answer sequence fails a constant-step (linear) fit
+//   • ≥2 distinct formats present
+//   • for STRATEGY-staged early units: the unit's target strategy dominates
+//     (~≥55% after spiral review) so the new idea isn't crowded out
+export function validateCurriculumStage(skill: string, totalSheets = 100): { ok: boolean; issues: string[] } {
+  const issues: string[] = [];
+  const units = CURRICULA[skill];
+  if (!units) return { ok: true, issues };
+  for (const unit of units) {
+    const pool = unit.pool();
+    const stratTagged = pool.filter(p => p.strat).length > pool.length * 0.5;
+    // target strategy = modal strat among the unit's own (non-review) facts
+    const stratCounts: Record<string, number> = {};
+    for (const p of pool) if (p.strat) stratCounts[p.strat] = (stratCounts[p.strat] || 0) + 1;
+    const target = Object.entries(stratCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+    for (const s of [unit.range[0], Math.round((unit.range[0] + unit.range[1]) / 2)]) {
+      const span = unit.range[1] - unit.range[0];
+      const t = span === 0 ? 0.5 : (s - unit.range[0]) / span;
+      const sel = selectProblems(buildScoredPool(skill, unitIndexForSheet(skill, s)), t, 30, hashStr(`${skill}:${s}`));
+      const ans = sel.map(p => Number(p.a));
+      // non-predictability
+      let eqAdj = 0; for (let i = 1; i < sel.length; i++) if (Number.isFinite(ans[i]) && ans[i] === ans[i - 1]) eqAdj++;
+      if (eqAdj > 1) issues.push(`${skill}/${unit.id} sheet ${s}: ${eqAdj} equal-adjacent answers`);
+      let mono = 0; for (let i = 2; i < ans.length; i++) if ([ans[i], ans[i - 1], ans[i - 2]].every(Number.isFinite)) { const d1 = ans[i - 1] - ans[i - 2], d2 = ans[i] - ans[i - 1]; if ((d1 > 0 && d2 > 0) || (d1 < 0 && d2 < 0)) mono++; }
+      if (mono > 2) issues.push(`${skill}/${unit.id} sheet ${s}: ${mono} monotonic runs`);
+      // constant-step (linear) fit on numeric answers — must FAIL (not a simple sequence)
+      const nums = ans.filter(Number.isFinite); const steps = new Set<number>(); for (let i = 1; i < nums.length; i++) steps.add(nums[i] - nums[i - 1]);
+      if (nums.length > 8 && steps.size <= 2) issues.push(`${skill}/${unit.id} sheet ${s}: answer sequence too regular (steps=${steps.size})`);
+      // format variety
+      const fmts = new Set(sel.map(p => p.options ? (p.type === "true_false" ? "tf" : "mc") : (/___/.test(p.q) ? "missing" : "direct")));
+      if (fmts.size < 2) issues.push(`${skill}/${unit.id} sheet ${s}: only ${fmts.size} format`);
+      // strategy dominance (staged units only)
+      if (stratTagged && target) {
+        const onTarget = sel.filter(p => p.strat === target).length / sel.length;
+        if (onTarget < 0.45) issues.push(`${skill}/${unit.id} sheet ${s}: target strategy '${target}' only ${(onTarget * 100).toFixed(0)}%`);
+      }
+    }
+  }
+  return { ok: issues.length === 0, issues };
 }
