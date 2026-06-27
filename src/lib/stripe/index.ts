@@ -198,3 +198,22 @@ export function canAccessFeature(
 export function getDailySheetLimit(plan: PlanId): number {
   return PLANS[plan].limits.sheetsPerDay;
 }
+
+// ─────────────────────────────────────────────────────────────
+// Admin ops: cancel & refund
+// ─────────────────────────────────────────────────────────────
+
+/** Cancel a subscription — immediately or at period end. Returns the updated sub. */
+export async function cancelSubscription(stripeSubscriptionId: string, opts: { immediately?: boolean } = {}) {
+  if (opts.immediately) return stripe.subscriptions.cancel(stripeSubscriptionId);
+  return stripe.subscriptions.update(stripeSubscriptionId, { cancel_at_period_end: true });
+}
+
+/** Refund the most recent successful payment on a subscription. amountCents
+ *  optional (full refund if omitted). Returns the Stripe refund. */
+export async function refundLatestPayment(stripeSubscriptionId: string, amountCents?: number) {
+  const sub = await stripe.subscriptions.retrieve(stripeSubscriptionId, { expand: ["latest_invoice.payment_intent"] }) as any;
+  const pi = sub?.latest_invoice?.payment_intent;
+  if (!pi?.id) throw new Error("No payment intent found on the latest invoice to refund");
+  return stripe.refunds.create({ payment_intent: pi.id, ...(amountCents ? { amount: amountCents } : {}) });
+}

@@ -96,7 +96,12 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL(roleToDashboard(role), req.url));
     }
   }
-  if (ADMIN_ROUTES.some((r) => pathname.startsWith(r))) {
+  // Platform-owner admin: ADMIN / SUPER_ADMIN only (teachers get the school view).
+  if (pathname.startsWith("/admin/platform")) {
+    if (!["ADMIN", "SUPER_ADMIN"].includes(role)) {
+      return NextResponse.redirect(new URL(roleToDashboard(role), req.url));
+    }
+  } else if (ADMIN_ROUTES.some((r) => pathname.startsWith(r))) {
     if (!["TEACHER", "ADMIN", "SUPER_ADMIN"].includes(role)) {
       return NextResponse.redirect(new URL(roleToDashboard(role), req.url));
     }
@@ -109,10 +114,11 @@ function roleToDashboard(role: string): string {
   switch (role) {
     case "STUDENT": return "/student";
     case "PARENT": return "/parent";
-    case "TEACHER":
     case "ADMIN":
     case "SUPER_ADMIN":
-      return "/admin";
+      return "/admin/platform";   // platform owner lands on the owner console
+    case "TEACHER":
+      return "/admin";            // teachers keep the school dashboard
     default: return "/";
   }
 }

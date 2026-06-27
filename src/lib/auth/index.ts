@@ -53,6 +53,11 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Incorrect password");
         }
 
+        // Suspended accounts cannot sign in (admin moderation).
+        if (user.suspendedAt) {
+          throw new Error("This account has been suspended. Contact support@eduyro.com.");
+        }
+
         if (!user.emailVerified && process.env.NODE_ENV === "production") {
           throw new Error("Please verify your email before signing in");
         }

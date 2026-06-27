@@ -52,6 +52,10 @@ model User {
   coppaConsentStatus   CoppaConsentStatus? // PENDING / VERIFIED / DENIED / EXPIRED
   coppaVerifiedAt      DateTime?
 
+  // Admin moderation: when set, the account is suspended (login blocked).
+  suspendedAt   DateTime?
+  suspendedReason String?
+
   // Relations
   student       Student?
   parent        Parent?
