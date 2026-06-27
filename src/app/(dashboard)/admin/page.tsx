@@ -2,8 +2,8 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
 import { DashboardTopbar } from "@/components/layout";
 import { Button } from "@/components/ui/Button";
@@ -24,6 +24,14 @@ const TABS = [
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("curriculum");
+  // Platform owners (ADMIN / SUPER_ADMIN) get the platform console, not the
+  // school/teacher dashboard (which 404s without a linked school).
+  const { data: session } = useSession();
+  const router = useRouter();
+  useEffect(() => {
+    const role = (session?.user as any)?.role;
+    if (role === "ADMIN" || role === "SUPER_ADMIN") router.replace("/admin/platform");
+  }, [session, router]);
 
   return (
     // CHANGED: removed the grid-cols-[210px_1fr] layout and the DashboardSidebar.
