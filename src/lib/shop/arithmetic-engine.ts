@@ -155,6 +155,45 @@ function sNearDoubles(): Fact[] { const o: Fact[] = []; for (let n = 1; n <= 9; 
 function sBridge(): Fact[] { const o: Fact[] = []; for (let a = 11; a <= 18; a++) for (let b = 2; b <= 9; b++) if (a - b >= 1 && (a % 10) < b) o.push({ a, b, diff: a + 4, strat: "bridge-down" }); return o; }
 function sFactFamily(): Fact[] { const o: Fact[] = []; for (let a = 2; a <= 18; a++) for (let b = 1; b < a && a - b <= 9 && b <= 9; b++) o.push({ a, b, diff: a + 5, strat: "fact-family" }); return o; }
 
+// ── Multiplication strategy fact sets + format wrapper ──
+type MFact = { a: number; b: number; diff: number; strat: string };
+function mTables(tables: number[], strat: string): MFact[] { const o: MFact[] = []; for (const t of tables) for (let b = 1; b <= 12; b++) o.push({ a: t, b, diff: t * b * 0.4 + Math.max(t, b), strat }); return o; }
+function mSquares(): MFact[] { const o: MFact[] = []; for (let n = 1; n <= 12; n++) o.push({ a: n, b: n, diff: n * n * 0.4, strat: "squares" }); return o; }
+function mAll(): MFact[] { const o: MFact[] = []; for (let a = 2; a <= 12; a++) for (let b = 2; b <= 12; b++) o.push({ a, b, diff: a * b * 0.4, strat: "fact-family" }); return o; }
+function mulFormats(items: MFact[]): AProblem[] {
+  const out: AProblem[] = [];
+  for (const { a, b, diff, strat } of items) {
+    const p = a * b;
+    out.push({ q: `${a} × ${b}`, a: String(p), diff, key: `d:${strat}:${a}x${b}`, strat });
+    if (b !== 0) out.push({ q: `${a} × ___ = ${p}`, a: String(b), diff: diff + 0.3, key: `mf:${strat}:${a}_${p}_${b}`, strat });
+    if ((a + b) % 3 === 0) {
+      const opts = shuffle([String(p), String(p + a), String(Math.max(0, p - a)), String(p + Math.max(1, b))], mulberry32(hashStr(`mc*${strat}${a}_${b}`)));
+      if (new Set(opts).size === 4) out.push({ q: `${a} × ${b} = ?`, a: String(p), diff: diff + 0.2, key: `mc:${strat}:${a}x${b}`, type: "multiple_choice", options: opts, strat });
+    }
+    if (p % 4 === 0 && b !== 0) { const shown = (a + b) % 2 === 0 ? p : p + a; out.push({ q: `True or False:  ${a} × ${b} = ${shown}`, a: shown === p ? "True" : "False", diff: diff + 0.1, key: `tf:${strat}:${a}x${b}`, type: "true_false", options: ["True", "False"], strat }); }
+  }
+  return out;
+}
+// ── Division strategy fact sets + format wrapper (inverse of multiplication) ──
+type DFact = { dividend: number; divisor: number; q: number; diff: number; strat: string };
+function dTables(divisors: number[], strat: string): DFact[] { const o: DFact[] = []; for (const d of divisors) for (let q = 1; q <= 12; q++) o.push({ dividend: d * q, divisor: d, q, diff: d * q * 0.35 + d, strat }); return o; }
+function dIdentity(): DFact[] { const o: DFact[] = []; for (let n = 1; n <= 12; n++) { o.push({ dividend: n, divisor: 1, q: n, diff: n + 1, strat: "identity" }); o.push({ dividend: n, divisor: n, q: 1, diff: n + 1.1, strat: "identity" }); } return o; }
+function dSquares(): DFact[] { const o: DFact[] = []; for (let n = 1; n <= 12; n++) o.push({ dividend: n * n, divisor: n, q: n, diff: n * n * 0.35, strat: "squares" }); return o; }
+function dAll(): DFact[] { const o: DFact[] = []; for (let d = 2; d <= 12; d++) for (let q = 2; q <= 12; q++) o.push({ dividend: d * q, divisor: d, q, diff: d * q * 0.35, strat: "fact-family" }); return o; }
+function divFormats(items: DFact[]): AProblem[] {
+  const out: AProblem[] = [];
+  for (const { dividend, divisor, q, diff, strat } of items) {
+    out.push({ q: `${dividend} ÷ ${divisor}`, a: String(q), diff, key: `d:${strat}:${dividend}/${divisor}`, strat });
+    out.push({ q: `${dividend} ÷ ___ = ${q}`, a: String(divisor), diff: diff + 0.3, key: `md:${strat}:${dividend}_${q}_${divisor}`, strat });
+    if ((divisor + q) % 3 === 0) {
+      const opts = shuffle([String(q), String(q + 1), String(Math.max(0, q - 1)), String(q + 2)], mulberry32(hashStr(`mc/${strat}${dividend}_${divisor}`)));
+      if (new Set(opts).size === 4) out.push({ q: `${dividend} ÷ ${divisor} = ?`, a: String(q), diff: diff + 0.2, key: `mc:${strat}:${dividend}/${divisor}`, type: "multiple_choice", options: opts, strat });
+    }
+    if (dividend % 4 === 0) { const shown = (divisor + q) % 2 === 0 ? q : q + 1; out.push({ q: `True or False:  ${dividend} ÷ ${divisor} = ${shown}`, a: shown === q ? "True" : "False", diff: diff + 0.1, key: `tf:${strat}:${dividend}/${divisor}`, type: "true_false", options: ["True", "False"], strat }); }
+  }
+  return out;
+}
+
 // ── MULTIPLICATION enumerators ────────────────────────────────────────────────
 function enumMul(aLo: number, aHi: number, bLo: number, bHi: number, carry?: boolean): AProblem[] {
   const out: AProblem[] = [];
@@ -236,27 +275,34 @@ const CURRICULA: Record<string, Unit[]> = {
     { id:"sub-missing-review", label:"Missing number & mixed review", objective:"Student solves for the unknown and reviews every subtraction type", grade:"Grade 4", stars:5, range:[91,100], pool:()=>[...enumMissingSub(20,99,1,40), ...enumSub(100,999,100,999), ...enumSub(10,99,10,99,true)], example:{ problem:"45 - ___ = 18", steps:["45 - 18 = 27"], answer:"27" } },
   ],
 
+  // Strategy-staged: skip-counting anchors → identity → squares → build-up tables
+  // → hard facts → fact families → big tables → multi-digit, with spiral review.
   MULTIPLICATION: [
-    { id:"mul-2-5", label:"Multiplication — ×2 to ×5", objective:"Student recalls the 2, 3, 4 and 5 times tables", grade:"Grade 3", stars:2, range:[1,12], pool:()=>enumMul(2,5,1,12), example:{ problem:"4 × 6 =", steps:["4 sixes: 6, 12, 18, 24"], answer:"24" } },
-    { id:"mul-6-9", label:"Multiplication — ×6 to ×9", objective:"Student recalls the 6, 7, 8 and 9 times tables", grade:"Grade 3-4", stars:3, range:[13,24], pool:()=>enumMul(6,9,1,12), example:{ problem:"7 × 8 =", steps:["7 × 8 = 56"], answer:"56" } },
-    { id:"mul-10-12", label:"Multiplication — ×10, ×11, ×12", objective:"Student recalls the 10, 11 and 12 times tables", grade:"Grade 4", stars:3, range:[25,34], pool:()=>enumMul(10,12,1,12), example:{ problem:"12 × 7 =", steps:["12 × 7 = 84"], answer:"84" } },
-    { id:"mul-all", label:"Multiplication — all tables mixed", objective:"Student recalls all times tables fluently", grade:"Grade 4", stars:4, range:[35,46], pool:()=>enumMul(2,12,2,12), example:{ problem:"9 × 6 =", steps:["9 × 6 = 54"], answer:"54" } },
-    { id:"mul-2d1d-nc", label:"Multiplication — 2-digit × 1-digit (no carry)", objective:"Student multiplies a 2-digit number by 1 digit without carrying", grade:"Grade 4", stars:4, range:[47,58], pool:()=>enumMul(11,41,2,4,false), example:{ problem:"23 × 3 =", steps:["3 × 3 = 9","3 × 20 = 60","Answer: 69"], answer:"69" } },
-    { id:"mul-2d1d-c", label:"Multiplication — 2-digit × 1-digit (carry)", objective:"Student multiplies 2-digit × 1-digit with carrying", grade:"Grade 4-5", stars:5, range:[59,70], pool:()=>enumMul(12,99,2,9,true), example:{ problem:"47 × 6 =", steps:["6 × 7 = 42 → write 2 carry 4","6 × 4 = 24 + 4 = 28","Answer: 282"], answer:"282" } },
-    { id:"mul-missing", label:"Multiplication — missing factor", objective:"Student finds the missing factor", grade:"Grade 4", stars:4, range:[71,80], pool:()=>enumMissingFactor(2,12,2,12), example:{ problem:"6 × ___ = 48", steps:["48 ÷ 6 = 8"], answer:"8" } },
-    { id:"mul-2d2d", label:"Multiplication — 2-digit × 2-digit", objective:"Student multiplies two 2-digit numbers", grade:"Grade 5", stars:5, range:[81,94], pool:()=>enumMul(11,99,11,99), example:{ problem:"23 × 14 =", steps:["23 × 4 = 92","23 × 10 = 230","92 + 230 = 322"], answer:"322" } },
-    { id:"mul-review", label:"Multiplication — mixed review", objective:"Student multiplies fluently across all types", grade:"Grade 5", stars:5, range:[95,100], pool:()=>[...enumMul(2,12,2,12),...enumMul(12,99,2,9)], example:{ problem:"38 × 7 =", steps:["7 × 8 = 56 → 6 carry 5","7 × 3 = 21 + 5 = 26","Answer: 266"], answer:"266" } },
+    { id:"mul-skip", label:"×2, ×5, ×10 (skip counting)", objective:"Student multiplies by 2, 5 and 10 using skip counting", grade:"Grade 3", stars:2, range:[1,10], pool:()=>mulFormats(mTables([2,5,10],"skip-count")), example:{ problem:"5 × 6 =", steps:["Skip-count by 5: 5,10,15,20,25,30"], answer:"30" } },
+    { id:"mul-identity", label:"×1 and ×0", objective:"Student multiplies by 1 (identity) and 0", grade:"Grade 3", stars:1, range:[11,16], pool:()=>mulFormats(mTables([0,1],"identity")), example:{ problem:"7 × 1 =", steps:["Any number times 1 is itself"], answer:"7" } },
+    { id:"mul-squares", label:"Square facts (n × n)", objective:"Student recalls the square facts", grade:"Grade 3", stars:2, range:[17,24], pool:()=>spiral(mulFormats(mSquares()), mulFormats(mTables([2,5,10],"skip-count")), [], "m3"), example:{ problem:"6 × 6 =", steps:["6 sixes = 36"], answer:"36" } },
+    { id:"mul-3-4", label:"×3 and ×4 (build from ×2)", objective:"Student multiplies by 3 and 4 building on doubles", grade:"Grade 3-4", stars:3, range:[25,34], pool:()=>spiral(mulFormats(mTables([3,4],"build-up")), mulFormats(mSquares()), mulFormats(mTables([2,5,10],"skip-count")), "m4"), example:{ problem:"4 × 7 =", steps:["Double 7 is 14","Double again: 28"], answer:"28" } },
+    { id:"mul-6-9", label:"×6, ×7, ×8, ×9 (the hard facts)", objective:"Student recalls the 6–9 times tables", grade:"Grade 4", stars:4, range:[35,48], pool:()=>spiral(mulFormats(mTables([6,7,8,9],"hard-facts")), mulFormats(mTables([3,4],"build-up")), mulFormats(mSquares()), "m5"), example:{ problem:"7 × 8 =", steps:["7 × 8 = 56"], answer:"56" } },
+    { id:"mul-fact-family", label:"Fact families & missing factor", objective:"Student uses ×/÷ inverse and finds missing factors", grade:"Grade 4", stars:4, range:[49,58], pool:()=>spiral(mulFormats(mAll()), mulFormats(mTables([6,7,8,9],"hard-facts")), mulFormats(mTables([3,4],"build-up")), "m6"), example:{ problem:"6 × ___ = 48", steps:["48 ÷ 6 = 8"], answer:"8" } },
+    { id:"mul-10-12", label:"×10, ×11, ×12", objective:"Student recalls the 10, 11 and 12 times tables", grade:"Grade 4", stars:3, range:[59,68], pool:()=>spiral(mulFormats(mTables([10,11,12],"big-tables")), mulFormats(mAll()), [], "m7"), example:{ problem:"12 × 7 =", steps:["12 × 7 = 84"], answer:"84" } },
+    { id:"mul-2d1d", label:"2-digit × 1-digit", objective:"Student multiplies a 2-digit number by 1 digit (with carrying)", grade:"Grade 4-5", stars:5, range:[69,82], pool:()=>[...enumMul(11,41,2,4,false), ...enumMul(12,99,2,9,true), ...enumMissingFactor(2,12,2,12)], example:{ problem:"47 × 6 =", steps:["6 × 7 = 42 → write 2 carry 4","6 × 4 = 24 + 4 = 28","Answer: 282"], answer:"282" } },
+    { id:"mul-2d2d", label:"2-digit × 2-digit", objective:"Student multiplies two 2-digit numbers", grade:"Grade 5", stars:5, range:[83,94], pool:()=>[...enumMul(11,99,11,99), ...det(mulFormats(mAll()), 20, "m9p")], example:{ problem:"23 × 14 =", steps:["23 × 4 = 92","23 × 10 = 230","92 + 230 = 322"], answer:"322" } },
+    { id:"mul-review", label:"Mixed review", objective:"Student multiplies fluently across all types", grade:"Grade 5", stars:5, range:[95,100], pool:()=>[...enumMul(2,12,2,12), ...enumMul(12,99,2,9), ...enumMissingFactor(2,12,2,12)], example:{ problem:"38 × 7 =", steps:["7 × 8 = 56 → 6 carry 5","7 × 3 = 21 + 5 = 26","Answer: 266"], answer:"266" } },
   ],
 
+  // Strategy-staged (inverse of multiplication): ÷2/5/10 → identity → squares →
+  // ÷3/4 → ÷6-9 → fact families → ÷10-12 → remainders → larger, with spiral.
   DIVISION: [
-    { id:"div-2-5", label:"Division — ÷2 to ÷5", objective:"Student divides by 2, 3, 4 and 5 (exact)", grade:"Grade 3", stars:2, range:[1,12], pool:()=>enumDivExact(2,5,1,12), example:{ problem:"24 ÷ 4 =", steps:["4 × 6 = 24","So 24 ÷ 4 = 6"], answer:"6" } },
-    { id:"div-6-9", label:"Division — ÷6 to ÷9", objective:"Student divides by 6, 7, 8 and 9 (exact)", grade:"Grade 3-4", stars:3, range:[13,24], pool:()=>enumDivExact(6,9,1,12), example:{ problem:"56 ÷ 7 =", steps:["7 × 8 = 56","So 56 ÷ 7 = 8"], answer:"8" } },
-    { id:"div-10-12", label:"Division — ÷10, ÷11, ÷12", objective:"Student divides by 10, 11 and 12 (exact)", grade:"Grade 4", stars:3, range:[25,34], pool:()=>enumDivExact(10,12,1,12), example:{ problem:"84 ÷ 12 =", steps:["12 × 7 = 84","So 84 ÷ 12 = 7"], answer:"7" } },
-    { id:"div-all", label:"Division — all facts mixed", objective:"Student divides fluently using all facts", grade:"Grade 4", stars:4, range:[35,46], pool:()=>enumDivExact(2,12,2,12), example:{ problem:"63 ÷ 9 =", steps:["9 × 7 = 63","So 63 ÷ 9 = 7"], answer:"7" } },
-    { id:"div-2d1d", label:"Division — 2-digit ÷ 1-digit (exact)", objective:"Student divides a 2-digit number by 1 digit", grade:"Grade 4", stars:4, range:[47,60], pool:()=>enumDivExact(3,9,5,15), example:{ problem:"96 ÷ 6 =", steps:["6 × 16 = 96","So 96 ÷ 6 = 16"], answer:"16" } },
-    { id:"div-remainder", label:"Division — with remainders", objective:"Student divides with remainders", grade:"Grade 4-5", stars:5, range:[61,76], pool:()=>enumDivRemainder(2,9,10,99), example:{ problem:"29 ÷ 4 =", steps:["4 × 7 = 28","29 - 28 = 1","Answer: 7 r 1"], answer:"7 r 1" } },
-    { id:"div-missing", label:"Division — missing dividend", objective:"Student finds the missing dividend", grade:"Grade 4", stars:4, range:[77,86], pool:()=>enumMissingDividend(2,12,2,12), example:{ problem:"___ ÷ 6 = 7", steps:["6 × 7 = 42"], answer:"42" } },
-    { id:"div-3d1d", label:"Division — 3-digit ÷ 1-digit", objective:"Student divides a 3-digit number by 1 digit", grade:"Grade 5", stars:5, range:[87,100], pool:()=>enumDivExact(3,9,15,99), example:{ problem:"175 ÷ 7 =", steps:["7 × 25 = 175","So 175 ÷ 7 = 25"], answer:"25" } },
+    { id:"div-skip", label:"÷2, ÷5, ÷10", objective:"Student divides by 2, 5 and 10 using known facts", grade:"Grade 3", stars:2, range:[1,10], pool:()=>divFormats(dTables([2,5,10],"skip-count")), example:{ problem:"30 ÷ 5 =", steps:["5 × 6 = 30","So 30 ÷ 5 = 6"], answer:"6" } },
+    { id:"div-identity", label:"÷1 and dividing a number by itself", objective:"Student divides by 1 and a number by itself", grade:"Grade 3", stars:1, range:[11,16], pool:()=>divFormats(dIdentity()), example:{ problem:"8 ÷ 8 =", steps:["A number divided by itself is 1"], answer:"1" } },
+    { id:"div-squares", label:"Square-root facts (n² ÷ n)", objective:"Student divides square numbers", grade:"Grade 3", stars:2, range:[17,24], pool:()=>spiral(divFormats(dSquares()), divFormats(dTables([2,5,10],"skip-count")), [], "d3"), example:{ problem:"36 ÷ 6 =", steps:["6 × 6 = 36","So 36 ÷ 6 = 6"], answer:"6" } },
+    { id:"div-3-4", label:"÷3 and ÷4", objective:"Student divides by 3 and 4", grade:"Grade 3-4", stars:3, range:[25,34], pool:()=>spiral(divFormats(dTables([3,4],"build-up")), divFormats(dSquares()), divFormats(dTables([2,5,10],"skip-count")), "d4"), example:{ problem:"28 ÷ 4 =", steps:["4 × 7 = 28","So 28 ÷ 4 = 7"], answer:"7" } },
+    { id:"div-6-9", label:"÷6, ÷7, ÷8, ÷9", objective:"Student divides by 6–9", grade:"Grade 4", stars:4, range:[35,48], pool:()=>spiral(divFormats(dTables([6,7,8,9],"hard-facts")), divFormats(dTables([3,4],"build-up")), divFormats(dSquares()), "d5"), example:{ problem:"56 ÷ 7 =", steps:["7 × 8 = 56","So 56 ÷ 7 = 8"], answer:"8" } },
+    { id:"div-fact-family", label:"Fact families & missing dividend", objective:"Student uses ÷/× inverse and finds the missing number", grade:"Grade 4", stars:4, range:[49,58], pool:()=>spiral(divFormats(dAll()), divFormats(dTables([6,7,8,9],"hard-facts")), divFormats(dTables([3,4],"build-up")), "d6"), example:{ problem:"___ ÷ 6 = 7", steps:["6 × 7 = 42"], answer:"42" } },
+    { id:"div-10-12", label:"÷10, ÷11, ÷12", objective:"Student divides by 10, 11 and 12", grade:"Grade 4", stars:3, range:[59,68], pool:()=>spiral(divFormats(dTables([10,11,12],"big-tables")), divFormats(dAll()), [], "d7"), example:{ problem:"84 ÷ 12 =", steps:["12 × 7 = 84","So 84 ÷ 12 = 7"], answer:"7" } },
+    { id:"div-remainder", label:"Division with remainders", objective:"Student divides with remainders", grade:"Grade 4-5", stars:5, range:[69,82], pool:()=>[...enumDivRemainder(2,9,10,99), ...det(divFormats(dAll()), 20, "d8p")], example:{ problem:"29 ÷ 4 =", steps:["4 × 7 = 28","29 - 28 = 1","Answer: 7 r 1"], answer:"7 r 1" } },
+    { id:"div-larger", label:"2-digit & 3-digit ÷ 1-digit", objective:"Student divides larger numbers by 1 digit", grade:"Grade 5", stars:5, range:[83,94], pool:()=>[...enumDivExact(3,9,5,15), ...enumDivExact(3,9,15,99)], example:{ problem:"96 ÷ 6 =", steps:["6 × 16 = 96","So 96 ÷ 6 = 16"], answer:"16" } },
+    { id:"div-review", label:"Mixed review", objective:"Student divides fluently across all types", grade:"Grade 5", stars:5, range:[95,100], pool:()=>[...enumDivExact(2,12,2,12), ...enumDivRemainder(2,9,10,99), ...enumMissingDividend(2,12,2,12)], example:{ problem:"175 ÷ 7 =", steps:["7 × 25 = 175","So 175 ÷ 7 = 25"], answer:"25" } },
   ],
 };
 
