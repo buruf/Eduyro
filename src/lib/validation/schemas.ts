@@ -18,6 +18,12 @@ export const RegisterSchema = z.object({
   lastName: z.string().min(1, "Last name is required").max(50),
   role: z.enum(["STUDENT", "PARENT", "TEACHER"]).default("STUDENT"),
   grade: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  // Worldwide compliance: affirmative, un-ticked-by-default acceptance of the
+  // current Terms & Privacy Policy is required to create an account.
+  acceptedTerms: z.literal(true, { errorMap: () => ({ message: "You must accept the Terms of Service and Privacy Policy" }) }),
+  // Optional client-provided country fallback (ISO alpha-2); server prefers geo header.
+  countryCode: z.string().length(2).optional(),
 });
 
 export const LoginSchema = z.object({
@@ -63,6 +69,11 @@ export const SubmitSheetSchema = z.object({
   // rejecting the whole submission — a long idle session must never discard
   // correct work. (Recorded time is for stats/badges only, not grading.)
   timeSeconds: z.number().min(0),
+  // Interactive practice uses retry-till-right, so the FINAL answers are all
+  // correct. The client sends the honest FIRST-TRY accuracy (the real fluency
+  // signal) so mastery isn't trivially satisfied by retrying. Omitted for paper
+  // submissions (there, final == first try).
+  firstTryAccuracyPct: z.number().min(0).max(100).optional(),
 });
 
 // ─────────────────────────────────────────────
@@ -78,7 +89,7 @@ export const StartPlacementSchema = z.object({
 export const AnswerPlacementSchema = z.object({
   testId: z.string().cuid(),
   questionId: z.string(),
-  selectedIndex: z.number().int().min(0).max(3),
+  selectedIndex: z.number().int().min(-1).max(3), // -1 = "I'm not sure" (scored incorrect, no guess-inflation)
   timeMs: z.number().min(0),
 });
 

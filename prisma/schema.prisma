@@ -66,6 +66,7 @@ model User {
   subscription  Subscription?
   googleClassroom GoogleClassroomIntegration?
   coppaConsentRequests CoppaConsentRequest[]
+  legalAcceptances     LegalAcceptance[]
 
   @@index([email])
   @@index([role])
@@ -133,6 +134,10 @@ model Student {
   grade       String?   // "Grade 4", "Pre-K", etc.
   dateOfBirth DateTime?
   schoolId    String?
+  // IANA timezone (e.g. "Asia/Tokyo") auto-captured from the student's browser.
+  // Drives the daily-quota day boundary so "today" rolls at THEIR midnight —
+  // null falls back to APP_TIMEZONE (worldwide students, not just one region).
+  timezone    String?
 
   // Streak tracking
   currentStreak     Int      @default(0)
@@ -300,6 +305,11 @@ model Subject {
   iconEmoji   String?
   colorHex    String?
   sortOrder   Int         @default(0)
+  /// Owner-controlled release switch. When false, the subject is hidden from
+  /// parents (offering, placement, add-child) so it can be polished before it
+  /// goes public. Defaults true so this migration changes nothing on its own;
+  /// existing enrollments keep working either way.
+  isPublic    Boolean     @default(true)
 
   levels      Level[]
   enrollments StudentSubject[]
@@ -342,7 +352,7 @@ model Level {
   isActive    Boolean @default(true)
 
   // Mastery config
-  masteryThresholdPct  Int @default(95)  // 95%
+  masteryThresholdPct  Int @default(90)  // 90% — lowered from 95 so silly mistakes don't block advancement
   masteryConsecutiveDays Int @default(5) // 5 days in a row
   sheetsPerDay         Int @default(3)
   problemsPerSheet     Int @default(20)
@@ -453,9 +463,28 @@ model StudentProgress {
   correctAnswers      Int   @default(0)
   totalAnswers        Int   @default(0)
 
+  // Skill-map progression (MATH): index of the CURRENT skill/lesson within the
+  // level's skill map. Advances by 1 when a day's packet is cleared at ≥95%
+  // (one lesson per day). Non-math levels ignore it.
+  currentSkillIndex   Int   @default(0)
+
   // Rolling 5-day mastery tracking
   consecutivePassDays Int   @default(0)  // days at ≥95%
   lastAccuracyPct     Float @default(0)
+
+  // Admin per-student override for how many practice sheets the student may do
+  // in a single day on THIS level (null → use the level's sheetsPerDay). Lets an
+  // admin open up more same-day practice for a child who knows the content and
+  // doesn't want to wait for the next day. RAISE-ONLY at read time: the
+  // effective cap is max(override, sheetsPerDay), because a cap below the daily
+  // quota would make day-clearing (=== sheetsPerDay) impossible forever.
+  dailySheetsOverride Int?
+
+  // Set when an ADMIN unlocks/jumps a skill mid-day (set-skill). The daily
+  // quota window starts at max(startOfToday, skillUnlockedAt), so an unlock
+  // serves a fresh packet IMMEDIATELY and pre-unlock sheets can't mix into the
+  // new lesson's day-clearing. Organic advancement never sets this.
+  skillUnlockedAt DateTime?
 
   // Dates
   startedAt  DateTime?
@@ -507,6 +536,9 @@ model CompletedSheet {
   @@index([studentId])
   @@index([worksheetId])
   @@index([completedAt])
+  // Composite for the hot path: every dashboard load / quota check / streak
+  // calc filters by studentId + completedAt range.
+  @@index([studentId, completedAt])
 }
 
 // ─────────────────────────────────────────────
@@ -712,6 +744,22 @@ model StudentBadge {
 // AUDIT LOG
 // ─────────────────────────────────────────────
 
+// User-submitted problem reports ("Report a bug" on the student/parent
+// dashboards). Triaged in the admin Support tab.
+model BugReport {
+  id         String    @id @default(cuid())
+  userId     String?
+  role       String?   // STUDENT | PARENT | …
+  page       String?   // path where it was reported
+  category   String    // "practice" | "worksheet" | "billing" | "other"
+  message    String
+  status     String    @default("NEW") // NEW | RESOLVED
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+
+  @@index([status, createdAt])
+}
+
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String?
@@ -897,6 +945,98 @@ model ShopPurchaseFile {
 // DAILY PACKET — locked once per day per child
 // ─────────────────────────────────────────────
 
+// ─────────────────────────────────────────────
+// WEBHOOK DELIVERABILITY MONITOR
+// Persists every inbound webhook (Stripe) so silent handler failures are
+// visible & replayable, and so duplicate deliveries are idempotent.
+// ─────────────────────────────────────────────
+
+enum WebhookEventStatus {
+  PROCESSED // handler ran to completion
+  FAILED    // handler threw — subscription state may be stale; replayable
+  SKIPPED   // already processed (duplicate delivery)
+  IGNORED   // event type we don't handle
+}
+
+model WebhookEvent {
+  id            String             @id @default(cuid())
+  source        String             @default("stripe")
+  eventId       String             @unique // Stripe event id (evt_…) — idempotency key
+  type          String             // e.g. "invoice.payment_failed"
+  status        WebhookEventStatus
+  error         String?            @db.Text
+  attempts      Int                @default(1)
+  createdAt     DateTime           @default(now())
+  processedAt   DateTime?
+
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────
+// LEGAL / CONSENT VERSIONING
+// Versioned ToS / Privacy / COPPA-consent documents + per-user acceptance, so
+// the owner can publish a new version and track who has accepted the current one.
+// ─────────────────────────────────────────────
+
+enum LegalDocType {
+  TERMS
+  PRIVACY
+  COPPA_CONSENT
+}
+
+model LegalDocument {
+  id          String       @id @default(cuid())
+  type        LegalDocType
+  version     String       // e.g. "2026-06-27" or "1.2"
+  title       String
+  url         String?      // link to the hosted document
+  summary     String?      @db.Text // what changed in this version
+  effectiveAt DateTime     @default(now())
+  isCurrent   Boolean      @default(false) // exactly one current per type
+  createdAt   DateTime     @default(now())
+
+  acceptances LegalAcceptance[]
+
+  @@unique([type, version])
+  @@index([type])
+}
+
+model LegalAcceptance {
+  id         String   @id @default(cuid())
+  userId     String
+  documentId String
+  acceptedAt DateTime @default(now())
+
+  // Evidence captured at acceptance (worldwide compliance — GDPR/COPPA/LGPD…):
+  country     String? // ISO-3166 alpha-2 detected at acceptance (jurisdiction)
+  ipAddress   String? // request IP at acceptance
+  // When a parent/guardian accepts on a child's behalf, who gave consent.
+  acceptedByUserId String?
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document LegalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, documentId])
+  @@index([documentId])
+  @@index([userId])
+}
+
+// Cache of synthesized narration audio (text-to-speech) so we never re-charge
+// the TTS provider for the same line + voice. Keyed by hash(voiceId + text).
+model TtsClip {
+  id        String   @id @default(cuid())
+  hash      String   @unique // sha256 of `${voiceId}|${text}`
+  voiceId   String
+  fileKey   String   // storage key (S3 / local-storage) of the mp3
+  chars     Int      // billed character count (for cost visibility)
+  alignment Json?    // word-level timings { words, startsSec, endsSec } for read-along
+  createdAt DateTime @default(now())
+
+  @@index([voiceId])
+}
+
 model DailyPacket {
   id        String   @id @default(cuid())
   studentId String
@@ -920,6 +1060,12 @@ model DailyPacket {
   // Tracking
   printCount Int      @default(0)
   createdAt  DateTime @default(now())
+
+  // Parent-excused ("skip session"): when true this day was skipped by the
+  // parent — no work is served to the student, the day is EXCUSED in attendance
+  // and doesn't break the streak, but it still advances the curriculum position.
+  skipped         Boolean @default(false)
+  skippedByUserId String?
 
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 

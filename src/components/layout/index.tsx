@@ -153,12 +153,15 @@ export interface SidebarItem {
 }
 
 export function DashboardSidebar({
-  items, user, roleBadge, footerContent,
+  items, user, roleBadge, footerContent, topContent,
 }: {
   items: SidebarItem[];
   user: { name: string; subtitle: string; image?: string };
   roleBadge?: string;
   footerContent?: ReactNode;
+  /** Rendered directly under the user block, ABOVE the nav items — e.g. the
+      parent dashboard's child switcher. */
+  topContent?: ReactNode;
 }) {
   return (
     <aside className="bg-ink text-cream w-56 min-h-screen flex flex-col">
@@ -180,6 +183,8 @@ export function DashboardSidebar({
           <div className="text-[11px] text-cream/45 truncate">{user.subtitle}</div>
         </div>
       </div>
+
+      {topContent && <div className="px-3 py-3 border-b border-white/10">{topContent}</div>}
 
       <nav className="px-3 py-3 flex-1 flex flex-col gap-1">
         {items.map((item) => (

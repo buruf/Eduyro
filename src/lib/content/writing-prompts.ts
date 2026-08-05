@@ -346,7 +346,70 @@ export const PROMPTS_W8: WritingPrompt[] = [
 ];
 
 // ─────────────────────────────────────────────
-// Index
+// W8 — Informational & Expository (W0–W9 realignment: W8 is now informational;
+// the persuasive prompts above became W9)
+// ─────────────────────────────────────────────
+
+export const PROMPTS_W8_INFO: WritingPrompt[] = [
+  {
+    id: "w8-how-to",
+    levelCode: "W8",
+    title: "How To Make It",
+    type: "essay",
+    prompt: "Choose something you know how to make or do (a sandwich, a paper plane, a free throw). Write a HOW-TO explanation with a materials list and numbered steps in order. Use sequence words: first, next, then, finally.",
+    scaffolding: ["You will need: ___", "First, ___", "Next, ___", "Finally, ___"],
+    rubricCriteria: [
+      { name: "Order", description: "Steps are in an order that actually works" },
+      { name: "Completeness", description: "Nothing important is missing — a stranger could follow it" },
+      { name: "Sequence words", description: "First/next/then/finally guide the reader" },
+    ],
+    wordCountTarget: { min: 150, max: 350 },
+  },
+  {
+    id: "w8-compare",
+    levelCode: "W8",
+    title: "Two Things Compared",
+    type: "essay",
+    prompt: "Pick two things you know well (two sports, two animals, two games). Write a comparison: one paragraph on how they are ALIKE, one on how they are DIFFERENT, and a closing sentence saying which you prefer and why.",
+    scaffolding: ["___ and ___ are alike because ___", "They are different because ___"],
+    rubricCriteria: [
+      { name: "Both sides", description: "Real similarities AND real differences" },
+      { name: "Organization", description: "Alike and different are kept in separate paragraphs" },
+    ],
+    wordCountTarget: { min: 200, max: 400 },
+  },
+  {
+    id: "w8-report",
+    levelCode: "W8",
+    title: "Expert Report",
+    type: "essay",
+    prompt: "Write a short informational report about a topic you know a lot about. Include: a title, an introduction that names the topic, at least two body paragraphs each with ONE main idea and supporting facts, and a conclusion. No opinions — facts only.",
+    rubricCriteria: [
+      { name: "Structure", description: "Title, intro, body paragraphs, conclusion" },
+      { name: "Facts not opinions", description: "Information a reader can check, not feelings" },
+      { name: "Paragraph focus", description: "Each body paragraph sticks to one main idea" },
+    ],
+    wordCountTarget: { min: 250, max: 500 },
+  },
+  {
+    id: "w8-explain-why",
+    levelCode: "W8",
+    title: "Explain Why It Happens",
+    type: "essay",
+    prompt: "Choose something that happens in nature (rain, seasons, shadows, why leaves change color). Explain WHY it happens, step by step, so a younger student could understand. Define any big words you use.",
+    scaffolding: ["___ happens because ___", "First ___, which causes ___"],
+    rubricCriteria: [
+      { name: "Cause and effect", description: "Each step explains what causes the next" },
+      { name: "Audience", description: "A younger student could follow it" },
+    ],
+    wordCountTarget: { min: 200, max: 400 },
+  },
+];
+
+// ─────────────────────────────────────────────
+// Index — W0–W9 realigned map. W9 carries the persuasive prompts (formerly
+// filed under W8); W0 handwriting has its own dedicated printable at
+// /print/handwriting (tracing can't live in a prompt card).
 // ─────────────────────────────────────────────
 
 export const ALL_PROMPTS: Record<string, WritingPrompt[]> = {
@@ -357,18 +420,20 @@ export const ALL_PROMPTS: Record<string, WritingPrompt[]> = {
   W5: PROMPTS_W5,
   W6: PROMPTS_W6,
   W7: PROMPTS_W7,
-  W8: PROMPTS_W8,
+  W8: PROMPTS_W8_INFO,
+  W9: PROMPTS_W8.map((p) => ({ ...p, levelCode: "W9" })),
 };
 
 export const WRITING_LEVEL_NAMES: Record<string, string> = {
-  W1: "Sentence Completion",
-  W2: "Parts of Speech",
-  W3: "Sentence Structure",
-  W4: "Punctuation",
+  W1: "Sentence Completion & Building",
+  W2: "Parts of Speech & Word Choice",
+  W3: "Sentence Structure & Variety",
+  W4: "Punctuation & Mechanics",
   W5: "Paragraph Structure",
-  W6: "Essay Structure",
+  W6: "Essay Structure & Research",
   W7: "Narrative Writing",
-  W8: "Persuasive Writing",
+  W8: "Informational & Expository",
+  W9: "Persuasive & Argumentative",
 };
 
 export function getPromptsByLevel(levelCode: string): WritingPrompt[] {

@@ -12,7 +12,8 @@ import {
 } from "@/lib/api/helpers";
 import { RegisterSchema } from "@/lib/validation/schemas";
 import { sendVerificationEmail } from "@/lib/email";
-import { calculateAge, requiresParentalConsent } from "@/lib/coppa";
+import { calculateAge, requiresParentalConsent } from "@/lib/compliance/consent-age";
+import { recordConsent, getRequestCountry, getClientIp } from "@/lib/compliance/consent";
 import { nanoid } from "nanoid";
 
 export async function POST(req: NextRequest) {
@@ -21,16 +22,22 @@ export async function POST(req: NextRequest) {
 
   const parsed = await parseRequest(req, RegisterSchema);
   if ("status" in parsed) return parsed;
-  const { email, password, firstName, lastName, role, grade, dateOfBirth } = parsed.data as any;
+  const { email, password, firstName, lastName, role, grade, dateOfBirth, countryCode } = parsed.data as any;
+
+  // Jurisdiction evidence captured at signup (worldwide compliance).
+  const country = getRequestCountry(req, countryCode);
+  const ipAddress = getClientIp(req);
 
   try {
     // Check existing
     const existing = await db.user.findUnique({ where: { email } });
     if (existing) return conflict("An account with this email already exists");
 
-    // COPPA check — if student under 13, lock until parental consent
+    // Parental-consent check — jurisdiction-aware (digital consent age varies by
+    // country: US 13 / COPPA, EU 13–16, default 16). Under threshold → lock until
+    // a parent gives verifiable consent.
     const dob = dateOfBirth ? new Date(dateOfBirth) : null;
-    const needsCoppa = role === "STUDENT" && dob && requiresParentalConsent(dob);
+    const needsCoppa = role === "STUDENT" && dob && requiresParentalConsent(dob, country);
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12);
@@ -64,6 +71,12 @@ export async function POST(req: NextRequest) {
 
       return newUser;
     });
+
+    // Record acceptance of the current Terms & Privacy Policy with jurisdiction
+    // + IP evidence (non-blocking — never fails signup). A self-registering
+    // minor is locked pending parental consent, so only the adult-facing docs
+    // are recorded here; parental COPPA consent is recorded when a parent acts.
+    await recordConsent({ userId: user.id, types: ["TERMS", "PRIVACY"], country, ipAddress });
 
     // Generate email verification token
     const token = nanoid(32);

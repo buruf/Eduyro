@@ -2,12 +2,35 @@
 // Core worksheet generation engine — produces Problem[] for any subject/skill
 // Covers all 50+ skills across Math M1-M18, Reading R1-R9, Writing W1-W8, Science S1-S7
 
+import { stageForUnit } from "@/lib/reading/phonics";
+import { passagesForUnit } from "@/lib/reading/passages";
+import { sightWordsForUnit, sightWordItems, STUDY_CHUNK } from "@/lib/reading/sight-words";
+import { READING_CURRICULUM } from "@/lib/reading/curriculum";
+import { textsForStage } from "@/lib/reading/decodable-texts";
+import { generateWordItems } from "@/lib/reading/word-items";
 import { nanoid } from "nanoid";
 import type { Problem, ProblemType, GeneratedWorksheet, AnswerKeyEntry } from "@/types";
 import { generateProgressiveSheet, type ShopSkill } from "@/lib/shop/progressive-generator";
-import { generateEarlyMathSheet, isEarlyMathLevel } from "@/lib/shop/early-math-engine";
-import { generateHigherMathSheet, isHigherMathLevel } from "@/lib/shop/higher-math-engine";
+import { generateEarlyMathSheet, isEarlyMathLevel, earlyMathUnits } from "@/lib/shop/early-math-engine";
+import { generateHigherMathSheet, isHigherMathLevel, higherMathUnits } from "@/lib/shop/higher-math-engine";
+import { isArithmeticSkill, arithmeticUnits } from "@/lib/shop/arithmetic-engine";
+import { isAdvancedSkill, advancedUnits } from "@/lib/shop/advanced-engine";
+import { fdpUnits } from "@/lib/shop/fdp-engine";
 import { adaptiveCount } from "@/lib/math/layout-capacity";
+
+// The ordered SKILL MAP for a MATH level — the engine's REAL content units (the
+// "skills" a student advances through, one lesson per day). Empty for non-math.
+export interface LevelSkill { index: number; id: string; label: string; objective: string; grade: string; range: [number, number]; }
+export function getMathLevelSkills(levelCode: string): LevelSkill[] {
+  if (isEarlyMathLevel(levelCode)) return earlyMathUnits(levelCode);
+  if (isHigherMathLevel(levelCode)) return higherMathUnits(levelCode);
+  const skill = LEVEL_TO_SKILL[levelCode];
+  if (!skill) return [];
+  if (skill === "FRACTIONS") return fdpUnits();
+  if (isArithmeticSkill(skill)) return arithmeticUnits(skill);
+  if (isAdvancedSkill(skill)) return advancedUnits(skill);
+  return [];
+}
 
 // ── Shared clean-engine bridge ────────────────────────────────────────────────
 // The student learning platform (daily packets) and the shop now share ONE
@@ -36,6 +59,21 @@ export interface GeneratorConfig {
   difficulty?: number;
   sheetNumber?: number;
   totalSheets?: number;
+}
+
+// Print-only: true/false items render poorly on paper. The content bank defines
+// them inconsistently — most have no options (so they print as a bare statement +
+// blank line, with no True/False to circle) and carry verbose explanation answers.
+// We strip them from PRINTED packets only; interactive practice keeps them.
+export function stripTrueFalse<P extends { id: string; question: string }, A extends { id: string }>(
+  problems: P[],
+  answerKey: A[],
+): { problems: P[]; answerKey: A[] } {
+  const isTF = (q: string) => /\btrue\s*(?:or|\/)\s*false\b/i.test(q);
+  const kept = problems.filter((p) => !isTF(p.question));
+  if (kept.length === problems.length) return { problems, answerKey };
+  const keepIds = new Set(kept.map((p) => p.id));
+  return { problems: kept, answerKey: answerKey.filter((a) => keepIds.has(a.id)) };
 }
 
 export function generateProblems(config: GeneratorConfig): {
@@ -110,10 +148,19 @@ export function generateProblems(config: GeneratorConfig): {
     // rotate by sheet number, so consecutive comprehension sheets show DIFFERENT
     // passages instead of always the first one. (Uniqueness guard for passages.)
     const blocks: Problem[][] = [];
+    // Items BEFORE the first passage (Track A's phonics warm-up) belong WITH the
+    // first passage, not as a block of their own — otherwise sheet 1 is word
+    // drills with no reading in it at all.
+    const lead: Problem[] = [];
     for (const p of converted) {
       const isHead = (p.points ?? 0) === 0 || p.question.startsWith("READ THIS PASSAGE");
-      if (isHead || blocks.length === 0) blocks.push([p]);
+      if (isHead) blocks.push([p]);
+      else if (blocks.length === 0) lead.push(p);
       else blocks[blocks.length - 1].push(p);
+    }
+    if (lead.length) {
+      if (blocks.length) blocks[0] = [...lead, ...blocks[0]];
+      else blocks.push(lead);
     }
     const block = blocks.length ? blocks[(sn - 1) % blocks.length] : converted;
     final = block.slice(0, problemCount);
@@ -231,11 +278,14 @@ export function nonMathBankQuestions(
 export function getMathSheetMeta(
   levelCode: string,
   sheetNumber = 1
-): { subSkillLabel: string; learningObjective: string; gradeLevel: string } | null {
+): { subSkillLabel: string; learningObjective: string; gradeLevel: string; directive?: string } | null {
   const n = Math.max(1, sheetNumber || 1);
   try {
-    const pick = (m: { subSkillLabel: string; learningObjective: string; gradeLevel: string }) =>
-      ({ subSkillLabel: m.subSkillLabel, learningObjective: m.learningObjective, gradeLevel: m.gradeLevel });
+    // Carry the unit `directive` ("Compare. Write >, <, or =.") through so the
+    // worksheet shows the instruction once at the top — the per-problem prompt is
+    // a bare stem, so the directive is how the student knows what to do.
+    const pick = (m: { subSkillLabel: string; learningObjective: string; gradeLevel: string; directive?: string }) =>
+      ({ subSkillLabel: m.subSkillLabel, learningObjective: m.learningObjective, gradeLevel: m.gradeLevel, directive: m.directive });
     // Use a normal problem count: the selector divides by (count − 1), so 1 would
     // throw. We only read .meta, but the engine generates problems regardless.
     if (isEarlyMathLevel(levelCode)) return pick(generateEarlyMathSheet(levelCode, n, 100, 30).meta);
@@ -929,57 +979,375 @@ const readingPassages: Record<string, { passage: string; questions: Problem[] }[
   }],
 };
 
+// ── New reading skills for the R1–R9 curriculum realignment ──────────────────
+// R1 · Letter ID — case matching, visual discrimination, letter names (name
+// knowledge, kept separate from letter SOUNDS per the science-of-reading review).
+function generateLetterIdProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Which letter comes right after 'C'?", a: "D", opts: ["B", "D", "E", "A"], type: "multiple_choice" },
+    { q: "Match the capital to its lowercase: 'B' goes with…", a: "b", opts: ["d", "b", "p", "q"], type: "multiple_choice" },
+    { q: "Which two are the SAME letter?", a: "A and a", opts: ["A and a", "A and e", "A and o", "A and n"], type: "multiple_choice" },
+    { q: "What is the name of this letter: 'M'?", a: "em (M)", opts: ["en (N)", "em (M)", "double-u (W)", "aitch (H)"], type: "multiple_choice" },
+    { q: "Which letter is a lowercase 'g'?", a: "g", opts: ["q", "g", "p", "j"], type: "multiple_choice" },
+    { q: "Which letter comes right before 'F'?", a: "E", opts: ["G", "E", "D", "H"], type: "multiple_choice" },
+    { q: "Find the letter that is NOT the same: b, b, d, b", a: "d", opts: ["b", "d", "the first b", "none"], type: "multiple_choice" },
+    { q: "Which is the capital of 'r'?", a: "R", opts: ["R", "P", "B", "K"], type: "multiple_choice" },
+    { q: "How many letters are in the alphabet?", a: "26", opts: ["24", "26", "20", "30"], type: "multiple_choice" },
+    { q: "Which letter is a lowercase 'e'?", a: "e", opts: ["c", "e", "o", "a"], type: "multiple_choice" },
+    { q: "Which letter looks like a circle with a line: it is…", a: "d or b", opts: ["d or b", "m", "w", "z"], type: "multiple_choice" },
+    { q: "Match: capital 'T' goes with lowercase…", a: "t", opts: ["l", "t", "f", "i"], type: "multiple_choice" },
+    { q: "Which comes first in the alphabet?", a: "A", opts: ["A", "M", "Z", "P"], type: "multiple_choice" },
+    { q: "Which letter is between 'H' and 'J'?", a: "I", opts: ["G", "I", "K", "L"], type: "multiple_choice" },
+  ], count);
+}
+// R2 · Short Vowels & Blending — CVC decoding.
+function generateShortVowelProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Blend the sounds: /c/ /a/ /t/. What word?", a: "cat", opts: ["cat", "cot", "cut", "kit"], type: "multiple_choice" },
+    { q: "Which word has the short 'a' sound?", a: "map", opts: ["map", "make", "may", "main"], type: "multiple_choice" },
+    { q: "Blend: /p/ /i/ /g/ =", a: "pig", opts: ["pig", "peg", "pug", "bag"], type: "multiple_choice" },
+    { q: "Which word has the short 'e' sound?", a: "bed", opts: ["bed", "bead", "bee", "be"], type: "multiple_choice" },
+    { q: "Blend: /d/ /o/ /g/ =", a: "dog", opts: ["dog", "dig", "dug", "bog"], type: "multiple_choice" },
+    { q: "Which is a CVC word (consonant-vowel-consonant)?", a: "sun", opts: ["sun", "rain", "cake", "tree"], type: "multiple_choice" },
+    { q: "Which word has the short 'i' sound?", a: "sit", opts: ["sit", "site", "sight", "sigh"], type: "multiple_choice" },
+    { q: "Blend: /h/ /o/ /t/ =", a: "hot", opts: ["hot", "hat", "hut", "hit"], type: "multiple_choice" },
+    { q: "Which word has the short 'u' sound?", a: "cup", opts: ["cup", "cube", "cute", "cue"], type: "multiple_choice" },
+    { q: "Change the vowel: 'cat' with an 'o' becomes…", a: "cot", opts: ["cot", "cut", "kit", "cap"], type: "multiple_choice" },
+    { q: "Blend: /f/ /u/ /n/ =", a: "fun", opts: ["fun", "fan", "fin", "van"], type: "multiple_choice" },
+    { q: "Which word has the short 'o' sound?", a: "top", opts: ["top", "toe", "toad", "tow"], type: "multiple_choice" },
+    { q: "What is the middle sound in 'red'?", a: "short e (/e/)", opts: ["short e (/e/)", "short a (/a/)", "long e", "silent"], type: "multiple_choice" },
+    { q: "Blend: /b/ /e/ /d/ =", a: "bed", opts: ["bed", "bad", "bud", "bid"], type: "multiple_choice" },
+  ], count);
+}
+// R2 · Consonant Blends (and digraphs) — bl, st, tr, sh, ch, th.
+function generateConsonantBlendProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Which word starts with the 'bl' blend?", a: "black", opts: ["black", "back", "lack", "book"], type: "multiple_choice" },
+    { q: "What two letters blend at the start of 'stop'?", a: "st", opts: ["st", "ts", "sp", "sl"], type: "multiple_choice" },
+    { q: "Which word begins with the 'tr' blend?", a: "tree", opts: ["tree", "tea", "the", "tie"], type: "multiple_choice" },
+    { q: "The 'sh' in 'ship' makes which sound?", a: "/sh/", opts: ["/sh/", "/s/ then /h/", "/ch/", "/th/"], type: "multiple_choice" },
+    { q: "Which word ends with a blend?", a: "hand", opts: ["hand", "ham", "hat", "had"], type: "multiple_choice" },
+    { q: "Which word starts with the 'cl' blend?", a: "clap", opts: ["clap", "cap", "lap", "cup"], type: "multiple_choice" },
+    { q: "The digraph 'ch' in 'chair' sounds like:", a: "/ch/", opts: ["/ch/", "/k/", "/sh/", "/c/ /h/"], type: "multiple_choice" },
+    { q: "Which word begins with the 'fr' blend?", a: "frog", opts: ["frog", "fog", "rag", "for"], type: "multiple_choice" },
+    { q: "Which word has the 'th' digraph?", a: "this", opts: ["this", "tip", "sit", "his"], type: "multiple_choice" },
+    { q: "Which word ends with the 'st' blend?", a: "nest", opts: ["nest", "net", "ten", "new"], type: "multiple_choice" },
+    { q: "Which word starts with 'gr'?", a: "green", opts: ["green", "gone", "ring", "gear"], type: "multiple_choice" },
+    { q: "The 'wh' in 'when' is a:", a: "digraph", opts: ["digraph", "vowel team", "silent letter", "blend of 3"], type: "multiple_choice" },
+    { q: "Which word starts with the 'sn' blend?", a: "snake", opts: ["snake", "sake", "nake", "sank"], type: "multiple_choice" },
+    { q: "Which word begins with the 'sp' blend?", a: "spin", opts: ["spin", "sin", "pin", "sip"], type: "multiple_choice" },
+  ], count);
+}
+// R2 · Vowel Teams & Diphthongs — ai, ea, oa, ee, oi, ou, ow.
+function generateVowelTeamProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "The 'ai' in 'rain' makes which sound?", a: "long a", opts: ["long a", "short a", "long i", "short i"], type: "multiple_choice" },
+    { q: "Which word has the 'ea' team saying long e?", a: "beach", opts: ["beach", "bread", "head", "bear"], type: "multiple_choice" },
+    { q: "The 'oa' in 'boat' says:", a: "long o", opts: ["long o", "short o", "long a", "/ow/"], type: "multiple_choice" },
+    { q: "Which word has the 'oi' diphthong?", a: "coin", opts: ["coin", "corn", "cone", "can"], type: "multiple_choice" },
+    { q: "The 'ee' in 'tree' says:", a: "long e", opts: ["long e", "short e", "long a", "short i"], type: "multiple_choice" },
+    { q: "Which word has the 'ou' diphthong (like in 'out')?", a: "cloud", opts: ["cloud", "could", "cold", "call"], type: "multiple_choice" },
+    { q: "The 'ay' in 'play' makes which sound?", a: "long a", opts: ["long a", "short a", "long e", "/oy/"], type: "multiple_choice" },
+    { q: "Which word has the 'oy' diphthong?", a: "toy", opts: ["toy", "top", "toe", "too"], type: "multiple_choice" },
+    { q: "A vowel team is:", a: "two vowels making one sound", opts: ["two vowels making one sound", "two consonants", "one vowel", "a silent letter"], type: "multiple_choice" },
+    { q: "Which word has the 'ow' saying long o?", a: "snow", opts: ["snow", "cow", "now", "owl"], type: "multiple_choice" },
+    { q: "The 'ea' in 'bread' says:", a: "short e", opts: ["short e", "long e", "long a", "long i"], type: "multiple_choice" },
+    { q: "Which word uses the 'ie' team saying long e?", a: "field", opts: ["field", "pie", "tie", "die"], type: "multiple_choice" },
+    { q: "A diphthong is a vowel sound that:", a: "glides from one sound to another", opts: ["glides from one sound to another", "is always silent", "is a consonant", "makes no sound"], type: "multiple_choice" },
+    { q: "Which word has the 'oo' team (as in 'moon')?", a: "spoon", opts: ["spoon", "book", "good", "foot"], type: "multiple_choice" },
+  ], count);
+}
+// R2 · R-Controlled Vowels — ar, er, ir, or, ur ("bossy R").
+function generateRControlledProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "The 'ar' in 'car' sounds like:", a: "/ar/ (as in 'star')", opts: ["/ar/ (as in 'star')", "short a", "long a", "/or/"], type: "multiple_choice" },
+    { q: "Which word has the 'or' sound (as in 'corn')?", a: "fork", opts: ["fork", "far", "fur", "fern"], type: "multiple_choice" },
+    { q: "'er', 'ir', and 'ur' often make the SAME sound. Which word?", a: "bird", opts: ["bird", "bard", "board", "bead"], type: "multiple_choice" },
+    { q: "In an R-controlled word, the letter that changes the vowel is:", a: "r", opts: ["r", "e", "l", "s"], type: "multiple_choice" },
+    { q: "Which word has the 'ur' sound?", a: "turn", opts: ["turn", "tan", "torn", "tune"], type: "multiple_choice" },
+    { q: "The 'er' in 'her' sounds like:", a: "/er/ (as in 'fern')", opts: ["/er/ (as in 'fern')", "long e", "short e", "/ar/"], type: "multiple_choice" },
+    { q: "Which word has the 'ar' sound?", a: "start", opts: ["start", "state", "stir", "store"], type: "multiple_choice" },
+    { q: "'Bossy R' means the R:", a: "changes the vowel's sound", opts: ["changes the vowel's sound", "is silent", "doubles the vowel", "adds a syllable"], type: "multiple_choice" },
+    { q: "Which word has the 'ir' sound?", a: "girl", opts: ["girl", "goal", "gear", "gale"], type: "multiple_choice" },
+    { q: "Which word has the 'or' sound?", a: "storm", opts: ["storm", "star", "stern", "stir"], type: "multiple_choice" },
+    { q: "The word 'winter' has how many R-controlled sounds?", a: "one (er)", opts: ["one (er)", "none", "two", "three"], type: "multiple_choice" },
+    { q: "Which word has the 'ur' sound?", a: "purple", opts: ["purple", "parcel", "pearl", "portal"], type: "multiple_choice" },
+    { q: "Which word rhymes with 'shark'?", a: "park", opts: ["park", "perk", "pork", "peck"], type: "multiple_choice" },
+    { q: "Which word has the 'ar' sound?", a: "farm", opts: ["farm", "form", "firm", "fame"], type: "multiple_choice" },
+  ], count);
+}
+// R4 · Word Relationships — synonyms + antonyms + multiple-meaning words.
+function generateMultipleMeaningProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "In 'The baseball player will bat first,' what does 'bat' mean?", a: "take a turn to hit", opts: ["take a turn to hit", "a flying animal", "a blink", "a wooden club only"], type: "multiple_choice" },
+    { q: "'The river bank flooded.' Here 'bank' means:", a: "the land beside a river", opts: ["the land beside a river", "a place for money", "to tilt", "to rely on"], type: "multiple_choice" },
+    { q: "'Please turn down the volume.' 'Volume' means:", a: "loudness", opts: ["loudness", "a book", "amount of space", "a dial"], type: "multiple_choice" },
+    { q: "'She had to duck under the branch.' 'Duck' means:", a: "to lower your head quickly", opts: ["to lower your head quickly", "a bird", "water", "to swim"], type: "multiple_choice" },
+    { q: "'The band gave a great show.' 'Band' means:", a: "a group of musicians", opts: ["a group of musicians", "a strip that ties", "a ring", "a radio range"], type: "multiple_choice" },
+    { q: "'He tied the boat with a rope.' A word with two meanings here is 'tied' — the other meaning is:", a: "equal score", opts: ["equal score", "sleepy", "a knot only", "colored"], type: "multiple_choice" },
+    { q: "'The light was too bright.' 'Light' means:", a: "brightness", opts: ["brightness", "not heavy", "to set on fire", "pale"], type: "multiple_choice" },
+    { q: "'Watch out for the sharp point!' 'Point' means:", a: "the sharp tip", opts: ["the sharp tip", "a score", "the main idea", "to aim"], type: "multiple_choice" },
+    { q: "'I will park the car.' 'Park' means:", a: "to stop and leave a vehicle", opts: ["to stop and leave a vehicle", "a green space", "a swing set", "a picnic"], type: "multiple_choice" },
+    { q: "'The story had a happy ending.' A multiple-meaning word is one that:", a: "has more than one meaning", opts: ["has more than one meaning", "means the same as another", "is an opposite", "is spelled two ways"], type: "multiple_choice" },
+  ], count);
+}
+function generateWordRelationshipsProblems(count: number): Problem[] {
+  const each = Math.ceil(count / 3);
+  return [
+    ...generateSynonymProblems(each),
+    ...generateAntonymProblems(each),
+    ...generateMultipleMeaningProblems(each),
+  ].slice(0, count);
+}
+// R5 · WH- Questions — literal comprehension of a single sentence/mini-scene.
+function generateWHQuestionsProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "'On Friday, Maria baked cookies for her grandma.' WHO baked the cookies?", a: "Maria", opts: ["Maria", "Grandma", "a friend", "the teacher"], type: "multiple_choice" },
+    { q: "'On Friday, Maria baked cookies for her grandma.' WHAT did she bake?", a: "cookies", opts: ["cookies", "a cake", "bread", "pie"], type: "multiple_choice" },
+    { q: "'On Friday, Maria baked cookies for her grandma.' WHEN did it happen?", a: "Friday", opts: ["Friday", "Monday", "the weekend", "at night"], type: "multiple_choice" },
+    { q: "'The dog ran to the park because it was excited.' WHY did the dog run?", a: "it was excited", opts: ["it was excited", "it was tired", "it was hungry", "it was lost"], type: "multiple_choice" },
+    { q: "'Sam found his lost key under the couch.' WHERE was the key?", a: "under the couch", opts: ["under the couch", "in the car", "at school", "in a drawer"], type: "multiple_choice" },
+    { q: "'The team won the game after a long practice.' WHAT did the team do?", a: "won the game", opts: ["won the game", "lost the game", "quit", "practiced only"], type: "multiple_choice" },
+    { q: "'Because it rained, the picnic moved indoors.' WHY did it move indoors?", a: "it rained", opts: ["it rained", "it was cold", "it was late", "no reason"], type: "multiple_choice" },
+    { q: "'Every summer, the Lees visit the beach.' WHEN do they visit?", a: "every summer", opts: ["every summer", "in winter", "on weekends", "once"], type: "multiple_choice" },
+    { q: "'The nurse gently helped the patient walk.' WHO helped?", a: "the nurse", opts: ["the nurse", "the patient", "a doctor", "a friend"], type: "multiple_choice" },
+    { q: "A 'who' question asks about the:", a: "person", opts: ["person", "place", "time", "reason"], type: "multiple_choice" },
+    { q: "A 'where' question asks about the:", a: "place", opts: ["place", "person", "reason", "thing"], type: "multiple_choice" },
+    { q: "'The kite flew high over the field on a windy day.' WHERE did the kite fly?", a: "over the field", opts: ["over the field", "in a room", "under water", "in a box"], type: "multiple_choice" },
+    { q: "A 'why' question asks for the:", a: "reason", opts: ["reason", "time", "place", "person"], type: "multiple_choice" },
+    { q: "'Leo fixed his bike so he could ride to school.' WHY did he fix the bike?", a: "to ride to school", opts: ["to ride to school", "to sell it", "for fun only", "no reason"], type: "multiple_choice" },
+  ], count);
+}
+// R5 · Story Elements — character, setting, plot.
+function generateStoryElementsProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "The 'setting' of a story is:", a: "where and when it happens", opts: ["where and when it happens", "the main person", "the problem", "the lesson"], type: "multiple_choice" },
+    { q: "A 'character' is:", a: "a person or animal in the story", opts: ["a person or animal in the story", "the place", "the ending", "the time"], type: "multiple_choice" },
+    { q: "The 'plot' is:", a: "the events that happen", opts: ["the events that happen", "the place", "a character's name", "the title"], type: "multiple_choice" },
+    { q: "'Deep in a snowy forest, a rabbit searched for food.' What is the setting?", a: "a snowy forest", opts: ["a snowy forest", "the rabbit", "searching", "food"], type: "multiple_choice" },
+    { q: "The 'problem' (conflict) in a story is:", a: "the trouble the character must solve", opts: ["the trouble the character must solve", "the setting", "the narrator", "the title"], type: "multiple_choice" },
+    { q: "'Mia wanted to win the race but she twisted her ankle.' What is the problem?", a: "she twisted her ankle", opts: ["she twisted her ankle", "she wanted to win", "the race", "Mia"], type: "multiple_choice" },
+    { q: "The main character is usually:", a: "the person the story is mostly about", opts: ["the person the story is mostly about", "any side person", "the author", "the reader"], type: "multiple_choice" },
+    { q: "The part where the problem is solved is the:", a: "resolution", opts: ["resolution", "setting", "introduction", "character"], type: "multiple_choice" },
+    { q: "'Long ago in a castle by the sea…' This tells us the story's:", a: "setting", opts: ["setting", "problem", "character trait", "theme"], type: "multiple_choice" },
+    { q: "Which is a character TRAIT?", a: "brave", opts: ["brave", "forest", "Tuesday", "running"], type: "multiple_choice" },
+    { q: "The events of a story, in order, make up the:", a: "plot", opts: ["plot", "setting", "cast", "cover"], type: "multiple_choice" },
+    { q: "'The old lighthouse creaked in the storm.' The setting feeling (mood) is:", a: "spooky / tense", opts: ["spooky / tense", "cheerful", "funny", "calm"], type: "multiple_choice" },
+    { q: "A story's turning point — the most exciting moment — is the:", a: "climax", opts: ["climax", "setting", "title", "character"], type: "multiple_choice" },
+    { q: "Which question helps you find a character?", a: "Who is the story about?", opts: ["Who is the story about?", "Where does it happen?", "When is it?", "Why write it?"], type: "multiple_choice" },
+  ], count);
+}
+// R7 · Perspective & Purpose — author's purpose (PIE) + fact vs. opinion.
+function generatePerspectivePurposeProblems(count: number): Problem[] {
+  const half = Math.ceil(count / 2);
+  return [...generateAuthorsPurposeProblems(half), ...generateFactOpinionProblems(half)].slice(0, count);
+}
+// R8 · Literary Devices — similes, metaphors, personification, hyperbole, idioms.
+function generateLiteraryDevicesProblems(count: number): Problem[] {
+  const each = Math.ceil(count / 4);
+  return [
+    ...generateSimileMetaphorProblems(each),
+    ...generatePersonificationProblems(each),
+    ...generateHyperboleProblems(each),
+    ...generateIdiomProblems(each),
+  ].slice(0, count);
+}
+// R9 · Comparative Text Analysis — compare two short texts.
+function generateComparativeTextProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Text A gives facts about whales; Text B is a poem about a whale. How do their PURPOSES differ?", a: "A informs, B entertains", opts: ["A informs, B entertains", "Both persuade", "Both inform", "A entertains, B informs"], type: "multiple_choice" },
+    { q: "Two authors write about winter — one loves it, one dislikes it. This is a difference in:", a: "point of view / opinion", opts: ["point of view / opinion", "setting", "spelling", "length"], type: "multiple_choice" },
+    { q: "When comparing two texts on the same topic, you look for:", a: "similarities and differences", opts: ["similarities and differences", "only the title", "the longest one", "the newest one"], type: "multiple_choice" },
+    { q: "Text A is a diary entry (first person); Text B is a news report (third person). They differ in:", a: "point of view", opts: ["point of view", "topic", "theme", "genre only"], type: "multiple_choice" },
+    { q: "A theme shared by two stories about never giving up is best called:", a: "perseverance", opts: ["perseverance", "greed", "fear", "boredom"], type: "multiple_choice" },
+    { q: "One text uses charts and headings; the other uses paragraphs and dialogue. They differ in:", a: "text structure", opts: ["text structure", "author", "topic", "audience only"], type: "multiple_choice" },
+    { q: "To compare how two authors treat the SAME event, you should focus on their:", a: "tone and details chosen", opts: ["tone and details chosen", "page numbers", "font", "cover art"], type: "multiple_choice" },
+    { q: "Text A: 'Recess should be longer.' Text B: 'Recess is 20 minutes.' Which is opinion?", a: "Text A", opts: ["Text A", "Text B", "both", "neither"], type: "multiple_choice" },
+    { q: "Two poems use different imagery for the moon. Comparing imagery examines the authors':", a: "word choices", opts: ["word choices", "signatures", "birthdays", "titles only"], type: "multiple_choice" },
+    { q: "A good comparison essay is organized by:", a: "points of comparison", opts: ["points of comparison", "random order", "alphabetical titles", "length"], type: "multiple_choice" },
+    { q: "Text A argues for school uniforms; Text B argues against. They share a topic but differ in:", a: "claim / position", opts: ["claim / position", "genre", "theme", "setting"], type: "multiple_choice" },
+    { q: "When two texts reach the SAME conclusion with different evidence, you note their:", a: "shared idea, different support", opts: ["shared idea, different support", "identical wording", "same author", "same length"], type: "multiple_choice" },
+  ], count);
+}
+
+// TRACK A — a phonics unit's session is: word-level warm-up (the existing MC
+// items) THEN a text the child can actually decode, then a few comprehension
+// questions about it. Word items alone never build reading; a passage the child
+// can't decode teaches guessing. Both halves, in that order.
+function withDecodableText(skillName: string, base: Problem[], count: number): Problem[] {
+  const stage = stageForUnit(skillName);
+  if (!stage) return base;
+  const texts = textsForStage(stage);
+  if (!texts.length) return base;
+
+  // Word work FIRST (real decoding practice on this stage's patterns), then the
+  // text. Falls back to the unit's own items if the stage yields none.
+  const wordItems = generateWordItems(stage, 6, 1).map((w) => ({
+    id: nanoid(8), type: "multiple_choice" as ProblemType,
+    question: w.question, options: w.options, answer: w.answer, points: 1,
+  }));
+  const warmUp = wordItems.length ? wordItems : base.slice(0, 6);
+  // Emit EVERY text for the stage so consecutive sheets read different stories
+  // (the windowing rotates one passage block per sheet).
+  const blocks = texts.flatMap((t) => [
+    {
+      id: nanoid(8), type: "short_answer" as ProblemType,
+      question: `READ THIS PASSAGE:\n\n${t.title}\n\n${t.text}\n\nNow answer the questions below.`,
+      answer: "(passage — no answer required)", points: 0,
+    },
+    ...t.questions.map((q) => ({
+      id: nanoid(8), type: "multiple_choice" as ProblemType,
+      question: q.prompt,
+      options: q.options,
+      answer: q.options[q.correctIndex],
+      points: 1,
+    })),
+  ]);
+  return [...warmUp, ...blocks];
+}
+
+/**
+ * TRACK B serve path — band-scoped passages (src/lib/reading/passages.ts).
+ *
+ * A unit only ever receives passages from ITS OWN grade band. This is what
+ * replaced ~12 shared passages of 54–81 words serving Grades 2–10 (R14/G3,
+ * R31/G6, R45/G8 and R58/G10 all got the same 79-word text about bees).
+ *
+ * Returns null when the band has no passages yet — phases B2–B4 are unbuilt, so
+ * those grades keep their existing content rather than losing it.
+ */
+function withBandPassages(skillName: string): Problem[] | null {
+  // The unit label identifies its module, so no level code needs threading
+  // through the memoized bank (whose cache key is subject + skill only).
+  const mod = READING_CURRICULUM.find((m) => m.units.includes(skillName));
+  if (!mod) return null;
+  const pool = passagesForUnit(mod.grade);
+  if (!pool.length) return null;
+
+  // Emit every passage in the band; the windowing rotates one per sheet, so
+  // consecutive sheets in a day read different texts.
+  return pool.flatMap((p) => [
+    {
+      id: nanoid(8), type: "short_answer" as ProblemType,
+      question: `READ THIS PASSAGE:\n\n${p.title}\n\n${p.text}\n\nNow answer the questions below.`,
+      answer: "(passage — no answer required)", points: 0,
+    },
+    ...p.items.map((it) => ({
+      id: nanoid(8), type: "multiple_choice" as ProblemType,
+      question: it.prompt,
+      options: it.options,
+      answer: it.options[it.correctIndex],
+      points: 1,
+    })),
+  ]);
+}
+
+/**
+ * Sight-word units must SHOW the words before asking about them. A study card
+ * is emitted per chunk of 25, so each sheet in the day teaches a different
+ * chunk and then practises it. Mirrors the passage-block shape, so the existing
+ * per-sheet windowing rotates study card + its questions together.
+ */
+function withSightWordStudy(skillName: string, base: Problem[]): Problem[] {
+  const list = sightWordsForUnit(skillName);
+  if (!list) return base;
+  const chunks: string[][] = [];
+  for (let i = 0; i < list.words.length; i += STUDY_CHUNK) {
+    chunks.push(list.words.slice(i, i + STUDY_CHUNK));
+  }
+  return chunks.flatMap((chunk, ci) => [
+    {
+      id: nanoid(8), type: "short_answer" as ProblemType,
+      question: `LEARN THESE WORDS:\n\n${list.title} (${ci + 1} of ${chunks.length})\n\n${chunk.join("   ")}\n\nRead each word out loud. Say it, don't sound it out — these are words to know on sight. Then answer the questions below.`,
+      answer: "(word list — no answer required)", points: 0,
+    },
+    // Questions are built FROM this chunk, so a sheet can never ask for a word
+    // it did not just teach (audit-sheet-self-containment enforces this).
+    ...sightWordItems(chunk).slice(0, 8).map((it) => ({
+      id: nanoid(8), type: "multiple_choice" as ProblemType,
+      question: it.q, options: it.opts, answer: it.a, points: 1,
+    })),
+  ]);
+}
+
 function generateReadingProblems(skillName: string, count: number): Problem[] {
   const skill = skillName.toLowerCase();
 
-  // R1 — Letter Recognition (Pre-K/K). These are NOT comprehension passages;
-  // serving a reading passage to a child learning letters was the worst gap.
-  if (skill.includes("uppercase")) return generateUppercaseProblems(count);
-  if (skill.includes("lowercase")) return generateLowercaseProblems(count);
-  if (skill.includes("letter sound")) return generateLetterSoundProblems(count);
+  // Track A (phonics/decodable) owns its units — check it first. Everything
+  // else in a built band goes to Track B's band-scoped passages.
+  if (!stageForUnit(skillName)) {
+    const banded = withBandPassages(skillName);
+    if (banded) return banded;
+  }
 
-  // R3 — Sight Words (recognition, no passage)
-  if (skill.includes("dolch") || skill.includes("fry") || skill.includes("sight word")) return generateSightWordProblems(count);
+  // ── R1–R9 realigned curriculum routing (accepts new skill names; legacy
+  // names kept as aliases so old data still resolves). ──
+  // R1 — Letter Recognition
+  if (skill.includes("letter sound")) return withDecodableText(skillName, generateLetterSoundProblems(count), count);
+  if (skill.includes("letter id") || skill.includes("letter recognition") || skill.includes("alphabet")) return withDecodableText(skillName, generateLetterIdProblems(count), count);
+  if (skill.includes("uppercase")) return generateUppercaseProblems(count);          // legacy alias
+  if (skill.includes("lowercase")) return generateLowercaseProblems(count);          // legacy alias
 
-  // R4 — Vocabulary: synonyms / antonyms are standalone (context clues stays a passage)
-  if (skill.includes("synonym")) return generateSynonymProblems(count);
-  if (skill.includes("antonym")) return generateAntonymProblems(count);
+  // R2 — Phonics (no passage, direct question banks)
+  if (skill.includes("short vowel") || skill.includes("blending")) return withDecodableText(skillName, generateShortVowelProblems(count), count);
+  if (skill.includes("consonant blend") || skill.includes("digraph")) return withDecodableText(skillName, generateConsonantBlendProblems(count), count);
+  if (skill.includes("silent")) return withDecodableText(skillName, generateSilentEProblems(count), count);
+  if (skill.includes("vowel team") || skill.includes("diphthong")) return withDecodableText(skillName, generateVowelTeamProblems(count), count);
+  if (skill.includes("r-controlled") || skill.includes("r controlled")) return withDecodableText(skillName, generateRControlledProblems(count), count);
+  if (skill.includes("long a")) return generateLongVowelProblems("a", count);        // legacy alias
+  if (skill.includes("long i")) return generateLongVowelProblems("i", count);        // legacy alias
+  if (skill.includes("long o")) return generateLongVowelProblems("o", count);        // legacy alias
 
-  // R6 — Inference & Prediction (mini-scenario MC; "Making inferences" still uses
-  // the passage bank below)
-  if (skill.includes("drawing conclusion") || skill.includes("conclusion")) return generateDrawingConclusionsProblems(count);
+  // R3 — Sight Words
+  if (skill.includes("sight word") || skill.includes("high-frequency") || skill.includes("high frequency") || skill.includes("dolch") || skill.includes("fry")) return withSightWordStudy(skillName, generateSightWordProblems(count));
+
+  // R4 — Vocabulary in Context (Context Clues → passage bank below; Word Relationships here)
+  if (skill.includes("word relationship")) return generateWordRelationshipsProblems(count);
+  if (skill.includes("synonym")) return generateSynonymProblems(count);              // legacy alias
+  if (skill.includes("antonym")) return generateAntonymProblems(count);              // legacy alias
+
+  // R5 — Reading Comprehension (WH-Questions, Story Elements → here; Paragraph Mechanics → passage bank)
+  if (skill.includes("wh-") || skill.includes("wh question") || skill.includes("who, what")) return generateWHQuestionsProblems(count);
+  if (skill.includes("story element")) return generateStoryElementsProblems(count);
+
+  // R6 — Inference & Prediction (Making Inferences → passage bank; Predictions here)
   if (skill.includes("predict")) return generatePredictingProblems(count);
+  if (skill.includes("drawing conclusion")) return generateDrawingConclusionsProblems(count); // legacy alias
 
-  // R7 — Author's Purpose
-  if (skill.includes("author")) return generateAuthorsPurposeProblems(count);
-  if (skill.includes("tone") || skill.includes("mood")) return generateToneMoodProblems(count);
-  if (skill.includes("fact") || skill.includes("opinion")) return generateFactOpinionProblems(count);
-  if (skill.includes("point of view")) return generatePointOfViewProblems(count);
+  // R7 — Author's Purpose → Perspective & Purpose (purpose + fact/opinion)
+  if (skill.includes("perspective") || skill.includes("purpose") || skill.includes("author")) return generatePerspectivePurposeProblems(count);
+  if (skill.includes("tone") || skill.includes("mood")) return generateToneMoodProblems(count);   // legacy alias
+  if (skill.includes("fact") || skill.includes("opinion")) return generateFactOpinionProblems(count); // legacy alias
 
-  // R8 — Figurative Language (device-identification MC). Specific devices match
-  // here; R9's generic "Figurative language" still routes to the passage bank.
-  if (skill.includes("simile") || skill.includes("metaphor")) return generateSimileMetaphorProblems(count);
+  // R8 — Figurative Language → Literary Devices (all devices)
+  if (skill.includes("literary device") || skill.includes("figurative")) return generateLiteraryDevicesProblems(count);
+  if (skill.includes("simile") || skill.includes("metaphor")) return generateSimileMetaphorProblems(count); // legacy aliases
   if (skill.includes("personification")) return generatePersonificationProblems(count);
   if (skill.includes("hyperbole")) return generateHyperboleProblems(count);
   if (skill.includes("idiom")) return generateIdiomProblems(count);
 
-  // R2 — Phonics (no passage, direct question banks)
-  if (skill.includes("silent e")) return generateSilentEProblems(count);
-  if (skill.includes("long a")) return generateLongVowelProblems("a", count);
-  if (skill.includes("long i")) return generateLongVowelProblems("i", count);
-  if (skill.includes("long o")) return generateLongVowelProblems("o", count);
+  // R9 — Literary Analysis (Point of View, Comparative Text Analysis → here; Theme & Moral → passage bank)
+  if (skill.includes("point of view")) return generatePointOfViewProblems(count);
+  if (skill.includes("comparative") || skill.includes("compare")) return generateComparativeTextProblems(count);
 
-  // R5/R9 — Passage-based comprehension
+  // TRACK A GUARD: a Grade 1–2 phonics/word unit must NEVER fall through to the
+  // generic passage bank — those texts are written for Grade 5+, and a beginning
+  // reader cannot decode a word of them ("Word Families & Rhyme" was being served
+  // a passage about coral bleaching). Serve stage-appropriate decodable text.
+  const trackA = withDecodableText(skillName, [], count);
+  if (trackA.length) return trackA;
+
+  // Passage-based comprehension fallback (Context Clues, Making Inferences,
+  // Paragraph Mechanics, Theme & Moral, and legacy passage skills).
   let key = "main idea";
   if (skill.includes("cause") || skill.includes("effect"))        key = "cause and effect";
   else if (skill.includes("context") || skill.includes("vocabulary")) key = "context clues";
   else if (skill.includes("inference") || skill.includes("infer"))    key = "inference";
   else if (skill.includes("sequence"))                               key = "sequence of events";
   else if (skill.includes("character"))                              key = "character analysis";
-  else if (skill.includes("theme"))                                  key = "theme identification";
-  else if (skill.includes("figurative"))                             key = "figurative language";
+  else if (skill.includes("theme") || skill.includes("moral"))       key = "theme identification";
   else if (skill.includes("narrative structure"))                    key = "narrative structure";
-  else if (skill.includes("main idea") || skill.includes("topic") || skill.includes("detail")) key = "main idea";
+  else if (skill.includes("paragraph mechanic") || skill.includes("main idea") || skill.includes("topic") || skill.includes("detail")) key = "main idea";
 
   const bank = readingPassages[key] ?? readingPassages["main idea"];
 
@@ -1016,8 +1384,296 @@ function generateReadingProblems(skillName: string, count: number): Problem[] {
 // WRITING GENERATOR
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── W0–W9 realignment: new writing skill banks + combiners ──────────────────
+// W0.1 Letter Formation — formation KNOWLEDGE (the actual tracing is printable).
+function generateLetterFormationProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Where do most letters start when you write them?", a: "At the top", opts: ["At the top", "At the bottom", "In the middle", "On the right"], type: "multiple_choice" },
+    { q: "Which lowercase letter has a 'tail' that goes below the line?", a: "g", opts: ["g", "a", "o", "s"], type: "multiple_choice" },
+    { q: "A capital letter is usually:", a: "Taller than a lowercase letter", opts: ["Taller than a lowercase letter", "Shorter", "The same as a number", "Always round"], type: "multiple_choice" },
+    { q: "Which way do we write and read letters in a word?", a: "Left to right", opts: ["Left to right", "Right to left", "Top to bottom", "Bottom to top"], type: "multiple_choice" },
+    { q: "Which letter is written with one straight line down and one across (like a cross)?", a: "t", opts: ["t", "o", "c", "e"], type: "multiple_choice" },
+    { q: "Letters like 'b' and 'd' are easy to mix up. 'b' has its circle on the:", a: "Right side", opts: ["Right side", "Left side", "Top", "Bottom"], type: "multiple_choice" },
+    { q: "The line the letters sit on is called the:", a: "Baseline", opts: ["Baseline", "Skyline", "Middle", "Tail line"], type: "multiple_choice" },
+    { q: "Which of these is written with all straight lines?", a: "A", opts: ["A", "S", "C", "O"], type: "multiple_choice" },
+    { q: "When you write, your letters should sit:", a: "On the line, not floating", opts: ["On the line, not floating", "Above the line", "Anywhere", "Overlapping"], type: "multiple_choice" },
+    { q: "Which letter starts with a round circle?", a: "o", opts: ["o", "l", "k", "v"], type: "multiple_choice" },
+  ], count);
+}
+// W0.2 Spatial Awareness — size, spacing, baseline.
+function generateSpatialAwarenessProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Between two words we leave:", a: "A finger space", opts: ["A finger space", "No space", "Three lines", "A comma"], type: "multiple_choice" },
+    { q: "Tall letters (like 'l' and 'h') should reach:", a: "The top line", opts: ["The top line", "Below the baseline", "Only the middle", "Off the page"], type: "multiple_choice" },
+    { q: "Which is written correctly with even spacing?", a: "I like dogs.", opts: ["I like dogs.", "Ilikedogs.", "I  like   dogs .", "i like dogs"], type: "multiple_choice" },
+    { q: "Letters in the SAME word should be:", a: "Close together", opts: ["Close together", "Far apart", "On different lines", "Different sizes"], type: "multiple_choice" },
+    { q: "Small letters like 'a', 'c', 'e' should be:", a: "The same height as each other", opts: ["The same height as each other", "All different sizes", "Bigger than capitals", "Below the line"], type: "multiple_choice" },
+    { q: "Your writing should stay:", a: "On the baseline", opts: ["On the baseline", "Going uphill", "Going downhill", "In circles"], type: "multiple_choice" },
+    { q: "Which has good word spacing?", a: "The cat ran.", opts: ["The cat ran.", "Thecatran.", "The  cat  ran  .", "T h e c a t"], type: "multiple_choice" },
+    { q: "If letters are too big or too small on a line, the writing looks:", a: "Messy and hard to read", opts: ["Messy and hard to read", "Neat", "Faster", "Correct"], type: "multiple_choice" },
+    { q: "A lowercase 'a' should be about as tall as a lowercase:", a: "c", opts: ["c", "l", "h", "t"], type: "multiple_choice" },
+    { q: "Good handwriting keeps letters:", a: "Evenly sized and spaced", opts: ["Evenly sized and spaced", "Random sizes", "All touching", "All capital"], type: "multiple_choice" },
+  ], count);
+}
+// W0.3 Basic Copying — copying accuracy (the actual copying is printable).
+function generateBasicCopyingProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Copy this exactly: 'The sun is hot.' Which is correct?", a: "The sun is hot.", opts: ["The sun is hot.", "the sun is hot", "The sun is hot", "The sun is Hot."], type: "multiple_choice" },
+    { q: "When you copy a sentence, you should keep the:", a: "Capital letters and end mark", opts: ["Capital letters and end mark", "Only some words", "Your own spelling", "No punctuation"], type: "multiple_choice" },
+    { q: "Copy exactly: 'I can run.' Which matches?", a: "I can run.", opts: ["I can run.", "i can run.", "I can run", "I Can Run."], type: "multiple_choice" },
+    { q: "A good copy of a sentence has:", a: "Every word spelled the same", opts: ["Every word spelled the same", "Words left out", "Extra words added", "No spaces"], type: "multiple_choice" },
+    { q: "Copy exactly: 'We play games.' Which is right?", a: "We play games.", opts: ["We play games.", "We play game.", "we play games", "We plays games."], type: "multiple_choice" },
+    { q: "When copying, you should check your work against the:", a: "Original sentence", opts: ["Original sentence", "A different page", "Your memory only", "A picture"], type: "multiple_choice" },
+    { q: "Which is a correct copy of 'My dog is big.'?", a: "My dog is big.", opts: ["My dog is big.", "My dog is Big.", "my dog is big.", "My dog big."], type: "multiple_choice" },
+    { q: "If the sentence starts with a capital, your copy should:", a: "Also start with a capital", opts: ["Also start with a capital", "Start lowercase", "Skip the first word", "Add a comma"], type: "multiple_choice" },
+  ], count);
+}
+// W1.1 Complete vs. Incomplete — fragment vs full thought.
+function generateCompleteIncompleteProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Which is a COMPLETE sentence?", a: "The dog runs fast.", opts: ["The dog runs fast.", "The big dog", "Running in the park", "Under the tree"], type: "multiple_choice" },
+    { q: "A complete sentence must have a:", a: "Naming part and a doing part", opts: ["Naming part and a doing part", "Only a naming part", "Only a doing part", "Just a describing word"], type: "multiple_choice" },
+    { q: "Which is an INCOMPLETE sentence (a fragment)?", a: "The little bird", opts: ["The little bird", "The bird sang.", "Birds fly.", "It rained."], type: "multiple_choice" },
+    { q: "'Jumped over the fence.' This fragment is missing:", a: "Who or what did it (the subject)", opts: ["Who or what did it (the subject)", "The action", "A period", "A capital"], type: "multiple_choice" },
+    { q: "Which completes 'The big dog ___'?", a: "runs", opts: ["runs", "is blue", "leaf", "and"], type: "multiple_choice" },
+    { q: "Which is a full thought?", a: "We won the game.", opts: ["We won the game.", "After the long game", "The team in red", "Winning is fun because"], type: "multiple_choice" },
+    { q: "'Because it was raining.' is a fragment because it:", a: "Can't stand on its own", opts: ["Can't stand on its own", "Is too short", "Has no verb", "Has no noun"], type: "multiple_choice" },
+    { q: "A complete sentence expresses a:", a: "Whole idea", opts: ["Whole idea", "Half idea", "List only", "Single word"], type: "multiple_choice" },
+    { q: "Which is NOT a complete sentence?", a: "The tall boy with the hat", opts: ["The tall boy with the hat", "The boy waved.", "She smiled.", "They left."], type: "multiple_choice" },
+    { q: "To fix the fragment 'The happy cat', you could add:", a: "an action (e.g. 'purred')", opts: ["an action (e.g. 'purred')", "another adjective", "a comma", "nothing"], type: "multiple_choice" },
+  ], count);
+}
+// W1.2 Expanding Sentences — add adjectives/adverbs.
+function generateExpandingSentencesProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Expand 'The bird flies.' by adding detail. Which is best?", a: "The small bird flies high.", opts: ["The small bird flies high.", "Bird flies.", "The the bird flies.", "Flies bird."], type: "multiple_choice" },
+    { q: "Which word ADDS detail to 'The dog ran'?", a: "quickly", opts: ["quickly", "dog", "the", "ran"], type: "multiple_choice" },
+    { q: "An adjective added to 'car' could be:", a: "red", opts: ["red", "drove", "loudly", "the"], type: "multiple_choice" },
+    { q: "Expand 'She sang.' Which adds HOW she sang?", a: "She sang beautifully.", opts: ["She sang beautifully.", "She sang song.", "Sang she.", "She the sang."], type: "multiple_choice" },
+    { q: "Which sentence has the MOST detail?", a: "The tiny gray kitten slept softly.", opts: ["The tiny gray kitten slept softly.", "The kitten slept.", "It slept.", "Kitten."], type: "multiple_choice" },
+    { q: "Add a WHERE detail to 'The children played':", a: "in the park", opts: ["in the park", "happy", "children", "played"], type: "multiple_choice" },
+    { q: "Which is an adverb that could expand 'He walked ___'?", a: "slowly", opts: ["slowly", "tall", "dog", "the"], type: "multiple_choice" },
+    { q: "Expanding a sentence means:", a: "Adding details to make it clearer", opts: ["Adding details to make it clearer", "Making it shorter", "Removing words", "Repeating it"], type: "multiple_choice" },
+    { q: "Which adds a WHEN detail to 'We ate dinner'?", a: "at seven o'clock", opts: ["at seven o'clock", "quickly", "food", "we"], type: "multiple_choice" },
+    { q: "Best expansion of 'The flower grew':", a: "The bright yellow flower grew tall.", opts: ["The bright yellow flower grew tall.", "Flower grew.", "The grew flower.", "Grew the flower tall bright."], type: "multiple_choice" },
+  ], count);
+}
+// W1.3 Combining Sentences — conjunctions.
+function generateCombiningSentencesProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Combine: 'Tom runs. Tom laughs.' Which is best?", a: "Tom runs and laughs.", opts: ["Tom runs and laughs.", "Tom runs Tom laughs.", "Tom runs. and laughs.", "Runs and laughs Tom."], type: "multiple_choice" },
+    { q: "Which word JOINS two sentences?", a: "and", opts: ["and", "dog", "quickly", "red"], type: "multiple_choice" },
+    { q: "Combine with 'but': 'I like tea. She likes coffee.'", a: "I like tea, but she likes coffee.", opts: ["I like tea, but she likes coffee.", "I like tea she likes coffee.", "I like tea but. she likes coffee.", "But I like tea coffee."], type: "multiple_choice" },
+    { q: "Which conjunction shows a REASON/result?", a: "so", opts: ["so", "and", "but", "or"], type: "multiple_choice" },
+    { q: "Combine: 'It was late. We went home.'", a: "It was late, so we went home.", opts: ["It was late, so we went home.", "It was late we went home.", "It was, late so we went home.", "Late it was home we went."], type: "multiple_choice" },
+    { q: "Before the joining word (and/but/so), we usually put a:", a: "comma", opts: ["comma", "period", "question mark", "nothing"], type: "multiple_choice" },
+    { q: "Which joining word offers a CHOICE?", a: "or", opts: ["or", "and", "so", "but"], type: "multiple_choice" },
+    { q: "Combining short sentences makes writing:", a: "Smoother and less choppy", opts: ["Smoother and less choppy", "Longer and worse", "Harder to read", "Incorrect"], type: "multiple_choice" },
+    { q: "Combine: 'She was tired. She kept working.'", a: "She was tired, but she kept working.", opts: ["She was tired, but she kept working.", "She was tired and she kept working (wrong meaning)", "She tired kept working.", "But she tired working."], type: "multiple_choice" },
+    { q: "The words and, but, or, so are called:", a: "conjunctions", opts: ["conjunctions", "nouns", "adjectives", "adverbs"], type: "multiple_choice" },
+  ], count);
+}
+// W2.3 Precision Vocabulary — upgrade weak words.
+function generateWordUpgradeProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Replace the weak verb: 'She went home quickly.' Best strong verb:", a: "hurried", opts: ["hurried", "walked", "was", "did"], type: "multiple_choice" },
+    { q: "Upgrade 'nice': 'The weather was ___.'", a: "pleasant", opts: ["pleasant", "good", "okay", "nice"], type: "multiple_choice" },
+    { q: "A stronger word for 'said' (loudly) is:", a: "shouted", opts: ["shouted", "talked", "said", "went"], type: "multiple_choice" },
+    { q: "Replace 'big': 'The ___ elephant.'", a: "enormous", opts: ["enormous", "big", "large-ish", "kind of big"], type: "multiple_choice" },
+    { q: "A precise word for 'got' in 'She got the prize':", a: "won", opts: ["won", "had", "got", "took"], type: "multiple_choice" },
+    { q: "Upgrade 'happy' to a stronger word:", a: "thrilled", opts: ["thrilled", "fine", "okay", "happy"], type: "multiple_choice" },
+    { q: "Strong verb for 'looked' (carefully):", a: "examined", opts: ["examined", "saw", "looked", "had"], type: "multiple_choice" },
+    { q: "Why upgrade weak words to strong ones?", a: "To make writing vivid and precise", opts: ["To make writing vivid and precise", "To make it longer", "To confuse the reader", "There is no reason"], type: "multiple_choice" },
+    { q: "Replace 'walked slowly' with one strong verb:", a: "strolled", opts: ["strolled", "ran", "walked", "moved"], type: "multiple_choice" },
+    { q: "A precise word for 'small' (very small):", a: "tiny", opts: ["tiny", "small", "not big", "little bit small"], type: "multiple_choice" },
+  ], count);
+}
+// W3.2 Subject-Verb Agreement & Verb Tense Consistency.
+function generateAgreementTenseProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Choose the correct verb: 'The dog ___ every morning.'", a: "barks", opts: ["barks", "bark", "barking", "barked yesterday"], type: "multiple_choice" },
+    { q: "Fix the agreement: 'The children ___ happy.'", a: "are", opts: ["are", "is", "am", "was each"], type: "multiple_choice" },
+    { q: "Keep the tense consistent: 'She walked to the store and ___ some bread.'", a: "bought", opts: ["bought", "buys", "will buy", "buying"], type: "multiple_choice" },
+    { q: "Which sentence has correct subject-verb agreement?", a: "The team plays well.", opts: ["The team plays well.", "The team play well.", "The team playing well.", "The team are plays."], type: "multiple_choice" },
+    { q: "Fix the tense: 'Yesterday we go to the zoo.'", a: "went", opts: ["went", "go", "gone", "will go"], type: "multiple_choice" },
+    { q: "'He ___ a book right now.' (present)", a: "is reading", opts: ["is reading", "read", "will read", "reads yesterday"], type: "multiple_choice" },
+    { q: "Which keeps ONE tense throughout?", a: "I opened the door and saw a cat.", opts: ["I opened the door and saw a cat.", "I open the door and saw a cat.", "I opened the door and see a cat.", "I will open the door and saw a cat."], type: "multiple_choice" },
+    { q: "'She and I ___ friends.'", a: "are", opts: ["are", "is", "am", "was"], type: "multiple_choice" },
+    { q: "Correct agreement: 'Each of the boys ___ a bag.'", a: "has", opts: ["has", "have", "having", "are"], type: "multiple_choice" },
+    { q: "Mixed tense is a mistake because it:", a: "Confuses WHEN things happen", opts: ["Confuses WHEN things happen", "Makes writing longer", "Adds detail", "Is always fine"], type: "multiple_choice" },
+  ], count);
+}
+// W3.3 & W5.3 Editing — find and fix errors.
+function generateSentenceEditingProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Which sentence is written correctly?", a: "My friend and I went to the park.", opts: ["My friend and I went to the park.", "my friend and i went to the park.", "My friend and I went to the park", "My friend and I goed to the park."], type: "multiple_choice" },
+    { q: "Fix the error: 'their going to the store.'", a: "They're going to the store.", opts: ["They're going to the store.", "Their going to the store.", "There going to the store.", "they're going to the store"], type: "multiple_choice" },
+    { q: "Which needs a capital letter?", a: "we visited paris. → Paris", opts: ["we visited paris. → Paris", "the dog ran.", "she is kind.", "it rained."], type: "multiple_choice" },
+    { q: "Edit for clarity: 'The thing was good.' A clearer version:", a: "The movie was exciting.", opts: ["The movie was exciting.", "The thing was good.", "It was a thing.", "Good was the thing."], type: "multiple_choice" },
+    { q: "Which sentence has a punctuation error?", a: "Where are you going", opts: ["Where are you going", "I am happy.", "Stop right there!", "She sat down."], type: "multiple_choice" },
+    { q: "Fix the run-on: 'I was tired I went to bed.'", a: "I was tired, so I went to bed.", opts: ["I was tired, so I went to bed.", "I was tired I went to bed.", "I was, tired I went to bed.", "I was tired I, went to bed."], type: "multiple_choice" },
+    { q: "Editing writing means:", a: "Checking and fixing mistakes", opts: ["Checking and fixing mistakes", "Adding more pages", "Copying it again", "Reading it once"], type: "multiple_choice" },
+    { q: "Which spelling is correct?", a: "because", opts: ["because", "becuase", "becouse", "becaus"], type: "multiple_choice" },
+    { q: "Revise the vague sentence: 'He did stuff.'", a: "He finished his homework.", opts: ["He finished his homework.", "He did stuff.", "Stuff he did.", "He did the stuff there."], type: "multiple_choice" },
+    { q: "When revising a paragraph you should check for:", a: "Grammar, spelling, and clarity", opts: ["Grammar, spelling, and clarity", "Only the title", "Only the length", "Nothing"], type: "multiple_choice" },
+  ], count);
+}
+// W4.1 Terminal Punctuation — . ? !
+function generateTerminalPunctuationProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Which end mark ends a telling sentence?", a: "Period (.)", opts: ["Period (.)", "Question mark (?)", "Exclamation mark (!)", "Comma (,)"], type: "multiple_choice" },
+    { q: "'How old are you___'  Which end mark?", a: "?", opts: ["?", ".", "!", ","], type: "multiple_choice" },
+    { q: "'Watch out___'  (shouting a warning) Which end mark?", a: "!", opts: ["!", ".", "?", ","], type: "multiple_choice" },
+    { q: "A question always ends with a:", a: "Question mark", opts: ["Question mark", "Period", "Comma", "Exclamation mark"], type: "multiple_choice" },
+    { q: "Which sentence is punctuated correctly?", a: "Are you coming?", opts: ["Are you coming?", "Are you coming.", "Are you coming!", "Are you coming,"], type: "multiple_choice" },
+    { q: "'I love ice cream___'  (excited) Best end mark:", a: "!", opts: ["!", ".", "?", ";"], type: "multiple_choice" },
+    { q: "An exclamation mark shows:", a: "Strong feeling or excitement", opts: ["Strong feeling or excitement", "A question", "A pause", "A list"], type: "multiple_choice" },
+    { q: "'The sky is blue___'  Best end mark:", a: ".", opts: [".", "?", "!", ":"], type: "multiple_choice" },
+    { q: "Which is a question?", a: "What time is it?", opts: ["What time is it?", "It is late.", "Go now!", "The cat sat."], type: "multiple_choice" },
+    { q: "Every sentence needs:", a: "An end mark", opts: ["An end mark", "A comma", "Two verbs", "A capital in the middle"], type: "multiple_choice" },
+  ], count);
+}
+// W6.2 Thesis Statements.
+function generateThesisProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "A thesis statement is:", a: "The main point the essay will prove", opts: ["The main point the essay will prove", "A random fact", "The title", "The first word"], type: "multiple_choice" },
+    { q: "Which is the STRONGEST thesis?", a: "Schools should start later because it improves health, focus, and grades.", opts: ["Schools should start later because it improves health, focus, and grades.", "Schools are a thing.", "I like school.", "School starts early."], type: "multiple_choice" },
+    { q: "A thesis usually goes:", a: "At the end of the introduction", opts: ["At the end of the introduction", "In the middle of a body paragraph", "In the conclusion only", "Nowhere"], type: "multiple_choice" },
+    { q: "Which thesis is too WEAK (just a fact)?", a: "The sun is a star.", opts: ["The sun is a star.", "Space exploration is worth the cost for three reasons.", "Recycling should be required because it helps the planet.", "Reading fiction builds empathy."], type: "multiple_choice" },
+    { q: "A good thesis is:", a: "Clear, specific, and arguable", opts: ["Clear, specific, and arguable", "Vague and broad", "A question", "A list of everything"], type: "multiple_choice" },
+    { q: "Which is an argumentative thesis?", a: "Homework should be limited because it harms family time.", opts: ["Homework should be limited because it harms family time.", "Homework exists.", "Some people do homework.", "Homework is assigned by teachers."], type: "multiple_choice" },
+    { q: "The rest of the essay must:", a: "Support the thesis", opts: ["Support the thesis", "Ignore the thesis", "Change topics", "Repeat the title"], type: "multiple_choice" },
+    { q: "A thesis for an EXPLANATORY essay:", a: "States what will be explained", opts: ["States what will be explained", "Argues a strong opinion", "Tells a story", "Asks a riddle"], type: "multiple_choice" },
+    { q: "Which needs a clearer thesis? 'This essay is about dogs.'", a: "Yes — it's too vague", opts: ["Yes — it's too vague", "No, it's perfect", "It's a good hook", "It's a conclusion"], type: "multiple_choice" },
+    { q: "A three-point thesis previews:", a: "The three main reasons/ideas", opts: ["The three main reasons/ideas", "Three unrelated facts", "The word count", "The sources"], type: "multiple_choice" },
+  ], count);
+}
+// W6.3 Basic Research & Citing.
+function generateResearchCitingProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Paraphrasing means:", a: "Putting an idea in your OWN words", opts: ["Putting an idea in your OWN words", "Copying word for word", "Making it up", "Skipping it"], type: "multiple_choice" },
+    { q: "Using someone's exact words without credit is:", a: "Plagiarism", opts: ["Plagiarism", "Paraphrasing", "Summarizing", "Citing"], type: "multiple_choice" },
+    { q: "A reliable source for a report is:", a: "An encyclopedia or expert article", opts: ["An encyclopedia or expert article", "A random social post", "A guess", "A cartoon"], type: "multiple_choice" },
+    { q: "A bibliography is a list of:", a: "The sources you used", opts: ["The sources you used", "Your opinions", "The title only", "Your friends"], type: "multiple_choice" },
+    { q: "When you use a direct quote, you should:", a: "Use quotation marks and cite the source", opts: ["Use quotation marks and cite the source", "Change a few words", "Say it's yours", "Hide where it came from"], type: "multiple_choice" },
+    { q: "Summarizing is:", a: "Giving the main points briefly", opts: ["Giving the main points briefly", "Copying everything", "Adding your feelings", "Ignoring the source"], type: "multiple_choice" },
+    { q: "A citation tells the reader:", a: "Where the information came from", opts: ["Where the information came from", "Your name", "The date you were born", "Nothing"], type: "multiple_choice" },
+    { q: "To avoid plagiarism you should:", a: "Paraphrase and cite your sources", opts: ["Paraphrase and cite your sources", "Copy and hope", "Never use sources", "Change the font"], type: "multiple_choice" },
+    { q: "A primary source is:", a: "Original, first-hand information", opts: ["Original, first-hand information", "Someone's summary", "A textbook only", "A rumor"], type: "multiple_choice" },
+    { q: "Good research uses:", a: "More than one reliable source", opts: ["More than one reliable source", "Only one website", "No sources", "Made-up facts"], type: "multiple_choice" },
+  ], count);
+}
+// W8.1 Informational Formatting.
+function generateInformationalProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "A HEADING in a report is used to:", a: "Label a section's topic", opts: ["Label a section's topic", "End the report", "Add an opinion", "Tell a story"], type: "multiple_choice" },
+    { q: "Informational writing mainly presents:", a: "Facts and information", opts: ["Facts and information", "Feelings and made-up events", "A persuasive argument", "A poem"], type: "multiple_choice" },
+    { q: "A subheading is:", a: "A smaller heading under a main heading", opts: ["A smaller heading under a main heading", "The title", "The last line", "A quotation"], type: "multiple_choice" },
+    { q: "Which text feature shows data at a glance?", a: "A chart or table", opts: ["A chart or table", "A long paragraph", "A comma", "A rhyme"], type: "multiple_choice" },
+    { q: "Informational writing should be:", a: "Clear and factual", opts: ["Clear and factual", "Full of opinions", "Mysterious", "Rhyming"], type: "multiple_choice" },
+    { q: "Bold words or a glossary help the reader:", a: "Understand key terms", opts: ["Understand key terms", "Get confused", "Skip the topic", "Find the author"], type: "multiple_choice" },
+    { q: "A caption goes with a:", a: "Picture or diagram", opts: ["Picture or diagram", "Title page", "Thesis", "Rhyme"], type: "multiple_choice" },
+    { q: "The tone of informational writing is usually:", a: "Neutral and objective", opts: ["Neutral and objective", "Angry", "Silly", "Sad"], type: "multiple_choice" },
+    { q: "Text features like headings help organize writing by:", a: "Topic and section", opts: ["Topic and section", "Color only", "Length", "Author's mood"], type: "multiple_choice" },
+    { q: "A report about volcanoes would best include:", a: "Facts, diagrams, and headings", opts: ["Facts, diagrams, and headings", "A made-up dragon", "The writer's feelings", "A love poem"], type: "multiple_choice" },
+  ], count);
+}
+// W8.2 Process (how-to) & Comparison writing.
+function generateProcessComparisonProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "A 'how-to' (procedural) piece is organized by:", a: "Steps in order", opts: ["Steps in order", "Random ideas", "Rhyme", "Characters"], type: "multiple_choice" },
+    { q: "Which signal word fits a process piece?", a: "First, next, then, finally", opts: ["First, next, then, finally", "Once upon a time", "In my opinion", "The end"], type: "multiple_choice" },
+    { q: "A comparison essay shows:", a: "How two things are alike and different", opts: ["How two things are alike and different", "Only one topic", "A story", "A single fact"], type: "multiple_choice" },
+    { q: "Which words show a DIFFERENCE?", a: "however, on the other hand", opts: ["however, on the other hand", "also, and", "first, next", "the end"], type: "multiple_choice" },
+    { q: "Which words show a SIMILARITY?", a: "both, likewise, similarly", opts: ["both, likewise, similarly", "but, however", "first, last", "angrily"], type: "multiple_choice" },
+    { q: "A recipe is an example of:", a: "Procedural (how-to) writing", opts: ["Procedural (how-to) writing", "A persuasive essay", "A poem", "A comparison"], type: "multiple_choice" },
+    { q: "In a how-to, steps must be:", a: "In the correct order", opts: ["In the correct order", "Random", "Reversed", "Skipped"], type: "multiple_choice" },
+    { q: "Comparing cats and dogs, you might contrast their:", a: "care, size, and behavior", opts: ["care, size, and behavior", "spelling only", "page numbers", "authors"], type: "multiple_choice" },
+    { q: "A clear how-to also includes:", a: "The materials needed", opts: ["The materials needed", "A plot twist", "A thesis debate", "A rhyme scheme"], type: "multiple_choice" },
+    { q: "The goal of comparison writing is to help the reader:", a: "Understand the two things better", opts: ["Understand the two things better", "Pick a fight", "Feel scared", "Fall asleep"], type: "multiple_choice" },
+  ], count);
+}
+// ── Combiners (reuse existing banks for multi-topic sub-skills) ──
+function generateCoreGrammarProblems(count: number): Problem[] {
+  const e = Math.ceil(count / 3);
+  return [...generateNounsVerbsProblems(e), ...generateAdjAdverbProblems(e), ...generatePronounProblems(e)].slice(0, count);
+}
+function generateAdvancedPartsProblems(count: number): Problem[] {
+  const e = Math.ceil(count / 2);
+  return [...generatePrepositionProblems(e), ...generateAdjAdverbProblems(e)].slice(0, count);
+}
+function generateInternalPunctuationProblems(count: number): Problem[] {
+  const e = Math.ceil(count / 2);
+  return [...generateCommaProblems(e), ...generateApostropheProblems(e)].slice(0, count);
+}
+function generateAdvancedMechanicsProblems(count: number): Problem[] {
+  const e = Math.ceil(count / 2);
+  return [...generateQuotationProblems(e), ...generateCapitalLettersProblems(e)].slice(0, count);
+}
+function generateStructuralComponentsProblems(count: number): Problem[] {
+  const e = Math.ceil(count / 3);
+  return [...generateTopicSentenceProblems(e), ...generateSupportingSentenceProblems(e), ...generateConcludingSentenceProblems(e)].slice(0, count);
+}
+function generateParagraphOrgProblems(count: number): Problem[] {
+  const e = Math.ceil(count / 2);
+  return [...generateTransitionMcProblems(e), ...generateParagraphUnityProblems(e)].slice(0, count);
+}
+function generateFiveParagraphProblems(count: number): Problem[] {
+  const e = Math.ceil(count / 3);
+  return [...generateIntroductionProblems(e), ...generateBodyParagraphProblems(e), ...generateConclusionProblems(e)].slice(0, count);
+}
+function generateCharacterSettingProblems(count: number): Problem[] {
+  const e = Math.ceil(count / 2);
+  return [...generateCharacterDevProblems(e), ...generateSettingMoodProblems(e)].slice(0, count);
+}
+function generateStructuralPersuasionProblems(count: number): Problem[] {
+  const e = Math.ceil(count / 3);
+  return [...generatePersuasiveTechniqueProblems(e), ...generateCounterargumentProblems(e), ...generateEssayStructureProblems(e)].slice(0, count);
+}
+
 function generateWritingProblems(skillName: string, count: number): Problem[] {
   const skill = skillName.toLowerCase();
+
+  // ── W0–W9 realigned curriculum routing (new sub-skill names). Checked first;
+  // legacy skill routes below remain as fallback so old data still resolves. ──
+  // W0 — Handwriting & Mechanics
+  if (skill.includes("letter formation")) return generateLetterFormationProblems(count);
+  if (skill.includes("spatial")) return generateSpatialAwarenessProblems(count);
+  if (skill.includes("copying")) return generateBasicCopyingProblems(count);
+  // W1 — Sentence Completion & Building
+  if (skill.includes("complete vs") || skill.includes("incomplete")) return generateCompleteIncompleteProblems(count);
+  if (skill.includes("expanding")) return generateExpandingSentencesProblems(count);
+  if (skill.includes("combining")) return generateCombiningSentencesProblems(count);
+  // W2 — Parts of Speech & Word Choice
+  if (skill.includes("core grammar")) return generateCoreGrammarProblems(count);
+  if (skill.includes("advanced parts")) return generateAdvancedPartsProblems(count);
+  if (skill.includes("precision") || skill.includes("word choice") || skill.includes("upgrad")) return generateWordUpgradeProblems(count);
+  // W3 — Sentence Structure & Variety
+  if (skill.includes("simple, compound") || skill.includes("simple/compound")) return generateSentenceTypeProblems(count);
+  if (skill.includes("agreement") || (skill.includes("tense") && skill.includes("subject"))) return generateAgreementTenseProblems(count);
+  if (skill.includes("sentence editing")) return generateSentenceEditingProblems(count);
+  // W4 — Punctuation & Mechanics
+  if (skill.includes("terminal punctuation")) return generateTerminalPunctuationProblems(count);
+  if (skill.includes("internal punctuation")) return generateInternalPunctuationProblems(count);
+  if (skill.includes("advanced mechanics")) return generateAdvancedMechanicsProblems(count);
+  // W5 — Paragraph Structure
+  if (skill.includes("structural component")) return generateStructuralComponentsProblems(count);
+  if (skill.includes("paragraph organization") || skill.includes("organization")) return generateParagraphOrgProblems(count);
+  if (skill.includes("editing & revising") || skill.includes("revising")) return generateSentenceEditingProblems(count);
+  // W6 — Essay Structure & Research
+  if (skill.includes("five-paragraph") || skill.includes("5-paragraph") || skill.includes("framework")) return generateFiveParagraphProblems(count);
+  if (skill.includes("thesis")) return generateThesisProblems(count);
+  if (skill.includes("research") || skill.includes("citing")) return generateResearchCitingProblems(count);
+  // W7 — Narrative Writing
+  if (skill.includes("character & setting") || (skill.includes("character") && skill.includes("setting"))) return generateCharacterSettingProblems(count);
+  if (skill.includes("plot arc")) return generatePlotProblems(count);
+  // W8 — Informational & Expository
+  if (skill.includes("informational")) return generateInformationalProblems(count);
+  if (skill.includes("process") || skill.includes("comparison")) return generateProcessComparisonProblems(count);
+  // W9 — Persuasive & Argumentative
+  if (skill.includes("fact-based") || skill.includes("fact based")) return generateClaimsEvidenceProblems(count);
+  if (skill.includes("structural persuasion")) return generateStructuralPersuasionProblems(count);
+
   // W1 — Sentence Completion (Grade 1–2). Grade-appropriate; these used to fall
   // through to clause-type / parts-of-speech questions far above grade level.
   if (skill.includes("completing sentence") || skill.includes("sentence completion")) return generateCompletingSentenceProblems(count);

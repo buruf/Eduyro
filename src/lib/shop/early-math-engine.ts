@@ -43,7 +43,11 @@ function compare(lo: number, hi: number, which: "greater" | "less"): EP[] {
   for (let a = lo; a <= hi; a++) for (let b = lo; b <= hi; b++) {
     if (a >= b) continue;                                   // a<b, each unordered pair once
     const ans = which === "greater" ? b : a;
-    out.push({ q: `Which is ${which}: ${a} or ${b}?`, a: String(ans), diff: b + (b - a) * 0.2, key: `cmp${which}:${a}_${b}` });
+    // Randomize the DISPLAY order (deterministically) so the correct number
+    // isn't always in the same slot — otherwise "greater" is always the 2nd
+    // number and "less" always the 1st, and a child can win without comparing.
+    const [x, y] = hashStr(`cmp:${which}:${a}_${b}`) % 2 === 0 ? [b, a] : [a, b];
+    out.push({ q: `Which is ${which}: ${x} or ${y}?`, a: String(ans), diff: b + (b - a) * 0.2, key: `cmp${which}:${a}_${b}` });
   }
   return out;
 }
@@ -107,33 +111,72 @@ function buildScoredPool(level: string, unitIndex: number): EP[] {
   const base = unitIndex * GPI_STEP;
   return raw.map(p => ({ ...p, diff: base + ((p.diff - lo) / span) * GPI_BAND }));
 }
-function selectProblems(pool: EP[], t: number, count: number): EP[] {
+// Seeded RNG + de-patterning so consecutive sheets DIFFER and questions aren't
+// in a fill-in-the-blank sequence (was: no seed → identical sheets, sorted by
+// value → "after 1, after 2, after 3…" trivially guessable).
+function mulberry32(seed: number): () => number {
+  return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function hashStr(s: string): number { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function shuffle<T>(a: T[], rng: () => number): T[] { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
+// No two adjacent answers equal, and no run of 3 monotonic answers (kills the
+// "count up in order" pattern the user saw).
+function arrangeNoPattern(items: EP[]): EP[] {
+  const remaining = [...items]; const out: EP[] = [];
+  while (remaining.length) {
+    let pick = -1;
+    for (let i = 0; i < remaining.length; i++) {
+      const cand = remaining[i], prev = out[out.length - 1], prev2 = out[out.length - 2];
+      const ca = Number(cand.a), pa = prev ? Number(prev.a) : NaN, p2a = prev2 ? Number(prev2.a) : NaN;
+      if (prev && Number.isFinite(ca) && Number.isFinite(pa) && ca === pa) continue;
+      if (prev2 && [ca, pa, p2a].every(Number.isFinite)) { if (pa - p2a > 0 && ca - pa > 0) continue; if (pa - p2a < 0 && ca - pa < 0) continue; }
+      pick = i; break;
+    }
+    if (pick === -1) pick = 0;
+    out.push(remaining.splice(pick, 1)[0]);
+  }
+  return out;
+}
+function selectProblems(pool: EP[], t: number, count: number, seed: number): EP[] {
+  const rng = mulberry32(seed);
   const seen = new Set<string>();
-  const uniq = pool.filter(p => (seen.has(p.key) ? false : (seen.add(p.key), true)));
+  const uniq = pool.filter(p => (seen.has(p.q) ? false : (seen.add(p.q), true)));
   const sorted = uniq.sort((a, b) => a.diff - b.diff || (a.key < b.key ? -1 : 1));
   const N = sorted.length;
-  if (N <= count) {
-    const out: EP[] = [];
-    for (let i = 0; i < count; i++) out.push(sorted[i % N]);
-    return out.sort((a, b) => a.diff - b.diff);
-  }
-  const W = Math.min(N, Math.max(count, Math.round(N * 0.6)));
-  const start = Math.round(t * (N - W));
-  const win = sorted.slice(start, start + W);
+  const W = Math.min(N, Math.max(count, Math.round(N * 0.7)));
+  const start = N <= count ? 0 : Math.round(t * (N - W));
+  const win = N <= count ? sorted : sorted.slice(start, start + W);
+  const bag = shuffle(win.length ? win : sorted, rng);
+  if (!bag.length) return [];
   const chosen: EP[] = [];
-  const used = new Set<number>();
-  for (let i = 0; i < count; i++) {
-    let idx = Math.round((i * (W - 1)) / (count - 1));
-    while (used.has(idx)) idx = (idx + 1) % W;
-    used.add(idx);
-    chosen.push(win[idx]);
-  }
-  return chosen.sort((a, b) => a.diff - b.diff);
+  for (let i = 0; i < count; i++) chosen.push(bag[i % bag.length]);
+  return arrangeNoPattern(shuffle(chosen, rng));
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
+/** Resolve an early-math micro-skill's lesson by its unit label (exact match),
+ *  so M1/M2 lessons use their OWN objective + example instead of keyword-
+ *  matched tutorial fallbacks (same fix as arithmetic's fact-family leak). */
+export function getEarlyMathMicroLesson(label: string): { goal: string; bigIdea: string; example: { problem: string; steps: string[]; answer: string }; umbrella: string } | null {
+  for (const [code, units] of Object.entries(CURRICULA)) {
+    const u = units.find((x) => x.label === label);
+    if (u) {
+      const g = u.objective.replace(/^Student /, "").replace(/^./, (c) => c.toUpperCase());
+      return { goal: g, bigIdea: g, example: u.example, umbrella: code === "M1" ? "Counting" : "Place value" };
+    }
+  }
+  return null;
+}
+
 export function isEarlyMathLevel(levelCode: string): boolean {
   return levelCode in CURRICULA;
+}
+
+// The ordered SKILL MAP for a level — the engine's real content units (these are
+// the "skills" the student advances through one lesson per day).
+export interface LevelSkill { index: number; id: string; label: string; objective: string; grade: string; range: [number, number]; }
+export function earlyMathUnits(levelCode: string): LevelSkill[] {
+  return (CURRICULA[levelCode] ?? []).map((u, i) => ({ index: i, id: u.id, label: u.label, objective: u.objective, grade: u.grade, range: u.range }));
 }
 
 export function generateEarlyMathSheet(
@@ -144,7 +187,7 @@ export function generateEarlyMathSheet(
   const span = unit.range[1] - unit.range[0];
   const t = span === 0 ? 0.5 : (sheetNumber - unit.range[0]) / span;
 
-  const selected = selectProblems(buildScoredPool(levelCode, ui), t, problemCount);
+  const selected = selectProblems(buildScoredPool(levelCode, ui), t, problemCount, hashStr(`${levelCode}:${sheetNumber}`));
   const problems = selected.map((p, i) => ({
     id: nanoid(8), type: "arithmetic" as const, question: p.q, answer: p.a, points: 1,
     zone: (Math.floor(i / Math.ceil(problemCount / 5)) + 1) as 1 | 2 | 3 | 4 | 5,
@@ -179,12 +222,12 @@ export function validateEarlyMathPack(level: string, totalSheets = 100): {
     const unit = CURRICULA[level][ui];
     const span = unit.range[1] - unit.range[0];
     const t = span === 0 ? 0.5 : (s - unit.range[0]) / span;
-    const sel = selectProblems(buildScoredPool(level, ui), t, 30);
+    const sel = selectProblems(buildScoredPool(level, ui), t, 30, hashStr(`${level}:${s}`));
     const qs = sel.map(p => p.q);
-    const poolSize = new Set(unit.pool().map(p => p.key)).size;
+    const poolSize = new Set(unit.pool().map(p => p.q)).size;
     const dupes = qs.length - new Set(qs).size;
     if (dupes > 0 && poolSize >= qs.length) issues.push(`${level} sheet ${s}: ${dupes} dup(s) (pool=${poolSize})`);
-    if (sel[sel.length - 1].diff < sel[0].diff) issues.push(`${level} sheet ${s}: not ascending`);
+    // Order is intentionally de-patterned (not ascending) now.
     const mean = sel.reduce((a, p) => a + p.diff, 0) / sel.length;
     gpi.push(Math.round(mean * 10) / 10);
     if (mean < prevMean - 0.001) issues.push(`${level} sheet ${s}: GPI dropped`);

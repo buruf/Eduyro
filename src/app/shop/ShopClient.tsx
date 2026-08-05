@@ -6,6 +6,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { SamplePreviewModal } from "@/components/shop/SamplePreviewModal";
 
 type Skill = "ADDITION" | "SUBTRACTION" | "MULTIPLICATION" | "DIVISION" | "FRACTIONS" | "DECIMALS" | "RATIOS" | "PRE_ALGEBRA" | "LINEAR_EQUATIONS" | "POLYNOMIALS";
@@ -170,6 +171,17 @@ export default function ShopPage() {
 
   return (
     <main className="min-h-screen bg-cream">
+      {/* Header — the shop had NO way back to the homepage */}
+      <header className="border-b border-border/60 bg-cream/90 backdrop-blur sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+          <Link href="/" className="font-serif text-lg font-bold text-ink hover:opacity-80">
+            Eduyro <span className="text-muted font-sans text-xs font-normal align-middle ml-1">· Worksheet Shop</span>
+          </Link>
+          <nav className="flex items-center gap-4 text-sm">
+            <Link href="/" className="text-muted hover:text-ink">← Back to home</Link>
+          </nav>
+        </div>
+      </header>
       <section className="max-w-7xl mx-auto px-6 py-16">
         <div className="text-center mb-10">
           <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold mb-3">

@@ -128,7 +128,7 @@ function CurriculumTab() {
               ["Total worksheets", "240"],
               ["Problems per sheet", "20"],
               ["Time limit", "10 min"],
-              ["Mastery threshold", "95% × 5 consecutive days"],
+              ["Mastery threshold", "90% daily average"],
               ["Sheets per day", "—"],
               ["Status", "Active ✓"],
             ].map(([k, v]) => (

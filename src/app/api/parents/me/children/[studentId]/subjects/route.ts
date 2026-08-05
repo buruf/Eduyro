@@ -33,7 +33,8 @@ export async function GET(req: NextRequest, { params }: { params: { studentId: s
       // subject has a concrete row to flip.
       await ensureDefaultEnrollments(params.studentId);
 
-      const subjects = await db.subject.findMany({ orderBy: { sortOrder: "asc" } });
+      // Only subjects the owner has released — see Subject.isPublic.
+      const subjects = await db.subject.findMany({ where: { isPublic: true }, orderBy: { sortOrder: "asc" } });
       // Degrade to all-enabled if the table isn't migrated yet (deploy before
       // db push) rather than 500-ing the parent dashboard.
       const enrollments = await db.studentSubject

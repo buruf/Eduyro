@@ -15,7 +15,7 @@ import { renderPackToPdf } from "@/lib/pdf/renderer";
 import { getMathSheetMeta } from "@/lib/worksheet/generator";
 import type { ShopSkill, WorksheetData } from "@/lib/shop/progressive-generator";
 
-export const maxDuration = 60;
+export const maxDuration = 120; // Pro plan — real headroom for a cold multi-sheet render
 
 const LEVEL_TO_SKILL: Record<string, ShopSkill> = {
   M1: "ADDITION", M2: "ADDITION", // early levels render fine under any skill tag
@@ -47,8 +47,16 @@ export async function GET(
       if (!student) return notFound("Student");
       const isSelf = student.userId === ctx.userId;
       const isParent = student.parentLinks.some((l) => l.parent.userId === ctx.userId);
-      if (!isSelf && !isParent && ctx.role !== "ADMIN" && ctx.role !== "TEACHER") {
-        return forbidden();
+      if (!isSelf && !isParent && ctx.role !== "ADMIN" && ctx.role !== "SUPER_ADMIN") {
+        // TEACHER must be linked to this student (security audit: blanket
+        // teacher access exposed any child's worksheets to any teacher account).
+        const linkedTeacher =
+          ctx.role === "TEACHER" &&
+          (await db.teacherStudent.findFirst({
+            where: { studentId: student.id, teacher: { userId: ctx.userId } },
+            select: { id: true },
+          })) !== null;
+        if (!linkedTeacher) return forbidden();
       }
 
       const tz = new URL(req.url).searchParams.get("tz") ?? "UTC";
@@ -100,6 +108,7 @@ export async function GET(
             gradeLevel: em?.gradeLevel ?? packet.levelName,
             difficultyStars: 3,
             learningObjective: `practice ${label.toLowerCase()}`,
+            directive: em?.directive,
             mode: "practice" as const,
             estimatedMinutes: packet.timeLimitMinutes,
           } satisfies WorksheetData["meta"],

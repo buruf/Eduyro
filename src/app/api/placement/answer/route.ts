@@ -9,11 +9,10 @@ import {
 } from "@/lib/api/helpers";
 import { AnswerPlacementSchema } from "@/lib/validation/schemas";
 import {
-  pickNextQuestion,
   adjustDifficulty,
   calculateConfidence,
-  shouldTerminate,
-  calculatePlacement,
+  ladderNext,
+  calculateLadderPlacement,
   getQuestionById,
   PLACEMENT_CONSTANTS,
 } from "@/lib/placement/engine";
@@ -59,13 +58,14 @@ export async function POST(req: NextRequest) {
         timeMs,
       });
 
-      const askedIds = log.map((l) => l.questionId);
-      const shouldEnd = shouldTerminate(newQuestionsAsked, confidence);
+      // LADDER (v2): the next step — or the finished placement — is recomputed
+      // statelessly from the full answer log (see ladderNext in the engine).
+      const step = ladderNext(subject.slug, log);
 
-      if (shouldEnd) {
-        const placement = await calculatePlacement(
+      if (step.done) {
+        const placement = await calculateLadderPlacement(
           subject.slug,
-          newDifficulty,
+          step.comfortableLevelCode,
           newCorrectAnswers,
           newQuestionsAsked
         );
@@ -142,16 +142,9 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Continue — pick next question
-      const nextQuestion = pickNextQuestion(subject.slug, newDifficulty, askedIds);
-      // If no questions left, force termination regardless of shouldTerminate
-      if (!nextQuestion && !shouldEnd) {
-        const forcedPlacement = await calculatePlacement(subject.slug, newDifficulty, newCorrectAnswers, newQuestionsAsked);
-        const forcedLevel = await db.level.findFirst({ where: { subjectId: subject.id, code: forcedPlacement.assignedLevelCode } });
-        await db.placementTest.update({ where: { id: testId }, data: { status: "COMPLETED", completedAt: new Date(), currentDifficulty: newDifficulty, questionsAsked: newQuestionsAsked, correctAnswers: newCorrectAnswers, confidenceScore: confidence, placementPct: forcedPlacement.accuracyPct, resultLevelId: forcedLevel?.id, resultLevelCode: forcedPlacement.assignedLevelCode, questionLog: log } });
-        if (forcedLevel) { await db.studentProgress.upsert({ where: { studentId_levelId: { studentId: test.studentId, levelId: forcedLevel.id } }, create: { studentId: test.studentId, levelId: forcedLevel.id, status: "IN_PROGRESS", startedAt: new Date() }, update: { status: "IN_PROGRESS", startedAt: new Date() } }); }
-        return ok({ done: true, isCorrect, correctAnswer: question.options[question.correctIndex], result: forcedPlacement, nextTestId: null, totalQuestions: newQuestionsAsked });
-      }
+      // Continue — the ladder already chose the next question (an exhausted bank
+      // returns done above, so no forced-termination path is needed).
+      const nextQuestion = step.question;
 
       await db.placementTest.update({
         where: { id: testId },

@@ -131,6 +131,9 @@ export async function parseRequest<T>(
 // Rate limiting (simple in-memory, swap for Redis in prod)
 // ─────────────────────────────────────────────
 
+// NOTE: this Map is per-serverless-instance and resets on cold start, so it is a
+// best-effort speed-bump, NOT a durable control. A determined attacker fans out
+// across instances. Back critical limits with Redis/Upstash for real protection.
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 export function rateLimit(
@@ -139,6 +142,12 @@ export function rateLimit(
   windowMs: number
 ): boolean {
   const now = Date.now();
+
+  // Bounded memory: prune expired entries when the map grows (was never evicted).
+  if (rateLimitMap.size > 5000) {
+    for (const [k, v] of rateLimitMap) if (now > v.resetAt) rateLimitMap.delete(k);
+  }
+
   const entry = rateLimitMap.get(identifier);
 
   if (!entry || now > entry.resetAt) {

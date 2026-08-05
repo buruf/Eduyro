@@ -271,13 +271,26 @@ export interface StudentDashboard {
     levelCode: string;
     levelName: string;
     subjectName: string;
-    sheetsCompleted: number;
-    totalSheets: number;
-    progressPct: number;
-    consecutivePassDays: number;
-    daysUntilAdvance: number;
     status: string;
-  };
+    progressPct: number;
+    // Skill-map progression (one lesson per day, advance on ≥95% daily avg):
+    currentSkillIndex: number;
+    currentSkillName: string;
+    totalSkills: number;
+    skillsMastered: number;
+    todayDone: number;
+    todayNeeded: number;
+    todayAvgPct: number;
+    // The level's real bar + fact-pace target, so the UI never hard-codes them.
+    thresholdPct?: number;
+    paceTargetSec?: number | null;
+    // Accurate enough but too slow on fact sheets → the lesson repeats.
+    slowToday?: boolean;
+    dayCleared: boolean;
+    sheetsToAdvance: number;
+    isReadyToAdvance: boolean;
+    currentSkill: string;
+  } | null;
   todayPacket: TodayPacket;
   recentBadges: (StudentBadge & { badge: Badge })[];
   skillTree: SkillTreeNode[];
@@ -334,13 +347,32 @@ export interface ChildSummary {
   weeklyCompletionRate: number;
   status: "EXCELLENT" | "ON_TRACK" | "NEEDS_REVIEW" | "NEEDS_SUPPORT";
   weakSkills: { skillName: string; accuracyPct: number }[];
+  /** Plain-language "what happened today / what happens tomorrow" — advance vs
+   *  repeat vs still-working, with the current lesson's name and position. */
+  todayStory?: {
+    subjectName: string | null;
+    doneToday: number;
+    perDay: number;
+    avgToday: number | null;
+    bar: number;
+    outcome: "working" | "repeat" | "advance";
+    lessonLabel: string | null;
+    lessonPos: number | null;
+    lessonTotal: number | null;
+    nextLessonLabel: string | null;
+  } | null;
   recentPdfs: PdfExport[];
   attendanceLastMonth: AttendanceDay[];
+  // 10-section parent dashboard data
+  recentSheets?: { completedAt: string | Date; title: string; skillName: string; levelCode: string; accuracyPct: number; timeSeconds: number | null }[];
+  badges?: { earnedAt: string | Date; name: string; description: string; iconEmoji: string }[];
+  goals?: { sheetsPerDay: number; masteryThresholdPct: number; streakDays: number; bestStreak: number };
+  learningPath?: { levelCode: string; levelName: string; currentIndex: number; lessons: string[] } | null;
 }
 
 export interface AttendanceDay {
   date: string;
-  status: "COMPLETE" | "MISSED" | "WEEKEND" | "UPCOMING";
+  status: "COMPLETE" | "MISSED" | "WEEKEND" | "UPCOMING" | "EXCUSED";
 }
 
 export interface AdminDashboard {

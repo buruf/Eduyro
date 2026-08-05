@@ -22,8 +22,15 @@ export async function POST(req: NextRequest) {
 
       const isOwn = student.userId === ctx.userId;
       const isParent = student.parentLinks.some((l) => l.parent.userId === ctx.userId);
-      const isAdmin = ctx.role === "ADMIN" || ctx.role === "TEACHER" || ctx.role === "SUPER_ADMIN";
-      if (!isOwn && !isParent && !isAdmin) return err("Forbidden", 403);
+      const isAdmin = ctx.role === "ADMIN" || ctx.role === "SUPER_ADMIN";
+      // TEACHER must be linked to this student (security audit).
+      const isLinkedTeacher =
+        ctx.role === "TEACHER" &&
+        (await db.teacherStudent.findFirst({
+          where: { studentId: student.id, teacher: { userId: ctx.userId } },
+          select: { id: true },
+        })) !== null;
+      if (!isOwn && !isParent && !isAdmin && !isLinkedTeacher) return err("Forbidden", 403);
 
       // Generate
       const { buffer, fileName } = await generateWorksheetPdf({

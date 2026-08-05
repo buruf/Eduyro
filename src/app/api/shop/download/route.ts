@@ -69,9 +69,17 @@ export async function GET(req: NextRequest) {
       data: { downloadCount: { increment: 1 } },
     });
 
+    // Mask the email — the download URL can end up in browser history, referrer
+    // headers, or a forwarded email, so don't echo full PII back to the holder.
+    const maskEmail = (e: string) => {
+      const [u, d] = e.split("@");
+      if (!d) return "***";
+      return `${u.slice(0, 1)}***@${d}`;
+    };
+
     return ok({
       status: "COMPLETED",
-      customerEmail: purchase.customerEmail,
+      customerEmail: maskEmail(purchase.customerEmail),
       skills: purchase.skillsCsv.split(","),
       amountCents: purchase.amountCents,
       files,

@@ -23,6 +23,7 @@ type Packet = {
 type FetchState =
   | { status: "loading" }
   | { status: "no_placement" }
+  | { status: "skipped" }
   | { status: "error"; message: string }
   | { status: "ready"; packet: Packet; date: string };
 
@@ -41,7 +42,11 @@ export default function PrintPage() {
       .then((r) => r.json())
       .then((data) => {
         if (!data.success) { setState({ status: "error", message: data.error ?? "Failed" }); return; }
-        if (!data.data.packet) { setState({ status: data.data.reason === "no_placement" ? "no_placement" : "error", message: "No packet" }); return; }
+        if (!data.data.packet) {
+          const reason = data.data.reason;
+          setState({ status: reason === "no_placement" ? "no_placement" : reason === "skipped" ? "skipped" : "error", message: "No packet" });
+          return;
+        }
         setState({ status: "ready", packet: data.data.packet, date: data.data.date });
       })
       .catch((e) => setState({ status: "error", message: e.message }));
@@ -69,6 +74,17 @@ export default function PrintPage() {
         <h1 style={{ fontFamily: "Georgia, serif", fontSize: "24px", marginBottom: "12px" }}>Placement test needed</h1>
         <p style={{ color: "#7A6E5F", fontSize: "14px", marginBottom: "20px" }}>Your child hasn't taken the placement test yet. It takes 15 minutes and is free.</p>
         <Link href="/placement" style={{ background: "#1A1612", color: "white", padding: "12px 24px", borderRadius: "8px", fontSize: "14px", textDecoration: "none" }}>Take placement test</Link>
+      </div>
+    </div>
+  );
+
+  if (state.status === "skipped") return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px" }}>
+      <div style={{ maxWidth: "400px", textAlign: "center" }}>
+        <div style={{ fontSize: "32px", marginBottom: "8px" }}>🌴</div>
+        <h1 style={{ fontFamily: "Georgia, serif", fontSize: "24px", marginBottom: "12px" }}>Today is a rest day</h1>
+        <p style={{ color: "#7A6E5F", fontSize: "14px", marginBottom: "20px" }}>This session was skipped. Enjoy the break — practice picks up right where it left off.</p>
+        <Link href="/parent" style={{ color: "#1B4F8A", fontSize: "14px" }}>← Back to dashboard</Link>
       </div>
     </div>
   );

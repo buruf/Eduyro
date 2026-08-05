@@ -81,20 +81,32 @@ function enumDecDivWhole(): XP[] {
   return out;
 }
 function enumPercentOf(): XP[] {
-  const out: XP[] = []; const pcts = [5, 10, 20, 25, 50, 75];
-  for (const p of pcts) for (let n = 4; n <= 40; n += 2) {
+  const out: XP[] = []; const pcts = [5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 100];
+  for (const p of pcts) for (let n = 2; n <= 100; n += 1) {
     const v = (p / 100) * n; if (!Number.isInteger(v)) continue;
-    out.push({ q: `${p}% of ${n}`, a: String(v), diff: p * 0.3 + n + 20, key: `pct:${p}of${n}` });
+    out.push({ q: `${p}% of ${n}`, a: String(v), diff: p * 0.15 + n * 0.4 + 20, key: `pct:${p}of${n}` });
   }
   return out;
 }
 function enumConvert(): XP[] {
   const out: XP[] = [];
-  const fd: [number, number, string][] = [[1,2,"0.5"],[1,4,"0.25"],[3,4,"0.75"],[1,5,"0.2"],[2,5,"0.4"],[3,5,"0.6"],[4,5,"0.8"],[1,10,"0.1"],[3,10,"0.3"],[7,10,"0.7"],[1,20,"0.05"]];
+  const fd: [number, number, string][] = [
+    [1,2,"0.5"],[1,4,"0.25"],[3,4,"0.75"],
+    [1,5,"0.2"],[2,5,"0.4"],[3,5,"0.6"],[4,5,"0.8"],
+    [1,8,"0.125"],[3,8,"0.375"],[5,8,"0.625"],[7,8,"0.875"],
+    [1,10,"0.1"],[3,10,"0.3"],[7,10,"0.7"],[9,10,"0.9"],
+    [1,20,"0.05"],[3,20,"0.15"],[7,20,"0.35"],[9,20,"0.45"],[11,20,"0.55"],[13,20,"0.65"],[17,20,"0.85"],[19,20,"0.95"],
+    [1,25,"0.04"],[2,25,"0.08"],[3,25,"0.12"],[7,25,"0.28"],[9,25,"0.36"],[11,25,"0.44"],[13,25,"0.52"],[17,25,"0.68"],[21,25,"0.84"],
+    [1,50,"0.02"],[3,50,"0.06"],[7,50,"0.14"],[9,50,"0.18"],
+  ];
+  const pctOf = (dec: string) => { const v = parseFloat(dec) * 100; return `${Number.isInteger(v) ? v : +v.toFixed(1)}%`; };
   for (const [n,d,dec] of fd) {
+    const pct = pctOf(dec);
     out.push({ q: `Write ${F(n,d)} as a decimal.`, a: dec, diff: d + 30, key: `cfd:${n}/${d}` });
-    out.push({ q: `Write ${dec} as a fraction.`, a: F(n,d), diff: d + 32, key: `cdf:${dec}` });
-    out.push({ q: `Write ${dec} as a percent.`, a: `${Math.round(parseFloat(dec)*100)}%`, diff: d + 34, key: `cdp:${dec}` });
+    out.push({ q: `Write ${dec} as a fraction.`, a: F(n,d), diff: d + 31, key: `cdf:${dec}` });
+    out.push({ q: `Write ${dec} as a percent.`, a: pct, diff: d + 32, key: `cdp:${dec}` });
+    out.push({ q: `Write ${pct} as a decimal.`, a: dec, diff: d + 33, key: `cpd:${pct}` });
+    out.push({ q: `Write ${F(n,d)} as a percent.`, a: pct, diff: d + 34, key: `cfp:${n}/${d}` });
   }
   return out;
 }
@@ -207,9 +219,15 @@ function enumDistribute(): XP[] {
 }
 function enumBothSides(): XP[] {
   const out: XP[] = [];
-  for (let m = 2; m <= 6; m++) for (let x = 1; x <= 12; x++) {
-    const b = (m - 1) * x;                  // mx = x + b  → x = b/(m-1)
+  // mx = x + b
+  for (let m = 2; m <= 8; m++) for (let x = 1; x <= 20; x++) {
+    const b = (m - 1) * x;
     out.push({ q: `Solve for x:  ${m}x = x + ${b}`, a: String(x), diff: m + x + 22, key: `bs:${m}_${x}` });
+  }
+  // mx + a = nx + b  (n < m), second form for variety across the 18-sheet unit
+  for (let m = 3; m <= 7; m++) for (let n = 1; n < m; n++) for (let x = 1; x <= 12; x++) {
+    const a = x, b = (m - n) * x + a;       // mx + a = nx + b → x = (b - a)/(m - n)
+    out.push({ q: `Solve for x:  ${m}x + ${a} = ${n}x + ${b}`, a: String(x), diff: m + n + x + 24, key: `bs2:${m}_${n}_${x}` });
   }
   return out;
 }
@@ -223,8 +241,10 @@ function enumDivEq(): XP[] {
 // ── POLYNOMIALS (M12) ─────────────────────────────────────────────────────────
 function enumPolyCombine(): XP[] {
   const out: XP[] = [];
-  for (let m = 1; m <= 9; m++) for (let n = 1; n <= 9; n++)
+  for (let m = 1; m <= 12; m++) for (let n = 1; n <= 12; n++) {
     out.push({ q: `Simplify ${term(m,"x²")} + ${term(n,"x²")}.`, a: term(m+n,"x²"), diff: m + n + 6, key: `pc:${m}+${n}` });
+    if (m > n) out.push({ q: `Simplify ${term(m,"x²")} - ${term(n,"x²")}.`, a: term(m-n,"x²"), diff: m + n + 7, key: `pcs:${m}-${n}` });
+  }
   return out;
 }
 function enumPolyAdd(sub: boolean): XP[] {
@@ -239,14 +259,16 @@ function enumPolyAdd(sub: boolean): XP[] {
 }
 function enumMonomialMul(): XP[] {
   const out: XP[] = [];
-  for (let m = 2; m <= 9; m++) for (let n = 2; n <= 9; n++)
+  for (let m = 2; m <= 12; m++) for (let n = 2; n <= 12; n++)
     out.push({ q: `Multiply ${m}x · ${n}x.`, a: `${m*n}x²`, diff: m + n + 20, key: `mm:${m}_${n}` });
   return out;
 }
 function enumMonoDistribute(): XP[] {
   const out: XP[] = [];
-  for (let m = 2; m <= 6; m++) for (let b = 1; b <= 9; b++)
+  for (let m = 2; m <= 9; m++) for (let b = 1; b <= 12; b++) {
     out.push({ q: `Expand ${m}x(x + ${b}).`, a: `${m}x² + ${m*b}x`, diff: m + b + 26, key: `md:${m}_${b}` });
+    if (b <= m + 3) out.push({ q: `Expand ${m}x(x - ${b}).`, a: `${m}x² - ${m*b}x`, diff: m + b + 27, key: `mds:${m}_${b}` });
+  }
   return out;
 }
 function enumFoil(): XP[] {
@@ -259,7 +281,7 @@ function enumFoil(): XP[] {
 // partial products in fixed order (x², ax, bx, ab); graded by value match.
 function enumAreaModel(): XP[] {
   const out: XP[] = []; let i = 0;
-  for (let a = 2; a <= 6; a++) for (let b = a; b <= 7; b++)
+  for (let a = 2; a <= 7; a++) for (let b = a; b <= 9; b++)
     out.push({
       q: `Fill in the area model for (x + ${a})(x + ${b}).`,
       a: `x²,${a}x,${b}x,${a * b}`, diff: 28 + i++ * 0.1, key: `am:${a}_${b}`,
@@ -272,7 +294,7 @@ function enumAreaModel(): XP[] {
 // Distractors are interleaved so the two correct factors are never adjacent.
 function enumSelectFactors(): XP[] {
   const out: XP[] = []; let i = 0;
-  for (let p = 2; p <= 6; p++) for (let q = p + 1; q <= 7; q++) {
+  for (let p = 2; p <= 7; p++) for (let q = p + 1; q <= 9; q++) {
     const s = p + q, prod = p * q;
     const c0 = `(x + ${p})`, c1 = `(x + ${q})`;
     const d0 = `(x + ${p - 1})`, d1 = `(x + ${q + 1})`;   // p-1≥1, q+1>q → never equal p or q
@@ -288,8 +310,170 @@ function enumSelectFactors(): XP[] {
 }
 function enumFactorGcf(): XP[] {
   const out: XP[] = [];
-  for (let g = 2; g <= 9; g++) for (let b = 1; b <= 9; b++)
+  for (let g = 2; g <= 12; g++) for (let b = 1; b <= 12; b++)
     out.push({ q: `Factor ${g}x + ${g*b}.`, a: `${g}(x + ${b})`, diff: g + b + 30, key: `fg:${g}_${b}` });
+  return out;
+}
+
+// ── TIER 2: advanced factoring (each is its own single-task unit) ─────────────
+// Difference of squares: a² − b² = (a + b)(a − b).
+function enumFactorDiffSquares(): XP[] {
+  const out: XP[] = [];
+  for (let k = 1; k <= 12; k++)
+    out.push({ q: `Factor ${pStr([{ c: 1, p: 2 }, { c: -(k * k), p: 0 }])}.`, a: `(x + ${k})(x - ${k})`, diff: k, key: `dsq:1_${k}` });
+  for (const m of [2, 3, 4, 5]) for (let k = 1; k <= 6; k++)
+    out.push({ q: `Factor ${m * m}x² - ${k * k}.`, a: `(${term(m, "x")} + ${k})(${term(m, "x")} - ${k})`, diff: 14 + m * 2 + k, key: `dsq:${m}_${k}` });
+  return out;
+}
+// Perfect-square trinomial: x² ± 2bx + b² = (x ± b)².
+function enumFactorPerfectSquare(): XP[] {
+  const out: XP[] = [];
+  for (let b = 1; b <= 15; b++) {
+    out.push({ q: `Factor ${pStr([{ c: 1, p: 2 }, { c: 2 * b, p: 1 }, { c: b * b, p: 0 }])}.`, a: `(x + ${b})²`, diff: b, key: `psq:+${b}` });
+    out.push({ q: `Factor ${pStr([{ c: 1, p: 2 }, { c: -2 * b, p: 1 }, { c: b * b, p: 0 }])}.`, a: `(x - ${b})²`, diff: b + 0.5, key: `psq:-${b}` });
+  }
+  return out;
+}
+// Trinomial with leading coefficient a ≠ 1: ax² + bx + c = (px + q)(rx + s).
+function enumFactorTrinomialA(): XP[] {
+  const out: XP[] = [];
+  for (const p of [2, 3]) for (const r of [1, 2, 3]) for (let q = 1; q <= 4; q++) for (let s = 1; s <= 4; s++) {
+    const a = p * r, b = p * s + q * r, c = q * s;
+    if (a === 1) continue;                       // a=1 case belongs to the quadratic-trinomials unit
+    if (p === r && q > s) continue;              // (2x+1)(2x+3) ≡ (2x+3)(2x+1) — keep one
+    out.push({ q: `Factor ${pStr([{ c: a, p: 2 }, { c: b, p: 1 }, { c, p: 0 }])}.`, a: `(${term(p, "x")} + ${q})(${term(r, "x")} + ${s})`, diff: a + b + c, key: `trN:${p}_${q}_${r}_${s}` });
+  }
+  return out;
+}
+// Factor by grouping (four terms): x³ + bx² + ax + ab = (x² + a)(x + b).
+function enumFactorGrouping(): XP[] {
+  const out: XP[] = [];
+  for (let a = 1; a <= 8; a++) for (let b = 1; b <= 7; b++)
+    out.push({ q: `Factor ${pStr([{ c: 1, p: 3 }, { c: b, p: 2 }, { c: a, p: 1 }, { c: a * b, p: 0 }])}.`, a: `(x² + ${a})(x + ${b})`, diff: a + b, key: `grp:${a}_${b}` });
+  return out;
+}
+// Sum / difference of cubes: x³ ± k³ = (x ± k)(x² ∓ kx + k²).
+function enumFactorCubes(): XP[] {
+  const out: XP[] = [];
+  for (let k = 1; k <= 10; k++) {
+    out.push({ q: `Factor x³ + ${k * k * k}.`, a: `(x + ${k})(x² - ${term(k, "x")} + ${k * k})`, diff: k, key: `cub:+${k}` });
+    out.push({ q: `Factor x³ - ${k * k * k}.`, a: `(x - ${k})(x² + ${term(k, "x")} + ${k * k})`, diff: k + 0.5, key: `cub:-${k}` });
+  }
+  return out;
+}
+
+// ── POLYNOMIALS Tier-1 additions: foundations, more operations, division ──────
+// Shared polynomial formatting: unicode superscripts + signed term joining, so a
+// list of {c (coefficient), p (power)} renders as conventional algebra, e.g.
+// [{c:1,p:2},{c:-3,p:1},{c:5,p:0}] → "x² - 3x + 5".
+const PSUP: Record<number, string> = { 0: "", 1: "", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶" };
+const pMono = (c: number, p: number): string => (p === 0 ? `${c}` : term(c, p === 1 ? "x" : `x${PSUP[p]}`));
+function pStr(terms: { c: number; p: number }[]): string {
+  const parts = terms.filter((t) => t.c !== 0);
+  if (parts.length === 0) return "0";
+  return parts.map((t, i) => {
+    const m = pMono(Math.abs(t.c), t.p);
+    if (i === 0) return t.c < 0 ? `-${m}` : m;
+    return t.c < 0 ? ` - ${m}` : ` + ${m}`;
+  }).join("");
+}
+
+// Fundamentals: classify a polynomial by its number of terms (+ identify whether
+// an expression is a polynomial at all). Multiple-choice, value-graded.
+// Difficulty for the foundation units is not meaningfully ordered (classifying a
+// monomial isn't "easier" than a trinomial in a way that should segregate onto
+// separate sheets). Scatter each item across the band by a hash of its key so
+// every sheet draws a MIX of the sub-types instead of one homogeneous block.
+const scatterDiff = (key: string): number => (hashStr(key) % 1000) / 1000 * 8;
+function enumPolyClassify(): XP[] {
+  const out: XP[] = [];
+  const OPTS = ["monomial", "binomial", "trinomial"];
+  const push = (e: string, label: string, key: string) =>
+    out.push({ q: `Classify by the number of terms: ${e}`, a: label, diff: scatterDiff(key), type: "multiple_choice", options: OPTS, key });
+  // Generated to keep the pool large enough (> one sheet's worth) that a single
+  // sheet never has to cycle and repeat a question.
+  for (let p = 0; p <= 4; p++) for (const c of [2, 3, 5, 7])          // monomials: c·xᵖ
+    push(pMono(c, p), "monomial", `clm:${c}_${p}`);
+  for (let p = 1; p <= 3; p++) for (const c of [1, 3, 5, -2, -4])      // binomials: xᵖ + c
+    push(pStr([{ c: 1, p }, { c, p: 0 }]), "binomial", `clb:${p}_${c}`);
+  for (const b of [3, 5, -1, 2, 4, -3]) for (const c of [2, -4, 6, 10]) // trinomials: x² + bx + c
+    push(pStr([{ c: 1, p: 2 }, { c: b, p: 1 }, { c, p: 0 }]), "trinomial", `clt:${b}_${c}`);
+  return out;
+}
+function enumPolyIdentify(): XP[] {
+  const out: XP[] = [];
+  const yes = ["x² + 3x + 1", "5x - 2", "7x³", "x + 9", "4x² - x", "2x⁴ + 1", "x³ - 5", "6x² + 2x", "x + 1", "3x⁵", "8x² + 3x - 2", "x⁴ - x²", "9 - x", "x² + 10"];
+  const no = ["1/x + 5", "√x - 3", "x⁻² + 1", "3ˣ + 2", "2/x²", "1/x²", "√x + 4", "5/x", "x⁻¹ + 7", "2ˣ - 1", "4/x + x", "6x⁻³", "√x - x", "1/(x + 2)"];
+  yes.forEach((e, i) => out.push({ q: `Is this a polynomial?   ${e}`, a: "Yes", diff: scatterDiff(`id:y:${i}`), type: "multiple_choice", options: ["Yes", "No"], key: `id:y:${i}` }));
+  no.forEach((e, i) => out.push({ q: `Is this a polynomial?   ${e}`, a: "No", diff: scatterDiff(`id:n:${i}`), type: "multiple_choice", options: ["Yes", "No"], key: `id:n:${i}` }));
+  return out;
+}
+// Degree of a polynomial (highest power present). Scattered so each sheet mixes
+// "find the degree" with "write in standard form".
+function enumPolyDegree(): XP[] {
+  const out: XP[] = [];
+  for (let D = 2; D <= 5; D++) for (let mid = 1; mid < D; mid++) for (const lead of [1, 2, 3])
+    out.push({ q: `Find the degree of ${pStr([{ c: lead, p: D }, { c: 2, p: mid }, { c: 3, p: 0 }])}.`, a: String(D), diff: scatterDiff(`deg:${D}_${mid}_${lead}`), key: `deg:${D}_${mid}_${lead}` });
+  return out;
+}
+// Rewrite a scrambled polynomial in standard form (descending powers).
+function enumStandardForm(): XP[] {
+  const out: XP[] = [];
+  for (let a = 1; a <= 3; a++) for (let b = 1; b <= 4; b++) for (let c = 1; c <= 5; c++) {
+    const ordered = [{ c: a, p: 2 }, { c: b, p: 1 }, { c: c, p: 0 }];
+    const scrambled = [{ c: c, p: 0 }, { c: a, p: 2 }, { c: b, p: 1 }];
+    out.push({ q: `Write in standard form: ${pStr(scrambled)}.`, a: pStr(ordered), diff: scatterDiff(`sf:${a}_${b}_${c}`), key: `sf:${a}_${b}_${c}` });
+  }
+  return out;
+}
+// Leading coefficient — its OWN single-task unit (never mixed with "constant
+// term" on the same sheet, per the one-instruction-per-sheet rule).
+function enumLeadingCoef(): XP[] {
+  const out: XP[] = [];
+  for (let D = 2; D <= 4; D++) for (const lead of [2, 3, 5, -2, -3, 4]) for (const k of [1, -3, 7, -5]) {
+    const s = pStr([{ c: lead, p: D }, { c: 1, p: 1 }, { c: k, p: 0 }]);
+    out.push({ q: `What is the leading coefficient of ${s}?`, a: String(lead), diff: scatterDiff(`lc:${D}_${lead}_${k}`), key: `lc:${D}_${lead}_${k}` });
+  }
+  return out;
+}
+// Constant term — its OWN single-task unit.
+function enumConstantTerm(): XP[] {
+  const out: XP[] = [];
+  for (let D = 2; D <= 4; D++) for (const lead of [2, 3, 5, -2, -3, 4]) for (const k of [1, -3, 7, -5, 9, -8]) {
+    const s = pStr([{ c: lead, p: D }, { c: 1, p: 1 }, { c: k, p: 0 }]);
+    out.push({ q: `What is the constant term of ${s}?`, a: String(k), diff: scatterDiff(`ct:${D}_${lead}_${k}`), key: `ct:${D}_${lead}_${k}` });
+  }
+  return out;
+}
+// Evaluate a quadratic polynomial at a value of x.
+function enumPolyEval(): XP[] {
+  const out: XP[] = []; let i = 0;
+  for (let a = 1; a <= 3; a++) for (let b = 1; b <= 4; b++) for (let c = 1; c <= 5; c++) for (const k of [2, 3, -1, 4])
+    out.push({ q: `Evaluate ${pStr([{ c: a, p: 2 }, { c: b, p: 1 }, { c: c, p: 0 }])} at x = ${k}.`, a: String(a * k * k + b * k + c), diff: Math.abs(k) + a + b + i++ * 0.01, key: `ev:${a}_${b}_${c}_${k}` });
+  return out;
+}
+// Multiply a polynomial by more than two terms: monomial × trinomial and
+// binomial × trinomial.
+function enumPolyTrinomialMul(): XP[] {
+  const out: XP[] = []; let i = 0;
+  for (let m = 2; m <= 5; m++) for (let b = 1; b <= 4; b++) for (let c = 1; c <= 5; c++)
+    out.push({ q: `Expand ${m}x(${pStr([{ c: 1, p: 2 }, { c: b, p: 1 }, { c: c, p: 0 }])}).`, a: pStr([{ c: m, p: 3 }, { c: m * b, p: 2 }, { c: m * c, p: 1 }]), diff: m + b + c + i++ * 0.01, key: `mt:${m}_${b}_${c}` });
+  for (let a = 1; a <= 3; a++) for (let b = 1; b <= 3; b++) for (let c = 1; c <= 4; c++)
+    out.push({ q: `Expand (x + ${a})(${pStr([{ c: 1, p: 2 }, { c: b, p: 1 }, { c: c, p: 0 }])}).`, a: pStr([{ c: 1, p: 3 }, { c: a + b, p: 2 }, { c: a * b + c, p: 1 }, { c: a * c, p: 0 }]), diff: 12 + a + b + c + i++ * 0.01, key: `bt:${a}_${b}_${c}` });
+  return out;
+}
+// Divide a polynomial by a monomial: (d·a x² + d·b x) ÷ d x = a x + b.
+function enumPolyDivMono(): XP[] {
+  const out: XP[] = []; let i = 0;
+  for (let d = 2; d <= 4; d++) for (let a = 1; a <= 5; a++) for (let b = 1; b <= 6; b++)
+    out.push({ q: `Divide (${pStr([{ c: d * a, p: 2 }, { c: d * b, p: 1 }])}) ÷ ${d}x.`, a: pStr([{ c: a, p: 1 }, { c: b, p: 0 }]), diff: d + a + b + i++ * 0.01, key: `dm:${d}_${a}_${b}` });
+  return out;
+}
+// Polynomial long division (exact): (x + a)(x + b) ÷ (x + a) = x + b.
+function enumPolyDivLong(): XP[] {
+  const out: XP[] = []; let i = 0;
+  for (let a = 1; a <= 5; a++) for (let b = 1; b <= 6; b++)
+    out.push({ q: `Divide (${pStr([{ c: 1, p: 2 }, { c: a + b, p: 1 }, { c: a * b, p: 0 }])}) ÷ (x + ${a}).`, a: pStr([{ c: 1, p: 1 }, { c: b, p: 0 }]), diff: a + b + i++ * 0.02, key: `dl:${a}_${b}` });
   return out;
 }
 
@@ -325,7 +509,7 @@ function enumPlotPoints(): XP[] {
 function enumPlotLine(): XP[] {
   const out: XP[] = [];
   let i = 0;
-  for (const m of [1, 2, -1, -2, 3]) for (const b of [-2, -1, 0, 1, 2]) {
+  for (const m of [1, 2, 3, -1, -2, -3]) for (const b of [-3, -2, -1, 0, 1, 2, 3]) {
     const mTerm = m === 1 ? "x" : m === -1 ? "−x" : `${m}x`;
     const bTerm = b === 0 ? "" : b < 0 ? ` − ${-b}` : ` + ${b}`;
     out.push({
@@ -391,11 +575,20 @@ function enumTriangle(): XP[] {
 }
 
 function enumOrderIntegers(): XP[] {
-  const sets: number[][] = [
-    [-3, 5, -1, 2], [4, -2, 1, -5], [-4, 0, 3, -1], [6, -3, 2, -6], [-2, 7, -5, 1],
-    [3, -7, 5, -1], [-8, 4, -2, 6], [2, -4, 8, -6], [-1, 9, -3, 5], [7, -5, 3, -9],
-    [0, -6, 4, -2], [-3, 3, -9, 9], [5, -1, -4, 2], [-2, 6, -8, 4],
-  ];
+  // Generate many distinct 4-integer sets deterministically (was 14 hardcoded →
+  // forced repeats across the unit). Vary the negative/positive mix + spread.
+  const sets: number[][] = [];
+  const seen = new Set<string>();
+  for (let a = -9; a <= 6; a++) for (const d1 of [2, 3, 4, 5]) for (const d2 of [3, 5, 7]) {
+    const s = [a, a + d1, -(a + d2), -a].map((n) => Math.max(-9, Math.min(9, n)));
+    const uniq = [...new Set(s)];
+    if (uniq.length < 4) continue;
+    const key = [...uniq].sort((x, y) => x - y).join("_");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    sets.push(uniq);
+    if (sets.length >= 70) break;
+  }
   const out: XP[] = [];
   let i = 0;
   for (const s of sets) {
@@ -421,6 +614,36 @@ interface Unit {
   directive?: string;
 }
 
+// ── M10 Pre-Algebra: three small generators for the 4-phase split ──
+// Distributive expansion a(x ± b) → ax ± ab (Properties & Simplifying phase).
+function enumExpand(): XP[] {
+  const out: XP[] = [];
+  for (let a = 2; a <= 9; a++) for (let b = 1; b <= 12; b++) {
+    out.push({ q: `Expand ${a}(x + ${b}).`, a: `${a}x + ${a * b}`, diff: a + b + 8, key: `exp:${a}_${b}` });
+    if (b <= a + 3) out.push({ q: `Expand ${a}(x - ${b}).`, a: `${a}x - ${a * b}`, diff: a + b + 9, key: `exps:${a}_${b}` });
+  }
+  return out;
+}
+// One-step inequalities x ± b (rel) c (Equations phase). Answers stay positive.
+function enumInequality(): XP[] {
+  const out: XP[] = [];
+  for (let b = 1; b <= 12; b++) for (let r = 1; r <= 12; r++) {
+    out.push({ q: `Solve for x:  x + ${b} < ${b + r}`, a: `x < ${r}`, diff: b + r + 14, key: `iqa:${b}_${r}` });
+    out.push({ q: `Solve for x:  x - ${b} > ${r}`, a: `x > ${b + r}`, diff: b + r + 15, key: `iqb:${b}_${r}` });
+  }
+  return out;
+}
+// Number patterns → intro to slope as a constant step (Coordinate-Plane phase).
+function enumPattern(): XP[] {
+  const out: XP[] = [];
+  for (let start = 1; start <= 10; start++) for (let step = 2; step <= 9; step++) {
+    const seq = [start, start + step, start + 2 * step, start + 3 * step];
+    out.push({ q: `Find the next number:  ${seq.join(", ")}, ___`, a: String(start + 4 * step), diff: start + step + 4, key: `pat:${start}_${step}` });
+    out.push({ q: `Each step grows by the same amount (the "slope"). What is the step for:  ${seq.join(", ")}?`, a: String(step), diff: start + step + 6, key: `pats:${start}_${step}` });
+  }
+  return out;
+}
+
 const CURRICULA: Record<string, Unit[]> = {
   DECIMALS: [
     { id:"dec-add1", label:"Decimals — add (tenths)", objective:"Student adds decimals to one place", directive:"Add.", grade:"Grade 4", stars:2, range:[1,10], pool:()=>enumDecAdd(1), example:{ problem:"0.4 + 0.3", steps:["Line up the decimal points","4 tenths + 3 tenths = 7 tenths"], answer:"0.7" } },
@@ -444,37 +667,68 @@ const CURRICULA: Record<string, Unit[]> = {
   ],
 
   PRE_ALGEBRA: [
-    { id:"pa-order-int", label:"Order integers", objective:"Student orders integers from least to greatest on the number line", directive:"Order from least to greatest.", grade:"Grade 6", stars:2, range:[1,4], pool:()=>enumOrderIntegers(), example:{ problem:"Order from least to greatest:  2,  −3,  1", steps:["Negatives are smallest; the further left on the number line, the smaller","−3, then 1, then 2"], answer:"-3,1,2" } },
-    { id:"pa-eval-add", label:"Evaluate expressions (+/-)", objective:"Student evaluates an expression by substitution", directive:"Evaluate each for the given value of x.", grade:"Grade 6", stars:2, range:[5,16], pool:()=>[...enumEvaluate("+"),...enumEvaluate("-")], example:{ problem:"x + 5,  x = 3", steps:["3 + 5 = 8"], answer:"8" } },
-    { id:"pa-eval-mul", label:"Evaluate expressions (×)", objective:"Student evaluates a product expression", directive:"Evaluate each for the given value of x.", grade:"Grade 6", stars:2, range:[17,28], pool:()=>enumEvaluateMul(), example:{ problem:"3x,  x = 4", steps:["3 × 4 = 12"], answer:"12" } },
-    { id:"pa-combine", label:"Combine like terms", objective:"Student combines like terms", directive:"Combine like terms.", grade:"Grade 6-7", stars:3, range:[29,40], pool:()=>enumCombine(), example:{ problem:"2x + 3x", steps:["Add coefficients: 2 + 3 = 5"], answer:"5x" } },
-    { id:"pa-onestep-add", label:"One-step equations (+/-)", objective:"Student solves one-step add/subtract equations", directive:"Solve for x.", grade:"Grade 7", stars:3, range:[41,54], pool:()=>[...enumOneStep("+"),...enumOneStep("-")], example:{ problem:"x + 5 = 12", steps:["12 - 5 = 7"], answer:"7" } },
-    { id:"pa-onestep-mul", label:"One-step equations (×)", objective:"Student solves one-step multiplication equations", directive:"Solve for x.", grade:"Grade 7", stars:4, range:[55,66], pool:()=>enumOneStep("×"), example:{ problem:"3x = 21", steps:["21 ÷ 3 = 7"], answer:"7" } },
-    { id:"pa-integers", label:"Integer addition & subtraction", objective:"Student adds and subtracts integers", directive:"Add or subtract.", grade:"Grade 7", stars:4, range:[67,78], pool:()=>[...enumInteger("+"),...enumInteger("-")], example:{ problem:"(-5) + 8", steps:["8 - 5 = 3"], answer:"3" } },
-    { id:"pa-order", label:"Order of operations", objective:"Student applies order of operations", directive:"Solve using order of operations.", grade:"Grade 7", stars:5, range:[79,90], pool:()=>enumOrderOps(), example:{ problem:"3 + 4 × 2", steps:["Multiply first: 4 × 2 = 8","3 + 8 = 11"], answer:"11" } },
-    { id:"pa-review", label:"Pre-algebra — mixed review", objective:"Student works fluently across pre-algebra skills", directive:"Solve.", grade:"Grade 7", stars:5, range:[91,100], pool:()=>[...enumCombine(),...enumOneStep("+"),...enumOrderOps()], example:{ problem:"4x + 2x", steps:["4 + 2 = 6"], answer:"6x" } },
+    // ── Phase 1 · Expressions & Variables (sheets 1–25) ──
+    { id:"pa-order-int", label:"Expressions · Order integers", objective:"Student orders integers from least to greatest on the number line", directive:"Order from least to greatest.", grade:"Grade 6", stars:2, range:[1,4], pool:()=>enumOrderIntegers(), example:{ problem:"Order from least to greatest:  2,  −3,  1", steps:["Negatives are smallest; the further left on the number line, the smaller","−3, then 1, then 2"], answer:"-3,1,2" } },
+    { id:"pa-eval-add", label:"Expressions · Evaluate (+/−)", objective:"Student evaluates an expression by substituting a value for x", directive:"Evaluate each for the given value of x.", grade:"Grade 6", stars:2, range:[5,15], pool:()=>[...enumEvaluate("+"),...enumEvaluate("-")], example:{ problem:"x + 5,  x = 3", steps:["Replace x with 3","3 + 5 = 8"], answer:"8" } },
+    { id:"pa-eval-mul", label:"Expressions · Evaluate (×)", objective:"Student evaluates a product expression", directive:"Evaluate each for the given value of x.", grade:"Grade 6", stars:2, range:[16,25], pool:()=>enumEvaluateMul(), example:{ problem:"3x,  x = 4", steps:["3x means 3 × x","3 × 4 = 12"], answer:"12" } },
+    // ── Phase 2 · Properties & Simplifying (sheets 26–50) ──
+    { id:"pa-combine", label:"Simplify · Combine like terms", objective:"Student combines like terms by adding coefficients", directive:"Combine like terms.", grade:"Grade 6-7", stars:3, range:[26,37], pool:()=>enumCombine(), example:{ problem:"2x + 3x", steps:["Add coefficients: 2 + 3 = 5"], answer:"5x" } },
+    { id:"pa-expand", label:"Simplify · Distributive property", objective:"Student expands using the distributive property", directive:"Expand each expression.", grade:"Grade 7", stars:3, range:[38,44], pool:()=>enumExpand(), example:{ problem:"3(x + 4)", steps:["3 · x = 3x","3 · 4 = 12"], answer:"3x + 12" } },
+    { id:"pa-order-ops", label:"Simplify · Order of operations", objective:"Student applies the order of operations", directive:"Solve using order of operations.", grade:"Grade 7", stars:4, range:[45,50], pool:()=>enumOrderOps(), example:{ problem:"3 + 4 × 2", steps:["Multiply first: 4 × 2 = 8","3 + 8 = 11"], answer:"11" } },
+    // ── Phase 3 · Equations (sheets 51–80) ──
+    { id:"pa-onestep-add", label:"Equations · One-step (+/−)", objective:"Student solves one-step add/subtract equations", directive:"Solve for x.", grade:"Grade 7", stars:3, range:[51,62], pool:()=>[...enumOneStep("+"),...enumOneStep("-")], example:{ problem:"x + 5 = 12", steps:["Subtract 5 on BOTH sides — that eliminates the +5","x = 12 − 5 = 7","Check: 7 + 5 = 12 ✓"], answer:"7" } },
+    { id:"pa-onestep-mul", label:"Equations · One-step (×)", objective:"Student solves one-step multiplication equations", directive:"Solve for x.", grade:"Grade 7", stars:4, range:[63,70], pool:()=>enumOneStep("×"), example:{ problem:"3x = 21", steps:["x is multiplied by 3 — divide BOTH sides by 3 to undo it","x = 21 ÷ 3 = 7","Check: 3 × 7 = 21 ✓"], answer:"7" } },
+    { id:"pa-integers", label:"Equations · Integer add & subtract", objective:"Student adds and subtracts integers", directive:"Add or subtract.", grade:"Grade 7", stars:4, range:[71,76], pool:()=>[...enumInteger("+"),...enumInteger("-")], example:{ problem:"(-5) + 8", steps:["8 - 5 = 3"], answer:"3" } },
+    { id:"pa-inequal", label:"Equations · One-step inequalities", objective:"Student solves one-step inequalities", directive:"Solve for x.", grade:"Grade 7-8", stars:5, range:[77,80], pool:()=>enumInequality(), example:{ problem:"x + 3 < 8", steps:["Subtract 3 from both sides","x < 5"], answer:"x < 5" } },
+    // ── Phase 4 · Coordinate Plane (sheets 81–100) ──
+    { id:"pa-plot", label:"Coordinate Plane · Plot points", objective:"Student plots ordered pairs on the coordinate plane", directive:"Plot each point.", grade:"Grade 7", stars:3, range:[81,92], pool:()=>enumPlotPoints(), example:{ problem:"Plot the point (3, 2).", steps:["Right 3 along the x-axis","Up 2 along the y-axis"], answer:"3,2" } },
+    { id:"pa-pattern", label:"Coordinate Plane · Patterns & intro to slope", objective:"Student extends number patterns, identifying the constant step (slope)", directive:"Find the pattern.", grade:"Grade 7-8", stars:4, range:[93,100], pool:()=>enumPattern(), example:{ problem:"Find the next number:  2, 5, 8, 11, ___", steps:["Each step adds 3","11 + 3 = 14"], answer:"14" } },
   ],
 
   LINEAR_EQUATIONS: [
     { id:"le-plot", label:"Plot points on the coordinate plane", objective:"Student plots an ordered pair (x, y) on a coordinate plane", directive:"Plot each point.", grade:"Grade 6", stars:1, range:[1,4], pool:()=>enumPlotPoints(), example:{ problem:"Plot the point (3, 2).", steps:["From the origin, move right 3 along the x-axis","Then move up 2 along the y-axis"], answer:"3,2" } },
     { id:"le-graphline", label:"Graph a line", objective:"Student graphs a line y = mx + b by plotting two points on it", directive:"Plot the line.", grade:"Grade 8", stars:3, range:[5,8], pool:()=>[...enumPlotLine(), ...enumEquationBuilder()], example:{ problem:"Plot the line y = 2x − 1.", steps:["y-intercept (0, −1)","Slope 2 → up 2, right 1 → (1, 1)","Draw the line through both points"], answer:"2,-1" } },
     { id:"le-transform", label:"Transformations on the plane", objective:"Student reflects, translates and rotates points on the coordinate plane", directive:"Plot the image after the transformation.", grade:"Grade 8", stars:3, range:[9,12], pool:()=>[...enumTransformPoint(), ...enumTriangle()], example:{ problem:"Reflect the point (3, 2) across the x-axis. Plot the image.", steps:["Reflecting across the x-axis negates the y-coordinate","(3, 2) → (3, −2)"], answer:"3,-2" } },
-    { id:"le-two-add", label:"Two-step equations (+)", objective:"Student solves ax + b = c", directive:"Solve for x.", grade:"Grade 7", stars:3, range:[13,24], pool:()=>enumTwoStep(1), example:{ problem:"2x + 3 = 11", steps:["11 - 3 = 8","8 ÷ 2 = 4"], answer:"4" } },
-    { id:"le-two-sub", label:"Two-step equations (-)", objective:"Student solves ax - b = c", directive:"Solve for x.", grade:"Grade 7-8", stars:4, range:[25,38], pool:()=>enumTwoStep(-1), example:{ problem:"3x - 5 = 16", steps:["16 + 5 = 21","21 ÷ 3 = 7"], answer:"7" } },
-    { id:"le-distribute", label:"Equations with distribution", objective:"Student solves k(x + b) = c", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[39,54], pool:()=>enumDistribute(), example:{ problem:"2(x + 3) = 14", steps:["14 ÷ 2 = 7","7 - 3 = 4"], answer:"4" } },
-    { id:"le-both-sides", label:"Variables on both sides", objective:"Student solves equations with variables on both sides", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[55,72], pool:()=>enumBothSides(), example:{ problem:"3x = x + 8", steps:["3x - x = 8 → 2x = 8","x = 4"], answer:"4" } },
-    { id:"le-fraction", label:"Equations with a fraction", objective:"Student solves x/d = q", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[73,86], pool:()=>enumDivEq(), example:{ problem:`${BS}frac{x}{3} = 4`, steps:["Multiply both sides by 3","x = 12"], answer:"12" } },
-    { id:"le-review", label:"Linear equations — mixed review", objective:"Student solves linear equations of every type", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[87,100], pool:()=>[...enumTwoStep(1),...enumTwoStep(-1),...enumDistribute()], example:{ problem:"4x - 6 = 10", steps:["10 + 6 = 16","16 ÷ 4 = 4"], answer:"4" } },
+    { id:"le-two-add", label:"Two-step equations (+)", objective:"Student solves ax + b = c", directive:"Solve for x.", grade:"Grade 7", stars:3, range:[13,24], pool:()=>enumTwoStep(1), example:{ problem:"2x + 3 = 11", steps:["Subtract 3 on BOTH sides — that eliminates the +3: 2x = 11 − 3 = 8","Divide BOTH sides by 2 to isolate x: x = 8 ÷ 2 = 4","Check: 2×4 + 3 = 11 ✓"], answer:"4" } },
+    { id:"le-two-sub", label:"Two-step equations (-)", objective:"Student solves ax - b = c", directive:"Solve for x.", grade:"Grade 7-8", stars:4, range:[25,38], pool:()=>enumTwoStep(-1), example:{ problem:"3x - 5 = 16", steps:["Add 5 on BOTH sides — that eliminates the −5: 3x = 16 + 5 = 21","Divide BOTH sides by 3 to isolate x: x = 21 ÷ 3 = 7","Check: 3×7 − 5 = 16 ✓"], answer:"7" } },
+    { id:"le-distribute", label:"Equations with distribution", objective:"Student solves k(x + b) = c", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[39,54], pool:()=>enumDistribute(), example:{ problem:"2(x + 3) = 14", steps:["The bracket is multiplied by 2 — divide BOTH sides by 2: x + 3 = 7","Subtract 3 on BOTH sides: x = 7 − 3 = 4","Check: 2(4 + 3) = 14 ✓"], answer:"4" } },
+    { id:"le-both-sides", label:"Variables on both sides", objective:"Student solves equations with variables on both sides", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[55,72], pool:()=>enumBothSides(), example:{ problem:"3x = x + 8", steps:["Subtract x from BOTH sides to gather x on one side: 2x = 8","Divide BOTH sides by 2: x = 8 ÷ 2 = 4","Check: 3×4 = 4 + 8 ✓"], answer:"4" } },
+    { id:"le-fraction", label:"Equations with a fraction", objective:"Student solves x/d = q", directive:"Solve for x.", grade:"Grade 8", stars:4, range:[73,86], pool:()=>enumDivEq(), example:{ problem:`${BS}frac{x}{3} = 4`, steps:["x is divided by 3 — multiply BOTH sides by 3 to undo it","x = 4 × 3 = 12","Check: 12 ÷ 3 = 4 ✓"], answer:"12" } },
+    { id:"le-review", label:"Linear equations — mixed review", objective:"Student solves linear equations of every type", directive:"Solve for x.", grade:"Grade 8", stars:5, range:[87,100], pool:()=>[...enumTwoStep(1),...enumTwoStep(-1),...enumDistribute()], example:{ problem:"4x - 6 = 10", steps:["Add 6 on BOTH sides — that eliminates the −6: 4x = 10 + 6 = 16","Divide BOTH sides by 4 to isolate x: x = 16 ÷ 4 = 4","Check: 4×4 − 6 = 10 ✓"], answer:"4" } },
   ],
 
   POLYNOMIALS: [
-    { id:"poly-combine", label:"Combine like terms (x²)", objective:"Student combines quadratic like terms", directive:"Combine like terms.", grade:"Grade 8", stars:3, range:[1,14], pool:()=>enumPolyCombine(), example:{ problem:"3x² + 2x²", steps:["Add coefficients: 3 + 2 = 5"], answer:"5x²" } },
-    { id:"poly-add", label:"Add polynomials", objective:"Student adds two binomials", directive:"Add.", grade:"Grade 8", stars:3, range:[15,30], pool:()=>enumPolyAdd(false), example:{ problem:"(2x + 3) + (4x + 1)", steps:["2x + 4x = 6x","3 + 1 = 4"], answer:"6x + 4" } },
-    { id:"poly-sub", label:"Subtract polynomials", objective:"Student subtracts two binomials", directive:"Subtract.", grade:"Grade 8", stars:4, range:[31,46], pool:()=>enumPolyAdd(true), example:{ problem:"(5x + 6) - (2x + 1)", steps:["5x - 2x = 3x","6 - 1 = 5"], answer:"3x + 5" } },
-    { id:"poly-mono", label:"Multiply monomials", objective:"Student multiplies monomials", directive:"Multiply.", grade:"Grade 8-9", stars:4, range:[47,60], pool:()=>enumMonomialMul(), example:{ problem:"3x · 4x", steps:["3 × 4 = 12","x · x = x²"], answer:"12x²" } },
-    { id:"poly-distribute", label:"Distribute a monomial", objective:"Student distributes a monomial over a binomial", directive:"Expand.", grade:"Grade 9", stars:5, range:[61,74], pool:()=>enumMonoDistribute(), example:{ problem:"2x(x + 3)", steps:["2x · x = 2x²","2x · 3 = 6x"], answer:"2x² + 6x" } },
-    { id:"poly-foil", label:"Multiply binomials (FOIL)", objective:"Student expands (x + a)(x + b)", directive:"Expand.", grade:"Grade 9", stars:5, range:[75,88], pool:()=>[...enumFoil(), ...enumSelectFactors(), ...enumAreaModel()], example:{ problem:"(x + 2)(x + 3)", steps:["First x·x = x²","Outer+Inner = 5x","Last 2·3 = 6"], answer:"x² + 5x + 6" } },
-    { id:"poly-factor", label:"Factor out the GCF", objective:"Student factors the GCF from a binomial", directive:"Factor out the GCF.", grade:"Grade 9", stars:5, range:[89,100], pool:()=>enumFactorGcf(), example:{ problem:"3x + 12", steps:["GCF = 3","3(x + 4)"], answer:"3(x + 4)" } },
+    // ── Foundations & vocabulary (taught before any operations) ──
+    // ── Foundations & vocabulary — ONE instruction per unit/sheet (never mixed).
+    // Each sheet states its single task once in the directive; every line is a
+    // bare expression (the instruction is stripped at print time).
+    { id:"poly-classify", label:"Classify polynomials by terms", objective:"Student classifies a polynomial as a monomial, binomial, or trinomial", directive:"Classify each by its number of terms: monomial (1), binomial (2), or trinomial (3).", grade:"Grade 8", stars:1, range:[1,4], pool:()=>enumPolyClassify(), example:{ problem:"Classify by the number of terms: x² + 3x + 2", steps:["Count the terms separated by + or −: x², 3x, 2 — three terms","Three terms → trinomial"], answer:"trinomial" } },
+    { id:"poly-identify", label:"Identify polynomials", objective:"Student decides whether an expression is a polynomial", directive:"Is each expression a polynomial? Write Yes or No.", grade:"Grade 8", stars:1, range:[5,7], pool:()=>enumPolyIdentify(), example:{ problem:"Is this a polynomial? 1/x + 5", steps:["1/x has x in the denominator — not allowed","→ No"], answer:"No" } },
+    { id:"poly-degree", label:"Degree of a polynomial", objective:"Student finds the degree of a polynomial", directive:"Find the degree of each polynomial (the highest power of x).", grade:"Grade 8", stars:2, range:[8,10], pool:()=>enumPolyDegree(), example:{ problem:"Find the degree of 3x⁴ + 2x + 3", steps:["The degree is the highest power of x present","The highest power is 4"], answer:"4" } },
+    { id:"poly-stdform", label:"Write in standard form", objective:"Student writes a polynomial in standard form", directive:"Write each polynomial in standard form (highest power first).", grade:"Grade 8", stars:2, range:[11,13], pool:()=>enumStandardForm(), example:{ problem:"Write in standard form: 5 + x² + x", steps:["Order the terms by power: x² (2), x (1), 5 (0)","x² + x + 5"], answer:"x² + x + 5" } },
+    { id:"poly-leadcoef", label:"Leading coefficient", objective:"Student identifies the leading coefficient", directive:"Write the leading coefficient of each polynomial (the number on the highest-power term).", grade:"Grade 8", stars:2, range:[14,16], pool:()=>enumLeadingCoef(), example:{ problem:"What is the leading coefficient of 4x³ + x - 7?", steps:["Highest-power term is 4x³","Its coefficient is 4"], answer:"4" } },
+    { id:"poly-constant", label:"Constant term", objective:"Student identifies the constant term", directive:"Write the constant term of each polynomial (the number with no x).", grade:"Grade 8", stars:2, range:[17,19], pool:()=>enumConstantTerm(), example:{ problem:"What is the constant term of 4x³ + x - 7?", steps:["The term with no x is -7"], answer:"-7" } },
+    { id:"poly-eval", label:"Evaluate polynomials", objective:"Student evaluates a polynomial for a given value of x", directive:"Evaluate each polynomial for the given value of x.", grade:"Grade 8", stars:3, range:[20,23], pool:()=>enumPolyEval(), example:{ problem:"Evaluate x² + 3x + 2 at x = 4", steps:["Substitute 4 for x: 4² + 3·4 + 2","16 + 12 + 2 = 30"], answer:"30" } },
+    // ── Operations ──
+    { id:"poly-combine", label:"Combine like terms (x²)", objective:"Student combines quadratic like terms", directive:"Combine like terms.", grade:"Grade 8", stars:3, range:[24,28], pool:()=>enumPolyCombine(), example:{ problem:"3x² + 2x²", steps:["Add coefficients: 3 + 2 = 5"], answer:"5x²" } },
+    { id:"poly-add", label:"Add polynomials", objective:"Student adds two binomials", directive:"Add.", grade:"Grade 8", stars:3, range:[29,33], pool:()=>enumPolyAdd(false), example:{ problem:"(2x + 3) + (4x + 1)", steps:["2x + 4x = 6x","3 + 1 = 4"], answer:"6x + 4" } },
+    { id:"poly-sub", label:"Subtract polynomials", objective:"Student subtracts two binomials", directive:"Subtract.", grade:"Grade 8", stars:4, range:[34,38], pool:()=>enumPolyAdd(true), example:{ problem:"(5x + 6) - (2x + 1)", steps:["5x - 2x = 3x","6 - 1 = 5"], answer:"3x + 5" } },
+    { id:"poly-mono", label:"Multiply monomials", objective:"Student multiplies monomials", directive:"Multiply.", grade:"Grade 8-9", stars:4, range:[39,42], pool:()=>enumMonomialMul(), example:{ problem:"3x · 4x", steps:["3 × 4 = 12","x · x = x²"], answer:"12x²" } },
+    { id:"poly-distribute", label:"Distribute a monomial", objective:"Student distributes a monomial over a binomial", directive:"Expand.", grade:"Grade 9", stars:5, range:[43,47], pool:()=>enumMonoDistribute(), example:{ problem:"2x(x + 3)", steps:["2x · x = 2x²","2x · 3 = 6x"], answer:"2x² + 6x" } },
+    { id:"poly-foil", label:"Multiply binomials (FOIL)", objective:"Student expands (x + a)(x + b)", directive:"Expand each product.", grade:"Grade 9", stars:5, range:[48,52], pool:()=>enumFoil(), example:{ problem:"(x + 2)(x + 3)", steps:["First x·x = x²","Outer+Inner = 5x","Last 2·3 = 6"], answer:"x² + 5x + 6" } },
+    { id:"poly-boxmodel", label:"Partial products (box method)", objective:"Student writes the four partial products of a binomial product", directive:"Write the four partial products of each (x², the two x-terms, the constant).", grade:"Grade 9", stars:5, range:[53,56], pool:()=>enumAreaModel(), example:{ problem:"(x + 2)(x + 3)", steps:["x · x = x²","x · 3 = 3x","2 · x = 2x","2 · 3 = 6"], answer:"x²,2x,3x,6" } },
+    { id:"poly-trinomial", label:"Multiply by a trinomial", objective:"Student multiplies a monomial or binomial by a trinomial", directive:"Expand.", grade:"Grade 9", stars:5, range:[57,61], pool:()=>enumPolyTrinomialMul(), example:{ problem:"Expand 2x(x² + 3x + 1)", steps:["2x · x² = 2x³","2x · 3x = 6x²","2x · 1 = 2x"], answer:"2x³ + 6x² + 2x" } },
+    // ── Division ──
+    { id:"poly-div-mono", label:"Divide by a monomial", objective:"Student divides a polynomial by a monomial", directive:"Divide.", grade:"Grade 9", stars:5, range:[62,66], pool:()=>enumPolyDivMono(), example:{ problem:"Divide (6x² + 4x) ÷ 2x", steps:["Factor 2x out of the top: 6x² + 4x = 2x(3x + 2)","Cancel the 2x top and bottom: 2x(3x + 2) ÷ 2x","= 3x + 2"], answer:"3x + 2" } },
+    { id:"poly-div-long", label:"Polynomial long division", objective:"Student divides a quadratic by a binomial exactly", directive:"Divide.", grade:"Grade 9-10", stars:5, range:[67,70], pool:()=>enumPolyDivLong(), example:{ problem:"Divide (x² + 5x + 6) ÷ (x + 2)", steps:["Factor the top: x² + 5x + 6 = (x + 2)(x + 3)","Cancel the common (x + 2) top and bottom","= x + 3"], answer:"x + 3" } },
+    // ── Factoring — grouped as a coherent finale (GCF → quadratics → advanced) ──
+    { id:"poly-factor", label:"Factor out the GCF", objective:"Student factors the GCF from a binomial", directive:"Factor out the GCF.", grade:"Grade 9", stars:5, range:[71,74], pool:()=>enumFactorGcf(), example:{ problem:"Factor 3x + 12", steps:["GCF of 3 and 12 = 3","3(x + 4)"], answer:"3(x + 4)" } },
+    { id:"poly-factor-tri", label:"Factor quadratic trinomials", objective:"Student factors x² + bx + c into two binomials", directive:"Factor each quadratic into two binomials.", grade:"Grade 9", stars:5, range:[75,78], pool:()=>enumSelectFactors(), example:{ problem:"Factor x² + 5x + 6", steps:["Two numbers that multiply to 6 and add to 5: 2 and 3","(x + 2)(x + 3)"], answer:"(x + 2)(x + 3)" } },
+    { id:"poly-factor-aN", label:"Factor trinomials (a ≠ 1)", objective:"Student factors ax² + bx + c with a leading coefficient", directive:"Factor each trinomial into two binomials.", grade:"Grade 9-10", stars:5, range:[79,83], pool:()=>enumFactorTrinomialA(), example:{ problem:"Factor 2x² + 7x + 3", steps:["a·c = 2·3 = 6; two numbers multiply to 6 and add to 7: 6 and 1","Split & group: 2x² + 6x + x + 3 = 2x(x + 3) + 1(x + 3)","(2x + 1)(x + 3)"], answer:"(2x + 1)(x + 3)" } },
+    { id:"poly-diff-squares", label:"Difference of squares", objective:"Student factors a² − b² as (a + b)(a − b)", directive:"Factor each difference of squares:  a² − b² = (a + b)(a − b).", grade:"Grade 9", stars:5, range:[84,88], pool:()=>enumFactorDiffSquares(), example:{ problem:"Factor x² - 9", steps:["x² - 9 = x² - 3²","a² - b² = (a + b)(a - b)","(x + 3)(x - 3)"], answer:"(x + 3)(x - 3)" } },
+    { id:"poly-perfect-square", label:"Perfect-square trinomials", objective:"Student factors a perfect-square trinomial as (a ± b)²", directive:"Factor each perfect-square trinomial:  a² ± 2ab + b² = (a ± b)².", grade:"Grade 9-10", stars:5, range:[89,92], pool:()=>enumFactorPerfectSquare(), example:{ problem:"Factor x² + 6x + 9", steps:["9 = 3² and 6x = 2·3·x → perfect square","x² + 6x + 9 = (x + 3)²"], answer:"(x + 3)²" } },
+    { id:"poly-grouping", label:"Factor by grouping", objective:"Student factors a four-term polynomial by grouping", directive:"Factor each four-term polynomial by grouping.", grade:"Grade 10", stars:5, range:[93,96], pool:()=>enumFactorGrouping(), example:{ problem:"Factor x³ + 2x² + 3x + 6", steps:["Group: (x³ + 2x²) + (3x + 6)","Factor each: x²(x + 2) + 3(x + 2)","(x² + 3)(x + 2)"], answer:"(x² + 3)(x + 2)" } },
+    { id:"poly-cubes", label:"Sum & difference of cubes", objective:"Student factors a³ ± b³", directive:"Factor each sum or difference of cubes.", grade:"Grade 10", stars:5, range:[97,100], pool:()=>enumFactorCubes(), example:{ problem:"Factor x³ + 8", steps:["8 = 2³ → sum of cubes a³ + b³","a³ + b³ = (a + b)(a² - ab + b²)","(x + 2)(x² - 2x + 4)"], answer:"(x + 2)(x² - 2x + 4)" } },
   ],
 };
 
@@ -500,31 +754,41 @@ function buildScoredPool(skill: string, unitIndex: number): XP[] {
   return raw.map(p => ({ ...p, diff: base + ((p.diff - lo) / span) * GPI_BAND }));
 }
 
-function selectProblems(pool: XP[], t: number, count: number): XP[] {
+// Per-sheet seeded RNG so consecutive sheets in a unit draw DIFFERENT subsets of
+// the pool (was fully deterministic by t → adjacent sheets near-identical).
+function mulberry32(seed: number): () => number {
+  return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function hashStr(s: string): number { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function shuffleSeeded<T>(a: T[], rng: () => number): T[] { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
+
+function selectProblems(pool: XP[], t: number, count: number, seed = 0): XP[] {
+  // Dedup by QUESTION TEXT so no two items show identical text on a sheet. (On
+  // the PRINT PDF the renderer doesn't draw the interactive graphs, so items that
+  // share a prompt — e.g. "What is the equation of the line shown?" — really are
+  // visual duplicates on paper and must collapse.)
   const seen = new Set<string>();
-  const uniq = pool.filter(p => (seen.has(p.key) ? false : (seen.add(p.key), true)));
+  const uniq = pool.filter((p) => (seen.has(p.q) ? false : (seen.add(p.q), true)));
   const sorted = uniq.sort((a, b) => a.diff - b.diff || (a.key < b.key ? -1 : 1));
   const N = sorted.length;
+  const rng = mulberry32(seed >>> 0);
   if (N <= count) {
+    const bag = shuffleSeeded(sorted, rng);
     const out: XP[] = [];
-    for (let i = 0; i < count; i++) out.push(sorted[i % N]);
+    for (let i = 0; i < count; i++) out.push(bag[i % bag.length]);
     return out.sort((a, b) => a.diff - b.diff);
   }
   const W = Math.min(N, Math.max(count, Math.round(N * 0.6)));
   const start = Math.round(t * (N - W));
   const win = sorted.slice(start, start + W);
-  const chosen: XP[] = [];
-  const used = new Set<number>();
-  for (let i = 0; i < count; i++) {
-    let idx = Math.round((i * (W - 1)) / (count - 1));
-    while (used.has(idx)) idx = (idx + 1) % W;
-    used.add(idx);
-    chosen.push(win[idx]);
-  }
-  return chosen.sort((a, b) => a.diff - b.diff);
+  // Seeded sample: shuffle the difficulty window, take `count`, restore order.
+  return shuffleSeeded(win, rng).slice(0, count).sort((a, b) => a.diff - b.diff);
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
+export function advancedUnits(skill: string): { index: number; id: string; label: string; objective: string; grade: string; range: [number, number] }[] {
+  return (CURRICULA[skill] ?? []).map((u, i) => ({ index: i, id: u.id, label: u.label, objective: u.objective, grade: u.grade, range: u.range }));
+}
 export function isAdvancedSkill(skill: string): boolean {
   return skill in CURRICULA;
 }
@@ -563,7 +827,7 @@ export function generateAdvancedSheet(
   const span = unit.range[1] - unit.range[0];
   const t = span === 0 ? 0.5 : (sheetNumber - unit.range[0]) / span;
 
-  const selected = selectProblems(buildScoredPool(skill, ui), t, problemCount);
+  const selected = selectProblems(buildScoredPool(skill, ui), t, problemCount, hashStr(`${skill}:${sheetNumber}`));
   const problems = selected.map((p, i) => ({
     id: nanoid(8),
     type: (p.type ?? "arithmetic") as "arithmetic" | "short_answer" | "multiple_choice",

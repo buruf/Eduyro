@@ -71,8 +71,16 @@ export async function runTrialEndingJob(): Promise<{
     }
   );
 
+  // Expire complimentary access (admin-granted, Stripe-less TRIALING rows).
+  // Stripe-backed trials are flipped by webhooks when the trial converts or
+  // lapses; comp rows have no webhook, so the cron downgrades them on time.
+  const compExpired = await db.subscription.updateMany({
+    where: { status: "TRIALING", stripeSubscriptionId: null, trialEndsAt: { lt: new Date() } },
+    data: { plan: "FREE", status: "CANCELED", canceledAt: new Date() },
+  });
+
   return {
-    recordsProcessed: emailsSent,
-    metadata: { emailsSent, skipped, failures: failures.length },
+    recordsProcessed: emailsSent + compExpired.count,
+    metadata: { emailsSent, skipped, compExpired: compExpired.count, failures: failures.length },
   };
 }

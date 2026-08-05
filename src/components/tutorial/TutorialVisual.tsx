@@ -92,6 +92,100 @@ function PlaceValueVisual() {
 }
 
 // ── M3 Addition — two groups slide together ──────────────────────────────────
+// ── Fact-strategy visuals (M3–M6) — the animation DEMONSTRATES the strategy the
+// lesson is teaching, using numbers that match the lesson's example (a generic
+// "3 + 2 = 5" taught nothing about near-doubles). Driven by the skill's
+// strategy, resolved from its name by factStrategyForSkill(). ──
+export type FactStrategy = "doubles" | "near-double" | "make-ten" | "count-on";
+
+/** Map a fact skill name → the strategy its visual should demonstrate, or null
+ *  (use the plain operation visual). */
+export function factStrategyForSkill(skillName: string): FactStrategy | null {
+  const s = (skillName || "").toLowerCase();
+  if (/near.?double/.test(s)) return "near-double";
+  if (/\bdouble/.test(s)) return "doubles";
+  if (/make.?ten|bridg|friends of ten/.test(s)) return "make-ten";
+  if (/count on|counting on/.test(s)) return "count-on";
+  return null;
+}
+
+function Dot({ cx, cy, fill, r = 15, dashed = false, style }: { cx: number; cy: number; fill: string; r?: number; dashed?: boolean; style?: React.CSSProperties }) {
+  return <circle cx={cx} cy={cy} r={r} fill={dashed ? "#fff" : fill} stroke={INK} strokeWidth={dashed ? 1.5 : 1} strokeDasharray={dashed ? "3 3" : undefined} style={style} />;
+}
+
+export function FactStrategyVisual({ strategy }: { strategy: FactStrategy }) {
+  const step = useTick(5, 1200);
+  const row = (n: number, y: number, fill: string, startX = 70, gap = 42) =>
+    Array.from({ length: n }, (_, i) => ({ cx: startX + i * gap, cy: y, fill }));
+
+  if (strategy === "doubles" || strategy === "near-double") {
+    // Two equal rows of 6 (the double you know) → then, for near-double, ONE
+    // more gold dot appears (the "nudge"). Matches the rule 6+6=12 → 6+7=13.
+    const n = 6, nudge = strategy === "near-double";
+    const showBottom = step >= 1;
+    const showNudge = nudge && step >= 2;
+    const top = row(n, 66, BLUE);
+    const bottom = row(n, 116, BLUE);
+    const label = !showBottom ? `${n}` : !showNudge ? `${n} + ${n} = ${2 * n}` : `${n} + ${n + 1} = ${2 * n + 1}`;
+    return (
+      <svg viewBox="0 0 360 200" className="w-full">
+        {top.map((d, i) => <Dot key={`t${i}`} cx={d.cx} cy={d.cy} fill={BLUE} />)}
+        {bottom.map((d, i) => <Dot key={`b${i}`} cx={d.cx} cy={d.cy} fill={BLUE} style={fade(showBottom)} />)}
+        <Dot cx={70 + n * 42} cy={116} fill={GOLD} style={fade(showNudge)} />
+        {showBottom && !showNudge && (
+          <text x={180} y={150} textAnchor="middle" fontSize={13} fill={MUTED}>the double you know</text>
+        )}
+        {showNudge && <text x={70 + n * 42} y={150} textAnchor="middle" fontSize={12} fill={GOLD} fontWeight={700}>+1 more</text>}
+        <text x={180} y={186} textAnchor="middle" fontSize={24} fontWeight={700} fill={INK} fontFamily="Georgia, serif">{label}</text>
+      </svg>
+    );
+  }
+
+  if (strategy === "make-ten") {
+    // 8 + 5: a ten-frame fills to 10 first (8 blue + 2 gold), then 3 more below.
+    const hi = 8, lo = 5, toTen = 10 - hi, rest = lo - toTen;
+    const showFill = step >= 1, showRest = step >= 2;
+    const frame = Array.from({ length: 10 }, (_, i) => ({ col: i % 5, r: Math.floor(i / 5) }));
+    return (
+      <svg viewBox="0 0 360 200" className="w-full">
+        {frame.map((c, i) => {
+          const cx = 90 + c.col * 40, cy = 40 + c.r * 40;
+          if (i < hi) return <Dot key={i} cx={cx} cy={cy} fill={BLUE} />;
+          return <Dot key={i} cx={cx} cy={cy} fill={GOLD} dashed={!showFill} style={fade(true)} />;
+        })}
+        {/* the 3 left over, below the frame */}
+        {Array.from({ length: rest }, (_, i) => (
+          <Dot key={`r${i}`} cx={90 + i * 40} cy={132} fill={GOLD} style={fade(showRest)} />
+        ))}
+        <text x={180} y={168} textAnchor="middle" fontSize={13} fill={MUTED} style={fade(showFill)}>
+          {showRest ? `10 + ${rest} = ${hi + lo}` : `${hi} + ${toTen} makes 10`}
+        </text>
+        <text x={180} y={190} textAnchor="middle" fontSize={22} fontWeight={700} fill={INK} fontFamily="Georgia, serif">{`${hi} + ${lo} = ${hi + lo}`}</text>
+      </svg>
+    );
+  }
+
+  // count-on: 8, then count on 3 → 9, 10, 11.
+  const hi = 8, lo = 3;
+  const revealed = Math.min(lo, Math.max(0, step)); // reveal one add-on per step
+  return (
+    <svg viewBox="0 0 360 200" className="w-full">
+      {/* the big number as a solid block */}
+      <rect x={40} y={54} width={120} height={60} rx={10} fill={BLUE} opacity={0.15} stroke={BLUE} />
+      <text x={100} y={92} textAnchor="middle" fontSize={30} fontWeight={800} fill={BLUE} fontFamily="Georgia, serif">{hi}</text>
+      {/* count on the small addend, one dot at a time, labelled 9,10,11 */}
+      {Array.from({ length: lo }, (_, i) => (
+        <g key={i} style={fade(i < revealed)}>
+          <Dot cx={200 + i * 44} cy={84} fill={GOLD} />
+          <text x={200 + i * 44} y={132} textAnchor="middle" fontSize={15} fontWeight={700} fill={GOLD}>{hi + i + 1}</text>
+        </g>
+      ))}
+      <text x={180} y={172} textAnchor="middle" fontSize={13} fill={MUTED}>start at {hi}, count on {lo}</text>
+      <text x={180} y={192} textAnchor="middle" fontSize={22} fontWeight={700} fill={INK} fontFamily="Georgia, serif">{`${hi} + ${lo} = ${hi + lo}`}</text>
+    </svg>
+  );
+}
+
 function AdditionVisual() {
   const step = useTick(5, 1100); // 0 groups appear, 1 hold, 2 merge, 3 total, 4 hold
   const merged = step >= 2;
@@ -518,8 +612,351 @@ function AdvancedMathLessonVisual() {
 }
 
 // ── Dispatcher ────────────────────────────────────────────────────────────────
-export function TutorialVisual({ visual, paused = false }: { visual: string; paused?: boolean }) {
-  return <TutorialPaused.Provider value={paused}>{renderVisual(visual)}</TutorialPaused.Provider>;
+// ── Tangent-line visual (calculus) ───────────────────────────
+// A point slides along y = x² while its tangent line pivots with it; the slope
+// readout updates live (slope = 2x) — the derivative IS the slope you see.
+function TangentVisual() {
+  const paused = useContext(TutorialPaused);
+  const [t, setT] = useState(0);
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => setT((v) => v + 0.02), 40);
+    return () => clearInterval(id);
+  }, [paused]);
+  // x sweeps −1.6 … 1.6 and back (sine ease)
+  const x = 1.6 * Math.sin(t);
+  const y = x * x;
+  const m = 2 * x; // the derivative of x²
+  // Map math coords → SVG: x ∈ [−2, 2] → [20, 380], y ∈ [−0.6, 3.4] → [230, 20]
+  const sx = (mx: number) => 200 + mx * 90;
+  const sy = (my: number) => 230 - (my + 0.6) * 52.5;
+  const px = sx(x), py = sy(y);
+  // Tangent segment: Δx = ±0.8 around the point
+  const x1 = x - 0.8, x2 = x + 0.8;
+  const parabola = Array.from({ length: 81 }, (_, i) => {
+    const mx = -2 + (i * 4) / 80;
+    return `${i === 0 ? "M" : "L"}${sx(mx).toFixed(1)},${sy(mx * mx).toFixed(1)}`;
+  }).join(" ");
+  return (
+    <svg viewBox="0 0 400 250" className="w-full" role="img" aria-label="A tangent line sliding along the parabola y equals x squared; its slope equals 2x">
+      {/* axes */}
+      <line x1="20" y1={sy(0)} x2="380" y2={sy(0)} stroke="#9aa3af" strokeWidth="1.5" />
+      <line x1={sx(0)} y1="14" x2={sx(0)} y2="240" stroke="#9aa3af" strokeWidth="1.5" />
+      <text x="372" y={sy(0) - 6} fontSize="13" fill="#6b7280" fontStyle="italic">x</text>
+      <text x={sx(0) + 7} y="24" fontSize="13" fill="#6b7280" fontStyle="italic">y</text>
+      {/* curve */}
+      <path d={parabola} fill="none" stroke="#1B4F8A" strokeWidth="2.5" />
+      {/* label sits below the axis on the right — clear of the sweeping point */}
+      <text x={sx(1.1)} y={sy(-0.35)} fontSize="12" fill="#1B4F8A" fontWeight="600">y = x²</text>
+      {/* tangent line */}
+      <line x1={sx(x1)} y1={sy(y + m * (x1 - x))} x2={sx(x2)} y2={sy(y + m * (x2 - x))} stroke="#C8902A" strokeWidth="2.5" strokeLinecap="round" />
+      {/* the point */}
+      <circle cx={px} cy={py} r="6" fill="#C8902A" stroke="#fff" strokeWidth="2" />
+      {/* live slope readout */}
+      <g>
+        <rect x="24" y="20" rx="6" width="150" height="40" fill="#fff" stroke="#e5e0d5" />
+        <text x="34" y="36" fontSize="12" fill="#4b5563">slope of the tangent</text>
+        <text x="34" y="53" fontSize="14" fontWeight="700" fill="#C8902A">
+          m = 2x = {m.toFixed(1)}
+        </text>
+      </g>
+      <text x="200" y="247" fontSize="11" fill="#6b7280" textAnchor="middle">The derivative is the slope at every point — watch it change as the point moves.</text>
+    </svg>
+  );
+}
+
+// ── Area-under-curve visual (integrals) — thin bars fill in under y = 2x, then
+// fuse into the shaded region: an integral ADDS UP tiny pieces to make a total.
+function AreaUnderCurveVisual() {
+  const step = useTick(5, 1200); // 0 line, 1-2 bars appear, 3 fuse, 4 hold
+  const bars = 8, x0 = 60, x1 = 300, y0 = 210;
+  const w = (x1 - x0) / bars;
+  const yAt = (px: number) => y0 - (px - x0) * 0.55; // y = 2x scaled
+  const showBars = step >= 1, fused = step >= 3;
+  return (
+    <svg viewBox="0 0 360 250" className="w-full" role="img" aria-label="Bars filling the area under a line, then fusing into the shaded region — an integral adds up tiny pieces">
+      <line x1="40" y1={y0} x2="330" y2={y0} stroke="#9aa3af" strokeWidth="1.5" />
+      <line x1={x0} y1="20" x2={x0} y2={y0 + 6} stroke="#9aa3af" strokeWidth="1.5" />
+      {/* the region, fused */}
+      <path d={`M${x0},${y0} L${x1},${y0} L${x1},${yAt(x1)} Z`} fill={GOLD} opacity={fused ? 0.45 : 0} style={{ transition: "opacity 700ms ease" }} />
+      {/* the bars */}
+      {Array.from({ length: bars }, (_, i) => {
+        const bx = x0 + i * w, h = y0 - yAt(bx + w);
+        return (
+          <rect key={i} x={bx + 1} y={y0 - h} width={w - 2} height={h} rx={2}
+            fill={GOLD} stroke={INK} strokeWidth={0.75}
+            style={{ opacity: !showBars ? 0 : fused ? 0 : i <= step * 4 ? 0.8 : 0, transition: "opacity 500ms ease" }} />
+        );
+      })}
+      <line x1={x0} y1={y0} x2={x1} y2={yAt(x1)} stroke={BLUE} strokeWidth="2.5" />
+      <text x={x1 + 6} y={yAt(x1) + 4} fontSize="12" fill={BLUE} fontWeight={600}>y = 2x</text>
+      <text x={180} y={238} textAnchor="middle" fontSize="12" fill={MUTED}>
+        {fused ? "∫ adds all the little pieces — the AREA under the line" : "slice the area into thin pieces…"}
+      </text>
+    </svg>
+  );
+}
+
+// ── Domain visual (rational functions) — the curve y = 1/(x−4) with its
+// excluded x drawn as a dashed wall: the domain is every x EXCEPT the one that
+// makes the denominator zero. The excluded value pulses so the eye lands on it.
+function DomainRangeVisual() {
+  const step = useTick(4, 1300); // 0 curve, 1 wall appears, 2 open circle + label, 3 hold
+  const x0 = 40, x1 = 340, y0 = 210, xa = 200; // xa = the excluded x (x = 4)
+  const showWall = step >= 1, showLabel = step >= 2;
+  // y = 1/(x-4) scaled: two branches around the asymptote
+  const branch = (from: number, to: number) => {
+    const pts: string[] = [];
+    for (let px = from; px <= to; px += 4) {
+      const xv = (px - xa) / 30; // math x−4
+      const yv = 1 / xv;
+      const py = 115 - yv * 26;
+      if (py > 18 && py < y0 - 4) pts.push(`${pts.length ? "L" : "M"}${px},${py.toFixed(1)}`);
+    }
+    return pts.join(" ");
+  };
+  return (
+    <svg viewBox="0 0 360 250" className="w-full" role="img" aria-label="The graph of one over x minus four: a dashed wall at x equals 4 shows the excluded value — the domain is every other x">
+      <line x1={x0 - 10} y1={115} x2={x1 + 10} y2={115} stroke="#9aa3af" strokeWidth="1.5" />
+      <line x1={x0} y1="16" x2={x0} y2={y0} stroke="#9aa3af" strokeWidth="1.5" />
+      <path d={branch(x0 + 8, xa - 10)} fill="none" stroke={BLUE} strokeWidth="2.5" />
+      <path d={branch(xa + 10, x1)} fill="none" stroke={BLUE} strokeWidth="2.5" />
+      <text x={x1 - 4} y={92} fontSize="12" fill={BLUE} fontWeight={600} textAnchor="end">f(x) = 1/(x − 4)</text>
+      {/* the forbidden wall */}
+      <line x1={xa} y1="16" x2={xa} y2={y0} stroke={GOLD} strokeWidth="2" strokeDasharray="6 5" style={fade(showWall)} />
+      <circle cx={xa} cy={115} r="6" fill="#fff" stroke={GOLD} strokeWidth="2.5" style={fade(showLabel)} />
+      <text x={xa} y={y0 + 18} textAnchor="middle" fontSize="13" fontWeight={700} fill={GOLD} style={fade(showWall)}>x = 4</text>
+      <text x={xa} y={36} textAnchor="middle" fontSize="12" fontWeight={700} fill={GOLD} style={fade(showLabel)}>✗ not allowed</text>
+      <text x={180} y={244} textAnchor="middle" fontSize="12" fill={MUTED}>
+        {showLabel ? "Domain: every x EXCEPT 4 — dividing by zero is impossible" : "the denominator hits 0 somewhere…"}
+      </text>
+    </svg>
+  );
+}
+
+// ── Right-triangle visual (Pythagorean theorem / right-triangle lessons) —
+// the classic picture: squares grow on each side of a 3-4-5 triangle, then the
+// areas add up: 9 + 16 = 25. The theorem, seen instead of stated.
+function RightTriangleVisual() {
+  const step = useTick(5, 1300); // 0 triangle, 1 leg squares, 2 hyp square, 3 sum, 4 hold
+  // Right angle at A; legs 3 (vertical) and 4 (horizontal); unit = 22px.
+  const u = 22;
+  const A = { x: 150, y: 160 }, B = { x: 150 + 4 * u, y: 160 }, C = { x: 150, y: 160 - 3 * u };
+  const legSq = step >= 1, hypSq = step >= 2, sum = step >= 3;
+  // Hypotenuse square: BC has length 5u = 110, so the perpendicular (66, −88)
+  // (BC rotated 90°, pointing away from the triangle) is already square-side long.
+  const Q1 = { x: B.x + 66, y: B.y - 88 };
+  const Q2 = { x: C.x + 66, y: C.y - 88 };
+  return (
+    <svg viewBox="0 0 400 260" className="w-full" role="img" aria-label="Squares drawn on the three sides of a right triangle: nine plus sixteen equals twenty-five">
+      {/* leg squares */}
+      <rect x={A.x} y={A.y} width={4 * u} height={4 * u} fill={BLUE} opacity={legSq ? 0.25 : 0} stroke={BLUE} style={{ transition: "opacity 600ms ease" }} />
+      <rect x={A.x - 3 * u} y={C.y} width={3 * u} height={3 * u} fill={BLUE} opacity={legSq ? 0.25 : 0} stroke={BLUE} style={{ transition: "opacity 600ms ease" }} />
+      {/* hypotenuse square */}
+      <polygon points={`${B.x},${B.y} ${C.x},${C.y} ${Q2.x},${Q2.y} ${Q1.x},${Q1.y}`} fill={GOLD} opacity={hypSq ? 0.35 : 0} stroke={GOLD} style={{ transition: "opacity 600ms ease" }} />
+      {/* the triangle on top */}
+      <polygon points={`${A.x},${A.y} ${B.x},${B.y} ${C.x},${C.y}`} fill="#fff" stroke={INK} strokeWidth="2" />
+      <rect x={A.x + 2} y={A.y - 12} width="10" height="10" fill="none" stroke={INK} strokeWidth="1.5" />
+      {/* side labels */}
+      <text x={A.x - 12} y={(A.y + C.y) / 2 + 4} fontSize="14" fontWeight={700} fill={INK}>a=3</text>
+      <text x={(A.x + B.x) / 2 - 12} y={A.y + 16} fontSize="14" fontWeight={700} fill={INK}>b=4</text>
+      <text x={(B.x + C.x) / 2 + 8} y={(B.y + C.y) / 2 - 6} fontSize="14" fontWeight={700} fill={GOLD}>c=5</text>
+      {/* areas */}
+      {legSq && <text x={A.x + 2 * u} y={A.y + 2 * u + 5} textAnchor="middle" fontSize="15" fontWeight={800} fill={BLUE}>16</text>}
+      {legSq && <text x={A.x - 1.5 * u} y={C.y + 1.5 * u + 5} textAnchor="middle" fontSize="15" fontWeight={800} fill={BLUE}>9</text>}
+      {hypSq && <text x={(B.x + Q2.x) / 2} y={(B.y + Q2.y) / 2} textAnchor="middle" fontSize="15" fontWeight={800} fill={GOLD}>25</text>}
+      <text x={200} y={250} textAnchor="middle" fontSize="14" fontWeight={700} fill={sum ? INK : MUTED} style={{ transition: "fill 400ms" }}>
+        {sum ? "9 + 16 = 25  →  a² + b² = c²" : "squares on every side…"}
+      </text>
+    </svg>
+  );
+}
+
+// ── SOH-CAH-TOA visual (right-triangle RATIOS) — label the sides FROM the
+// angle (Opposite / Adjacent / Hypotenuse), then the three ratios appear with
+// real numbers. This is the ratios lesson's actual skill; the squares proof
+// belongs to the Pythagorean THEOREM lesson.
+function SohCahToaVisual() {
+  // Phases: 0 label all three sides · 1-2 SIN · 3-4 COS · 5-6 TAN (repeat).
+  const step = useTick(7, 1500);
+  const u = 26;
+  const A = { x: 95, y: 185 }, B = { x: 95 + 4 * u, y: 185 }, C = { x: 95, y: 185 - 3 * u };
+  // θ lives at B — Opposite = vertical leg (AC), Adjacent = horizontal (AB).
+  const active: "none" | "sin" | "cos" | "tan" = step <= 0 ? "none" : step <= 2 ? "sin" : step <= 4 ? "cos" : "tan";
+  const oppOn = active === "sin" || active === "tan";
+  const adjOn = active === "cos" || active === "tan";
+  const hypOn = active === "sin" || active === "cos";
+  const side = (on: boolean, color: string) => ({ stroke: on || active === "none" ? color : "#c9c2b4", strokeWidth: on ? 5 : 2.5, transition: "all 400ms" });
+  // One ratio row: name, stacked fraction (colored by the two sides), value.
+  const Row = ({ y, name, num, den, numC, denC, val, on }: { y: number; name: string; num: string; den: string; numC: string; denC: string; val: string; on: boolean }) => (
+    <g opacity={on ? 1 : 0.3} style={{ transition: "opacity 400ms" }}>
+      <text x={248} y={y + 5} fontSize={on ? 16 : 13} fontWeight={800} fill={INK}>{name} θ =</text>
+      <text x={322} y={y - 6} fontSize={on ? 13 : 11} fontWeight={700} fill={numC} textAnchor="middle">{num}</text>
+      <line x1={300} y1={y} x2={344} y2={y} stroke={INK} strokeWidth="1.5" />
+      <text x={322} y={y + 15} fontSize={on ? 13 : 11} fontWeight={700} fill={denC} textAnchor="middle">{den}</text>
+      <text x={352} y={y + 5} fontSize={on ? 15 : 12} fontWeight={800} fill={INK}>= {val}</text>
+    </g>
+  );
+  return (
+    <svg viewBox="0 0 400 265" className="w-full" role="img" aria-label="A right triangle labelled Opposite, Adjacent, Hypotenuse; sine, cosine and tangent each shown as a fraction of two highlighted sides">
+      <polygon points={`${A.x},${A.y} ${B.x},${B.y} ${C.x},${C.y}`} fill="#fff" stroke="none" />
+      <rect x={A.x + 2} y={A.y - 12} width="10" height="10" fill="none" stroke={INK} strokeWidth="1.5" />
+      <path d={`M ${B.x - 26} ${B.y} A 26 26 0 0 0 ${B.x - 26 * Math.cos(Math.atan2(3, 4))} ${B.y - 26 * Math.sin(Math.atan2(3, 4))}`} fill="none" stroke={INK} strokeWidth="2" />
+      <text x={B.x - 42} y={B.y - 8} fontSize="15" fontWeight={800} fill={INK}>θ</text>
+      {/* sides — ALWAYS labelled; the pair the active ratio uses lights up */}
+      <line x1={A.x} y1={A.y} x2={C.x} y2={C.y} {...{ style: side(oppOn, BLUE) }} />
+      <line x1={A.x} y1={A.y} x2={B.x} y2={B.y} {...{ style: side(adjOn, GREEN) }} />
+      <line x1={B.x} y1={B.y} x2={C.x} y2={C.y} {...{ style: side(hypOn, GOLD) }} />
+      <text x={A.x - 8} y={(A.y + C.y) / 2 - 12} fontSize="12" fontWeight={700} fill={BLUE} textAnchor="end">Opposite</text>
+      <text x={A.x - 8} y={(A.y + C.y) / 2 + 2} fontSize="12" fontWeight={700} fill={BLUE} textAnchor="end">= 3</text>
+      <text x={(A.x + B.x) / 2} y={A.y + 18} fontSize="12" fontWeight={700} fill={GREEN} textAnchor="middle">Adjacent = 4</text>
+      <text x={(B.x + C.x) / 2 + 12} y={(B.y + C.y) / 2 - 10} fontSize="12" fontWeight={700} fill={GOLD}>Hypotenuse = 5</text>
+      {/* the three ratios as stacked fractions — active one full-strength */}
+      <Row y={62} name="sin" num="Opposite" den="Hypotenuse" numC={BLUE} denC={GOLD} val="3/5" on={active === "sin"} />
+      <Row y={124} name="cos" num="Adjacent" den="Hypotenuse" numC={GREEN} denC={GOLD} val="4/5" on={active === "cos"} />
+      <Row y={186} name="tan" num="Opposite" den="Adjacent" numC={BLUE} denC={GREEN} val="3/4" on={active === "tan"} />
+      <text x={200} y={256} textAnchor="middle" fontSize="12" fontWeight={600} fill={MUTED}>
+        {active === "none" ? "Name the sides FROM the angle θ" :
+         active === "sin" ? "SOH — Sine = Opposite over Hypotenuse" :
+         active === "cos" ? "CAH — Cosine = Adjacent over Hypotenuse" :
+                            "TOA — Tangent = Opposite over Adjacent"}
+      </text>
+    </svg>
+  );
+}
+
+// ── Simplify-fraction visual — 4/8 merges into 1/2 before the student's eyes:
+// eight small cells (4 shaded) fuse pairwise into four bigger cells (2 shaded).
+// The shaded AMOUNT never changes — only the size of the pieces. That's the
+// whole idea of simplifying, shown rather than told.
+function SimplifyFractionVisual() {
+  const step = useTick(4, 1600); // 0 eighths · 1 hold · 2 fused quarters · 3 hold
+  const fused = step >= 2;
+  const W = 300, H = 64, x0 = 28;
+  const cells = fused ? 4 : 8;
+  const cw = (W - 2) / cells;
+  const shaded = fused ? 2 : 4;
+  return (
+    <svg viewBox="0 0 400 150" className="w-full" role="img" aria-label="Four eighths merging into two quarters — the shaded amount stays the same">
+      {Array.from({ length: cells }, (_, i) => (
+        <rect key={`${cells}-${i}`} x={x0 + i * cw} y={28} width={cw} height={H} rx={4}
+          fill={i < shaded ? GOLD : "#fff"} stroke={INK} strokeWidth={1.5}
+          style={{ transition: "all 500ms ease" }} />
+      ))}
+      <text x={x0 + W + 14} y={64} fontSize="20" fontWeight={800} fill={INK} fontFamily="Georgia, serif">
+        {fused ? "1/2" : "4/8"}
+      </text>
+      <text x={200} y={122} textAnchor="middle" fontSize="13" fontWeight={600} fill={MUTED}>
+        {fused ? "…is the SAME amount as 1 of 2 big pieces — 4/8 = 1/2" : "4 of 8 small pieces shaded…"}
+      </text>
+      <text x={200} y={142} textAnchor="middle" fontSize="11" fill={MUTED}>
+        Simplifying never changes the amount — only the size of the pieces.
+      </text>
+    </svg>
+  );
+}
+
+// ── Fact-family visual — the classic number triangle: the product (or sum) on
+// top, the two partners below, and the FOUR related facts appearing one by one.
+// mode "mult": 4·8·32 (÷ undoes ×, missing factor = divide); mode "add": 6·7·13.
+function FactFamilyVisual({ mode }: { mode: "add" | "mult" }) {
+  const step = useTick(6, 1300); // 0 triangle · 1-4 facts · 5 hold
+  const [a, b, c] = mode === "mult" ? [4, 8, 32] : [6, 7, 13];
+  const facts = mode === "mult"
+    ? [`${a} × ${b} = ${c}`, `${b} × ${a} = ${c}`, `${c} ÷ ${a} = ${b}`, `${c} ÷ ${b} = ${a}`]
+    : [`${a} + ${b} = ${c}`, `${b} + ${a} = ${c}`, `${c} − ${a} = ${b}`, `${c} − ${b} = ${a}`];
+  return (
+    <svg viewBox="0 0 400 210" className="w-full" role="img" aria-label={`Fact family triangle for ${a}, ${b} and ${c} with its four related facts`}>
+      <polygon points="110,30 40,150 180,150" fill="#fff" stroke={INK} strokeWidth="2" />
+      <text x={110} y={62} textAnchor="middle" fontSize="24" fontWeight={800} fill={GOLD} fontFamily="Georgia, serif">{c}</text>
+      <text x={78} y={138} textAnchor="middle" fontSize="22" fontWeight={800} fill={BLUE} fontFamily="Georgia, serif">{a}</text>
+      <text x={144} y={138} textAnchor="middle" fontSize="22" fontWeight={800} fill={GREEN} fontFamily="Georgia, serif">{b}</text>
+      {facts.map((f, i) => (
+        <text key={f} x={230} y={55 + i * 34} fontSize="17" fontWeight={700} fill={i < 2 ? INK : MUTED} fontFamily="Georgia, serif" style={fade(step >= i + 1)}>
+          {f}
+        </text>
+      ))}
+      <text x={200} y={196} textAnchor="middle" fontSize="12" fontWeight={600} fill={MUTED}>
+        {step >= 4 ? (mode === "mult" ? "Know one fact → know all four. Missing factor? Just divide." : "Know one fact → know all four.") : `Three numbers, one family: ${a}, ${b}, ${c}`}
+      </text>
+    </svg>
+  );
+}
+
+// ── Skill → visual resolver ──────────────────────────────────────────────────
+// The lesson modal teaches a MICRO-skill, but concepts map one visual per LEVEL
+// — so "Composition of functions" was getting the generic level animation
+// (user-reported mismatch, M14). This resolver picks a visual that actually
+// demonstrates the unit's topic, and returns null when nothing genuinely fits:
+// the modal then HIDES the visual (no animation beats a wrong one).
+export type SkillVisual =
+  | { kind: "explorer"; which: "parabola" | "unitCircle" }
+  | { kind: "factStrategy"; strategy: FactStrategy }
+  | { kind: "visual"; name: string }
+  | null;
+
+export function visualForSkill(skillName: string): SkillVisual {
+  const s = (skillName || "").toLowerCase();
+  const fact = factStrategyForSkill(skillName);
+  if (fact) return { kind: "factStrategy", strategy: fact };
+  // Fact families FIRST — "missing FACTOR" was leaking into the polynomials
+  // /factor/ route (user-reported: ×/÷ lesson showed the 2x+3x=5x animation).
+  if (/fact famil.*(missing factor|missing dividend|missing divisor|×|÷)|missing factor|missing dividend|missing divisor/.test(s)) return { kind: "visual", name: "factFamilyMult" };
+  if (/fact famil|number bond/.test(s)) return { kind: "visual", name: "factFamilyAdd" };
+  // Topics with NO honest visual yet — bail out FIRST so substrings don't leak
+  // into wrong families ("multiplicity"→multiplication, "complex"→addition,
+  // "limits of polynomials"→polynomials — all real audit catches).
+  if (/limit|multiplicity|powers of i|complex number|sequence|series|vector|matri|end behavior|turning point|fundamental theorem|composition|inverse function|logarithm|exponential|transformation/.test(s)) return null;
+  // Domain of a function → the excluded-value graph
+  if (/domain/.test(s)) return { kind: "visual", name: "domainRange" };
+  // Calculus
+  if (/derivat|differenti|power rule|d\/dx|slope as a derivative|tangent/.test(s)) return { kind: "visual", name: "tangent" };
+  if (/∫|integral|integrat|area under/.test(s)) return { kind: "visual", name: "areaUnderCurve" };
+  // Pythagorean identity lives on the unit circle; the THEOREM and
+  // right-triangle lessons get the squares-on-the-sides picture.
+  if (/pythagorean identity/.test(s)) return { kind: "explorer", which: "unitCircle" };
+  // Ratios lessons label sides from the angle (SOH-CAH-TOA); the THEOREM
+  // lesson gets the squares proof.
+  if (/right.triangle|sohcahtoa/.test(s)) return { kind: "visual", name: "sohcahtoa" };
+  if (/pythagor|hypotenuse/.test(s)) return { kind: "visual", name: "rightTriangle" };
+  // Trig
+  if (/trig|sine|cosine|sohcahtoa|unit.circle|radian/.test(s)) return { kind: "explorer", which: "unitCircle" };
+  // Polynomials & factoring BEFORE quadratics ("Factor quadratic trinomials"
+  // is a factoring lesson, not a parabola lesson).
+  if (/polynomial|monomial|binomial|foil|factor|trinomial|like terms|degree|leading coefficient|constant term|standard form|synthetic|zero.?product|box method|partial products|difference of squares|difference of cubes|sum & difference/.test(s)) return { kind: "visual", name: "polynomials" };
+  // Quadratics / parabolas
+  if (/quadratic|parabol|vertex|axis of symmetry|discriminant|complet.*square|x² =|x²=/.test(s)) return { kind: "explorer", which: "parabola" };
+  // Lines & plotting
+  if (/slope|intercept|mx \+ b|y = mx|plot|graph.*line|linear (equation|function)|coordinate/.test(s)) return { kind: "visual", name: "linearGraph" };
+  // Equations / inequalities → the balance idea
+  if (/equation|solve for|inequal|balance|unknown/.test(s)) return { kind: "visual", name: "balance" };
+  // Fractions / decimals / percents / ratios
+  // Simplifying gets its own animation (pieces fuse, amount stays) — the
+  // identify-pie slider was the wrong topic for it (user report).
+  if (/simplify.*fraction|reduce.*fraction|lowest terms/.test(s)) return { kind: "visual", name: "simplifyFraction" };
+  if (/fraction|numerator|denominator|mixed number|part of a whole/.test(s))
+    return { kind: "visual", name: /add|subtract|multiply|divide|×|÷/.test(s) ? "fractionOps" : "fractionBasics" };
+  if (/decimal/.test(s)) return { kind: "visual", name: "decimals" };
+  if (/percent/.test(s)) return { kind: "visual", name: "percents" };
+  if (/\bratios?\b|proportion|scale up/.test(s)) return { kind: "visual", name: "ratios" };
+  // Early math
+  if (/count/.test(s)) return { kind: "visual", name: "counting" };
+  if (/place value|round|expanded|tens|hundreds|compare.*number|greater|less/.test(s)) return { kind: "visual", name: "placeValue" };
+  if (/divide|division|÷|quotient|remainder/.test(s)) return { kind: "visual", name: "division" };
+  if (/multipl|times|×|product|array/.test(s)) return { kind: "visual", name: "multiplication" };
+  if (/subtract|minus|difference|take away/.test(s)) return { kind: "visual", name: "subtraction" };
+  if (/add|plus|sum/.test(s)) return { kind: "visual", name: "addition" };
+  // Functions, matrices, logs, limits, complex numbers, transformations… no
+  // honest animation exists yet — show nothing rather than something wrong.
+  return null;
+}
+
+export function TutorialVisual({ visual, paused = false, strategy }: { visual: string; paused?: boolean; strategy?: FactStrategy }) {
+  return (
+    <TutorialPaused.Provider value={paused}>
+      {visual === "factStrategy" && strategy ? <FactStrategyVisual strategy={strategy} /> : renderVisual(visual)}
+    </TutorialPaused.Provider>
+  );
 }
 
 function renderVisual(visual: string) {
@@ -542,6 +979,14 @@ function renderVisual(visual: string) {
     case "balance":        return <BalanceVisual />;
     case "linearGraph":    return <LinearGraphVisual />;
     case "polynomials":    return <PolynomialsVisual />;
+    case "tangent":        return <TangentVisual />;
+    case "areaUnderCurve": return <AreaUnderCurveVisual />;
+    case "domainRange":    return <DomainRangeVisual />;
+    case "simplifyFraction": return <SimplifyFractionVisual />;
+    case "factFamilyMult":  return <FactFamilyVisual mode="mult" />;
+    case "factFamilyAdd":   return <FactFamilyVisual mode="add" />;
+    case "rightTriangle":  return <RightTriangleVisual />;
+    case "sohcahtoa":      return <SohCahToaVisual />;
     default:               return null;
   }
 }

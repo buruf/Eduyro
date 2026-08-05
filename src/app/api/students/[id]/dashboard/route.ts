@@ -1,13 +1,16 @@
 // src/app/api/students/[id]/dashboard/route.ts
+import { appDayStart } from "@/lib/time";
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import {
   ok, notFound, forbidden, handleRouteError, withAuth,
 } from "@/lib/api/helpers";
 import { startOfDay, subDays, format } from "date-fns";
-import { generateProblems, getMathSheetMeta, nonMathDistinctSheets, nonMathBankQuestions } from "@/lib/worksheet/generator";
+import { generateProblems, getMathSheetMeta, nonMathDistinctSheets, nonMathBankQuestions, getMathLevelSkills } from "@/lib/worksheet/generator";
 import { computeItemMastery, type ItemMastery } from "@/lib/worksheet/item-mastery";
 import { masteryTarget, isSkillMastered } from "@/lib/mastery";
+import { isSheetOnPace, skillLabelFromTitle, factPaceTargetSec } from "@/lib/mastery/fluency";
+import { buildTodayPacket, skillCompletionStats, itemMasteryBySkill } from "@/lib/worksheet/today-packet";
 import { enabledSubjectSlugs } from "@/lib/enrollment";
 import type { StudentDashboard, TodaySheet, SkillTreeNode } from "@/types";
 
@@ -58,7 +61,14 @@ export async function GET(
         (l) => l.parent.userId === ctx.userId
       );
       const isAdmin = ctx.role === "ADMIN" || ctx.role === "SUPER_ADMIN";
-      const isTeacher = ctx.role === "TEACHER";
+      // TEACHER must be LINKED to this student (blanket teacher access let any
+      // self-registered teacher read any child's data — security audit).
+      const isTeacher =
+        ctx.role === "TEACHER" &&
+        (await db.teacherStudent.findFirst({
+          where: { studentId: student.id, teacher: { userId: ctx.userId } },
+          select: { id: true },
+        })) !== null;
 
       if (!isOwn && !isParent && !isAdmin && !isTeacher) return forbidden();
 
@@ -72,10 +82,20 @@ export async function GET(
       const inProgressEnabled = student.progress.filter(
         (p) => p.status === "IN_PROGRESS" && enabled.has(p.level.subject.slug)
       );
+      // DEFENSIVE: if a subject somehow has more than one IN_PROGRESS level,
+      // always serve the FURTHEST one (highest sortOrder). Taking [0] served the
+      // child their OLD level, so "today's lesson" was one they had already
+      // completed and submitted (field reports: Ridwan, then Radwa). The stale
+      // row is repaired separately, but the reader must never regress a child.
+      const furthestIn = (slug: string) =>
+        inProgressEnabled
+          .filter((p) => p.level.subject.slug === slug)
+          .sort((a, b) => (b.level.sortOrder ?? 0) - (a.level.sortOrder ?? 0))[0];
+
+      const defaultSlug = inProgressEnabled[0]?.level.subject.slug;
       const activeProgress =
-        (requestedSubject
-          ? inProgressEnabled.find((p) => p.level.subject.slug === requestedSubject)
-          : undefined) ?? inProgressEnabled[0];
+        (requestedSubject ? furthestIn(requestedSubject) : undefined) ??
+        (defaultSlug ? furthestIn(defaultSlug) : undefined);
 
       // ── Build today's packet ──
       const todayPacket = await buildTodayPacket(student.id, activeProgress);
@@ -84,7 +104,7 @@ export async function GET(
       const weeklyAccuracy = buildWeeklyAccuracy(student.completedSheets);
 
       // ── Today accuracy ──
-      const todayStart = startOfDay(new Date());
+      const todayStart = appDayStart(new Date(), (student as any).timezone);
       const todaySheets = student.completedSheets.filter(
         (s) => s.completedAt >= todayStart
       );
@@ -96,45 +116,73 @@ export async function GET(
 
       // ── Skill tree for active level ──
       const skillTree = activeProgress
-        ? await buildSkillTree(student.id, activeProgress.level)
+        ? await buildSkillTree(student.id, activeProgress.level, activeProgress.currentSkillIndex ?? 0)
         : [];
 
-      // ── Level progress summary ──
-      const levelProgress = activeProgress
-        ? {
-            levelCode: activeProgress.level.code,
-            levelName: activeProgress.level.name,
-            subjectName: activeProgress.level.subject.slug,
-            sheetsCompleted: activeProgress.sheetsCompleted,
-            totalSheets:
-              activeProgress.level.problemsPerSheet *
-              activeProgress.level.skills.reduce(
-                (sum, s) => sum + (s as any).totalSheets,
-                0
-              ),
-            progressPct: Math.min(
-              Math.round(
-                (activeProgress.sheetsCompleted /
-                  Math.max(
-                    activeProgress.level.skills.reduce(
-                      (sum, s) => sum + (s as any).totalSheets,
-                      0
-                    ),
-                    1
-                  )) *
-                  100
-              ),
-              100
-            ),
-            consecutivePassDays: activeProgress.consecutivePassDays,
-            daysUntilAdvance: Math.max(
-              0,
-              activeProgress.level.masteryConsecutiveDays -
-                activeProgress.consecutivePassDays
-            ),
-            status: activeProgress.status,
-          }
-        : null;
+      // ── Level progress summary (SKILL-MAP: one lesson per day, ≥95% to advance) ──
+      let levelProgress: any = null;
+      if (activeProgress) {
+        const isMath = activeProgress.level.subject.slug === "MATH";
+        const mathSkills = isMath ? getMathLevelSkills(activeProgress.level.code) : [];
+        const skillIdx = Math.min(Math.max(0, activeProgress.currentSkillIndex ?? 0), Math.max(0, mathSkills.length - 1));
+        const curSkill = mathSkills[skillIdx];
+        // Effective daily quota: raise-only override; window restarts at an
+        // admin skill-unlock (must MATCH buildTodayPacket + submit-sheet).
+        const lvlPerDay = activeProgress.level.sheetsPerDay ?? 3;
+        const sheetsPerDay = (activeProgress as any).dailySheetsOverride
+          ? Math.max((activeProgress as any).dailySheetsOverride, lvlPerDay)
+          : lvlPerDay;
+        const unlkAt = (activeProgress as any).skillUnlockedAt as Date | null;
+        const qStart = unlkAt && unlkAt > todayStart ? unlkAt : todayStart;
+        const threshold = activeProgress.level.masteryThresholdPct ?? 90;
+        // Today's completed sheets for THIS level (quota window).
+        const todayLevelSheets = await db.completedSheet.findMany({
+          where: { studentId: student.id, worksheet: { levelId: activeProgress.level.id }, completedAt: { gte: qStart } },
+          select: { accuracyPct: true, timeSeconds: true, totalProblems: true, worksheet: { select: { title: true } } },
+        });
+        const todayDone = todayLevelSheets.length;
+        const todayAvg = todayDone ? Math.round(todayLevelSheets.reduce((a, s) => a + s.accuracyPct, 0) / todayDone) : 0;
+        // Fluency gate (fact levels): a fact sheet done accurately but too slowly
+        // does not clear the day (must MATCH submit-sheet).
+        const todayAllFluent = todayLevelSheets.every((s) =>
+          isSheetOnPace({
+            levelCode: activeProgress.level.code, skillLabel: skillLabelFromTitle(s.worksheet?.title),
+            timeSeconds: s.timeSeconds, problemCount: s.totalProblems,
+          }));
+        const slowToday = todayDone > 0 && todayAvg >= threshold && !todayAllFluent;
+        // Advancement clears at the LEVEL quota (lvlPerDay) — a raised practice
+        // cap only adds extra sheets, it doesn't move the advancement bar.
+        const dayCleared = todayDone >= lvlPerDay && todayAvg >= threshold && todayAllFluent;
+        levelProgress = {
+          levelCode: activeProgress.level.code,
+          levelName: activeProgress.level.name,
+          subjectName: activeProgress.level.subject.slug,
+          status: activeProgress.status,
+          // Skill-map fields:
+          currentSkillIndex: skillIdx,
+          currentSkillName: curSkill?.label ?? (skillTree as any[]).find((s) => s.status === "IN_PROGRESS")?.skillName ?? activeProgress.level.name,
+          totalSkills: mathSkills.length,
+          skillsMastered: skillIdx,
+          todayDone,
+          todayNeeded: sheetsPerDay,
+          todayAvgPct: todayAvg,
+          // The REAL bar (levels can differ) — the UI used to hard-code "90%",
+          // which contradicted itself whenever the bar or the blocker differed.
+          thresholdPct: threshold,
+          paceTargetSec: factPaceTargetSec(activeProgress.level.code, curSkill?.label ?? ""),
+          dayCleared,
+          // True when today's fact sheets were accurate but too slow — the UI
+          // shows "great accuracy, now build speed" and the sheets repeat.
+          slowToday,
+          progressPct: mathSkills.length ? Math.round((skillIdx / mathSkills.length) * 100) : 0,
+          // Back-compat with older UI (advancement bar = level quota):
+          masterySheetsPassed: todayDone,
+          masterySheetsNeeded: lvlPerDay,
+          sheetsToAdvance: Math.max(0, lvlPerDay - todayDone),
+          isReadyToAdvance: dayCleared,
+          currentSkill: curSkill?.label ?? activeProgress.level.name,
+        };
+      }
 
       const dashboard: StudentDashboard = {
         student: { ...student, user: student.user },
@@ -158,176 +206,6 @@ export async function GET(
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
-
-async function buildTodayPacket(
-  studentId: string,
-  progress: any
-): Promise<{ sheets: TodaySheet[]; allComplete: boolean; canPrint: boolean }> {
-  if (!progress) {
-    return { sheets: [], allComplete: false, canPrint: false };
-  }
-
-  const todayStart = startOfDay(new Date());
-  const sheetsPerDay = progress.level.sheetsPerDay ?? 3;
-
-  // Get today's completed sheets for this student + level
-  const completedToday = await db.completedSheet.findMany({
-    where: {
-      studentId,
-      completedAt: { gte: todayStart },
-      worksheet: { levelId: progress.levelId },
-    },
-    include: { worksheet: { include: { skill: true } } },
-    orderBy: { completedAt: "asc" },
-  });
-
-  // Skip worksheets the student has EVER completed in this level — not just
-  // today's. (Excluding only today's meant every new day re-served the same
-  // first sheets of the level, so students never saw new material.)
-  const completedEver = await db.completedSheet.findMany({
-    where: { studentId, worksheet: { levelId: progress.levelId } },
-    select: { worksheetId: true },
-  });
-  const completedWorksheetIds = [...new Set(completedEver.map((c) => c.worksheetId))];
-
-  const needed = Math.max(0, sheetsPerDay - completedToday.length);
-
-  // Which skill is the packet currently working on?
-  //  • MATH levels are sheet-number-driven (the engine raises difficulty by sheet
-  //    number; the named "skills" are cosmetic) → always the first skill.
-  //  • Reading/Writing/Science have DISTINCT content per skill, so the packet must
-  //    stay on the first not-yet-mastered skill until it's mastered, then advance —
-  //    otherwise the student spreads thin across skills and never unlocks the next.
-  const isMath = progress.level?.subject?.slug === "MATH";
-  const skills = progress.level?.skills ?? [];
-  let activeSkill = skills[0];
-  if (!isMath && skills.length > 1) {
-    const subjectSlug = progress.level?.subject?.slug ?? "";
-    const levelCode = progress.level?.code ?? "";
-    const stats = await skillCompletionStats(studentId, progress.levelId);
-    const itemStats = await itemMasteryBySkill(studentId, progress.level);
-    activeSkill = skills.find((sk: any) => {
-      const st = stats[sk.id];
-      const n = st?.sheetsCompleted ?? 0;
-      const avg = n > 0 ? st.totalAccuracy / n : 0;
-      return !isSkillMastered({
-        isMath: false,
-        sheetsCompleted: n,
-        avgAccuracy: avg,
-        distinctSheets: nonMathDistinctSheets(subjectSlug, levelCode, sk.name),
-        item: itemStats[sk.id],
-      });
-    }) ?? skills[skills.length - 1];
-  }
-
-  let nextWorksheets = await db.worksheet.findMany({
-    where: {
-      levelId: progress.levelId,
-      id: { notIn: completedWorksheetIds },
-      isActive: true,
-      ...(isMath || !activeSkill ? {} : { skillId: activeSkill.id }),
-    },
-    include: { skill: true },
-    orderBy: [{ skill: { sortOrder: "asc" } }, { sheetNumber: "asc" }],
-    take: needed,
-  });
-
-  // AUTO-MINT: the seeded bank is small (a handful of sheets per skill). When
-  // a student works past it, mint the next sheets on the fly from the clean
-  // curriculum engine — sheetNumber keeps advancing, so difficulty rises
-  // day over day exactly like the shop packs (Kumon pacing). Problems AND the
-  // answer key are stored on the row, so grading stays consistent.
-  const deficit = needed - nextWorksheets.length;
-  const skill = activeSkill;
-  if (deficit > 0 && skill) {
-    // Worksheets are shared per-skill content, so two concurrent requests (two
-    // tabs, or two students on the same skill) could otherwise create duplicate
-    // (skillId, sheetNumber) rows. Serialize minting per (level, skill) with a
-    // Postgres advisory lock and re-read the max sheet number INSIDE the lock so
-    // numbers can never collide. The lock auto-releases at transaction end.
-    const minted = await db.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${progress.levelId}), hashtext(${skill.id}))`;
-      const maxSheet = await tx.worksheet.aggregate({
-        where: { levelId: progress.levelId, skillId: skill.id },
-        _max: { sheetNumber: true },
-      });
-      let nextNum = (maxSheet._max.sheetNumber ?? 0) + 1;
-      const created: typeof nextWorksheets = [];
-      for (let i = 0; i < deficit; i++) {
-        const { problems, answerKey } = generateProblems({
-          subjectSlug: progress.level?.subject?.slug ?? "MATH",
-          levelCode: progress.level?.code ?? "M3",
-          skillName: skill.name,
-          problemCount: 30,
-          timeLimitMinutes: progress.level?.timeLimitMinutes ?? 10,
-          // The engine's curriculum is 100 sheets; clamp so extreme long-running
-          // students keep getting the hardest material rather than crashing.
-          sheetNumber: Math.min(100, nextNum),
-          totalSheets: 100,
-        });
-        created.push(await tx.worksheet.create({
-          data: {
-            levelId: progress.levelId,
-            skillId: skill.id,
-            sheetNumber: nextNum,
-            title: `${skill.name} — Sheet ${nextNum}`,
-            problems: problems as any,
-            answerKey: answerKey as any,
-            problemCount: problems.length,
-            estimatedMinutes: progress.level?.timeLimitMinutes ?? 10,
-          },
-          include: { skill: true },
-        }));
-        nextNum++;
-      }
-      return created;
-    }, { timeout: 20_000 });
-    nextWorksheets.push(...minted);
-  }
-
-  const sheets: TodaySheet[] = [];
-
-  // The clean engines teach a multi-unit progression inside one level, so a
-  // sheet's honest title is its current unit (e.g. "Arithmetic sequences"),
-  // not the parent skill ("Limits"). Resolve it server-side per sheet number.
-  const unitOf = (sheetNumber: number, fallback: string) =>
-    getMathSheetMeta(progress.level.code, sheetNumber)?.subSkillLabel ?? fallback;
-
-  // Add completed sheets
-  completedToday.forEach((cs, i) => {
-    sheets.push({
-      index: i + 1,
-      worksheetId: cs.worksheetId,
-      title: cs.worksheet.title,
-      skillName: unitOf(cs.worksheet.sheetNumber, cs.worksheet.skill.name),
-      problemCount: cs.totalProblems,
-      status: "COMPLETED",
-      score: cs.score,
-      accuracyPct: cs.accuracyPct,
-      timeSeconds: cs.timeSeconds,
-      completedAt: cs.completedAt.toISOString(),
-    });
-  });
-
-  // Add pending sheets
-  nextWorksheets.forEach((ws, i) => {
-    sheets.push({
-      index: completedToday.length + i + 1,
-      worksheetId: ws.id,
-      title: ws.title,
-      skillName: unitOf(ws.sheetNumber, ws.skill.name),
-      // Use the actual stored content length — the cached `problemCount` field can
-      // be stale (e.g. a seeded "10" when the sheet really has 7), which showed a
-      // wrong count on the card before the sheet was opened.
-      problemCount: Array.isArray(ws.problems) ? (ws.problems as any[]).length : ws.problemCount,
-      status: i === 0 ? "IN_PROGRESS" : "NOT_STARTED",
-    });
-  });
-
-  const allComplete = sheets.length > 0 && sheets.every((s) => s.status === "COMPLETED");
-
-  return { sheets, allComplete, canPrint: true };
-}
 
 function buildWeeklyAccuracy(
   completedSheets: any[]
@@ -362,78 +240,33 @@ function buildWeeklyAccuracy(
 // @/lib/mastery so every route shares one source of truth.
 
 /** Per-skill { sheetsCompleted, totalAccuracy } for a student in a level. */
-async function skillCompletionStats(
-  studentId: string,
-  levelId: string
-): Promise<Record<string, { sheetsCompleted: number; totalAccuracy: number }>> {
-  const grouped = await db.completedSheet.groupBy({
-    by: ["worksheetId"],
-    where: { studentId, worksheet: { levelId } },
-    _avg: { accuracyPct: true },
-    _count: true,
-  });
-  const ws = await db.worksheet.findMany({
-    where: { id: { in: grouped.map((g) => g.worksheetId) } },
-    select: { id: true, skillId: true },
-  });
-  const out: Record<string, { sheetsCompleted: number; totalAccuracy: number }> = {};
-  for (const g of grouped) {
-    const w = ws.find((x) => x.id === g.worksheetId);
-    if (!w) continue;
-    const b = (out[w.skillId] ??= { sheetsCompleted: 0, totalAccuracy: 0 });
-    b.sheetsCompleted += g._count;
-    b.totalAccuracy += (g._avg.accuracyPct ?? 0) * g._count;
-  }
-  return out;
-}
-
-/**
- * Per-skill item-level mastery for a NON-MATH level. Loads each completed sheet
- * with its stored problems so answers (which carry only per-generation problem
- * ids) can be resolved back to question text, then dedupes across sheets by
- * question. Returns {} for MATH (engine = unbounded items, item coverage N/A).
- */
-async function itemMasteryBySkill(
-  studentId: string,
-  level: any,
-): Promise<Record<string, ItemMastery>> {
-  const subjectSlug = level?.subject?.slug ?? "";
-  const levelCode = level?.code ?? "";
-  if (subjectSlug === "MATH") return {};
-
-  const sheets = await db.completedSheet.findMany({
-    where: { studentId, worksheet: { levelId: level.id } },
-    select: {
-      completedAt: true,
-      answers: true,
-      worksheet: { select: { skillId: true, problems: true } },
-    },
-  });
-
-  const bySkill: Record<string, { completedAt: Date; answers: unknown; problems: unknown }[]> = {};
-  for (const s of sheets) {
-    const sid = s.worksheet?.skillId;
-    if (!sid) continue;
-    (bySkill[sid] ??= []).push({ completedAt: s.completedAt, answers: s.answers, problems: s.worksheet?.problems });
-  }
-
-  const out: Record<string, ItemMastery> = {};
-  for (const skill of level.skills ?? []) {
-    const bank = nonMathBankQuestions(subjectSlug, levelCode, skill.name);
-    out[skill.id] = computeItemMastery(bySkill[skill.id] ?? [], bank);
-  }
-  return out;
-}
-
 async function buildSkillTree(
   studentId: string,
-  level: any
+  level: any,
+  currentSkillIndex: number = 0
 ): Promise<SkillTreeNode[]> {
   // Shared with buildTodayPacket — one grouping helper, not a copy.
   const skillStats = await skillCompletionStats(studentId, level.id);
 
   const isMathSubj = level.subject?.slug === "MATH";
-  const itemStats = isMathSubj ? {} : await itemMasteryBySkill(studentId, level);
+
+  // MATH skill map = the engine's REAL content lessons, ticked by the student's
+  // currentSkillIndex (one lesson per day). Lessons before the index are done,
+  // the index one is in progress, later ones are locked.
+  if (isMathSubj) {
+    const skills = getMathLevelSkills(level.code ?? "");
+    return skills.map((u, i): SkillTreeNode => ({
+      skillId: u.id,
+      skillName: u.label,
+      sortOrder: i,
+      status: i < currentSkillIndex ? "MASTERED" : i === currentSkillIndex ? "IN_PROGRESS" : "LOCKED",
+      progressPct: i < currentSkillIndex ? 100 : i === currentSkillIndex ? 20 : 0,
+      sheetsCompleted: 0,
+      totalSheets: u.range[1] - u.range[0] + 1,
+    }));
+  }
+
+  const itemStats = await itemMasteryBySkill(studentId, level);
 
   let foundInProgress = false;
 

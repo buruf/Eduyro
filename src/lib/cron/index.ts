@@ -3,6 +3,7 @@
 // Triggered by an external cron service (Vercel Cron, Upstash, or any HTTP scheduler)
 // that hits POST /api/cron/[jobName] with the secret header.
 
+import { timingSafeEqual } from "crypto";
 import { db } from "@/lib/db";
 
 // ─────────────────────────────────────────────
@@ -10,13 +11,24 @@ import { db } from "@/lib/db";
 // ─────────────────────────────────────────────
 
 export function verifyCronSecret(req: Request): boolean {
-  const authHeader = req.headers.get("authorization");
-  const expected = `Bearer ${process.env.CRON_SECRET}`;
-  if (!process.env.CRON_SECRET) {
-    console.warn("[CRON] CRON_SECRET not set — cron routes are unprotected!");
-    return true; // permissive in dev
+  const secret = process.env.CRON_SECRET;
+  // FAIL CLOSED: if the secret is unconfigured, refuse — never expose cron jobs
+  // (bulk PDF gen, dunning, streak resets) to anonymous callers. Only bypass in
+  // local dev, and only when explicitly running outside production.
+  if (!secret) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[CRON] CRON_SECRET not set — allowing in non-production only.");
+      return true;
+    }
+    console.error("[CRON] CRON_SECRET not set in production — refusing all cron requests.");
+    return false;
   }
-  return authHeader === expected;
+  const authHeader = req.headers.get("authorization") ?? "";
+  const expected = `Bearer ${secret}`;
+  // Constant-time compare (avoid length/timing leaks).
+  const a = Buffer.from(authHeader);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 // ─────────────────────────────────────────────

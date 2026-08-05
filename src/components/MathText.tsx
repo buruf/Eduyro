@@ -7,6 +7,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+// Without this stylesheet KaTeX's markup renders LINEARIZED — "1 over x−4"
+// came out as "x−41". Importing once here covers every MathText user.
+import "katex/dist/katex.min.css";
 
 interface MathTextProps {
   children: string;
@@ -29,6 +32,10 @@ function upgradeLegacyNotation(text: string): string {
       .replace(/\\frac\{[^{}]*\}\{[^{}]*\}/g, (m) => `$${m.replace(/_/g, "\\_")}$`)
       .replace(/\\sqrt\{[^{}]*\}/g, (m) => `$${m.replace(/_/g, "\\_")}$`);
   }
+
+  // Rational expressions: 1/(x − 4), 3/(x + 2) → stacked \frac{1}{x − 4}
+  // (user feedback: "why f(x) = 1/(x - 4) instead of 1 over x − 4").
+  text = text.replace(/(\d+|[a-zA-Z])\/\(([^()]+)\)/g, (_, n, d) => `$\\frac{${n}}{${String(d).trim()}}$`);
 
   // Simple fraction pattern: number/number → \frac{num}{den}
   // Only convert standalone fractions like "1/2", "3/4" not "x/y" variables or "km/h"

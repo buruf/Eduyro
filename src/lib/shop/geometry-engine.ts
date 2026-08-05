@@ -98,6 +98,46 @@ const circle: Builder = () => {
 };
 const trim = (n: number) => String(Math.round(n * 100) / 100);
 
+// ── Trigonometry (right triangles) ────────────────────────────────────────────
+// Pythagorean triples (primitives × scale) so every answer is an exact integer —
+// no calculator needed. Legs ≤ 60, hypotenuse ≤ 75.
+const gcdN = (a: number, b: number): number => (b === 0 ? a : gcdN(b, a % b));
+const fr = (n: number, d: number): string => { const g = gcdN(n, d) || 1; return `${n / g}/${d / g}`; };
+const TRIPLES: [number, number, number][] = (() => {
+  const prims: [number, number, number][] = [[3, 4, 5], [5, 12, 13], [8, 15, 17], [7, 24, 25], [20, 21, 29], [9, 40, 41], [12, 35, 37], [11, 60, 61], [28, 45, 53]];
+  const out: [number, number, number][] = [];
+  for (const [a, b, c] of prims) for (let k = 1; a * k <= 60 && b * k <= 60 && c * k <= 75; k++) out.push([a * k, b * k, c * k]);
+  return out;
+})();
+// Pythagorean theorem — find the hypotenuse. Figure: legs given, hyp = "?".
+const pythagHyp: Builder = () => TRIPLES.map(([a, b, c]) => ({ q: `[[viz geomright ${a} ${b} 0]]`, a: String(c), diff: c, key: `ph:${a}_${b}` }));
+// Pythagorean theorem — find a missing leg. Figure: one leg + hyp given, other = "?".
+const pythagLeg: Builder = () => TRIPLES.map(([a, b, c]) => ({ q: `[[viz geomright 0 ${b} ${c}]]`, a: String(a), diff: c + 0.5, key: `pl:${a}_${b}` }));
+// Trig ratios — read sin/cos/tan from a labelled right triangle. θ is at the
+// bottom-right vertex, so opposite = vertical leg, adjacent = horizontal leg.
+const trigRatio: Builder = () => {
+  const out: XP[] = [];
+  for (const [a, b, c] of TRIPLES) {
+    out.push({ q: `[[viz geomright ${a} ${b} ${c} 1]] sin θ`, a: fr(b, c), diff: c, key: `ts:${a}_${b}` });
+    out.push({ q: `[[viz geomright ${a} ${b} ${c} 1]] cos θ`, a: fr(a, c), diff: c + 0.3, key: `tco:${a}_${b}` });
+    out.push({ q: `[[viz geomright ${a} ${b} ${c} 1]] tan θ`, a: fr(b, a), diff: c + 0.6, key: `tta:${a}_${b}` });
+  }
+  return out;
+};
+// Find a missing side from a given trig ratio and the hypotenuse.
+const trigSide: Builder = () => {
+  const out: XP[] = []; const seen = new Set<string>();
+  // Scaled triples collapse to the same (ratio, hypotenuse) — e.g. (3,4,5)×2 and
+  // (6,8,10)×1 both give "sin θ = 4/5, hyp = 10" — so dedupe by question text.
+  for (const [, b, c] of TRIPLES) for (const k of [1, 2, 3, 4, 5]) {
+    if (c * k > 120) continue;
+    const q = `sin θ = ${fr(b, c)}. The hypotenuse is ${c * k}. Find the side opposite θ.`;
+    if (seen.has(q)) continue; seen.add(q);
+    out.push({ q, a: String(b * k), diff: c + k, key: `tso:${b}_${c}_${k}` });
+  }
+  return out;
+};
+
 type Builder = () => XP[];
 
 // ── Curriculum ────────────────────────────────────────────────────────────────
@@ -107,16 +147,23 @@ interface Unit {
 }
 
 const CURRICULUM: Unit[] = [
-  { id: "g-comp", label: "Complementary angles", objective: "Student finds the complement of an angle", directive: "Find the missing angle. Complementary angles add to 90°.", grade: "Grade 6-7", stars: 2, range: [1, 12], pool: complement, example: { problem: "[[viz angright 35]]", steps: ["Complements add to 90°", "90 − 35 = 55"], answer: "55" } },
-  { id: "g-supp", label: "Supplementary angles", objective: "Student finds the supplement of an angle", directive: "Find the missing angle. Supplementary angles add to 180°.", grade: "Grade 6-7", stars: 2, range: [13, 26], pool: supplement, example: { problem: "[[viz angline 110]]", steps: ["Supplements add to 180°", "180 − 110 = 70"], answer: "70" } },
-  { id: "g-vert", label: "Vertical angles", objective: "Student identifies equal vertical angles", directive: "Vertical angles are equal — write the missing angle.", grade: "Grade 7", stars: 2, range: [27, 38], pool: vertical, example: { problem: "[[viz angcross 70]]", steps: ["Vertical angles are equal"], answer: "70" } },
-  { id: "g-line", label: "Angles on a straight line", objective: "Student finds a missing angle on a straight line", directive: "Find the missing angle. Angles on a straight line add to 180°.", grade: "Grade 7", stars: 3, range: [39, 52], pool: linearPair, example: { problem: "[[viz angline 65]]", steps: ["180 − 65 = 115"], answer: "115" } },
-  { id: "g-point", label: "Angles around a point", objective: "Student finds a missing angle around a point", directive: "Find x. Angles around a point add to 360°.", grade: "Grade 7", stars: 4, range: [53, 66], pool: aroundPoint, example: { problem: "120° + 90° + x = 360°", steps: ["120 + 90 = 210", "360 − 210 = 150"], answer: "150" } },
-  { id: "g-tri", label: "Triangle angle sum", objective: "Student finds the third angle of a triangle", directive: "Find the missing angle. A triangle's angles add to 180°.", grade: "Grade 7", stars: 4, range: [67, 80], pool: triangleSum, example: { problem: "[[viz angtri 50 60]]", steps: ["50 + 60 = 110", "180 − 110 = 70"], answer: "70" } },
-  { id: "g-perim", label: "Perimeter of rectangles & squares", objective: "Student finds the perimeter of a rectangle or square", directive: "Find the perimeter of each shape.", grade: "Grade 4-5", stars: 3, range: [81, 86], pool: () => [...perimRect(), ...squarePerim()], example: { problem: "[[viz geomrect 8 5]]", steps: ["P = 2(l + w)", "2 × (8 + 5) = 26"], answer: "26" } },
-  { id: "g-area-rect", label: "Area of rectangles & squares", objective: "Student finds the area of a rectangle or square", directive: "Find the area of each shape.", grade: "Grade 4-5", stars: 3, range: [87, 92], pool: () => [...areaRect(), ...squareArea()], example: { problem: "[[viz geomrect 8 5]]", steps: ["A = l × w", "8 × 5 = 40"], answer: "40" } },
-  { id: "g-area-tri", label: "Area of triangles", objective: "Student finds the area of a triangle", directive: "Find the area of each triangle.", grade: "Grade 6", stars: 4, range: [93, 96], pool: areaTri, example: { problem: "[[viz geomtri 10 6]]", steps: ["A = ½ × b × h", "½ × 10 × 6 = 30"], answer: "30" } },
-  { id: "g-circle", label: "Circumference & area of circles", objective: "Student finds circle measures using π", directive: "Find each circle measure (use π = 3.14).", grade: "Grade 7", stars: 5, range: [97, 100], pool: circle, example: { problem: "[[viz geomcircle 5]] area (π = 3.14)", steps: ["A = π r²", "3.14 × 25 = 78.5"], answer: "78.5" } },
+  // ── Angle relationships (rebalanced: ~6 sheets each instead of 12–14) ──
+  { id: "g-comp", label: "Complementary angles", objective: "Student finds the complement of an angle", directive: "Find the missing angle. Complementary angles add to 90°.", grade: "Grade 6-7", stars: 2, range: [1, 6], pool: complement, example: { problem: "[[viz angright 35]]", steps: ["Complements add to 90°", "90 − 35 = 55"], answer: "55" } },
+  { id: "g-supp", label: "Supplementary angles", objective: "Student finds the supplement of an angle", directive: "Find the missing angle. Supplementary angles add to 180°.", grade: "Grade 6-7", stars: 2, range: [7, 12], pool: supplement, example: { problem: "[[viz angline 110]]", steps: ["Supplements add to 180°", "180 − 110 = 70"], answer: "70" } },
+  { id: "g-vert", label: "Vertical angles", objective: "Student identifies equal vertical angles", directive: "Vertical angles are equal — write the missing angle.", grade: "Grade 7", stars: 2, range: [13, 18], pool: vertical, example: { problem: "[[viz angcross 70]]", steps: ["Vertical angles are equal"], answer: "70" } },
+  { id: "g-line", label: "Angles on a straight line", objective: "Student finds a missing angle on a straight line", directive: "Find the missing angle. Angles on a straight line add to 180°.", grade: "Grade 7", stars: 3, range: [19, 24], pool: linearPair, example: { problem: "[[viz angline 65]]", steps: ["180 − 65 = 115"], answer: "115" } },
+  { id: "g-point", label: "Angles around a point", objective: "Student finds a missing angle around a point", directive: "Find x. Angles around a point add to 360°.", grade: "Grade 7", stars: 4, range: [25, 30], pool: aroundPoint, example: { problem: "120° + 90° + x = 360°", steps: ["120 + 90 = 210", "360 − 210 = 150"], answer: "150" } },
+  { id: "g-tri", label: "Triangle angle sum", objective: "Student finds the third angle of a triangle", directive: "Find the missing angle. A triangle's angles add to 180°.", grade: "Grade 7", stars: 4, range: [31, 36], pool: triangleSum, example: { problem: "[[viz angtri 50 60]]", steps: ["50 + 60 = 110", "180 − 110 = 70"], answer: "70" } },
+  // ── Perimeter & area (expanded — were starved at 4–6 sheets) ──
+  { id: "g-perim", label: "Perimeter of rectangles & squares", objective: "Student finds the perimeter of a rectangle or square", directive: "Find the perimeter of each shape.", grade: "Grade 4-5", stars: 3, range: [37, 43], pool: () => [...perimRect(), ...squarePerim()], example: { problem: "[[viz geomrect 8 5]]", steps: ["P = 2(l + w)", "2 × (8 + 5) = 26"], answer: "26" } },
+  { id: "g-area-rect", label: "Area of rectangles & squares", objective: "Student finds the area of a rectangle or square", directive: "Find the area of each shape.", grade: "Grade 4-5", stars: 3, range: [44, 50], pool: () => [...areaRect(), ...squareArea()], example: { problem: "[[viz geomrect 8 5]]", steps: ["A = l × w", "8 × 5 = 40"], answer: "40" } },
+  { id: "g-area-tri", label: "Area of triangles", objective: "Student finds the area of a triangle", directive: "Find the area of each triangle.", grade: "Grade 6", stars: 4, range: [51, 56], pool: areaTri, example: { problem: "[[viz geomtri 10 6]]", steps: ["A = ½ × b × h", "½ × 10 × 6 = 30"], answer: "30" } },
+  { id: "g-circle", label: "Circumference & area of circles", objective: "Student finds circle measures using π", directive: "Find each circle measure (use π = 3.14).", grade: "Grade 7", stars: 5, range: [57, 62], pool: circle, example: { problem: "[[viz geomcircle 5]] area (π = 3.14)", steps: ["A = π r²", "3.14 × 25 = 78.5"], answer: "78.5" } },
+  // ── Trigonometry (NEW — right-triangle geometry, Grade 8–9) ──
+  { id: "g-pythag-hyp", label: "Pythagorean theorem — hypotenuse", objective: "Student finds the hypotenuse of a right triangle", directive: "Find the hypotenuse. Use a² + b² = c².", grade: "Grade 8", stars: 4, range: [63, 72], pool: pythagHyp, example: { problem: "[[viz geomright 3 4 0]]", steps: ["a² + b² = c²", "3² + 4² = 9 + 16 = 25", "c = √25 = 5"], answer: "5" } },
+  { id: "g-pythag-leg", label: "Pythagorean theorem — find a leg", objective: "Student finds a missing leg of a right triangle", directive: "Find the missing leg. Use a² + b² = c².", grade: "Grade 8-9", stars: 5, range: [73, 82], pool: pythagLeg, example: { problem: "[[viz geomright 0 4 5]]", steps: ["a² = c² − b²", "5² − 4² = 25 − 16 = 9", "a = √9 = 3"], answer: "3" } },
+  { id: "g-trig-ratio", label: "Trig ratios (sin, cos, tan)", objective: "Student writes sin, cos and tan as ratios from a right triangle", directive: "Write each ratio as a fraction. Opposite/hypotenuse = sin, adjacent/hypotenuse = cos, opposite/adjacent = tan.", grade: "Grade 9", stars: 5, range: [83, 91], pool: trigRatio, example: { problem: "[[viz geomright 3 4 5 1]] sin θ", steps: ["sin θ = opposite / hypotenuse", "opposite = 4, hypotenuse = 5", "sin θ = 4/5"], answer: "4/5" } },
+  { id: "g-trig-side", label: "Find a side from a ratio", objective: "Student finds a missing side from a given trig ratio", directive: "Find the missing side using the given ratio.", grade: "Grade 9", stars: 5, range: [92, 100], pool: trigSide, example: { problem: "sin θ = 4/5. The hypotenuse is 10. Find the side opposite θ.", steps: ["sin θ = opposite / hypotenuse", "4/5 = opposite / 10", "opposite = 10 × 4/5 = 8"], answer: "8" } },
 ];
 
 const CODE = "GEOMETRY";

@@ -14,6 +14,24 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   appInfo: { name: "Eduyro", version: "1.0.0" },
 });
 
+// ── Launch-safety guard (non-blocking) ────────────────────────────────────────
+// Loudly warns — once per cold start — if PRODUCTION is running Stripe TEST keys.
+// Test keys are correct for testing/preview, but real customers' cards CANNOT be
+// charged in test mode, so this must be flipped to live keys before launch.
+// (Only fires for the live production deployment; Preview keeps test keys.)
+(() => {
+  const isProd = (process.env.VERCEL_ENV ?? process.env.NODE_ENV) === "production";
+  const key = process.env.STRIPE_SECRET_KEY ?? "";
+  if (isProd && key.startsWith("sk_test_")) {
+    console.warn(
+      "\n⚠️  [Eduyro] PRODUCTION is using Stripe TEST keys (sk_test_…).\n" +
+      "    Real customer cards will NOT be charged. Switch Production to live\n" +
+      "    keys (sk_live_ + live price IDs + live webhook) before launch.\n" +
+      "    See LAUNCH.md.\n"
+    );
+  }
+})();
+
 // ─────────────────────────────────────────────────────────────
 // Plan configuration
 // ─────────────────────────────────────────────────────────────

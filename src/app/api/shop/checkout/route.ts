@@ -93,7 +93,12 @@ export async function POST(req: NextRequest) {
         },
       ],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/shop/download?token=${downloadToken}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/shop/cancel`,
+      // The ← arrow on Stripe's hosted page follows cancel_url — send the buyer
+      // straight back to the shop (not a dead-end cancel page).
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/shop`,
+      // Collect the full billing address (must match the card) — standard
+      // payment fields the bare card form was missing.
+      billing_address_collection: "required",
       metadata: {
         purpose: "shop_purchase",
         shopPurchaseId: purchase.id,

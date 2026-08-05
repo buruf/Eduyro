@@ -5,7 +5,7 @@ import {
   ok, notFound, err, handleRouteError, withAuth, parseRequest,
 } from "@/lib/api/helpers";
 import { StartPlacementSchema } from "@/lib/validation/schemas";
-import { pickNextQuestion } from "@/lib/placement/engine";
+import { ladderNext } from "@/lib/placement/engine";
 import { enabledSubjectSlugs } from "@/lib/enrollment";
 
 export async function POST(req: NextRequest) {
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
       // Find subjects in DB (only the allowed ones)
       const subjects = await db.subject.findMany({
-        where: { slug: { in: allowedSlugs as any[] } },
+        where: { slug: { in: allowedSlugs as any[] }, isPublic: true },
       });
       if (!subjects.length) return err("Invalid subjects", 400);
 
@@ -51,7 +51,8 @@ export async function POST(req: NextRequest) {
               studentId: student.id,
               subjectId: subject.id,
               status: "IN_PROGRESS",
-              currentDifficulty: 1.0,
+              // LADDER (v2): the test starts at the very EASIEST level and climbs.
+              currentDifficulty: 0.1,
               questionsAsked: 0,
               correctAnswers: 0,
               questionLog: [],
@@ -62,7 +63,8 @@ export async function POST(req: NextRequest) {
 
       const firstTest = tests[0];
       const firstSubject = subjects.find((s) => s.id === firstTest.subjectId);
-      const firstQuestion = pickNextQuestion(firstSubject!.slug, 1.0, []);
+      const firstStep = ladderNext(firstSubject!.slug, []);
+      const firstQuestion = firstStep.done ? null : firstStep.question;
 
       return ok({
         testId: firstTest.id,

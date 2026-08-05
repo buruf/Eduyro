@@ -4,6 +4,7 @@
 // server-side by plain value match against the stored correct subset (also
 // sorted the same way), so selection order never matters.
 "use client";
+import { MathText } from "@/components/MathText";
 
 import { useState } from "react";
 
@@ -33,7 +34,7 @@ export function MultiSelectInput({ options, onChange }: { options: string[]; val
               }
             >
               <span className={"w-5 h-5 shrink-0 rounded-md border-2 flex items-center justify-center text-[11px] " + (on ? "border-brand-blue bg-brand-blue text-white" : "border-border")}>{on ? "✓" : ""}</span>
-              <span className="flex-1">{opt}</span>
+              <span className="flex-1"><MathText>{opt}</MathText></span>
             </button>
           );
         })}

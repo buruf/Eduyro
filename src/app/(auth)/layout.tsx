@@ -29,7 +29,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="grid grid-cols-3 gap-4 mt-10">
             <Stat value="23" label="Curriculum levels" />
             <Stat value="12,400+" label="Worksheets" />
-            <Stat value="95%" label="Mastery threshold" />
+            <Stat value="90%" label="Mastery threshold" />
           </div>
         </div>
 

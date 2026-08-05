@@ -141,8 +141,12 @@ export default function PlacementPage() {
     }
   }
 
-  async function submitAnswer() {
-    if (selectedIndex === null || !questionState?.question) return;
+  async function submitAnswer(overrideIndex?: number) {
+    // overrideIndex === -1 is "I'm not sure" — submitted as an incorrect answer
+    // so honest uncertainty lowers difficulty instead of a lucky guess raising it.
+    const idx = overrideIndex ?? selectedIndex;
+    if (idx === null || !questionState?.question) return;
+    setSelectedIndex(idx);
     setLoading(true);
 
     try {
@@ -152,7 +156,7 @@ export default function PlacementPage() {
         body: JSON.stringify({
           testId: questionState.testId,
           questionId: questionState.question.id,
-          selectedIndex,
+          selectedIndex: idx,
           timeMs: Date.now() - startTime,
         }),
       });
@@ -208,8 +212,11 @@ export default function PlacementPage() {
     setLoading(false);
   }
 
-  function demoAnswer() {
-    if (selectedIndex === null || !questionState?.question) return;
+  function demoAnswer(overrideIndex?: number) {
+    // overrideIndex === -1 → "I'm not sure" (revealed, advances, marked wrong).
+    const idx = overrideIndex ?? selectedIndex;
+    if (idx === null || !questionState?.question) return;
+    setSelectedIndex(idx);
 
     const currentQ = questionState.question;
     const correct = DEMO_ANSWERS[currentQ.id] ?? 0;
@@ -407,17 +414,27 @@ export default function PlacementPage() {
                 })}
               </div>
 
-              <div className="flex gap-2 mt-6">
+              <div className="flex flex-col gap-2 mt-6">
                 <Button
                   variant="blue"
                   fullWidth
-                  disabled={selectedIndex === null || answered}
+                  disabled={selectedIndex === null || selectedIndex < 0 || answered}
                   loading={loading && answered}
-                  onClick={questionState.isDemo ? demoAnswer : submitAnswer}
+                  onClick={() => (questionState.isDemo ? demoAnswer() : submitAnswer())}
                   rightIcon={<span>→</span>}
                 >
                   {answered ? "..." : "Next"}
                 </Button>
+                {/* Honest uncertainty: a lucky guess shouldn't inflate placement.
+                    "I'm not sure" is scored incorrect so the test eases down. */}
+                <button
+                  type="button"
+                  disabled={answered}
+                  onClick={() => (questionState.isDemo ? demoAnswer(-1) : submitAnswer(-1))}
+                  className="w-full py-2.5 text-sm font-medium text-muted hover:text-ink underline underline-offset-2 disabled:opacity-40 transition-colors"
+                >
+                  I&apos;m not sure / I don&apos;t know
+                </button>
               </div>
             </div>
           </>

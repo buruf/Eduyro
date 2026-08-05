@@ -24,6 +24,9 @@ export interface TutorialContent {
 
 import { getHigherMathMicroLesson, type MicroLesson } from "@/lib/shop/higher-math-engine";
 import { getAdvancedMicroLesson } from "@/lib/shop/advanced-engine";
+import { getArithmeticMicroLesson } from "@/lib/shop/arithmetic-engine";
+import { getEarlyMathMicroLesson } from "@/lib/shop/early-math-engine";
+import { READING_CURRICULUM } from "@/lib/reading/curriculum";
 import { getFdpMicroLesson } from "@/lib/shop/fdp-engine";
 
 export type { MicroLesson };
@@ -47,6 +50,10 @@ export function getMicroSkillLesson(
   const hm = getHigherMathMicroLesson(levelCode, microSkillLabel);
   if (hm) return hm;
   if (subjectSlug === "MATH") {
+    const early = getEarlyMathMicroLesson(microSkillLabel); // M1–M2 (exact unit match)
+    if (early) return early;
+    const arith = getArithmeticMicroLesson(microSkillLabel); // M3–M6 (exact unit match)
+    if (arith) return arith;
     const adv = getAdvancedMicroLesson(microSkillLabel); // M8–M12
     if (adv) return adv;
     const fdp = getFdpMicroLesson(microSkillLabel);      // M7 fractions
@@ -55,8 +62,16 @@ export function getMicroSkillLesson(
   const t = getTutorial(subjectSlug, microSkillLabel);
   const example = t.examples?.[0];
   if (!example) return null;
+  // READING: the R1–R60 tutorials are routed by coarse buckets, so t.intro was
+  // the SAME generic sentence for most of 238 units. Build a per-skill goal
+  // from the curriculum map instead (each lesson names its own skill + module).
+  let goal = t.intro;
+  if (subjectSlug === "READING") {
+    const mod = READING_CURRICULUM.find((m) => m.units.includes(microSkillLabel));
+    if (mod) goal = `build your ${mod.topic} skills: ${microSkillLabel} (Grade ${mod.grade}).`;
+  }
   return {
-    goal: t.intro,
+    goal,
     bigIdea: t.concepts?.[0]?.explanation ?? t.intro,
     example,
     umbrella: t.skillName,
@@ -80,16 +95,31 @@ export function getTutorial(subjectSlug: string, skillName: string): TutorialCon
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getMathTutorial(skill: string, skillName: string): TutorialContent {
-  if (skill.includes("counting")) return countingTutorial();
-  if (skill.includes("more") || skill.includes("less")) return moreLessTutorial();
+  // Early math (M1/M2). These sheets are tagged skill="ADDITION", so any label
+  // that fails to keyword-match here falls through to the addition-lesson
+  // fallback in renderer.tsx — printing an Addition lesson on a counting /
+  // place-value / comparison page. Route each family explicitly first.
+  if (skill.includes("place value")) return placeValueTutorial();
+  if (
+    skill.includes("counting") || skill.includes("continue the count") ||
+    skill.includes("numbers after") || skill.includes("numbers before") ||
+    skill.includes("comes after") || skill.includes("comes before")
+  ) return countingTutorial();
+  if (
+    skill.includes("more") || skill.includes("less") ||
+    skill.includes("greater") || skill.includes("compare")
+  ) return moreLessTutorial();
   if (skill.includes("number pattern")) return numberPatternsTutorial();
   if (skill.includes("number bond")) return numberBondsTutorial();
-  if (skill.includes("addition") || skill.includes("sums") || skill.includes("adding")) return additionTutorial(additionMaxFor(skill));
+  if ((skill.includes("addition") || skill.includes("sums") || skill.includes("adding")) && !skill.includes("polynomial")) return additionTutorial(additionMaxFor(skill));
   if (skill.includes("missing number")) return missingNumbersTutorial();
   if (skill.includes("subtraction")) return subtractionTutorial();
   if (skill.includes("×2") || skill.includes("×3") || skill.includes("×4") || skill.includes("×5") || skill.includes("x2") || skill.includes("x5") || (skill.includes("multiplication") && !skill.includes("polynomial"))) return multiplicationTutorial();
   if (skill.includes("division with remainder")) return divisionRemaindersTutorial();
-  if (skill.includes("division")) return divisionTutorial();
+  if (skill.includes("division") && !skill.includes("polynomial")) return divisionTutorial();
+  // Conversions unit ("Convert fractions, decimals, percents") must beat the
+  // generic "fraction" keyword, else it shows fraction-anatomy Key Ideas.
+  if (skill.includes("convert")) return conversionsTutorial();
   if (skill.includes("identifying fraction")) return fractionIdentificationTutorial();
   if (skill.includes("simplifying fraction")) return fractionSimplificationTutorial();
   if (skill.includes("adding fraction")) return fractionAdditionTutorial();
@@ -98,6 +128,11 @@ function getMathTutorial(skill: string, skillName: string): TutorialContent {
   if (skill.includes("decimal place value")) return decimalPlaceValueTutorial();
   if (skill.includes("decimal")) return decimalOperationsTutorial();
   if (skill.includes("percentage") || skill.includes("percent")) return percentagesTutorial();
+  // Right-triangle trig (Geometry pack) — MUST precede the generic "ratio" check,
+  // else "Trig ratios" / "Find a side from a ratio" match the part-to-part ratios
+  // lesson. Pythagorean units route here too (the SOHCAHTOA card set covers both).
+  if (skill.includes("pythagorean") || skill.includes("trig rat") || skill.includes("sin, cos") ||
+      skill.includes("side from a ratio") || skill.includes("right triangle trig")) return rightTriangleTrigTutorial();
   if (skill.includes("ratio")) return ratiosTutorial();
   if (skill.includes("proportion")) return proportionsTutorial();
   if (skill.includes("unit rate")) return unitRatesTutorial();
@@ -108,8 +143,35 @@ function getMathTutorial(skill: string, skillName: string): TutorialContent {
   if (skill.includes("slope") || skill.includes("intercept")) return slopeInterceptTutorial();
   if (skill.includes("graphing line")) return graphingLinesTutorial();
   if (skill.includes("system")) return systemsOfEquationsTutorial();
-  if (skill.includes("adding polynomial")) return addingPolynomialsTutorial();
-  if (skill.includes("multiplying polynomial")) return multiplyingPolynomialsTutorial();
+  // Polynomials (M12). The engine's unit labels are "Combine like terms",
+  // "Add/Subtract polynomials", "Multiply monomials", "Distribute a monomial",
+  // "Multiply binomials (FOIL)", "Factor out the GCF" — route each to the
+  // matching algebra tutorial. Must come BEFORE the generic "factor" check so
+  // "Factor out the GCF" gets GCF teaching, not quadratic factoring.
+  if (skill.includes("gcf")) return gcfFactoringTutorial();
+  // Polynomial FOUNDATIONS + DIVISION — checked before the general block so
+  // "Divide by a monomial" isn't captured by the monomial→multiply rule below.
+  if (skill.includes("classify") || skill.includes("identify polynomial")) return classifyPolynomialsTutorial();
+  if (skill.includes("degree") || skill.includes("standard form") || skill.includes("leading coefficient") || skill.includes("constant term")) return polynomialAnatomyTutorial();
+  if (skill.includes("evaluate polynomial")) return evaluatePolynomialsTutorial();
+  if (skill.includes("long division") || (skill.includes("divide") && (skill.includes("monomial") || skill.includes("polynomial")))) return dividingPolynomialsTutorial();
+  // Tier-2 advanced factoring — specific units routed before the generic checks.
+  if (skill.includes("difference of squares")) return differenceOfSquaresTutorial();
+  if (skill.includes("perfect-square") || skill.includes("perfect square")) return perfectSquareTrinomialTutorial();
+  if (skill.includes("grouping")) return factorByGroupingTutorial();
+  if (skill.includes("cubes")) return cubesTutorial();
+  if (skill.includes("a ≠ 1") || skill.includes("a != 1")) return factorTrinomialATutorial();
+  if (skill.includes("factor quadratic") || (skill.includes("factor") && skill.includes("trinomial"))) return factoringTutorial();
+  if (skill.includes("partial product") || skill.includes("box method")) return multiplyingPolynomialsTutorial();
+  if (
+    skill.includes("polynomial") || skill.includes("like term") ||
+    skill.includes("monomial") || skill.includes("binomial") ||
+    skill.includes("foil") || skill.includes("trinomial")
+  ) {
+    if (skill.includes("multiply") || skill.includes("monomial") || skill.includes("binomial") ||
+        skill.includes("distribut") || skill.includes("foil") || skill.includes("trinomial")) return multiplyingPolynomialsTutorial();
+    return addingPolynomialsTutorial(); // combine like terms · add · subtract
+  }
   if (skill.includes("factor")) return factoringTutorial();
   if (skill.includes("quadratic equation")) return quadraticEquationsTutorial();
   if (skill.includes("quadratic formula")) return quadraticFormulaTutorial();
@@ -129,6 +191,24 @@ function getMathTutorial(skill: string, skillName: string): TutorialContent {
   if (skill.includes("derivative")) return derivativesTutorial();
   if (skill.includes("integral")) return integralsTutorial();
   if (skill.includes("application")) return calculusApplicationsTutorial();
+
+  // Linear-equations coordinate units — else they fall back (renderer
+  // SKILL_TUTORIAL_KEY) to the slope-intercept lesson, which is wrong for them.
+  if (skill.includes("transformation")) return transformationsTutorial();
+  if (skill.includes("plot point") || skill.includes("coordinate plane")) return plotPointsTutorial();
+
+  // Geometry pack — angle relationships, perimeter & area. (Check area-of-
+  // triangle and circles BEFORE the generic "area" so they aren't swallowed.)
+  if (skill.includes("complementary")) return complementaryAnglesTutorial();
+  if (skill.includes("supplementary")) return supplementaryAnglesTutorial();
+  if (skill.includes("vertical angle")) return verticalAnglesTutorial();
+  if (skill.includes("angles on a") || skill.includes("straight line")) return anglesOnLineTutorial();
+  if (skill.includes("around a point")) return anglesAroundPointTutorial();
+  if (skill.includes("triangle angle")) return triangleAngleSumTutorial();
+  if (skill.includes("perimeter")) return perimeterTutorial();
+  if (skill.includes("area of triangle")) return areaTriangleTutorial();
+  if (skill.includes("circumference") || skill.includes("circle")) return circleTutorial();
+  if (skill.includes("area")) return areaRectTutorial();
 
   return genericMathTutorial(skillName);
 }
@@ -166,6 +246,25 @@ function moreLessTutorial(): TutorialContent {
       { problem: "Is 45 > 54?", steps: ["Both have the same digits but in different order.", "45 = 4 tens + 5 ones = 45", "54 = 5 tens + 4 ones = 54", "54 > 45, so 45 is NOT greater than 54."], answer: "No, 45 < 54" },
       { problem: "Order from least to greatest: 8, 3, 11, 5", steps: ["Find the smallest: 3", "Next: 5", "Next: 8", "Largest: 11"], answer: "3, 5, 8, 11" },
       { problem: "Which number is between 20 and 30?", steps: ["Numbers between 20 and 30: 21, 22, 23, 24, 25, 26, 27, 28, 29", "Example answer: 25"], answer: "Any number 21–29 (e.g., 25)" },
+    ],
+  };
+}
+
+function placeValueTutorial(): TutorialContent {
+  return {
+    skillName: "Place Value",
+    intro: "Every digit in a number has a place value — its position tells you whether it counts as ones, tens, hundreds, and so on.",
+    concepts: [
+      { title: "Tens and Ones", formula: "two-digit number = (tens digit × 10) + (ones digit)", explanation: "The right-hand digit counts single ones; the digit to its left counts groups of ten.", tip: "47 = 4 tens + 7 ones" },
+      { title: "The Value of a Digit", formula: "digit × its place", explanation: "The same digit is worth more the further left it sits. The 5 in 53 is worth 50; the 5 in 35 is worth 5.", tip: "In 80, the 8 means 8 tens = 80" },
+      { title: "Build & Break Apart", formula: "expand: 62 = 60 + 2", explanation: "You can split any number into its tens and ones, or combine tens and ones to build one.", tip: "3 tens + 6 ones = 36" },
+    ],
+    examples: [
+      { problem: "How many tens are in 74?", steps: ["The tens digit is the left digit: 7", "So there are 7 tens (worth 70)."], answer: "7" },
+      { problem: "What is the value of the 6 in 63?", steps: ["6 is in the tens place.", "6 tens = 6 × 10 = 60"], answer: "60" },
+      { problem: "How many ones are in 48?", steps: ["The ones digit is the right digit: 8"], answer: "8" },
+      { problem: "Write 5 tens and 2 ones as a number.", steps: ["5 tens = 50", "50 + 2 = 52"], answer: "52" },
+      { problem: "Break 91 into tens and ones.", steps: ["Tens digit: 9 → 9 tens = 90", "Ones digit: 1 → 1 one", "91 = 90 + 1"], answer: "90 + 1" },
     ],
   };
 }
@@ -758,6 +857,206 @@ function factoringTutorial(): TutorialContent {
   };
 }
 
+// GCF-only factoring (M12 "Factor out the GCF"). The practice in this unit
+// factors a common integer from a linear binomial (e.g. 3x + 12 → 3(x + 4)),
+// so the lesson must teach the GCF + reverse-distribution, NOT quadratic
+// factoring or difference of squares (those belong to factoringTutorial).
+function gcfFactoringTutorial(): TutorialContent {
+  return {
+    skillName: "Factoring out the GCF",
+    intro: "To factor out the GCF, find the largest number that divides every term, then rewrite the expression as that number times what remains (the reverse of the distributive property).",
+    concepts: [
+      { title: "Greatest Common Factor", formula: "GCF = largest number dividing evenly into ALL terms", explanation: "Look at the coefficients of every term and find the biggest number that divides each one exactly.", tip: "6x + 9 → GCF of 6 and 9 is 3" },
+      { title: "Reverse Distributing", formula: "ab + ac = a(b + c)", explanation: "Pull the GCF outside a bracket, then divide each original term by it to find what goes inside.", tip: "6x + 9 = 3(2x + 3)" },
+      { title: "Check by Expanding", formula: "Multiply back to confirm", explanation: "Distribute the GCF back through the bracket — you should land on the original expression.", tip: "3(2x + 3) = 6x + 9 ✓" },
+    ],
+    examples: [
+      { problem: "Factor: 3x + 12", steps: ["GCF of 3 and 12 = 3", "3x ÷ 3 = x, 12 ÷ 3 = 4", "Answer: 3(x + 4)"], answer: "3(x + 4)" },
+      { problem: "Factor: 6x + 9", steps: ["GCF of 6 and 9 = 3", "6x ÷ 3 = 2x, 9 ÷ 3 = 3", "Answer: 3(2x + 3)"], answer: "3(2x + 3)" },
+      { problem: "Factor: 10x + 15", steps: ["GCF of 10 and 15 = 5", "10x ÷ 5 = 2x, 15 ÷ 5 = 3", "Answer: 5(2x + 3)"], answer: "5(2x + 3)" },
+      { problem: "Factor: 8x + 20", steps: ["GCF of 8 and 20 = 4", "8x ÷ 4 = 2x, 20 ÷ 4 = 5", "Answer: 4(2x + 5)"], answer: "4(2x + 5)" },
+      { problem: "Factor: 4x + 4", steps: ["GCF of 4 and 4 = 4", "4x ÷ 4 = x, 4 ÷ 4 = 1", "Answer: 4(x + 1)"], answer: "4(x + 1)" },
+    ],
+  };
+}
+
+// M12 foundations: what a polynomial is + classifying by number of terms.
+function classifyPolynomialsTutorial(): TutorialContent {
+  return {
+    skillName: "Identifying & Classifying Polynomials",
+    intro: "A polynomial is a sum of terms where every variable has a whole-number exponent — no variables in denominators, under roots, or with negative/fractional powers. We name polynomials by how many terms they have.",
+    concepts: [
+      { title: "What Counts as a Polynomial", formula: "whole-number exponents only (0, 1, 2, 3, …)", explanation: "No x in a denominator (1/x), no √x, no negative exponents (x⁻²). Those are NOT polynomials.", tip: "x² + 3x - 1 ✓    1/x + 5 ✗" },
+      { title: "Counting Terms", formula: "terms are separated by + or −", explanation: "A term is a number-and-variable chunk. Count the chunks joined by + or − signs.", tip: "2x² - 7x + 4 has 3 terms" },
+      { title: "Naming by Terms", formula: "1 = monomial · 2 = binomial · 3 = trinomial", explanation: "The prefix tells the count: mono (1), bi (2), tri (3).", tip: "5x → monomial;  x + 3 → binomial;  x² + x + 1 → trinomial" },
+    ],
+    examples: [
+      { problem: "Classify: x² + 3x + 2", steps: ["Count the terms: x², 3x, 2 → 3 terms", "Three terms → trinomial"], answer: "trinomial" },
+      { problem: "Classify: 7x", steps: ["One term only", "→ monomial"], answer: "monomial" },
+      { problem: "Is 1/x + 5 a polynomial?", steps: ["1/x has x in the denominator", "Not allowed → NOT a polynomial"], answer: "No" },
+      { problem: "Is x² + 3x + 1 a polynomial?", steps: ["All exponents are whole numbers (2, 1, 0)", "→ Yes"], answer: "Yes" },
+      { problem: "Classify: 2x² + 5", steps: ["Two terms: 2x² and 5", "→ binomial"], answer: "binomial" },
+    ],
+  };
+}
+
+// M12 foundations: degree, standard form, leading coefficient, constant term.
+function polynomialAnatomyTutorial(): TutorialContent {
+  return {
+    skillName: "Degree, Standard Form & Parts",
+    intro: "Before operating on polynomials, learn to read them: the degree, standard form, the leading coefficient, and the constant term.",
+    concepts: [
+      { title: "Degree", formula: "degree = the highest power of x present", explanation: "Scan every term and take the largest exponent.", tip: "3x⁴ + 2x + 3 has degree 4" },
+      { title: "Standard Form", formula: "highest power → lowest, left to right", explanation: "Reorder terms so exponents decrease. This is the conventional way to write a polynomial.", tip: "5 + x² + x → x² + x + 5" },
+      { title: "Leading Coefficient", formula: "the number on the highest-power term", explanation: "Write in standard form first; the coefficient of the first term is the leading coefficient.", tip: "4x³ + x - 7 → leading coefficient 4" },
+      { title: "Constant Term", formula: "the term with no x", explanation: "It's the plain number — the value when x = 0.", tip: "4x³ + x - 7 → constant term -7" },
+    ],
+    examples: [
+      { problem: "Degree of 3x⁴ + 2x + 3", steps: ["Highest power present is 4"], answer: "4" },
+      { problem: "Standard form of 5 + x² + x", steps: ["Order by power: x² (2), x (1), 5 (0)", "x² + x + 5"], answer: "x² + x + 5" },
+      { problem: "Leading coefficient of 4x³ + x - 7", steps: ["Highest-power term is 4x³", "Coefficient is 4"], answer: "4" },
+      { problem: "Constant term of 4x³ + x - 7", steps: ["The number with no x is -7"], answer: "-7" },
+      { problem: "Degree of 2x² + 9x", steps: ["Highest power is 2"], answer: "2" },
+    ],
+  };
+}
+
+// M12 foundations: evaluating a polynomial for a value of x.
+function evaluatePolynomialsTutorial(): TutorialContent {
+  return {
+    skillName: "Evaluating Polynomials",
+    intro: "To evaluate a polynomial, replace every x with the given number and simplify using the order of operations.",
+    concepts: [
+      { title: "Substitute", formula: "put the value in place of every x", explanation: "Use brackets around the number so signs and powers stay correct.", tip: "x² + 3x at x = 4 → (4)² + 3(4)" },
+      { title: "Powers First", formula: "exponents → multiply → add", explanation: "Follow the order of operations: work out the powers, then the products, then add.", tip: "(4)² + 3(4) = 16 + 12" },
+      { title: "Mind the Negatives", formula: "(-a)² is positive", explanation: "A negative value squared becomes positive; a negative cubed stays negative.", tip: "(-1)² = 1,  (-1)³ = -1" },
+    ],
+    examples: [
+      { problem: "Evaluate x² + 3x + 2 at x = 4", steps: ["(4)² + 3(4) + 2", "16 + 12 + 2", "= 30"], answer: "30" },
+      { problem: "Evaluate 2x² + x at x = 3", steps: ["2(3)² + 3", "2·9 + 3 = 18 + 3", "= 21"], answer: "21" },
+      { problem: "Evaluate x² + 2x + 1 at x = -1", steps: ["(-1)² + 2(-1) + 1", "1 - 2 + 1", "= 0"], answer: "0" },
+      { problem: "Evaluate 3x + 5 at x = 2", steps: ["3(2) + 5 = 6 + 5", "= 11"], answer: "11" },
+      { problem: "Evaluate x² - 4 at x = 3", steps: ["(3)² - 4 = 9 - 4", "= 5"], answer: "5" },
+    ],
+  };
+}
+
+// M12 division: divide by a monomial and exact polynomial long division.
+function dividingPolynomialsTutorial(): TutorialContent {
+  return {
+    skillName: "Dividing Polynomials",
+    intro: "To divide a polynomial, FACTOR FIRST: factor the divisor out of the top, then cancel it. Long division is the backup when the top doesn't factor cleanly.",
+    concepts: [
+      { title: "Factor & Cancel", formula: "(ab + ac) ÷ a = a(b + c) ÷ a = b + c", explanation: "Factor the divisor out of the numerator, then cancel the matching factor top and bottom.", tip: "(6x² + 4x) ÷ 2x = 2x(3x + 2) ÷ 2x = 3x + 2" },
+      { title: "Same Idea for Binomials", formula: "factor the top → cancel the common bracket", explanation: "If the top factors into brackets and one matches the divisor, cancel it.", tip: "(x² + 5x + 6) ÷ (x + 2) = (x + 2)(x + 3) ÷ (x + 2) = x + 3" },
+      { title: "Check by Multiplying", formula: "quotient × divisor = dividend", explanation: "Multiply your answer by the divisor — you should recover the original polynomial.", tip: "(x + 3)(x + 2) = x² + 5x + 6 ✓" },
+    ],
+    examples: [
+      { problem: "Divide (6x² + 4x) ÷ 2x", steps: ["Factor 2x out of the top: 6x² + 4x = 2x(3x + 2)", "Cancel the 2x top and bottom", "= 3x + 2"], answer: "3x + 2" },
+      { problem: "Divide (10x² + 5x) ÷ 5x", steps: ["Factor 5x out: 10x² + 5x = 5x(2x + 1)", "Cancel the 5x", "= 2x + 1"], answer: "2x + 1" },
+      { problem: "Divide (x² + 5x + 6) ÷ (x + 2)", steps: ["Factor the top: x² + 5x + 6 = (x + 2)(x + 3)", "Cancel the common (x + 2)", "= x + 3"], answer: "x + 3" },
+      { problem: "Divide (x² + 7x + 12) ÷ (x + 3)", steps: ["Factor the top: x² + 7x + 12 = (x + 3)(x + 4)", "Cancel the common (x + 3)", "= x + 4"], answer: "x + 4" },
+      { problem: "Divide (8x² + 12x) ÷ 4x", steps: ["Factor 4x out: 8x² + 12x = 4x(2x + 3)", "Cancel the 4x", "= 2x + 3"], answer: "2x + 3" },
+    ],
+  };
+}
+
+// ── Tier-2 advanced factoring tutorials ──────────────────────────────────────
+function factorTrinomialATutorial(): TutorialContent {
+  return {
+    skillName: "Factoring Trinomials (a ≠ 1)",
+    intro: "When the leading coefficient isn't 1, factor ax² + bx + c with the AC method: multiply a·c, find two numbers that multiply to a·c and add to b, split the middle term, then factor by grouping.",
+    concepts: [
+      { title: "The AC Method", formula: "find two numbers: multiply to a·c, add to b", explanation: "Multiply the leading coefficient by the constant, then search for the pair that also adds to the middle coefficient.", tip: "2x²+7x+3: a·c=6, and 6+1=7 → use 6 and 1" },
+      { title: "Split & Group", formula: "rewrite bx as two terms, then group", explanation: "Replace the middle term with the two numbers, then factor each pair.", tip: "2x²+6x+1x+3 → 2x(x+3)+1(x+3)" },
+      { title: "Pull the Common Bracket", formula: "(shared bracket)(the two outside terms)", explanation: "Both groups share a bracket — factor it out to finish.", tip: "→ (2x+1)(x+3)" },
+    ],
+    examples: [
+      { problem: "Factor 2x² + 7x + 3", steps: ["a·c = 2·3 = 6; 6 and 1 multiply to 6, add to 7", "2x² + 6x + x + 3 = 2x(x+3) + 1(x+3)", "(2x + 1)(x + 3)"], answer: "(2x + 1)(x + 3)" },
+      { problem: "Factor 3x² + 8x + 4", steps: ["a·c = 12; 6 and 2 multiply to 12, add to 8", "3x² + 6x + 2x + 4 = 3x(x+2) + 2(x+2)", "(3x + 2)(x + 2)"], answer: "(3x + 2)(x + 2)" },
+      { problem: "Factor 2x² + 5x + 2", steps: ["a·c = 4; 4 and 1 → add to 5", "2x² + 4x + x + 2 = 2x(x+2)+1(x+2)", "(2x + 1)(x + 2)"], answer: "(2x + 1)(x + 2)" },
+      { problem: "Factor 6x² + 5x + 1", steps: ["a·c = 6; 3 and 2 → add to 5", "6x² + 3x + 2x + 1 = 3x(2x+1)+1(2x+1)", "(3x + 1)(2x + 1)"], answer: "(3x + 1)(2x + 1)" },
+      { problem: "Factor 3x² + 7x + 2", steps: ["a·c = 6; 6 and 1 → add to 7", "3x² + 6x + x + 2 = 3x(x+2)+1(x+2)", "(3x + 1)(x + 2)"], answer: "(3x + 1)(x + 2)" },
+    ],
+  };
+}
+
+function differenceOfSquaresTutorial(): TutorialContent {
+  return {
+    skillName: "Difference of Squares",
+    intro: "A difference of two perfect squares factors instantly: a² − b² = (a + b)(a − b). Look for two squares separated by a minus sign.",
+    concepts: [
+      { title: "The Pattern", formula: "a² − b² = (a + b)(a − b)", explanation: "Two perfect squares with a minus between them split into a sum times a difference.", tip: "x² − 9 = (x + 3)(x − 3)" },
+      { title: "Spotting Squares", formula: "perfect squares: 1, 4, 9, 16, 25, 36, …", explanation: "The constant must be a perfect square (and the x-term a square too, e.g. 4x² = (2x)²).", tip: "4x² − 25 = (2x + 5)(2x − 5)" },
+      { title: "Middle Term Cancels", formula: "no middle term appears", explanation: "When you expand (a+b)(a−b) the +ab and −ab cancel, leaving only a² − b².", tip: "That's why there's no x-term to match" },
+    ],
+    examples: [
+      { problem: "Factor x² - 9", steps: ["x² - 9 = x² - 3²", "a² - b² = (a+b)(a-b)", "(x + 3)(x - 3)"], answer: "(x + 3)(x - 3)" },
+      { problem: "Factor x² - 49", steps: ["49 = 7²", "(x + 7)(x - 7)"], answer: "(x + 7)(x - 7)" },
+      { problem: "Factor 4x² - 9", steps: ["4x² = (2x)², 9 = 3²", "(2x + 3)(2x - 3)"], answer: "(2x + 3)(2x - 3)" },
+      { problem: "Factor x² - 1", steps: ["1 = 1²", "(x + 1)(x - 1)"], answer: "(x + 1)(x - 1)" },
+      { problem: "Factor 9x² - 16", steps: ["9x² = (3x)², 16 = 4²", "(3x + 4)(3x - 4)"], answer: "(3x + 4)(3x - 4)" },
+    ],
+  };
+}
+
+function perfectSquareTrinomialTutorial(): TutorialContent {
+  return {
+    skillName: "Perfect-Square Trinomials",
+    intro: "A perfect-square trinomial is the square of a binomial: a² + 2ab + b² = (a + b)² and a² − 2ab + b² = (a − b)². Check that the first and last terms are squares and the middle is twice their product.",
+    concepts: [
+      { title: "The Two Patterns", formula: "a² ± 2ab + b² = (a ± b)²", explanation: "First term square, last term square, and the middle term is 2·a·b (its sign sets the sign in the bracket).", tip: "x² + 6x + 9 = (x + 3)²" },
+      { title: "The Check", formula: "middle term = 2 × √first × √last", explanation: "Take the square roots of the first and last terms; twice their product must equal the middle term.", tip: "√x²=x, √9=3, 2·x·3 = 6x ✓" },
+      { title: "Sign Rule", formula: "middle sign → bracket sign", explanation: "A + middle gives (a+b)²; a − middle gives (a−b)².", tip: "x² − 10x + 25 = (x − 5)²" },
+    ],
+    examples: [
+      { problem: "Factor x² + 6x + 9", steps: ["√x² = x, √9 = 3, and 2·x·3 = 6x ✓", "(x + 3)²"], answer: "(x + 3)²" },
+      { problem: "Factor x² - 10x + 25", steps: ["√25 = 5, 2·x·5 = 10x, middle is negative", "(x - 5)²"], answer: "(x - 5)²" },
+      { problem: "Factor x² + 8x + 16", steps: ["√16 = 4, 2·x·4 = 8x ✓", "(x + 4)²"], answer: "(x + 4)²" },
+      { problem: "Factor x² + 2x + 1", steps: ["√1 = 1, 2·x·1 = 2x ✓", "(x + 1)²"], answer: "(x + 1)²" },
+      { problem: "Factor x² - 14x + 49", steps: ["√49 = 7, 2·x·7 = 14x, negative middle", "(x - 7)²"], answer: "(x - 7)²" },
+    ],
+  };
+}
+
+function factorByGroupingTutorial(): TutorialContent {
+  return {
+    skillName: "Factoring by Grouping",
+    intro: "A four-term polynomial often factors by grouping: pair the terms, factor each pair, then pull out the shared bracket.",
+    concepts: [
+      { title: "Pair the Terms", formula: "(term1 + term2) + (term3 + term4)", explanation: "Split the four terms into two pairs that each share a factor.", tip: "x³ + 2x² + 3x + 6 → (x³+2x²)+(3x+6)" },
+      { title: "Factor Each Pair", formula: "GCF out of each pair", explanation: "Take the greatest common factor from each pair — the leftover brackets should match.", tip: "x²(x+2) + 3(x+2)" },
+      { title: "Pull the Common Bracket", formula: "(shared bracket)(the two GCFs)", explanation: "The matching bracket factors out, leaving the two outside pieces as the other factor.", tip: "→ (x² + 3)(x + 2)" },
+    ],
+    examples: [
+      { problem: "Factor x³ + 2x² + 3x + 6", steps: ["Group: (x³ + 2x²) + (3x + 6)", "Factor each: x²(x + 2) + 3(x + 2)", "(x² + 3)(x + 2)"], answer: "(x² + 3)(x + 2)" },
+      { problem: "Factor x³ + 4x² + 2x + 8", steps: ["(x³ + 4x²) + (2x + 8)", "x²(x + 4) + 2(x + 4)", "(x² + 2)(x + 4)"], answer: "(x² + 2)(x + 4)" },
+      { problem: "Factor x³ + 3x² + 5x + 15", steps: ["(x³ + 3x²) + (5x + 15)", "x²(x + 3) + 5(x + 3)", "(x² + 5)(x + 3)"], answer: "(x² + 5)(x + 3)" },
+      { problem: "Factor x³ + x² + 4x + 4", steps: ["(x³ + x²) + (4x + 4)", "x²(x + 1) + 4(x + 1)", "(x² + 4)(x + 1)"], answer: "(x² + 4)(x + 1)" },
+      { problem: "Factor x³ + 5x² + 2x + 10", steps: ["(x³ + 5x²) + (2x + 10)", "x²(x + 5) + 2(x + 5)", "(x² + 2)(x + 5)"], answer: "(x² + 2)(x + 5)" },
+    ],
+  };
+}
+
+function cubesTutorial(): TutorialContent {
+  return {
+    skillName: "Sum & Difference of Cubes",
+    intro: "Two perfect cubes factor with a fixed pattern: a³ + b³ = (a + b)(a² − ab + b²) and a³ − b³ = (a − b)(a² + ab + b²).",
+    concepts: [
+      { title: "The Two Formulas", formula: "a³ ± b³ = (a ± b)(a² ∓ ab + b²)", explanation: "The binomial keeps the original sign; the trinomial's middle sign is the OPPOSITE, and its last sign is always +.", tip: "\"SOAP\": Same, Opposite, Always Positive" },
+      { title: "Spotting Cubes", formula: "perfect cubes: 1, 8, 27, 64, 125", explanation: "The constant must be a perfect cube (b = its cube root); the x³ term gives a = x.", tip: "x³ + 8 → b = ∛8 = 2" },
+      { title: "Build the Trinomial", formula: "a² ∓ ab + b²", explanation: "Square the first, times the two (opposite sign), square the second.", tip: "x³+8 → (x+2)(x² − 2x + 4)" },
+    ],
+    examples: [
+      { problem: "Factor x³ + 8", steps: ["8 = 2³, so a = x, b = 2 (sum of cubes)", "(a + b)(a² − ab + b²)", "(x + 2)(x² − 2x + 4)"], answer: "(x + 2)(x² - 2x + 4)" },
+      { problem: "Factor x³ - 27", steps: ["27 = 3³ (difference of cubes)", "(x − 3)(x² + 3x + 9)"], answer: "(x - 3)(x² + 3x + 9)" },
+      { problem: "Factor x³ + 1", steps: ["1 = 1³", "(x + 1)(x² − x + 1)"], answer: "(x + 1)(x² - x + 1)" },
+      { problem: "Factor x³ - 64", steps: ["64 = 4³", "(x − 4)(x² + 4x + 16)"], answer: "(x - 4)(x² + 4x + 16)" },
+      { problem: "Factor x³ + 125", steps: ["125 = 5³", "(x + 5)(x² − 5x + 25)"], answer: "(x + 5)(x² - 5x + 25)" },
+    ],
+  };
+}
+
 function quadraticEquationsTutorial(): TutorialContent {
   return {
     skillName: "Quadratic Equations",
@@ -887,6 +1186,223 @@ function rightTriangleTrigTutorial(): TutorialContent {
       { problem: "A right triangle has opposite=3, adjacent=4. Find tan(θ).", steps: ["TOA: tan = Opposite/Adjacent", "tan(θ) = 3/4"], answer: "3/4" },
       { problem: "Find the hypotenuse of a right triangle with legs 5 and 12.", steps: ["Pythagorean theorem: c² = a² + b²", "c² = 25 + 144 = 169", "c = √169 = 13"], answer: "13" },
       { problem: "A ladder 10m long leans against a wall at 30° to the ground. How high does it reach?", steps: ["sin(30°) = opposite/hypotenuse", "sin(30°) = 0.5", "Height = 10 × sin(30°) = 10 × 0.5 = 5m"], answer: "5 m" },
+    ],
+  };
+}
+
+// M8 conversions: fractions ↔ decimals ↔ percents.
+function conversionsTutorial(): TutorialContent {
+  return {
+    skillName: "Converting Fractions, Decimals & Percents",
+    intro: "Fractions, decimals and percents are three ways of writing the SAME amount. Learn the moves between them and you can switch forms whenever one is easier.",
+    concepts: [
+      { title: "Fraction → Decimal", formula: "divide: top ÷ bottom", explanation: "A fraction IS a division — divide the numerator by the denominator.", tip: "1/4 = 1 ÷ 4 = 0.25" },
+      { title: "Decimal ↔ Percent", formula: "×100 → percent   ·   ÷100 → decimal", explanation: "Percent means 'out of 100'. Multiply by 100 to get a percent (move the point 2 right); divide by 100 to go back.", tip: "0.3 → 30%    45% → 0.45" },
+      { title: "Fraction → Percent", formula: "make the bottom 100", explanation: "Scale the fraction so the denominator is 100 — the top is then the percent.", tip: "9/10 = 90/100 = 90%" },
+      { title: "Decimal → Fraction", formula: "read the place value, then simplify", explanation: "Say the decimal aloud: 0.125 is '125 thousandths' = 125/1000, then simplify.", tip: "0.125 = 125/1000 = 1/8" },
+    ],
+    examples: [
+      { problem: "Write 1/4 as a decimal", steps: ["A fraction is a division: 1 ÷ 4", "1 ÷ 4 = 0.25"], answer: "0.25" },
+      { problem: "Write 0.3 as a percent", steps: ["Multiply by 100: 0.3 × 100 = 30", "Add the % sign"], answer: "30%" },
+      { problem: "Write 9/10 as a percent", steps: ["Make the bottom 100: 9/10 = 90/100", "90 out of 100 is 90%"], answer: "90%" },
+      { problem: "Write 0.125 as a fraction", steps: ["0.125 means 125 thousandths: 125/1000", "Simplify: divide top and bottom by 125 → 1/8"], answer: "1/8" },
+      { problem: "Write 45% as a decimal", steps: ["45% = 45 ÷ 100", "Move the decimal point two places left: 0.45"], answer: "0.45" },
+    ],
+  };
+}
+
+// ── Linear-equations coordinate units ──
+function plotPointsTutorial(): TutorialContent {
+  return {
+    skillName: "Plotting Points on the Coordinate Plane",
+    intro: "A point is located by an ordered pair (x, y): the x-coordinate tells you how far LEFT/RIGHT, the y-coordinate how far UP/DOWN, always starting from the origin (0, 0).",
+    concepts: [
+      { title: "The Axes & Origin", formula: "x-axis (across) · y-axis (up) · origin (0, 0)", explanation: "The horizontal x-axis and vertical y-axis cross at the origin, (0, 0).", tip: "Start every point at the origin" },
+      { title: "Ordered Pairs (x, y)", formula: "(x, y) → x first, then y", explanation: "Move along x first (right if +, left if −), then along y (up if +, down if −).", tip: "(3, 2): right 3, up 2" },
+      { title: "The Four Quadrants", formula: "I (+,+) · II (−,+) · III (−,−) · IV (+,−)", explanation: "The signs of x and y tell you which quarter of the plane the point is in.", tip: "(−4, −2) is in Quadrant III" },
+    ],
+    examples: [
+      { problem: "Plot the point (3, 2).", steps: ["From the origin, go right 3", "Then up 2", "Mark (3, 2)"], answer: "3,2" },
+      { problem: "Plot the point (−2, 4).", steps: ["Left 2, then up 4"], answer: "-2,4" },
+      { problem: "Plot the point (1, −3).", steps: ["Right 1, then down 3"], answer: "1,-3" },
+    ],
+  };
+}
+function transformationsTutorial(): TutorialContent {
+  return {
+    skillName: "Transformations on the Plane",
+    intro: "A transformation moves a point or shape to a new position. Reflections flip it, translations slide it, and rotations turn it — each changes the coordinates in a set way.",
+    concepts: [
+      { title: "Reflection", formula: "across x-axis: (x, y) → (x, −y)   ·   across y-axis: (x, y) → (−x, y)", explanation: "Reflecting flips the point over an axis. Reflecting over the x-axis negates y; over the y-axis negates x.", tip: "(3, 2) across x-axis → (3, −2)" },
+      { title: "Translation", formula: "(x, y) → (x + a, y + b)", explanation: "Translating slides the point: add the horizontal shift to x and the vertical shift to y.", tip: "(3, 2) by (2, −1) → (5, 1)" },
+      { title: "Rotation 90° CCW", formula: "(x, y) → (−y, x)", explanation: "A quarter-turn counter-clockwise about the origin swaps the coordinates and negates the new x.", tip: "(−2, 3) → (−3, −2)" },
+    ],
+    examples: [
+      { problem: "Reflect the point (3, 2) across the x-axis. Plot the image.", steps: ["Across the x-axis negates y", "(3, 2) → (3, −2)"], answer: "3,-2" },
+      { problem: "Translate the point (3, 2) by (2, −1). Plot the image.", steps: ["Add: (3+2, 2−1)", "(5, 1)"], answer: "5,1" },
+      { problem: "Rotate the point (−2, 3) 90° counter-clockwise. Plot the image.", steps: ["(x, y) → (−y, x)", "(−2, 3) → (−3, −2)"], answer: "-3,-2" },
+    ],
+  };
+}
+
+// ── Geometry pack — angle relationships, perimeter & area ──
+function complementaryAnglesTutorial(): TutorialContent {
+  return {
+    skillName: "Complementary Angles",
+    intro: "Two angles are complementary when they add up to 90° (a right angle). If you know one, subtract from 90° to find the other.",
+    concepts: [
+      { title: "Add to 90°", formula: "a + b = 90°", explanation: "Complementary angles combine to make a right angle. Together they form the square corner.", tip: "30° and 60° are complementary" },
+      { title: "Find the Missing Angle", formula: "missing = 90° − known", explanation: "Subtract the angle you're given from 90°.", tip: "90° − 35° = 55°" },
+      { title: "Spot the Right Angle", formula: "the small square = 90°", explanation: "The little square in the corner tells you the whole angle is 90°.", tip: "The two parts must add to 90°" },
+    ],
+    examples: [
+      { problem: "Find the complement of 35°", steps: ["Complements add to 90°", "90 − 35 = 55"], answer: "55°" },
+      { problem: "Find the complement of 18°", steps: ["90 − 18 = 72"], answer: "72°" },
+      { problem: "Two complementary angles: one is 62°. Find the other.", steps: ["90 − 62 = 28"], answer: "28°" },
+    ],
+  };
+}
+function supplementaryAnglesTutorial(): TutorialContent {
+  return {
+    skillName: "Supplementary Angles",
+    intro: "Two angles are supplementary when they add up to 180° (a straight line). Subtract the known angle from 180° to find the other.",
+    concepts: [
+      { title: "Add to 180°", formula: "a + b = 180°", explanation: "Supplementary angles combine to make a straight line.", tip: "110° and 70° are supplementary" },
+      { title: "Find the Missing Angle", formula: "missing = 180° − known", explanation: "Subtract the given angle from 180°.", tip: "180° − 110° = 70°" },
+      { title: "Complement vs Supplement", formula: "complement → 90°   ·   supplement → 180°", explanation: "Don't mix them up: 'S' for Supplement and Straight line (180°).", tip: "Straight = 180°" },
+    ],
+    examples: [
+      { problem: "Find the supplement of 110°", steps: ["Supplements add to 180°", "180 − 110 = 70"], answer: "70°" },
+      { problem: "Find the supplement of 45°", steps: ["180 − 45 = 135"], answer: "135°" },
+      { problem: "Two angles on a line: one is 125°. Find the other.", steps: ["180 − 125 = 55"], answer: "55°" },
+    ],
+  };
+}
+function verticalAnglesTutorial(): TutorialContent {
+  return {
+    skillName: "Vertical Angles",
+    intro: "When two straight lines cross, the angles OPPOSITE each other are equal. These are called vertical (or vertically opposite) angles.",
+    concepts: [
+      { title: "Opposite Angles are Equal", formula: "vertical angles are equal", explanation: "The two angles directly across the X from each other are always the same size.", tip: "If one is 70°, the opposite is 70°" },
+      { title: "Adjacent Angles Add to 180°", formula: "neighbour angles → 180°", explanation: "Angles next to each other on a line are supplementary.", tip: "70° and 110° sit on a straight line" },
+      { title: "Four Angles, Two Pairs", formula: "two pairs of equal angles", explanation: "Crossing lines make 4 angles: two equal pairs.", tip: "70°, 110°, 70°, 110° around the X" },
+    ],
+    examples: [
+      { problem: "Two lines cross; one angle is 70°. Find the vertical angle.", steps: ["Vertical angles are equal", "= 70°"], answer: "70°" },
+      { problem: "One crossing angle is 125°. Find the angle opposite it.", steps: ["Equal to it", "= 125°"], answer: "125°" },
+      { problem: "One angle at a crossing is 40°. Find the angle NEXT to it.", steps: ["Angles on a line add to 180°", "180 − 40 = 140"], answer: "140°" },
+    ],
+  };
+}
+function anglesOnLineTutorial(): TutorialContent {
+  return {
+    skillName: "Angles on a Straight Line",
+    intro: "Angles that sit together on one side of a straight line always add up to 180°.",
+    concepts: [
+      { title: "Add to 180°", formula: "the angles on a line = 180°", explanation: "All the angles along a straight line, on one side, total 180°.", tip: "65° + 115° = 180°" },
+      { title: "Find the Missing Angle", formula: "missing = 180° − (the others)", explanation: "Add up the known angles and subtract from 180°.", tip: "180 − 65 = 115" },
+      { title: "More Than Two", formula: "a + b + c = 180°", explanation: "Even with three or more angles on the line, they still total 180°.", tip: "50° + 60° + 70° = 180°" },
+    ],
+    examples: [
+      { problem: "One angle on a line is 65°. Find the other.", steps: ["Angles on a line add to 180°", "180 − 65 = 115"], answer: "115°" },
+      { problem: "Angles on a line: 40° and x. Find x.", steps: ["180 − 40 = 140"], answer: "140°" },
+      { problem: "Three angles on a line: 50°, 60°, x. Find x.", steps: ["50 + 60 = 110", "180 − 110 = 70"], answer: "70°" },
+    ],
+  };
+}
+function anglesAroundPointTutorial(): TutorialContent {
+  return {
+    skillName: "Angles Around a Point",
+    intro: "All the angles meeting at a single point make a full turn, which is 360°.",
+    concepts: [
+      { title: "Add to 360°", formula: "the angles around a point = 360°", explanation: "A full turn is 360°, so every angle around a point adds up to that.", tip: "120° + 90° + 150° = 360°" },
+      { title: "Find the Missing Angle", formula: "missing = 360° − (the others)", explanation: "Add the known angles and subtract from 360°.", tip: "360 − (120 + 90) = 150" },
+      { title: "Full Turn", formula: "360° = one complete rotation", explanation: "Think of a clock hand sweeping all the way around back to the start.", tip: "Half turn = 180°, quarter turn = 90°" },
+    ],
+    examples: [
+      { problem: "120° + 90° + x = 360°. Find x.", steps: ["120 + 90 = 210", "360 − 210 = 150"], answer: "150°" },
+      { problem: "Around a point: 200° and x. Find x.", steps: ["360 − 200 = 160"], answer: "160°" },
+      { problem: "Around a point: 90°, 90°, 90°, x. Find x.", steps: ["90 × 3 = 270", "360 − 270 = 90"], answer: "90°" },
+    ],
+  };
+}
+function triangleAngleSumTutorial(): TutorialContent {
+  return {
+    skillName: "Triangle Angle Sum",
+    intro: "The three inside angles of ANY triangle always add up to 180°. Subtract the two you know from 180° to find the third.",
+    concepts: [
+      { title: "Add to 180°", formula: "a + b + c = 180°", explanation: "No matter the triangle's shape, its three angles total 180°.", tip: "60° + 60° + 60° = 180° (equilateral)" },
+      { title: "Find the Third Angle", formula: "third = 180° − (a + b)", explanation: "Add the two known angles, then subtract from 180°.", tip: "180 − (50 + 60) = 70" },
+      { title: "Special Triangles", formula: "right → one 90°   ·   equilateral → three 60°", explanation: "A right triangle has a 90° angle; an equilateral triangle has three equal 60° angles.", tip: "In a right triangle, the other two add to 90°" },
+    ],
+    examples: [
+      { problem: "A triangle has angles 50° and 60°. Find the third.", steps: ["50 + 60 = 110", "180 − 110 = 70"], answer: "70°" },
+      { problem: "A triangle has angles 90° and 35°. Find the third.", steps: ["90 + 35 = 125", "180 − 125 = 55"], answer: "55°" },
+      { problem: "A triangle has angles 45° and 45°. Find the third.", steps: ["45 + 45 = 90", "180 − 90 = 90"], answer: "90°" },
+    ],
+  };
+}
+function perimeterTutorial(): TutorialContent {
+  return {
+    skillName: "Perimeter of Rectangles & Squares",
+    intro: "Perimeter is the total distance AROUND a shape — add up all the side lengths.",
+    concepts: [
+      { title: "Rectangle Perimeter", formula: "P = 2 × (length + width)", explanation: "Add the length and width, then double it (there are two of each).", tip: "8 by 5: 2 × (8 + 5) = 26" },
+      { title: "Square Perimeter", formula: "P = 4 × side", explanation: "A square has four equal sides, so multiply one side by 4.", tip: "Side 6: 4 × 6 = 24" },
+      { title: "Units", formula: "perimeter is a length", explanation: "Perimeter is measured in units of length (cm, m), not squared.", tip: "Add sides; don't multiply length × width" },
+    ],
+    examples: [
+      { problem: "Perimeter of a rectangle 8 by 5", steps: ["P = 2(l + w)", "2 × (8 + 5) = 26"], answer: "26" },
+      { problem: "Perimeter of a square with side 6", steps: ["P = 4 × 6", "= 24"], answer: "24" },
+      { problem: "Perimeter of a rectangle 12 by 3", steps: ["2 × (12 + 3) = 30"], answer: "30" },
+    ],
+  };
+}
+function areaRectTutorial(): TutorialContent {
+  return {
+    skillName: "Area of Rectangles & Squares",
+    intro: "Area is the amount of surface INSIDE a shape — for rectangles and squares, multiply the two side lengths.",
+    concepts: [
+      { title: "Rectangle Area", formula: "A = length × width", explanation: "Multiply the length by the width to count the square units inside.", tip: "8 by 5: 8 × 5 = 40" },
+      { title: "Square Area", formula: "A = side × side", explanation: "A square's length and width are equal, so square the side.", tip: "Side 6: 6 × 6 = 36" },
+      { title: "Square Units", formula: "area is measured in units²", explanation: "Area uses squared units (cm², m²) because it covers a surface.", tip: "Perimeter adds; area multiplies" },
+    ],
+    examples: [
+      { problem: "Area of a rectangle 8 by 5", steps: ["A = l × w", "8 × 5 = 40"], answer: "40" },
+      { problem: "Area of a square with side 6", steps: ["6 × 6 = 36"], answer: "36" },
+      { problem: "Area of a rectangle 12 by 3", steps: ["12 × 3 = 36"], answer: "36" },
+    ],
+  };
+}
+function areaTriangleTutorial(): TutorialContent {
+  return {
+    skillName: "Area of Triangles",
+    intro: "A triangle covers exactly HALF the rectangle around it, so its area is one-half the base times the height.",
+    concepts: [
+      { title: "Area Formula", formula: "A = ½ × base × height", explanation: "Multiply the base by the height, then halve it.", tip: "base 10, height 6: ½ × 10 × 6 = 30" },
+      { title: "Height is Perpendicular", formula: "height ⟂ base", explanation: "The height is the straight-up distance from the base to the top point — at a right angle to the base.", tip: "Use the dashed height, not a slanted side" },
+      { title: "Why One-Half", formula: "triangle = ½ of a rectangle", explanation: "Two identical triangles make a rectangle, so a triangle is half of one.", tip: "Square units (cm², m²)" },
+    ],
+    examples: [
+      { problem: "Area of a triangle with base 10 and height 6", steps: ["A = ½ × b × h", "½ × 10 × 6 = 30"], answer: "30" },
+      { problem: "Area of a triangle with base 8 and height 5", steps: ["½ × 8 × 5 = 20"], answer: "20" },
+      { problem: "Area of a triangle with base 12 and height 4", steps: ["½ × 12 × 4 = 24"], answer: "24" },
+    ],
+  };
+}
+function circleTutorial(): TutorialContent {
+  return {
+    skillName: "Circumference & Area of Circles",
+    intro: "A circle is measured with π (≈ 3.14). Circumference is the distance around; area is the surface inside.",
+    concepts: [
+      { title: "Circumference", formula: "C = 2 × π × r", explanation: "The distance around a circle: 2 times π times the radius.", tip: "r = 5: 2 × 3.14 × 5 = 31.4" },
+      { title: "Area", formula: "A = π × r²", explanation: "The surface inside: π times the radius squared.", tip: "r = 5: 3.14 × 25 = 78.5" },
+      { title: "Radius & Diameter", formula: "diameter = 2 × radius", explanation: "The radius goes from the centre to the edge; the diameter goes all the way across.", tip: "Use π ≈ 3.14 unless told otherwise" },
+    ],
+    examples: [
+      { problem: "Circumference of a circle with radius 5 (π = 3.14)", steps: ["C = 2 π r", "2 × 3.14 × 5 = 31.4"], answer: "31.4" },
+      { problem: "Area of a circle with radius 5 (π = 3.14)", steps: ["A = π r²", "3.14 × 25 = 78.5"], answer: "78.5" },
+      { problem: "Area of a circle with radius 3 (π = 3.14)", steps: ["3.14 × 9 = 28.26"], answer: "28.26" },
     ],
   };
 }
@@ -1122,7 +1638,10 @@ function genericMathTutorial(skillName: string): TutorialContent {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getReadingTutorial(skill: string, skillName: string): TutorialContent {
-  if (skill.includes("letter") || skill.includes("alphabet") || skill.includes("recognition")) return letterRecognitionTutorial();
+  // "letter" alone is a trap — R38 "Letters & Diaries as Sources" is a
+  // primary-source unit, not the alphabet.
+  if (skill.includes("letter name") || skill.includes("letter sound") || skill.includes("letter recognition") || skill.includes("alphabet") || skill.includes("recognition")) return letterRecognitionTutorial();
+  if (skill.includes("source") || skill.includes("diaries") || skill.includes("research") || skill.includes("citing")) return textStructureTutorial();
   if (skill.includes("phonic") || skill.includes("vowel") || skill.includes("blend") || skill.includes("sound")) return phonicsTutorial();
   if (skill.includes("sight") || skill.includes("dolch") || skill.includes("high frequency")) return sightWordsTutorial();
   if (skill.includes("main idea") || skill.includes("topic")) return mainIdeaTutorial();
@@ -1256,18 +1775,24 @@ function comprehensionTutorial(): TutorialContent {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getWritingTutorial(skill: string, skillName: string): TutorialContent {
+  if (skill.includes("copying")) return handwritingTutorial("copying");
+  if (skill.includes("spatial") || skill.includes("finger space")) return handwritingTutorial("spatial");
+  if (skill.includes("formation") || skill.includes("tracing") || skill.includes("handwriting") || skill.includes("pencil")) return handwritingTutorial("formation");
   if (skill.includes("letter recognition") || skill.includes("uppercase") || skill.includes("lowercase") || skill.includes("sentence completion")) return letterRecognitionTutorial();
-  if (skill.includes("noun")) return nounsTutorial();
+  if (skill.includes("noun") || skill.includes("grammar") || skill.includes("parts of speech") || skill.includes("tense") || skill.includes("pronoun")) return nounsTutorial();
+  if (skill.includes("vocab")) return adjectivesTutorial();
+  if (skill.includes("research") || skill.includes("citing") || skill.includes("source")) return essayTutorial();
   if (skill.includes("verb")) return verbsTutorial();
   if (skill.includes("adjective")) return adjectivesTutorial();
-  if (skill.includes("punctuation") || skill.includes("capitalization")) return punctuationTutorial();
+  if (skill.includes("punctuation") || skill.includes("capitalization") || skill.includes("capital") || skill.includes("end mark")) return punctuationTutorial();
   if (skill.includes("sentence")) return sentencesTutorial();
   if (skill.includes("spell")) return spellingTutorial();
   if (skill.includes("edit") || skill.includes("proofread") || skill.includes("revise")) return editingProofreadingTutorial();
   if (skill.includes("paragraph") || skill.includes("topic")) return paragraphsTutorial();
-  if (skill.includes("essay")) return essayTutorial();
-  if (skill.includes("persuasive")) return persuasiveTutorial();
-  if (skill.includes("narrative")) return narrativeTutorial();
+  if (skill.includes("essay") || skill.includes("thesis") || skill.includes("claim")) return essayTutorial();
+  if (skill.includes("persuas")) return persuasiveTutorial();
+  if (skill.includes("narrative") || skill.includes("plot") || skill.includes("story") || skill.includes("character") || skill.includes("setting") || skill.includes("dialogue")) return narrativeTutorial();
+  if (skill.includes("process") || skill.includes("comparison") || skill.includes("informational") || skill.includes("formatting")) return essayTutorial();
   return paragraphsTutorial();
 }
 
@@ -1449,13 +1974,13 @@ function narrativeTutorial(): TutorialContent {
 function getScienceTutorial(skill: string, skillName: string): TutorialContent {
   if (skill.includes("scientific method") || skill.includes("hypothesis") || skill.includes("variable") || skill.includes("experiment")) return scientificMethodTutorial();
   if (skill.includes("water cycle")) return waterCycleTutorial();
-  if (skill.includes("states of matter") || skill.includes("matter")) return statesOfMatterTutorial();
+  if (skill.includes("states of matter") || skill.includes("matter") || skill.includes("solid") || skill.includes("liquid") || skill.includes("gas") || skill.includes("melting") || skill.includes("freezing")) return statesOfMatterTutorial();
   if (skill.includes("food chain") || skill.includes("ecosystem")) return foodChainTutorial();
-  if (skill.includes("cell") || skill.includes("biology") || skill.includes("dna") || skill.includes("mitosis")) return biologyTutorial();
+  if (skill.includes("cell") || skill.includes("biology") || skill.includes("dna") || skill.includes("mitosis") || skill.includes("human body") || skill.includes("senses") || skill.includes("digest")) return biologyTutorial();
   if (skill.includes("photosynthesis") || skill.includes("life science")) return lifeScienceTutorial();
-  if (skill.includes("earth science") || skill.includes("rock") || skill.includes("tectonic")) return earthScienceTutorial();
-  if (skill.includes("force") || skill.includes("newton") || skill.includes("motion") || skill.includes("physics")) return physicsTutorial();
-  if (skill.includes("chemistry") || skill.includes("atom") || skill.includes("element") || skill.includes("bond")) return chemistryTutorial();
+  if (skill.includes("earth science") || skill.includes("rock") || skill.includes("tectonic") || skill.includes("solar") || skill.includes("planet") || skill.includes("space") || skill.includes("star") || skill.includes("weather") || skill.includes("season") || skill.includes("moon")) return earthScienceTutorial();
+  if (skill.includes("force") || skill.includes("newton") || skill.includes("motion") || skill.includes("physics") || skill.includes("electric") || skill.includes("circuit") || skill.includes("magnet") || skill.includes("energy") || skill.includes("machine") || skill.includes("sound") || skill.includes("light") || skill.includes("heat")) return physicsTutorial();
+  if (skill.includes("chemistry") || skill.includes("atom") || skill.includes("element") || skill.includes("bond") || skill.includes("acid") || skill.includes("base") || skill.includes("periodic") || skill.includes("compound") || skill.includes("molecule") || skill.includes("chemical") || skill.includes("reaction")) return chemistryTutorial();
   return lifeScienceTutorial();
 }
 
@@ -1614,6 +2139,63 @@ function chemistryTutorial(): TutorialContent {
 // =============================================================================
 // TIER 1 — Missing tutorials for R1, R2, R3, Writing W1, Science Method
 // =============================================================================
+
+// W0 is HANDWRITING, not phonics: forming letters, spacing them on the page and
+// copying accurately. These lessons must never open with vowels-and-sounds.
+export function handwritingTutorial(kind: "formation" | "spatial" | "copying"): TutorialContent {
+  if (kind === "spatial") {
+    return {
+      skillName: "Spatial Awareness",
+      intro: "Neat writing is about WHERE letters sit, not just how they look. Letters sit on the line, and words need space between them.",
+      concepts: [
+        { title: "Sit on the Line", formula: "Every letter starts on or above the line — none floating, none sinking", explanation: "The writing line is the floor. Letters stand on it. Tall letters (b, d, h, k, l, t) reach up; tail letters (g, j, p, q, y) hang below.", tip: "Say it as you write: 'feet on the floor'." },
+        { title: "Finger Space", formula: "one word · [finger] · next word", explanation: "Without a space, words run together and nobody can read them. Put one finger down after each word before writing the next.", tip: "cat sat  ✓     catsat  ✗" },
+        { title: "Left to Right, Top to Bottom", formula: "Start at the left margin → move right → next line down", explanation: "Reading and writing both travel left to right. When you reach the end of a line, return all the way to the left and drop down one line.", tip: "Put a green dot where you start each line." },
+      ],
+      examples: [
+        { problem: "Where should the letter 'a' sit?", steps: ["Find the writing line.", "'a' is a small letter — it sits ON the line.", "It does not float above or sink below."], answer: "On the line" },
+        { problem: "Which letters hang BELOW the line?", steps: ["Look for letters with tails: g, j, p, q, y", "Their tails drop under the line.", "Everything else stays on top."], answer: "g j p q y" },
+        { problem: "What goes between two words?", steps: ["Write the first word.", "Put one finger on the paper after it.", "Start the next word after your finger."], answer: "One finger space" },
+        { problem: "Fix this: 'thedogran'", steps: ["Find where each word ends: the / dog / ran", "Add one finger space between them."], answer: "the dog ran" },
+        { problem: "Where do you start a new line?", steps: ["Go back to the far LEFT of the page.", "Drop down one line.", "Begin writing there."], answer: "At the left, one line down" },
+      ],
+    };
+  }
+  if (kind === "copying") {
+    return {
+      skillName: "Basic Copying",
+      intro: "Copying means writing exactly what you see — same letters, same order, same spaces. It trains your eyes and hand to work together.",
+      concepts: [
+        { title: "Look, Then Write", formula: "Look at the model → hold it in your head → write it → check it", explanation: "Don't copy one letter at a time with your eyes darting back and forth. Look at the whole word, then write the whole word.", tip: "Look, cover, write, check." },
+        { title: "Copy Everything", formula: "letters + capitals + spaces + the full stop", explanation: "A copy is only correct if every part matches — including capital letters at the start and the punctuation at the end.", tip: "If the model has a capital T, your copy needs a capital T." },
+        { title: "Check Your Work", formula: "Read your copy against the model, word by word", explanation: "Point at the model word, then at your word. Same? Move on. Different? Fix it.", tip: "Checking takes ten seconds and catches almost every mistake." },
+      ],
+      examples: [
+        { problem: "Copy this word: cat", steps: ["Look at the whole word: c-a-t", "Say it, then write it without peeking letter by letter.", "Check: does your word say cat?"], answer: "cat" },
+        { problem: "Copy this: The dog ran.", steps: ["Notice the capital T at the start.", "Notice the spaces between the three words.", "Notice the full stop at the end.", "Write all of it."], answer: "The dog ran." },
+        { problem: "What's wrong with this copy?   Model: My cat.   Copy: my cat", steps: ["Compare word by word.", "The model starts with a CAPITAL M.", "The model ends with a full stop.", "The copy is missing both."], answer: "Missing the capital M and the full stop" },
+        { problem: "Copy this: I am six.", steps: ["Capital I at the start.", "Finger space between each word.", "Full stop at the end."], answer: "I am six." },
+        { problem: "How do you check a copy?", steps: ["Point at the first word of the model, then your first word.", "Compare them.", "Repeat for every word."], answer: "Compare word by word against the model" },
+      ],
+    };
+  }
+  return {
+    skillName: "Letter Formation",
+    intro: "Every letter is drawn the same way every time — starting at the top and moving down. Correct strokes make writing faster and neater for life.",
+    concepts: [
+      { title: "Start at the Top", formula: "Top → down.  Never build a letter from the bottom up.", explanation: "Almost every letter begins with a downward stroke from the top. Starting at the bottom makes letters wobbly and slow.", tip: "l = one line straight down from the top." },
+      { title: "Letter Families", formula: "Down-letters: l t i  ·  Curve-letters: c a o d g  ·  Bump-letters: n m r h", explanation: "Letters that are made the same way are easier learned together. Master the family and every letter in it gets easier.", tip: "c is the start of a, d, g and o — learn c first." },
+      { title: "Same Every Time", formula: "Same starting point + same stroke order = automatic writing", explanation: "Once your hand knows the path, you stop thinking about letters and start thinking about ideas.", tip: "Trace it, then write it three times without the model." },
+    ],
+    examples: [
+      { problem: "How do you form the letter l?", steps: ["Start at the TOP line.", "Pull one straight line straight down.", "Stop on the writing line."], answer: "One straight line, top to bottom" },
+      { problem: "How do you form the letter c?", steps: ["Start just below the top, near the right.", "Curve up and around to the left.", "Sweep down and around, stopping on the line."], answer: "One backwards curve, starting at the top right" },
+      { problem: "Which letters begin like c?", steps: ["Write c.", "Add a straight line up the right side → a and d", "Close the curve → o", "Add a tail below the line → g"], answer: "a, d, o, g" },
+      { problem: "What is wrong with drawing 't' from the bottom up?", steps: ["Letters started at the bottom lean and wobble.", "The cross bar ends up in the wrong place.", "Start at the top: pull down, then cross."], answer: "Start at the top — down first, then the cross" },
+      { problem: "How do you form the letter n?", steps: ["Start at the top, pull straight down.", "Go back UP the same line.", "Make a bump over to the right and down."], answer: "Down, up, over the bump, down" },
+    ],
+  };
+}
 
 export function letterRecognitionTutorial(): TutorialContent {
   return {

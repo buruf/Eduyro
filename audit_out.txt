@@ -1,0 +1,284 @@
+=== SUMMARY (verified answer checks) ===
+M1: total=396 ok=252 wrong=0 unverified=144 (verified-correct 100%)
+M2: total=396 ok=288 wrong=0 unverified=108 (verified-correct 100%)
+M3: total=300 ok=297 wrong=0 unverified=3 (verified-correct 100%)
+M4: total=321 ok=321 wrong=0 unverified=0 (verified-correct 100%)
+M5: total=303 ok=303 wrong=0 unverified=0 (verified-correct 100%)
+M6: total=238 ok=238 wrong=0 unverified=0 (verified-correct 100%)
+M7: total=258 ok=120 wrong=0 unverified=138 (verified-correct 100%)
+M8: total=310 ok=282 wrong=0 unverified=28 (verified-correct 100%)
+M9: total=276 ok=276 wrong=0 unverified=0 (verified-correct 100%)
+M10: total=303 ok=268 wrong=0 unverified=35 (verified-correct 100%)
+M11: total=305 ok=281 wrong=0 unverified=24 (verified-correct 100%)
+M12: total=330 ok=321 wrong=0 unverified=9 (verified-correct 100%)
+M13: total=304 ok=127 wrong=0 unverified=177 (verified-correct 100%)
+M14: total=374 ok=277 wrong=0 unverified=97 (verified-correct 100%)
+M15: total=285 ok=225 wrong=0 unverified=60 (verified-correct 100%)
+M16: total=396 ok=272 wrong=0 unverified=124 (verified-correct 100%)
+M17: total=320 ok=144 wrong=0 unverified=176 (verified-correct 100%)
+M18: total=396 ok=260 wrong=28 unverified=108 (verified-correct 90%)
+
+=== WRONG ANSWERS ===
+M18 s1: "d/dx x¹⁷" ans="17x¹⁶" -- WRONG deriv(2)=1114112.0011219755 ans(2)=1114112
+M18 s1: "d/dx x¹⁸" ans="18x¹⁷" -- WRONG deriv(2)=2359296.0026900982 ans(2)=2359296
+M18 s1: "d/dx x¹⁹" ans="19x¹⁸" -- WRONG deriv(2)=4980736.006383086 ans(2)=4980736
+M18 s1: "d/dx x²⁰" ans="20x¹⁹" -- WRONG deriv(2)=10485760.0150106 ans(2)=10485760
+M18 s1: "d/dx x²¹" ans="21x²⁰" -- WRONG deriv(2)=22020096.035010647 ans(2)=22020096
+M18 s1: "d/dx x²²" ans="22x²¹" -- WRONG deriv(2)=46137344.081047915 ans(2)=46137344
+M18 s1: "d/dx x²³" ans="23x²²" -- WRONG deriv(2)=96468992.18638426 ans(2)=96468992
+M18 s1: "d/dx x²⁴" ans="24x²³" -- WRONG deriv(2)=201326592.42581573 ans(2)=201326592
+M18 s1: "d/dx x²⁵" ans="25x²⁴" -- WRONG deriv(2)=419430400.96741164 ans(2)=419430400
+M18 s1: "d/dx x²⁶" ans="26x²⁵" -- WRONG deriv(2)=872415234.1868727 ans(2)=872415232
+M18 s1: "d/dx x²⁷" ans="27x²⁶" -- WRONG deriv(2)=1811939332.9188225 ans(2)=1811939328
+M18 s1: "d/dx x²⁸" ans="28x²⁷" -- WRONG deriv(2)=3758096395.017206 ans(2)=3758096384
+M18 s1: "d/dx x²⁹" ans="29x²⁸" -- WRONG deriv(2)=7784628248.569368 ans(2)=7784628224
+M18 s1: "d/dx x³⁰" ans="30x²⁹" -- WRONG deriv(2)=16106127414.60204 ans(2)=16106127360
+M18 s11: "d/dx x¹⁷" ans="17x¹⁶" -- WRONG deriv(2)=1114112.0011219755 ans(2)=1114112
+M18 s11: "d/dx x¹⁸" ans="18x¹⁷" -- WRONG deriv(2)=2359296.0026900982 ans(2)=2359296
+M18 s11: "d/dx x¹⁹" ans="19x¹⁸" -- WRONG deriv(2)=4980736.006383086 ans(2)=4980736
+M18 s11: "d/dx x²⁰" ans="20x¹⁹" -- WRONG deriv(2)=10485760.0150106 ans(2)=10485760
+M18 s11: "d/dx x²¹" ans="21x²⁰" -- WRONG deriv(2)=22020096.035010647 ans(2)=22020096
+M18 s11: "d/dx x²²" ans="22x²¹" -- WRONG deriv(2)=46137344.081047915 ans(2)=46137344
+M18 s11: "d/dx x²³" ans="23x²²" -- WRONG deriv(2)=96468992.18638426 ans(2)=96468992
+M18 s11: "d/dx x²⁴" ans="24x²³" -- WRONG deriv(2)=201326592.42581573 ans(2)=201326592
+M18 s11: "d/dx x²⁵" ans="25x²⁴" -- WRONG deriv(2)=419430400.96741164 ans(2)=419430400
+M18 s11: "d/dx x²⁶" ans="26x²⁵" -- WRONG deriv(2)=872415234.1868727 ans(2)=872415232
+M18 s11: "d/dx x²⁷" ans="27x²⁶" -- WRONG deriv(2)=1811939332.9188225 ans(2)=1811939328
+M18 s11: "d/dx x²⁸" ans="28x²⁷" -- WRONG deriv(2)=3758096395.017206 ans(2)=3758096384
+M18 s11: "d/dx x²⁹" ans="29x²⁸" -- WRONG deriv(2)=7784628248.569368 ans(2)=7784628224
+M18 s11: "d/dx x³⁰" ans="30x²⁹" -- WRONG deriv(2)=16106127414.60204 ans(2)=16106127360
+
+=== UNVERIFIED SAMPLES (manual review) ===
+M1
+  s41 "45, ___, 47" => "46"
+  s41 "31, ___, 33" => "32"
+  s41 "37, ___, 39" => "38"
+  s41 "30, ___, 32" => "31"
+  s41 "39, ___, 41" => "40"
+  s41 "38, ___, 40" => "39"
+M2
+  s61 "17, 19, 21, ___" => "23"
+  s61 "43, 45, 47, ___" => "49"
+  s61 "11, 13, 15, ___" => "17"
+  s61 "31, 33, 35, ___" => "37"
+  s61 "3, 5, 7, ___" => "9"
+  s61 "19, 21, 23, ___" => "25"
+M3
+  s81 "34 + 15 + 53" => "102"
+  s81 "91 + 15 + 15" => "121"
+  s81 "53 + 34 + 15" => "102"
+M7
+  s11 "\frac{1}{4} = \frac{2}{?}" => "8"
+  s11 "\frac{1}{4} = \frac{?}{8}" => "2"
+  s11 "\frac{1}{3} = \frac{3}{?}" => "9"
+  s11 "\frac{2}{3} = \frac{?}{9}" => "6"
+  s11 "\frac{3}{5} = \frac{6}{?}" => "10"
+  s11 "\frac{2}{5} = \frac{?}{10}" => "4"
+M8
+  s91 "Write \frac{9}{10} as a decimal." => "0.9"
+  s91 "Write 0.7 as a fraction." => "\frac{7}{10}"
+  s91 "Write 0.9 as a fraction." => "\frac{9}{10}"
+  s91 "Write \frac{5}{8} as a percent." => "62.5%"
+  s91 "Write \frac{3}{8} as a percent." => "37.5%"
+  s91 "Write 0.9 as a percent." => "90%"
+M10
+  s71 "(-1) - 4" => "-5"
+  s71 "(-3) + 3" => "0"
+  s71 "(-2) + 5" => "3"
+  s71 "(-3) + 4" => "1"
+  s71 "(-3) - 5" => "-8"
+  s71 "(-2) - 7" => "-9"
+M11
+  s1 "Plot the y-intercept of the line y = x − 2." => "0,-2"
+  s11 "Translate the point (1, -4) by (2, −1). Plot the image." => "3,-5"
+  s11 "Reflect the point (-1, 2) across the x-axis. Plot the image." => "-1,-2"
+  s11 "Reflect the point (-1, 2) across the y-axis. Plot the image." => "1,2"
+  s11 "Translate the point (-3, -1) by (2, −1). Plot the image." => "-1,-2"
+  s11 "Reflect the point (4, -2) across the x-axis. Plot the image." => "4,2"
+M12
+  s81 "Select all the factors of x² + 7x + 10." => "(x + 2),(x + 5)"
+  s81 "Select all the factors of x² + 8x + 12." => "(x + 2),(x + 6)"
+  s81 "Select all the factors of x² + 9x + 14." => "(x + 2),(x + 7)"
+  s81 "Select all the factors of x² + 7x + 12." => "(x + 3),(x + 4)"
+  s81 "Select all the factors of x² + 9x + 18." => "(x + 3),(x + 6)"
+  s81 "Select all the factors of x² + 10x + 24." => "(x + 4),(x + 6)"
+M13
+  s1 "Drag the orange vertex of the parabola to the point (-3, -2)." => "-3,-2"
+  s11 "Is 37 a perfect square?" => "False"
+  s11 "Is 48 a perfect square?" => "False"
+  s11 "Is 49 a perfect square?" => "True"
+  s11 "What is the square root of 49?" => "7"
+  s11 "What is the square root of 64?" => "8"
+M14
+  s1 "The graph of a linear function f(x) = mx + b is shown. Build its equation." => "1,-2"
+  s41 "f(x) = x + 3, g(x) = 3x. Find f(g(4))" => "15"
+  s41 "f(x) = x + 6, g(x) = x. Find f(g(3))" => "9"
+  s41 "f(x) = x + 2, g(x) = 5x. Find f(g(3))" => "17"
+  s41 "f(x) = x + 5, g(x) = x. Find f(g(4))" => "9"
+  s41 "f(x) = x + 4, g(x) = x. Find f(g(5))" => "9"
+M15
+  s61 "Drag the point around the circle to the angle π/6 radians." => "30"
+  s61 "Convert 30° to radians" => "π/6"
+  s61 "Drag the point around the circle to the angle π/4 radians." => "45"
+  s61 "Drag the point around the circle to the angle π/3 radians." => "60"
+  s61 "Drag the point around the circle to the angle π/2 radians." => "90"
+  s61 "Drag the point around the circle to the angle 2π/3 radians." => "120"
+M16
+  s41 "Solve 2^x = 2" => "1"
+  s41 "Solve 3^x = 3" => "1"
+  s41 "Solve 2^x = 4" => "2"
+  s41 "Solve 3^x = 9" => "2"
+  s41 "Solve 2^x = 8" => "3"
+  s41 "Solve 5^x = 5" => "1"
+M17
+  s1 "Which graph matches y = x² + 2?" => "parab:1,0,2"
+  s1 "Which graph matches y = (x − 2)²?" => "parab:1,2,0"
+  s1 "Which graph matches y = (x + 2)²?" => "parab:1,-2,0"
+  s1 "Which graph matches y = (x − 1)² − 3?" => "parab:1,1,-3"
+  s1 "Which graph matches y = (x + 1)² + 3?" => "parab:1,-1,3"
+  s31 "Sum of the first 3 terms: first term 4, common difference 1" => "15"
+M18
+  s61 "∫ x dx" => "x²/2 + C"
+  s61 "∫ x² dx" => "x³/3 + C"
+  s61 "∫ x³ dx" => "x⁴/4 + C"
+  s61 "∫ x⁴ dx" => "x⁵/5 + C"
+  s61 "∫ x⁵ dx" => "x⁶/6 + C"
+  s61 "∫ x⁶ dx" => "x⁷/7 + C"
+
+=== WITHIN-SHEET DUPLICATES ===
+M2 s61: dup "31, 33, 35, ___"
+M2 s61: dup "41, 43, 45, ___"
+M2 s61: dup "1, 3, 5, ___"
+M2 s61: dup "57, 59, 61, ___"
+M2 s61: dup "47, 49, 51, ___"
+M2 s61: dup "7, 9, 11, ___"
+M2 s71: dup "5, 10, 15, ___"
+M2 s71: dup "90, 95, 100, ___"
+M2 s71: dup "25, 30, 35, ___"
+M2 s71: dup "40, 45, 50, ___"
+M2 s71: dup "65, 70, 75, ___"
+M2 s71: dup "125, 130, 135, ___"
+M2 s81: dup "100, 110, 120, ___"
+M2 s81: dup "160, 170, 180, ___"
+M2 s81: dup "280, 290, 300, ___"
+M2 s81: dup "180, 190, 200, ___"
+M2 s81: dup "20, 30, 40, ___"
+M2 s81: dup "110, 120, 130, ___"
+M14 s51: dup "Domain of f(x) = 1/(x - 1)"
+M14 s51: dup "Domain of f(x) = 1/(x - 2)"
+M14 s51: dup "Domain of f(x) = 1/(x - 3)"
+M14 s51: dup "Domain of f(x) = 1/(x - 4)"
+M14 s51: dup "Domain of f(x) = 1/(x - 5)"
+M14 s51: dup "Domain of f(x) = 1/(x - 6)"
+M14 s61: dup "Domain of f(x) = 1/(x - 1)"
+M14 s61: dup "Domain of f(x) = 1/(x - 2)"
+M14 s61: dup "Domain of f(x) = 1/(x - 3)"
+M14 s61: dup "Domain of f(x) = 1/(x - 4)"
+M14 s61: dup "Domain of f(x) = 1/(x - 5)"
+M14 s61: dup "Domain of f(x) = 1/(x - 6)"
+M14 s71: dup "Range of f(x) = x² + (-15)"
+M14 s71: dup "Range of f(x) = x² + (-14)"
+M14 s71: dup "Range of f(x) = x² + (-13)"
+M14 s71: dup "Range of f(x) = x² + (-12)"
+M14 s71: dup "Range of f(x) = x² + (-11)"
+M14 s81: dup "Range of f(x) = x² + (-15)"
+M14 s81: dup "Range of f(x) = x² + (-14)"
+M14 s81: dup "Range of f(x) = x² + (-13)"
+M14 s81: dup "Range of f(x) = x² + (-12)"
+M14 s81: dup "Range of f(x) = x² + (-11)"
+...and 250 more
+
+=== ADJACENT-SHEET OVERLAP >=60% ===
+M1 sheets 11/12: 83% overlap
+M1 sheets 91/92: 83% overlap
+M2 sheets 11/12: 61% overlap
+M5 sheets 11/12: 97% overlap
+M6 sheets 11/12: 76% overlap
+M11 sheets 11/12: 65% overlap
+M13 sheets 11/12: 91% overlap
+M13 sheets 51/52: 89% overlap
+M14 sheets 11/12: 61% overlap
+M14 sheets 51/52: 100% overlap
+M14 sheets 91/92: 89% overlap
+M15 sheets 11/12: 100% overlap
+M15 sheets 51/52: 100% overlap
+M15 sheets 91/92: 100% overlap
+M16 sheets 11/12: 100% overlap
+M16 sheets 51/52: 100% overlap
+M17 sheets 11/12: 100% overlap
+M17 sheets 51/52: 92% overlap
+M18 sheets 11/12: 100% overlap
+M18 sheets 51/52: 61% overlap
+M18 sheets 91/92: 100% overlap
+
+=== INTERACTIVE-ONLY PHRASING ON PAPER ===
+M10 s81: "Plot the point (-3, -3) on the coordinate plane."
+M10 s81: "Plot the point (-3, -2) on the coordinate plane."
+M10 s81: "Plot the point (-3, 1) on the coordinate plane."
+M10 s81: "Plot the point (-3, 3) on the coordinate plane."
+M10 s81: "Plot the point (-2, -3) on the coordinate plane."
+M10 s81: "Plot the point (-2, 1) on the coordinate plane."
+M10 s81: "Plot the point (-2, 2) on the coordinate plane."
+M10 s81: "Plot the point (-2, 3) on the coordinate plane."
+M10 s81: "Plot the point (-1, -2) on the coordinate plane."
+M10 s81: "Plot the point (-1, 2) on the coordinate plane."
+M10 s81: "Plot the point (1, -3) on the coordinate plane."
+M10 s81: "Plot the point (1, -1) on the coordinate plane."
+M10 s81: "Plot the point (1, 1) on the coordinate plane."
+M10 s81: "Plot the point (1, 2) on the coordinate plane."
+M10 s81: "Plot the point (2, -2) on the coordinate plane."
+M10 s81: "Plot the point (2, 1) on the coordinate plane."
+M10 s81: "Plot the point (2, 3) on the coordinate plane."
+M10 s81: "Plot the point (3, -3) on the coordinate plane."
+M10 s81: "Plot the point (3, -2) on the coordinate plane."
+M10 s81: "Plot the point (3, -1) on the coordinate plane."
+M10 s81: "Plot the point (3, 2) on the coordinate plane."
+M10 s81: "Plot the point (3, 3) on the coordinate plane."
+M10 s91: "Plot the point (2, 2) on the coordinate plane."
+M10 s91: "Plot the point (3, 1) on the coordinate plane."
+M11 s1: "Plot the point (-3, -3) on the coordinate plane."
+M11 s1: "Plot the point (-3, 3) on the coordinate plane."
+M11 s1: "Plot the point (-2, -3) on the coordinate plane."
+M11 s1: "Plot the point (-2, 1) on the coordinate plane."
+M11 s1: "Plot the point (-2, 2) on the coordinate plane."
+M11 s1: "Plot the point (-2, 3) on the coordinate plane."
+M11 s1: "Plot the point (-1, -3) on the coordinate plane."
+M11 s1: "Plot the point (-1, 1) on the coordinate plane."
+M11 s1: "Plot the point (-1, 3) on the coordinate plane."
+M11 s1: "Plot the point (1, -3) on the coordinate plane."
+M11 s1: "Plot the point (1, -2) on the coordinate plane."
+M11 s1: "Plot the point (1, -1) on the coordinate plane."
+M11 s1: "Plot the point (1, 1) on the coordinate plane."
+M11 s1: "Plot the point (2, -2) on the coordinate plane."
+M11 s1: "Plot the point (2, 1) on the coordinate plane."
+M11 s1: "Plot the point (2, 2) on the coordinate plane."
+M11 s1: "Plot the point (2, 3) on the coordinate plane."
+M11 s1: "Plot the point (3, -3) on the coordinate plane."
+M11 s1: "Plot the point (3, -2) on the coordinate plane."
+M11 s1: "Plot the point (3, -1) on the coordinate plane."
+M11 s1: "Plot the point (3, 1) on the coordinate plane."
+M13 s1: "Plot the point (3, 2) on the coordinate plane."
+M13 s1: "Plot the point (-2, 1) on the coordinate plane."
+M13 s1: "Plot the point (1, -3) on the coordinate plane."
+M13 s1: "Plot the point (-3, -1) on the coordinate plane."
+M13 s1: "Plot the point (2, 4) on the coordinate plane."
+
+=== DIFFICULTY PROXY (mean max number per question, sheets 1,10,19,...,100) ===
+M1: 23,32,22,34,26,35,21,24,22,25,36,27
+M2: 46,66,57,70,58,48,63,35,88,173,63,84
+M3: 5,6,10,10,54,67,66,75,661,736,256,510
+M4: 5,7,8,11,9,61,68,61,600,634,98,335
+M5: 14,27,20,25,18,23,34,47,58,70,81,60
+M6: 20,31,33,43,33,53,70,47,48,287,375,48
+M7: 9,8,10,18,6,7,1,1,6,39,49,46
+M8: 2,2,0,2,0,7,1,6,59,86,19,1
+M9: 16,19,15,19,14,18,25,8,8,9,24,21
+M10: 7,9,8,6,8,7,14,25,7,2,2,27
+M11: 2,14,43,27,41,39,17,31,6,11,35,46
+M12: 8,9,7,8,7,8,9,7,9,8,30,63
+M13: 2,127,20,56,151,92,6,8,23,6,3,6
+M14: 3,7,3,6,5,7,14,14,8,8,7,9
+M15: 37,49,46,48,83,100,100,53,53,22,22,22
+M16: 3327,3327,3,3,3757,3757,0,0,0,4,5,5
+M17: 3,3,5,6,6,4,4,4,265,265,4,5
+M18: 0,0,5,5,3,5,6,0,0,10,14,14

@@ -5,6 +5,7 @@
 // Protected by INTERNAL_API_SECRET environment variable.
 
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { generatePdfsForPurchase } from "@/lib/shop/fulfillment";
 
 export const maxDuration = 300;
@@ -17,8 +18,10 @@ export async function POST(req: NextRequest) {
   if (!expected) {
     return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
   }
-  const secret = req.headers.get("x-internal-secret");
-  if (!secret || secret !== expected) {
+  const secret = req.headers.get("x-internal-secret") ?? "";
+  const a = Buffer.from(secret);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

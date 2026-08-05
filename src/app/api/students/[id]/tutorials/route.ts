@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import {
   ok, notFound, forbidden, handleRouteError, withAuth, parseRequest,
 } from "@/lib/api/helpers";
+import { canAccessStudent } from "@/lib/api/student-access";
 
 const MarkCompleteSchema = z.object({
   conceptId: z.string().min(1).max(64),
@@ -22,8 +23,9 @@ async function guard(studentId: string, ctx: { userId: string; role: string }) {
   if (!student) return notFound("Student");
   const isSelf = student.userId === ctx.userId;
   const isParent = student.parentLinks.some((l) => l.parent.userId === ctx.userId);
-  if (!isSelf && !isParent && ctx.role !== "ADMIN" && ctx.role !== "TEACHER") {
-    return forbidden();
+  if (!isSelf && !isParent) {
+    const allowed = await canAccessStudent(ctx, student, { checkParent: false });
+    if (!allowed) return forbidden();
   }
   return null;
 }

@@ -2,6 +2,7 @@
 // Runs daily at 11:59pm — resets streaks for students who didn't complete
 // any worksheets today, and awards streak milestone badges.
 
+import { appDayStart } from "@/lib/time";
 import { db } from "@/lib/db";
 import { sendStreakMilestoneEmail } from "@/lib/email";
 import { startOfDay, subDays } from "date-fns";
@@ -12,14 +13,22 @@ export async function runStreakMaintenance(): Promise<{
   recordsProcessed: number;
   metadata: Record<string, any>;
 }> {
-  const todayStart = startOfDay(new Date());
+  // Prefetch a 2-day window, then evaluate "today" PER STUDENT in their own
+  // timezone (students are worldwide — one global UTC day mis-scores evening
+  // workers and the far side of the date line).
+  const windowStart = subDays(new Date(), 2);
 
   const allStudents = await db.student.findMany({
     include: {
       user: true,
       completedSheets: {
-        where: { completedAt: { gte: todayStart } },
-        select: { id: true },
+        where: { completedAt: { gte: windowStart } },
+        select: { completedAt: true },
+      },
+      // Parent-excused day today → treat like a non-penalized day (streak holds).
+      dailyPackets: {
+        where: { skipped: true, date: { gte: windowStart } },
+        select: { date: true },
       },
     },
   });
@@ -34,13 +43,15 @@ export async function runStreakMaintenance(): Promise<{
   });
 
   for (const student of allStudents) {
-    const completedAnyToday = student.completedSheets.length > 0;
+    // "Today" in THIS student's timezone.
+    const dayStart = appDayStart(new Date(), (student as any).timezone);
+    const completedAnyToday = student.completedSheets.some((s: any) => s.completedAt >= dayStart);
 
     if (completedAnyToday) {
       // Streak continues — increment if this is a new day relative to lastActiveDate
       const lastActive = student.lastActiveDate;
-      const wasYesterday = lastActive && lastActive >= subDays(todayStart, 1) && lastActive < todayStart;
-      const wasToday = lastActive && lastActive >= todayStart;
+      const wasYesterday = lastActive && lastActive >= subDays(dayStart, 1) && lastActive < dayStart;
+      const wasToday = lastActive && lastActive >= dayStart;
 
       if (!wasToday) {
         // Increment streak
@@ -92,11 +103,12 @@ export async function runStreakMaintenance(): Promise<{
       }
     } else {
       // No work today — check if streak should break
-      // Allow weekends to not break the streak
+      // Allow weekends, and parent-excused ("skipped") days, to not break the streak
       const dayOfWeek = new Date().getDay();
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      const isExcused = student.dailyPackets.some((p: any) => p.date >= dayStart);
 
-      if (!isWeekend && student.currentStreak > 0) {
+      if (!isWeekend && !isExcused && student.currentStreak > 0) {
         await db.student.update({
           where: { id: student.id },
           data: { currentStreak: 0 },

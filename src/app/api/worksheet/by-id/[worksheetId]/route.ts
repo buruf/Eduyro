@@ -7,7 +7,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { ok, notFound, forbidden, handleRouteError, withAuth } from "@/lib/api/helpers";
-import { generateProblems } from "@/lib/worksheet/generator";
+import { generateProblems, getMathLevelSkills } from "@/lib/worksheet/generator";
 import { classifyAnswerType } from "@/lib/practice/answer-type";
 
 export async function GET(
@@ -62,13 +62,28 @@ export async function GET(
         // banks, skills that lacked dedicated content — and applies the per-sheet
         // partitioning so consecutive sheets differ. Distractors are kept stable
         // when the questions already match.
+        // Map the CONTENT sheet number into the lesson's range. For skill-map math
+        // sheets the stored `sheetNumber` is a global RUNNING counter, NOT the
+        // content index — the unit that owns the content is carried by the TITLE
+        // ("<unit label> — Sheet N"). Regenerating from the raw running number
+        // produces the WRONG unit (e.g. "What number comes after 19?" under a
+        // "Missing number in a sequence" title) AND would clobber a correct row.
+        let contentSheet = Math.min(100, worksheet.sheetNumber);
+        if (slug === "MATH") {
+          const label = worksheet.title?.split(" — Sheet")[0]?.trim();
+          const unit = label ? getMathLevelSkills(worksheet.level.code).find((s) => s.label === label) : undefined;
+          if (unit) {
+            const size = unit.range[1] - unit.range[0] + 1;
+            contentSheet = unit.range[0] + ((worksheet.sheetNumber - 1) % size);
+          }
+        }
         const fresh = generateProblems({
           subjectSlug: slug,
           levelCode: worksheet.level.code,
           skillName: worksheet.skill.name,
           problemCount: worksheet.problemCount || 20,
           timeLimitMinutes: worksheet.estimatedMinutes || 10,
-          sheetNumber: Math.min(100, worksheet.sheetNumber),
+          sheetNumber: contentSheet,
           totalSheets: 100,
         });
         const sig = (ps: any[]) => ps.map((p) => p.question).sort().join("§");
@@ -93,6 +108,50 @@ export async function GET(
       // shape (number vs. long text) and render multiple-choice as buttons.
       const subjectSlug2 = worksheet.level.subject.slug;
       const levelCode2 = worksheet.level.code;
+
+      // ── Worked examples for the pre-practice tutorial ──
+      // Built from THIS sheet's own problems (one per distinct question FORM,
+      // numbers masked), so the tutorial demonstrates every kind of question the
+      // student is about to practice and always matches the content. Steps come
+      // from the scaffold engine. This deliberately reveals the solution to a
+      // handful of the sheet's problems — same trade-off as the printed lesson
+      // page, which teaches with solved examples from the sheet.
+      const { buildScaffold } = await import("@/lib/tutor/scaffold");
+      const formOf = (q: string) => q.replace(/-?\d+(\.\d+)?/g, "#");
+      const seenForms = new Set<string>();
+      const workedExamples: { problem: string; steps: string[]; answer: string }[] = [];
+      // Everything AFTER a passage header is a question about that passage.
+      // Such a question cannot be a worked example: without the text it is
+      // meaningless ("Where was the ant's nest?" — what ant?), and showing its
+      // answer up front spoils the reading the child is about to do. Word work
+      // that appears BEFORE the header is still fair game.
+      let inPassage = false;
+      for (const p of storedProblems) {
+        const q = String(p.question ?? "");
+        const a = String(p.answer ?? "");
+        if (q.startsWith("READ THIS PASSAGE") || q.startsWith("LEARN THESE WORDS")) { inPassage = true; continue; }
+        if (inPassage) continue;
+        // Skip figure-marker and interactive items — their prompts don't render
+        // as plain text in the tutorial modal.
+        if (!q || !a || q.includes("[[viz") || p.interactive) continue;
+        const f = formOf(q);
+        if (seenForms.has(f)) continue;
+        seenForms.add(f);
+        try {
+          const sc = buildScaffold(q, a, "", { subjectSlug: subjectSlug2, directive: worksheet.skill?.name ?? "" });
+          // Never show a step-less "example" — if the scaffold has no real
+          // teaching for this form, leave it out (the curated lesson example
+          // still covers the unit).
+          // A "worked example" whose only step is generic test-taking advice
+          // ("Re-read the question and rule out the choices that clearly don't
+          // fit") teaches nothing — it just spends the answer. Require at least
+          // one step that actually works the problem.
+          const GENERIC_STEP = /^(the correct answer is|re-?read |rule out|look (carefully|closely|again)|think about what|eliminate |check each (option|choice)|consider each)/i;
+          const bland = !sc.hints.some((h) => !GENERIC_STEP.test(h.trim()));
+          if (!bland) workedExamples.push({ problem: q, steps: sc.hints, answer: a });
+        } catch { /* skip unbuildable example */ }
+        if (workedExamples.length >= 6) break;
+      }
       // Distractor pool for making symbolic math answers answerable as multiple
       // choice: the distinct answers already on this sheet (similar shape, so the
       // wrong options are plausible). Sorted for determinism, then sampled.
@@ -162,6 +221,7 @@ export async function GET(
         subjectSlug: worksheet.level.subject.slug,
         problemCount: problems.length,
         problems,
+        workedExamples,
       });
     } catch (error) {
       return handleRouteError(error);

@@ -6,6 +6,7 @@
 // never receives the answer). Reorder via ↑/↓ (deterministic + accessible) or
 // native drag.
 "use client";
+import { MathText } from "@/components/MathText";
 
 import { useEffect, useRef, useState } from "react";
 
@@ -49,7 +50,7 @@ export function OrderingInput({ items, onChange }: { items: string[]; value: str
           className="flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 cursor-grab active:cursor-grabbing"
         >
           <span className="w-5 text-xs text-muted tabular-nums">{i + 1}.</span>
-          <span className="flex-1 text-center font-serif font-semibold text-ink">{it}</span>
+          <span className="flex-1 text-center font-serif font-semibold text-ink"><MathText>{it}</MathText></span>
           <button onClick={() => move(i, -1)} disabled={i === 0} aria-label={`Move ${it} up`}
             className="w-7 h-7 rounded-md border border-border hover:bg-cream-dark disabled:opacity-30">↑</button>
           <button onClick={() => move(i, 1)} disabled={i === order.length - 1} aria-label={`Move ${it} down`}

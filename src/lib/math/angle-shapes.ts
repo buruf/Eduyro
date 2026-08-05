@@ -22,7 +22,7 @@ export function isAngleKind(kind: string): boolean {
 }
 
 export function isGeomKind(kind: string): boolean {
-  return kind === "geomrect" || kind === "geomsquare" || kind === "geomtri" || kind === "geomcircle";
+  return kind === "geomrect" || kind === "geomsquare" || kind === "geomtri" || kind === "geomcircle" || kind === "geomright";
 }
 
 export function isFigureKind(kind: string): boolean {
@@ -60,6 +60,22 @@ export function geomDiagram(kind: string, nums: number[], S: number): AnglePrim[
     out.push({ t: "circle", cx, cy, r });
     out.push({ t: "line", x1: cx, y1: cy, x2: cx + r, y2: cy });
     out.push({ t: "text", x: cx + r / 2, y: cy - 4, s: `r=${a}` });
+  } else if (kind === "geomright") {
+    // Right triangle for Pythagoras / trig. nums = [horizontal leg, vertical leg,
+    // hypotenuse, θflag?]. A value of 0 means "unknown" → drawn as "?". If θflag
+    // is 1, the angle θ is marked at the bottom-right vertex (opp = vertical leg,
+    // adj = horizontal leg, hyp = the slanted side).
+    const [h, v, hyp, theta] = nums;
+    const lbl = (n: number) => (n === 0 ? "?" : `${n}`);
+    const A: [number, number] = [16, S - 14];          // right angle (bottom-left)
+    const B: [number, number] = [S - 12, S - 14];       // bottom-right
+    const C: [number, number] = [16, 12];               // top-left
+    out.push({ t: "poly", pts: [A, B, C] });
+    out.push({ t: "rect", x: A[0], y: A[1] - 9, w: 9, h: 9 });                    // right-angle mark
+    out.push({ t: "text", x: (A[0] + B[0]) / 2, y: A[1] + 12, s: lbl(h) });        // horizontal leg
+    out.push({ t: "text", x: A[0] - 5, y: (A[1] + C[1]) / 2, s: lbl(v) });         // vertical leg
+    out.push({ t: "text", x: (B[0] + C[0]) / 2 + 8, y: (B[1] + C[1]) / 2 - 2, s: lbl(hyp) }); // hypotenuse
+    if (theta === 1) out.push({ t: "text", x: B[0] - 20, y: B[1] - 7, s: "θ" });
   }
   return out;
 }
@@ -68,14 +84,20 @@ export function angleDiagram(kind: string, nums: number[], S: number): AnglePrim
   const rad = (d: number) => (d * Math.PI) / 180;
   const out: AnglePrim[] = [];
   const a = nums[0] ?? 60, b = nums[1] ?? 60;
+  // Place an angle label along its wedge bisector, pushed OUTWARD as the wedge
+  // gets thinner so the number always clears the two rays (a small angle like 18°
+  // has a narrow wedge near a ray — a fixed radius made the text overwrite the
+  // line). Larger radius ⇒ the same angular wedge is physically wider there.
+  const lr = (L: number, wedge: number): number =>
+    L * (wedge < 26 ? 0.92 : wedge < 40 ? 0.84 : wedge < 60 ? 0.72 : wedge < 90 ? 0.62 : 0.54);
 
   if (kind === "angline") {
     const cx = S / 2, cy = S * 0.58, L = S * 0.44;
     const P = (deg: number, r = L): [number, number] => [cx + r * Math.cos(rad(deg)), cy - r * Math.sin(rad(deg))];
     out.push({ t: "line", x1: 6, y1: cy, x2: S - 6, y2: cy });
     const e = P(a); out.push({ t: "line", x1: cx, y1: cy, x2: e[0], y2: e[1] });
-    const la = P(a / 2, L * 0.66); out.push({ t: "text", x: la[0], y: la[1], s: `${a}°` });
-    const lb = P((a + 180) / 2, L * 0.66); out.push({ t: "text", x: lb[0], y: lb[1], s: "?" });
+    const la = P(a / 2, lr(L, a)); out.push({ t: "text", x: la[0], y: la[1], s: `${a}°` });
+    const lb = P((a + 180) / 2, lr(L, 180 - a)); out.push({ t: "text", x: lb[0], y: lb[1], s: "?" });
   } else if (kind === "angright") {
     const vx = S * 0.18, vy = S * 0.82, L = S * 0.62;
     const P = (deg: number, r = L): [number, number] => [vx + r * Math.cos(rad(deg)), vy - r * Math.sin(rad(deg))];
@@ -83,16 +105,16 @@ export function angleDiagram(kind: string, nums: number[], S: number): AnglePrim
     out.push({ t: "line", x1: vx, y1: vy, x2: vx, y2: vy - L });
     const e = P(a); out.push({ t: "line", x1: vx, y1: vy, x2: e[0], y2: e[1] });
     out.push({ t: "rect", x: vx, y: vy - 9, w: 9, h: 9 });
-    const la = P(a / 2, L * 0.55); out.push({ t: "text", x: la[0], y: la[1], s: `${a}°` });
-    const lb = P((a + 90) / 2, L * 0.55); out.push({ t: "text", x: lb[0], y: lb[1], s: "?" });
+    const la = P(a / 2, lr(L, a)); out.push({ t: "text", x: la[0], y: la[1], s: `${a}°` });
+    const lb = P((a + 90) / 2, lr(L, 90 - a)); out.push({ t: "text", x: lb[0], y: lb[1], s: "?" });
   } else if (kind === "angcross") {
     const cx = S / 2, cy = S / 2, L = S * 0.46, base = 18;
     const P = (deg: number, r = L): [number, number] => [cx + r * Math.cos(rad(deg)), cy - r * Math.sin(rad(deg))];
     const l1a = P(base), l1b = P(base + 180), l2a = P(base + a), l2b = P(base + a + 180);
     out.push({ t: "line", x1: l1a[0], y1: l1a[1], x2: l1b[0], y2: l1b[1] });
     out.push({ t: "line", x1: l2a[0], y1: l2a[1], x2: l2b[0], y2: l2b[1] });
-    const la = P(base + a / 2, L * 0.5); out.push({ t: "text", x: la[0], y: la[1], s: `${a}°` });
-    const lb = P(base + a / 2 + 180, L * 0.5); out.push({ t: "text", x: lb[0], y: lb[1], s: "?" });
+    const la = P(base + a / 2, lr(L, a)); out.push({ t: "text", x: la[0], y: la[1], s: `${a}°` });
+    const lb = P(base + a / 2 + 180, lr(L, a)); out.push({ t: "text", x: lb[0], y: lb[1], s: "?" });
   } else if (kind === "angtri") {
     const A: [number, number] = [8, S - 8], B: [number, number] = [S - 8, S - 8], C: [number, number] = [S * 0.42, 8];
     const G: [number, number] = [(A[0] + B[0] + C[0]) / 3, (A[1] + B[1] + C[1]) / 3];

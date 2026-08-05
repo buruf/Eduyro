@@ -149,7 +149,11 @@ const cmpSymbol: Builder = () => {
       : (d2 % d1 === 0 || d1 % d2 === 0) ? 1
       : (n1 === 1 && n2 === 1) ? 2
       : 3;
-    out.push({ q: `Compare with <, >, or =:  ${F(n1, d1)} ___ ${F(n2, d2)}`, a: sym, diff: tier * 14 + Math.max(d1, d2), form: "cmp-sym", key: `cmps:${n1}/${d1}:${n2}/${d2}` });
+    // Bare stem — the sheet's directive ("Compare. Write >, <, or =.") carries the
+    // instruction once at the top, so the per-problem prompt is just the two
+    // fractions and the blank (matches this unit's `example`). Repeating the full
+    // instruction here overflowed the narrow problem cell and rendered mangled.
+    out.push({ q: `${F(n1, d1)} ___ ${F(n2, d2)}`, a: sym, diff: tier * 14 + Math.max(d1, d2), form: "cmp-sym", key: `cmps:${n1}/${d1}:${n2}/${d2}` });
   }
   return out;
 };
@@ -436,7 +440,7 @@ const CURRICULUM: Unit[] = [
   { id: "fr-equiv", label: "Equivalent fractions", objective: "Student finds equivalent fractions", directive: "Find the missing number.", grade: "Grade 4", stars: 3, range: [10, 15], forms: [equivFillNum, equivFillDen], example: { problem: `${F(1, 2)} = ${BS}frac{?}{4}`, steps: ["4 ÷ 2 = 2", "1 × 2 = 2"], answer: "2" } },
   { id: "fr-compare", label: "Compare fractions", objective: "Student compares two fractions", directive: "Compare. Write >, <, or =.", grade: "Grade 4", stars: 3, range: [16, 20], forms: [cmpSymbol], example: { problem: `${F(2, 3)} ___ ${F(3, 5)}`, steps: ["Common denominator 15: 10/15 vs 9/15"], answer: ">" } },
   { id: "fr-order", label: "Order fractions", objective: "Student orders fractions from least to greatest", directive: "Order each from least to greatest.", grade: "Grade 4", stars: 4, range: [21, 24], forms: [orderLeast], example: { problem: `${F(1, 2)}, ${F(1, 4)}, ${F(2, 3)}`, steps: ["Common denominator 12"], answer: `${F(1, 4)} < ${F(1, 2)} < ${F(2, 3)}` } },
-  { id: "fr-simplify", label: "Simplify fractions", objective: "Student writes a fraction in simplest form", directive: "Write each fraction in simplest form.", grade: "Grade 4-5", stars: 3, range: [25, 30], forms: [simplifyForm("", "simp")], example: { problem: `${F(6, 8)}`, steps: ["GCF of 6 and 8 is 2", "6÷2=3, 8÷2=4"], answer: F(3, 4) } },
+  { id: "fr-simplify", label: "Simplify fractions", objective: "Student writes a fraction in simplest form", directive: "Write each fraction in simplest form.", grade: "Grade 4-5", stars: 3, range: [25, 30], forms: [simplifyForm("", "simp")], example: { problem: `${F(4, 8)}`, steps: ["Find the biggest number that divides EVENLY into both 4 and 8 — it's 4", "Divide both by it: 4 ÷ 4 = 1 and 8 ÷ 4 = 2", "Check: nothing bigger than 1 divides both 1 and 2, so 1/2 is the simplest form"], answer: F(1, 2) } },
   { id: "fr-mixed", label: "Mixed numbers", objective: "Student converts improper fractions to mixed numbers", directive: "Write each as a mixed number.", grade: "Grade 5", stars: 3, range: [31, 34], forms: [toMixed], example: { problem: `${F(7, 3)}`, steps: ["7 ÷ 3 = 2 remainder 1"], answer: `2 ${F(1, 3)}` } },
   { id: "fr-improper", label: "Improper fractions", objective: "Student converts mixed numbers to improper fractions", directive: "Write each as an improper fraction.", grade: "Grade 5", stars: 3, range: [35, 38], forms: [toImproper], example: { problem: `2 ${F(1, 3)}`, steps: ["2 × 3 + 1 = 7"], answer: F(7, 3) } },
   { id: "fr-add", label: "Add fractions", objective: "Student adds fractions (like and unlike denominators)", directive: "Add. Simplify if possible.", grade: "Grade 5", stars: 4, range: [39, 41], forms: [fracOp("+", "frac-add")], example: { problem: `${F(1, 3)} + ${F(1, 4)}`, steps: ["LCM 12: 4/12 + 3/12"], answer: F(7, 12) } },
@@ -482,17 +486,29 @@ function buildScoredPool(ui: number): XP[] {
 
 // Pick `count` problems: ascending difficulty, window slides up per sheet, and
 // no single form exceeds 40% of the sheet (variety rule).
-function selectProblems(pool: XP[], t: number, count: number): XP[] {
-  const sorted = [...pool].sort((a, b) => a.diff - b.diff || (a.key < b.key ? -1 : 1));
+// Per-sheet seeded RNG so consecutive sheets in a unit draw different subsets.
+function fdpRng(seed: number): () => number {
+  return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function fdpHash(s: string): number { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+function selectProblems(pool: XP[], t: number, count: number, seed = 0): XP[] {
+  // Dedup by QUESTION TEXT so two forms yielding the same problem can't repeat.
+  const seenQ = new Set<string>();
+  const sorted = pool.filter(p => (seenQ.has(p.q) ? false : (seenQ.add(p.q), true)))
+    .sort((a, b) => a.diff - b.diff || (a.key < b.key ? -1 : 1));
   const N = sorted.length;
+  const rng = fdpRng(seed >>> 0);
   // No single question FORM may be a strict majority of the sheet. 40% is
   // unachievable for concepts with only two natural phrasings (2×40%=80%<100%),
   // so the guarantee is "no form dominates" — the selector still spreads evenly.
   const cap = Math.max(1, Math.ceil(count * 0.5));
 
   if (N <= count) {
+    // Pool smaller than a sheet — seeded rotation so adjacent sheets differ.
+    const rot = Math.floor(rng() * N);
     const out: XP[] = [];
-    for (let i = 0; i < count; i++) out.push(sorted[i % N]);
+    for (let i = 0; i < count; i++) out.push(sorted[(i + rot) % N]);
     return out.sort((a, b) => a.diff - b.diff);
   }
 
@@ -504,11 +520,13 @@ function selectProblems(pool: XP[], t: number, count: number): XP[] {
   const start = Math.round(t * (N - W));
   const win = sorted.slice(start, start + W);
 
-  // Pass 1 — evenly-spread distinct picks across the window (ascending difficulty).
+  // Pass 1 — evenly-spread distinct picks across the window, with a per-sheet
+  // seeded offset so consecutive sheets pick DIFFERENT items (not near-identical).
+  const off = Math.floor(rng() * W);
   const usedIdx = new Set<number>();
   const chosenIdx: number[] = [];
   for (let i = 0; i < count; i++) {
-    let idx = Math.round((i * (W - 1)) / (count - 1));
+    let idx = (Math.round((i * (W - 1)) / (count - 1)) + off) % W;
     while (usedIdx.has(idx)) idx = (idx + 1) % W;
     usedIdx.add(idx);
     chosenIdx.push(idx);
@@ -558,6 +576,10 @@ export function getFdpMicroLesson(label: string): FdpMicroLesson | null {
   return { goal, bigIdea: goal, example: u.example, umbrella: "Fractions" };
 }
 
+// Ordered skill map (real content units) for M7 (fractions → decimals → percents).
+export function fdpUnits(): { index: number; id: string; label: string; objective: string; grade: string; range: [number, number] }[] {
+  return CURRICULUM.map((u, i) => ({ index: i, id: u.id, label: u.label, objective: u.objective, grade: u.grade, range: u.range }));
+}
 export function generateFdpSheet(sheetNumber: number, totalSheets: number, problemCount = 30): WorksheetData {
   const ui = unitIndexForSheet(sheetNumber);
   const unit = CURRICULUM[ui];
@@ -567,7 +589,7 @@ export function generateFdpSheet(sheetNumber: number, totalSheets: number, probl
   const span = unit.range[1] - unit.range[0];
   const t = span === 0 ? 0.5 : (sheetNumber - unit.range[0]) / span;
 
-  const selected = selectProblems(buildScoredPool(ui), t, count);
+  const selected = selectProblems(buildScoredPool(ui), t, count, fdpHash(`fdp:${sheetNumber}`));
   const problems = selected.map((p, i) => ({
     id: nanoid(8),
     type: "arithmetic" as const,

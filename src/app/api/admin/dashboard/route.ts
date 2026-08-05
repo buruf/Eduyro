@@ -1,4 +1,5 @@
 // src/app/api/admin/dashboard/route.ts
+import { appDayStart } from "@/lib/time";
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import {
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
       const teacherCount = await db.teacher.count({ where: { schoolId: school.id } });
 
       // ─── Weekly sheet count ───
-      const weekStart = subDays(startOfDay(new Date()), 7);
+      const weekStart = subDays(appDayStart(), 7);
       const sheetsThisWeek = await db.completedSheet.count({
         where: {
           student: { schoolId: school.id },
@@ -85,7 +86,7 @@ export async function GET(req: NextRequest) {
               )
             : 0;
         const status: StudentSummary["status"] =
-          accuracyPct >= 95
+          accuracyPct >= 90
             ? "EXCELLENT"
             : accuracyPct >= 85
             ? "ON_TRACK"

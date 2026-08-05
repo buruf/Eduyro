@@ -65,6 +65,7 @@ export default function RegisterPage() {
           lastName,
           role,
           grade: grade || undefined,
+          acceptedTerms: terms,
         }),
       });
       const data = await res.json();

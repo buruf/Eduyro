@@ -5,10 +5,8 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { ok, notFound, forbidden, handleRouteError, withAuth } from "@/lib/api/helpers";
-import { generateProblems } from "@/lib/worksheet/generator";
-
-const SHEETS_PER_DAY     = 3;
-const PROBLEMS_PER_SHEET = 30;
+import { stripTrueFalse } from "@/lib/worksheet/generator";
+import { buildTodayPacket } from "@/lib/worksheet/today-packet";
 
 // Get today's date string (yyyy-MM-dd) in a given timezone using native Intl
 function getTodayInTimezone(tz: string): { dateStr: string; dateUTC: Date } {
@@ -54,7 +52,7 @@ export async function GET(
           parentLinks: { include: { parent: true } },
           progress: {
             where: { status: "IN_PROGRESS" },
-            include: { level: { include: { subject: true, skills: { orderBy: { sortOrder: "asc" }, take: 1 } } } },
+            include: { level: { include: { subject: true, skills: { orderBy: { sortOrder: "asc" } } } } },
             orderBy: { updatedAt: "desc" },
             take: 1,
           },
@@ -70,6 +68,11 @@ export async function GET(
       const existing = await db.dailyPacket.findUnique({
         where: { studentId_date: { studentId, date: dateUTC } },
       });
+
+      // Parent excused this day — serve a rest-day signal, not empty work.
+      if (existing?.skipped) {
+        return ok({ packet: null, date: dateStr, fresh: false, reason: "skipped" });
+      }
 
       if (existing) {
         await db.dailyPacket.update({
@@ -92,30 +95,31 @@ export async function GET(
         return ok({ packet: null, date: dateStr, fresh: false, reason: "no_skill" });
       }
 
-      // Advance through the level's 100-sheet curriculum over time: each prior
-      // day's packet consumed SHEETS_PER_DAY sheets, so today continues where the
-      // student left off. The clean engine maps this global sheet number to a
-      // curriculum unit, so difficulty rises day over day (Kumon-style pacing).
-      const priorPackets = await db.dailyPacket.count({
-        where: { studentId, levelCode: level.code, date: { lt: dateUTC } },
-      });
-      const baseSheet = priorPackets * SHEETS_PER_DAY;
-
-      const sheets = [];
-      for (let i = 1; i <= SHEETS_PER_DAY; i++) {
-        const globalSheet = Math.min(100, baseSheet + i);
-        const { problems, answerKey } = generateProblems({
-          subjectSlug:      subject.slug as any,
-          levelCode:        level.code,
-          skillName:        skill.name,
-          problemCount:     PROBLEMS_PER_SHEET,
-          timeLimitMinutes: level.timeLimitMinutes,
-          difficulty:       1.0,
-          sheetNumber:      globalSheet,
-          totalSheets:      100,
-        });
-        sheets.push({ sheetNumber: i, problems, answerKey });
+      // Serve THE SAME worksheets as the on-screen packet — one shared source of
+      // truth (buildTodayPacket): same skill-map lesson, same repeat-on-fail
+      // retirement (failed sheets re-serve next day), same admin unlock/override.
+      // The printed packet and the student's practice always match.
+      const packetPlan = await buildTodayPacket(studentId, activeProgress);
+      // Print the sheets still to do today; if the day is already finished,
+      // print the whole day's set so the parent still gets a usable packet.
+      const pending = packetPlan.sheets.filter((s) => s.status !== "COMPLETED");
+      const toPrint = (pending.length > 0 ? pending : packetPlan.sheets).slice(0, 5);
+      if (toPrint.length === 0) {
+        return ok({ packet: null, date: dateStr, fresh: false, reason: "no_sheets" });
       }
+      const rows = await db.worksheet.findMany({
+        where: { id: { in: toPrint.map((s) => s.worksheetId) } },
+        select: { id: true, problems: true, answerKey: true },
+      });
+      const byId = new Map(rows.map((r) => [r.id, r]));
+      const sheets = toPrint.map((s, i) => {
+        const row = byId.get(s.worksheetId);
+        const problems = Array.isArray(row?.problems) ? (row!.problems as any[]) : [];
+        const answerKey = Array.isArray(row?.answerKey) ? (row!.answerKey as any[]) : [];
+        // Drop true/false items — they print poorly (see stripTrueFalse).
+        const cleaned = stripTrueFalse(problems as any, answerKey as any);
+        return { sheetNumber: i + 1, worksheetId: s.worksheetId, title: s.title, problems: cleaned.problems, answerKey: cleaned.answerKey };
+      });
 
       const packet = await db.dailyPacket.create({
         data: {
@@ -124,10 +128,12 @@ export async function GET(
           levelId:          level.id,
           levelCode:        level.code,
           levelName:        level.name,
-          skillName:        skill.name,
+          // Label the packet with the CURRENT lesson (matches what's printed),
+          // falling back to the level's first skill for legacy rows.
+          skillName:        toPrint[0]?.skillName ?? skill.name,
           subjectSlug:      subject.slug,
           sheets:           sheets as any,
-          problemsPerSheet: PROBLEMS_PER_SHEET,
+          problemsPerSheet: sheets[0]?.problems?.length ?? 30,
           timeLimitMinutes: level.timeLimitMinutes,
           printCount:       1,
         },

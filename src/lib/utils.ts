@@ -102,7 +102,7 @@ export function slugify(text: string): string {
 // ─────────────────────────────────────────────
 
 export function accuracyColor(pct: number): string {
-  if (pct >= 95) return "text-brand-green";
+  if (pct >= 90) return "text-brand-green";
   if (pct >= 85) return "text-gold-dark";
   if (pct >= 75) return "text-gold";
   return "text-brand-red";

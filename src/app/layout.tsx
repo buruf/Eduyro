@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { Providers } from "./providers";
 import { GdprBanner } from "@/components/GdprBanner";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://eduyro.com'),
@@ -98,6 +99,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <Providers>{children}</Providers>
         <GdprBanner />
+        <Analytics />
       </body>
     </html>
   );

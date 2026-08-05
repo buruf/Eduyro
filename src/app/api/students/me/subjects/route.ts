@@ -22,7 +22,11 @@ export async function GET(req: NextRequest) {
 
       const enabled = await enabledSubjectSlugs(student.id);
 
-      const subjects = await db.subject.findMany({ orderBy: { sortOrder: "asc" } });
+      // Unreleased subjects (Subject.isPublic = false) are hidden — EXCEPT for a
+      // child already enrolled in one. Flipping the owner's release switch must
+      // never delete a child's work-in-progress from their own dashboard.
+      const subjects = (await db.subject.findMany({ orderBy: { sortOrder: "asc" } }))
+        .filter((s) => s.isPublic || enabled.has(s.slug));
       const placements = await db.placementTest.findMany({
         where: { studentId: student.id },
         select: { subjectId: true, status: true, resultLevelCode: true, resultLevelId: true },

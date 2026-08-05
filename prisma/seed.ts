@@ -4,6 +4,7 @@
 
 import { PrismaClient } from "@prisma/client";
 import { generateProblems } from "../src/lib/worksheet/generator";
+import { READING_CURRICULUM } from "../src/lib/reading/curriculum";
 
 const db = new PrismaClient();
 
@@ -47,17 +48,15 @@ const SUBJECTS = [
     iconEmoji: "📖",
     colorHex: "#C8902A",
     sortOrder: 2,
-    levels: [
-      { code: "R1", name: "Letter Recognition", gradeMin: "Pre-K", gradeMax: "K", skills: ["Uppercase letters", "Lowercase letters", "Letter sounds"] },
-      { code: "R2", name: "Long Vowels", gradeMin: "Grade 1", gradeMax: "Grade 2", skills: ["Silent E words", "Long A sound", "Long I sound", "Long O sound"] },
-      { code: "R3", name: "Sight Words", gradeMin: "Grade 1", gradeMax: "Grade 2", skills: ["Dolch list 1–50", "Dolch list 51–100", "Fry words 1–100"] },
-      { code: "R4", name: "Vocabulary in Context", gradeMin: "Grade 2", gradeMax: "Grade 4", skills: ["Context clues", "Synonyms", "Antonyms"] },
-      { code: "R5", name: "Reading Comprehension", gradeMin: "Grade 3", gradeMax: "Grade 5", skills: ["Main idea & details", "Cause and effect", "Sequence of events", "Making inferences"] },
-      { code: "R6", name: "Inference & Prediction", gradeMin: "Grade 4", gradeMax: "Grade 6", skills: ["Making inferences", "Drawing conclusions", "Predicting outcomes"] },
-      { code: "R7", name: "Author's Purpose", gradeMin: "Grade 5", gradeMax: "Grade 7", skills: ["Identify author's purpose", "Tone and mood", "Fact vs. opinion", "Point of view"] },
-      { code: "R8", name: "Figurative Language", gradeMin: "Grade 6", gradeMax: "Grade 8", skills: ["Similes and metaphors", "Personification", "Hyperbole", "Idioms"] },
-      { code: "R9", name: "Literary Analysis", gradeMin: "Grade 7", gradeMax: "Grade 9", skills: ["Character analysis", "Theme identification", "Figurative language", "Narrative structure"] },
-    ],
+    // R1–R60 (Grades 1–10) — generated from the single source of truth in
+    // src/lib/reading/curriculum.ts so seed and prod can never drift.
+    levels: READING_CURRICULUM.map((m) => ({
+      code: m.code,
+      name: m.topic,
+      gradeMin: `Grade ${m.grade}`,
+      gradeMax: `Grade ${m.grade}`,
+      skills: [...m.units],
+    })),
   },
   {
     name: "Writing",
@@ -67,14 +66,16 @@ const SUBJECTS = [
     colorHex: "#2D6A3F",
     sortOrder: 3,
     levels: [
-      { code: "W1", name: "Sentence Completion", gradeMin: "Grade 1", gradeMax: "Grade 2", skills: ["Completing sentences", "Capital letters", "Periods"] },
-      { code: "W2", name: "Parts of Speech", gradeMin: "Grade 2", gradeMax: "Grade 4", skills: ["Nouns and verbs", "Adjectives and adverbs", "Pronouns", "Prepositions"] },
-      { code: "W3", name: "Sentence Structure", gradeMin: "Grade 3", gradeMax: "Grade 5", skills: ["Simple sentences", "Compound sentences", "Complex sentences", "Run-ons and fragments", "Subjects and predicates"] },
-      { code: "W4", name: "Punctuation", gradeMin: "Grade 4", gradeMax: "Grade 6", skills: ["Commas", "Apostrophes", "Quotation marks", "Semicolons"] },
-      { code: "W5", name: "Paragraph Structure", gradeMin: "Grade 5", gradeMax: "Grade 7", skills: ["Topic sentences", "Supporting sentences", "Concluding sentences", "Paragraph unity"] },
-      { code: "W6", name: "Essay Structure", gradeMin: "Grade 6", gradeMax: "Grade 8", skills: ["Introductions", "Body paragraphs", "Conclusions", "Transitions"] },
-      { code: "W7", name: "Narrative Writing", gradeMin: "Grade 7", gradeMax: "Grade 9", skills: ["Plot structure", "Character development", "Setting and mood", "Dialogue"] },
-      { code: "W8", name: "Persuasive Writing", gradeMin: "Grade 8", gradeMax: "Grade 10", skills: ["Claims and evidence", "Counterarguments", "Persuasive techniques", "Essay structure"] },
+      { code: "W0", name: "Handwriting & Mechanics", gradeMin: "Pre-K", gradeMax: "K", skills: ["Letter Formation", "Spatial Awareness", "Basic Copying"] },
+      { code: "W1", name: "Sentence Completion & Building", gradeMin: "Grade 1", gradeMax: "Grade 2", skills: ["Complete vs. Incomplete Sentences", "Expanding Sentences", "Combining Sentences"] },
+      { code: "W2", name: "Parts of Speech & Word Choice", gradeMin: "Grade 2", gradeMax: "Grade 4", skills: ["Core Grammar", "Advanced Parts of Speech", "Precision Vocabulary"] },
+      { code: "W3", name: "Sentence Structure & Variety", gradeMin: "Grade 3", gradeMax: "Grade 5", skills: ["Simple, Compound & Complex Sentences", "Subject-Verb Agreement & Tense", "Sentence Editing"] },
+      { code: "W4", name: "Punctuation & Mechanics", gradeMin: "Grade 4", gradeMax: "Grade 6", skills: ["Terminal Punctuation", "Internal Punctuation", "Advanced Mechanics"] },
+      { code: "W5", name: "Paragraph Structure", gradeMin: "Grade 5", gradeMax: "Grade 7", skills: ["Structural Components", "Paragraph Organization", "Editing & Revising"] },
+      { code: "W6", name: "Essay Structure & Research", gradeMin: "Grade 6", gradeMax: "Grade 8", skills: ["Five-Paragraph Framework", "Thesis Statements", "Research & Citing"] },
+      { code: "W7", name: "Narrative Writing", gradeMin: "Grade 7", gradeMax: "Grade 9", skills: ["Character & Setting Development", "Plot Arc Architecture"] },
+      { code: "W8", name: "Informational & Expository Writing", gradeMin: "Grade 8", gradeMax: "Grade 9", skills: ["Informational Formatting", "Process & Comparison Writing"] },
+      { code: "W9", name: "Persuasive & Argumentative Writing", gradeMin: "Grade 8", gradeMax: "Grade 10", skills: ["Fact-Based Claims", "Structural Persuasion"] },
     ],
   },
   {
@@ -136,7 +137,7 @@ async function main() {
         create: {
           subjectId: subject.id, code: lvl.code, name: lvl.name,
           gradeMin: lvl.gradeMin, gradeMax: lvl.gradeMax,
-          sortOrder: i, masteryThresholdPct: 95, masteryConsecutiveDays: 5,
+          sortOrder: i, masteryThresholdPct: 90, masteryConsecutiveDays: 5,
           sheetsPerDay: 3, problemsPerSheet: 20, timeLimitMinutes: 10,
         },
         update: {},
@@ -160,7 +161,7 @@ async function main() {
 
   // ── Sample worksheets (first 5 per skill for the most popular levels) ──
   console.log(`\n📝 Generating sample worksheets for key levels…`);
-const keyLevels = ["M1","M2","M3","M4","M5","M6","M7","M8","M9","M10","M11","M12","M13","M14","M15","M16","M17","M18","R1","R2","R3","R4","R5","R6","R7","R8","R9","W1","W2","W3","W4","W5","W6","W7","W8","S1","S2","S3","S4","S5","S6","S7"];  const subjects = await db.subject.findMany({
+const keyLevels = ["M1","M2","M3","M4","M5","M6","M7","M8","M9","M10","M11","M12","M13","M14","M15","M16","M17","M18","R1","R7","R13","R19","R25","R31","R37","R43","R49","R55","W1","W2","W3","W4","W5","W6","W7","W8","S1","S2","S3","S4","S5","S6","S7"];  const subjects = await db.subject.findMany({
     include: { levels: { where: { code: { in: keyLevels } }, include: { skills: true } } },
   });
 

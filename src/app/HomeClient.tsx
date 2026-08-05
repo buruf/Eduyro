@@ -15,6 +15,7 @@ import { FaqAccordion } from "@/components/marketing/FaqAccordion";
 import { SampleWorksheets } from "@/components/marketing/SampleWorksheets";
 import { CurriculumTables } from "@/components/marketing/CurriculumTables";
 import { PracticeWidgets } from "@/components/marketing/PracticeWidgets";
+import { HeroEmma, Emma } from "@/components/marketing/Emma";
 import { StickyBar } from "@/components/marketing/StickyBar";
 
 // Scroll-reveal hook
@@ -60,7 +61,7 @@ function ProgressCard() {
         </div>
         <div className="flex justify-between text-[11px] text-muted mb-1">
           <span>Mastery progress</span>
-          <span>target 95%</span>
+          <span>target 90%</span>
         </div>
         <div className="h-2 bg-cream-dark rounded-full mb-4 overflow-hidden">
           <div
@@ -81,7 +82,7 @@ function ProgressCard() {
           ))}
         </div>
         <div className="mt-3 bg-brand-green-light text-brand-green rounded-lg px-3 py-2 text-xs">
-          🏆 Great job — keep practising to reach 95% mastery.
+          🏆 Great job — keep practising to reach 90% mastery.
         </div>
       </div>
     </div>
@@ -148,18 +149,25 @@ export default function HomePage() {
           <div className="max-w-6xl mx-auto px-6 lg:px-8 relative grid lg:grid-cols-[1.1fr_1fr] gap-10 items-center">
             <div>
               <div className="inline-block bg-gold-light text-gold-dark text-[11px] font-semibold uppercase tracking-[0.1em] px-3 py-1 rounded-full mb-5">
-                Mastery before advancement
+                🎓 Mastery before advancement
               </div>
               <h1 className="font-serif text-4xl lg:text-[3.4rem] font-bold leading-[1.08] tracking-tight text-ink mb-5">
-                Know exactly what your child needs to practice next.
+                Know exactly what your child needs to{" "}
+                <span className="relative inline-block">
+                  practice next.
+                  {/* hand-drawn pencil underline */}
+                  <svg viewBox="0 0 220 12" className="absolute -bottom-1 left-0 w-full h-3" preserveAspectRatio="none" aria-hidden>
+                    <path d="M3 9 C 40 3, 90 3, 130 6 S 200 10, 217 5" fill="none" stroke="#C8902A" strokeWidth="4" strokeLinecap="round" opacity="0.85" />
+                  </svg>
+                </span>
               </h1>
               <p className="text-lg text-muted leading-relaxed mb-6 max-w-xl">
                 Eduyro places your child at their true skill level — not their grade — then
-                builds a personalized path of daily printable practice until they reach 95% mastery.
+                builds a personalized path of daily printable practice until they reach 90% mastery.
               </p>
 
               <div className="flex flex-wrap gap-2 mb-7">
-                {["Placement test", "Personalized path", "Daily practice", "95% mastery"].map((c) => (
+                {["Placement test", "Personalized path", "Daily practice", "90% mastery"].map((c) => (
                   <span key={c} className="text-xs bg-white border border-border rounded-full px-3 py-1.5 text-ink">
                     <span className="text-gold font-bold mr-1">✓</span>{c}
                   </span>
@@ -179,14 +187,24 @@ export default function HomePage() {
               <p className="text-xs text-muted mt-3">No credit card required · takes about 15 minutes</p>
             </div>
 
+            <HeroEmma />
+          </div>
+
+          {/* Curriculum progression strip (moved out of the hero column) */}
+          <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-8">
             <ProgressCard />
           </div>
 
           {/* Honest proof strip */}
           <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-12 pb-16">
             <div className="border-t border-border pt-5 text-center text-sm text-muted">
-              <span className="font-semibold text-ink">12 levels · 1,200+ worksheets · 36,000+ problems</span>
+              <span className="font-semibold text-ink">4 subjects · 42 levels · 60,000+ practice problems</span>
               {" "}— the daily-mastery method, built for printing at home.
+            </div>
+            <div className="flex items-center justify-center gap-6 mt-4 text-[13px] text-muted">
+              {[["✏️", "Pencil-and-paper first"], ["📚", "Real curriculum, Pre-K to Grade 12"], ["⭐", "One lesson a day, mastered"]].map(([e, t]) => (
+                <span key={t} className="inline-flex items-center gap-1.5"><span>{e}</span>{t}</span>
+              ))}
             </div>
           </div>
 
@@ -205,20 +223,21 @@ export default function HomePage() {
             className={`max-w-6xl mx-auto px-6 lg:px-8 transition-all duration-700 ${how.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
           >
             <div className="text-center mb-12">
+              <div className="flex justify-center mb-1"><Emma size={82} /></div>
               <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold mb-3">The system</div>
               <h2 className="font-serif text-4xl font-bold leading-tight mb-3">How Eduyro works</h2>
               <p className="text-muted">A simple system built for mastery.</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
               {[
-                ["📋", "1. Placement test", "We find your child's true level and identify learning gaps."],
-                ["📍", "2. Personalized level", "They start exactly where they are — not where their grade says."],
-                ["✏️", "3. Daily practice", "Three printable sheets a day, about 15 minutes."],
-                ["🎯", "4. 95% mastery", "They must prove mastery before moving forward."],
-                ["🚀", "5. Advance", "The next skill unlocks automatically."],
-              ].map(([icon, title, desc]) => (
+                ["📋", "1. Placement test", "We find your child's true level and identify learning gaps.", "bg-gold-light text-gold-dark border-gold/30"],
+                ["📍", "2. Personalized level", "They start exactly where they are — not where their grade says.", "bg-brand-green-light text-brand-green border-brand-green/30"],
+                ["✏️", "3. Daily practice", "Three printable sheets a day, about 15 minutes.", "bg-brand-blue-light text-brand-blue border-brand-blue/30"],
+                ["🎯", "4. 90% mastery", "They must prove mastery before moving forward.", "bg-gold-light text-gold-dark border-gold/30"],
+                ["🚀", "5. Advance", "The next skill unlocks automatically.", "bg-brand-green-light text-brand-green border-brand-green/30"],
+              ].map(([icon, title, desc, chip]) => (
                 <div key={title} className="text-center">
-                  <div className="w-12 h-12 rounded-full bg-white border border-border flex items-center justify-center mx-auto mb-3 text-xl">
+                  <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center mx-auto mb-3 text-2xl shadow-sm ${chip}`}>
                     {icon}
                   </div>
                   <div className="text-sm font-semibold mb-1">{title}</div>
@@ -261,7 +280,7 @@ export default function HomePage() {
                 <div className="text-sm font-semibold text-gold-dark mb-4">Mastery learning</div>
                 <ul className="space-y-3 text-sm text-ink">
                   {[
-                    "Moves on only after 95% mastery",
+                    "Moves on only after 90% mastery",
                     "A personalized path for each child",
                     "Live progress tracking for parents",
                     "Gaps identified and fixed automatically",
@@ -302,8 +321,12 @@ export default function HomePage() {
         </section>
 
         {/* ── SAMPLE WORKSHEETS ───────────────────────────────────────── */}
-        <section className="py-20">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <section className="py-20 bg-brand-green-light/40 relative overflow-hidden">
+          {/* ruled notebook-paper backdrop: faint horizontal rules + red margin */}
+          <div className="absolute inset-0 pointer-events-none opacity-[0.05]"
+            style={{ backgroundImage: "repeating-linear-gradient(transparent, transparent 27px, #1B4F8A 27px, #1B4F8A 28px)" }} />
+          <div className="absolute inset-y-0 left-10 w-px bg-brand-red/20 pointer-events-none hidden lg:block" />
+          <div className="max-w-7xl mx-auto px-6 lg:px-8 relative">
             <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold mb-3">See it in action</div>
             <div className="flex items-end justify-between mb-12">
               <div>
@@ -382,7 +405,7 @@ export default function HomePage() {
                 <div className="text-sm text-cream/50 mb-2">First child · +$5.99/mo each additional child</div>
                 <div className="text-xs text-gold-mid mb-6 font-sans">7-day free trial included</div>
                 <ul className="space-y-3 text-sm mb-8 flex-1">
-                  {["Everything in the free trial", "Unlimited daily worksheets", "Printable PDF downloads", "Auto-advance on mastery", "Add as many children as you like", "Email progress reports"].map((f) => (
+                  {["Everything in the free trial", "Fresh daily worksheet packets", "Printable PDF downloads", "Auto-advance on mastery", "Add as many children as you like", "Email progress reports"].map((f) => (
                     <li key={f} className="flex items-start gap-2.5 text-cream/80">
                       <svg viewBox="0 0 20 20" className="w-4 h-4 fill-gold-mid flex-shrink-0 mt-0.5">
                         <path d="M10 18A8 8 0 1 0 10 2a8 8 0 0 0 0 16zm3.707-9.293l-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414z"/>
@@ -427,7 +450,7 @@ export default function HomePage() {
               <h2 className="font-serif text-4xl font-bold leading-tight">Common questions.</h2>
             </div>
             <FaqAccordion items={[
-              { q: "How is this different from Kumon?", a: "Same methodology — mastery through daily practice, level-based progression, 95% accuracy threshold — but at a tenth of the cost. No physical centres, a real parent dashboard, and an AI placement test that replaces hour-long manual intake assessments." },
+              { q: "How is this different from Kumon?", a: "Same methodology — mastery through daily practice, level-based progression, 90% accuracy threshold — but at a tenth of the cost. No physical centres, a real parent dashboard, and an AI placement test that replaces hour-long manual intake assessments." },
               { q: "Do I need a printer?", a: "Recommended but not required. You can complete worksheets digitally on the student dashboard, but most families print the daily 3-sheet packet — it works better for fluency and there's no screen time." },
               { q: "How does the placement test work?", a: "15 minutes, adaptive — it gets harder or easier based on your answers. After 8–12 questions per subject, the AI confidently knows your exact starting level. Far more accurate than a grade-based assumption." },
               { q: "What if my child gets stuck at a level?", a: "The system detects this automatically. If accuracy drops below 70% for 3 days in a row on a skill, we insert review sheets from the previous level. No human intervention needed." },
@@ -460,6 +483,7 @@ export default function HomePage() {
           <div className="absolute inset-0 pointer-events-none"
             style={{ background: "radial-gradient(ellipse 60% 50% at 50% 100%, rgba(200,144,42,0.12), transparent)" }} />
           <div className="max-w-3xl mx-auto px-6 lg:px-8 relative">
+            <div className="flex justify-center mb-2"><Emma size={104} /></div>
             <div className="text-xs font-semibold uppercase tracking-[0.12em] text-gold-mid mb-4">Get started today</div>
             <h2 className="font-serif text-5xl lg:text-6xl font-bold leading-tight mb-5">
               Find your child&rsquo;s

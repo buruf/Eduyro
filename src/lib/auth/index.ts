@@ -40,8 +40,15 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email.toLowerCase() },
         });
 
+        // Anti-enumeration: identical message + comparable timing whether the
+        // account is missing or the password is wrong. When there's no user we
+        // still run a bcrypt compare against a fixed dummy hash so response time
+        // doesn't reveal account existence.
+        const GENERIC = "Invalid email or password";
+        const DUMMY_HASH = "$2a$12$abcdefghijklmnopqrstuuME0NfB3s7hQ5w1t8u9v0wXyZ0aBcDeF"; // never matches
         if (!user || !user.passwordHash) {
-          throw new Error("No account found with this email");
+          await bcrypt.compare(credentials.password, DUMMY_HASH).catch(() => {});
+          throw new Error(GENERIC);
         }
 
         const isValid = await bcrypt.compare(
@@ -50,7 +57,7 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isValid) {
-          throw new Error("Incorrect password");
+          throw new Error(GENERIC);
         }
 
         // Suspended accounts cannot sign in (admin moderation).

@@ -11,9 +11,12 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: { path: string[] } }
 ) {
-  // Refuse to serve in production — we only want local files in dev mode.
-  if (process.env.NODE_ENV === "production" && process.env.AWS_S3_BUCKET) {
-    return NextResponse.json({ error: "Not available in production" }, { status: 404 });
+  // This is a DEV-ONLY fallback for when S3 isn't configured. Hard-disable it in
+  // production UNCONDITIONALLY (previously it only refused when AWS_S3_BUCKET was
+  // set — so if S3 was unconfigured in prod it served arbitrary cwd files with no
+  // auth). In prod, files are served from S3 via signed URLs, not this route.
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   try {
@@ -21,9 +24,11 @@ export async function GET(
     const localDir = path.join(process.cwd(), ".local-storage");
     const fullPath = path.join(localDir, fileKey);
 
-    // Path-traversal guard: resolved path must stay within local-storage
+    // Path-traversal guard: resolved path must stay within local-storage. Compare
+    // against `localDir + sep` so a sibling like ".local-storage-x" can't pass a
+    // bare startsWith prefix check.
     const normalized = path.normalize(fullPath);
-    if (!normalized.startsWith(localDir)) {
+    if (normalized !== localDir && !normalized.startsWith(localDir + path.sep)) {
       return NextResponse.json({ error: "Invalid path" }, { status: 400 });
     }
 

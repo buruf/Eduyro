@@ -8,6 +8,7 @@ import type { ShopSkill } from "./skills";
 import { generateProgressiveSheet, type WorksheetData } from "./progressive-generator";
 import { generateM7Band, generateM8Band, generateM9Band, generateM10Band, generateM11Band, generateM12Band, generateFractionsComplete, generateAdditionRegrouping, generateSubtractionBorrowing, generatePolynomialsComplete, generateDecimalsComplete } from "./band-generators";
 import type { Problem, AnswerKeyEntry } from "@/types";
+import { stripTrueFalse } from "@/lib/worksheet/generator";
 
 // ─────────────────────────────────────────────
 // Skill definitions
@@ -23,6 +24,8 @@ export const SHOP_SKILLS: Record<ShopSkill, {
   iconEmoji: string;
   totalSheets: number;
   problemsPerSheet: number;
+  /** Not shown in the shop catalog (kept for fulfillment of old purchases). */
+  hidden?: boolean;
   bands: ShopBand[];
 }> = {
   ADDITION: {
@@ -82,31 +85,34 @@ export const SHOP_SKILLS: Record<ShopSkill, {
     ],
   },
   FRACTIONS: {
-    label: "Fractions, Decimals & Percents",
-    description: "One visual-first workbook from picture fractions to percents — identify, compare, simplify, the four operations, decimals, and percent conversions. Grades 2–7.",
+    label: "Fractions",
+    description: "A visual-first fractions workbook — picture fractions, identify, compare, order, equivalent, simplify, mixed numbers, and the four operations. Grades 2–6. (Decimals & percents are their own pack.)",
     iconEmoji: "½",
-    totalSheets: 100,
+    totalSheets: 50,
     problemsPerSheet: 30,
     bands: [
       { id: "fdp-visual",     label: "Visual fraction foundations",      sheetCount: 5,  difficulty: "easy",        problemCount: 8  },
       { id: "fdp-frac-core",  label: "Identify, equivalent, compare, order", sheetCount: 19, difficulty: "easy",    problemCount: 30 },
       { id: "fdp-frac-ops",   label: "Simplify, mixed numbers & 4 operations", sheetCount: 26, difficulty: "standard", problemCount: 30 },
-      { id: "fdp-decimals",   label: "Decimals — place value to operations", sheetCount: 25, difficulty: "standard", problemCount: 30 },
-      { id: "fdp-percents",   label: "Percents & fraction/decimal conversions", sheetCount: 25, difficulty: "challenging", problemCount: 30 },
     ],
   },
+  // COMBINED PACK (user request): decimals/percents and ratios are small
+  // subjects — 100 sheets EACH was overkill. One 100-sheet pack now covers
+  // both: sheets 1–50 sample the decimals curriculum, 51–100 the ratios
+  // curriculum (every other sheet of each, so all topics and the full
+  // difficulty ramp survive at half the volume). The RATIOS entry below stays
+  // for old purchases/fulfillment but is hidden from the catalog.
   DECIMALS: {
-    label: "Decimals & Percentages",
-    description: "Place value, all four decimal operations, percentage calculations and conversions. Grades 5–7.",
+    label: "Decimals, Percents & Ratios",
+    description: "Decimal place value and operations, percentages and conversions, plus ratios, proportions and unit rates — one right-sized pack. Grades 5–7.",
     iconEmoji: ".",
     totalSheets: 100,
     problemsPerSheet: 30,
     bands: [
-      { id: "dec-place",    label: "Decimal place value",          sheetCount: 20, difficulty: "easy",        problemCount: 30 },
-      { id: "dec-add-sub",  label: "Adding & subtracting decimals",sheetCount: 20, difficulty: "easy",        problemCount: 30 },
-      { id: "dec-multiply", label: "Multiplying decimals",         sheetCount: 20, difficulty: "standard",    problemCount: 30 },
-      { id: "dec-divide",   label: "Dividing decimals",            sheetCount: 20, difficulty: "standard",    problemCount: 30 },
-      { id: "dec-pct",      label: "Percentages & conversions",    sheetCount: 20, difficulty: "challenging", problemCount: 30 },
+      { id: "dec-place-ops", label: "Decimal place value & operations", sheetCount: 30, difficulty: "easy",        problemCount: 30 },
+      { id: "dec-pct",       label: "Percentages & conversions",        sheetCount: 20, difficulty: "standard",    problemCount: 30 },
+      { id: "rat-basic",     label: "Ratios & proportions",             sheetCount: 30, difficulty: "standard",    problemCount: 30 },
+      { id: "rat-rate",      label: "Unit rates & scaling",             sheetCount: 20, difficulty: "challenging", problemCount: 30 },
     ],
   },
   RATIOS: {
@@ -115,6 +121,7 @@ export const SHOP_SKILLS: Record<ShopSkill, {
     iconEmoji: ":",
     totalSheets: 100,
     problemsPerSheet: 30,
+    hidden: true, // folded into the combined Decimals, Percents & Ratios pack
     bands: [
       { id: "rat-basic",  label: "Basic ratios",       sheetCount: 25, difficulty: "easy",        problemCount: 30 },
       { id: "rat-prop",   label: "Proportions",        sheetCount: 25, difficulty: "standard",    problemCount: 30 },
@@ -163,16 +170,16 @@ export const SHOP_SKILLS: Record<ShopSkill, {
     ],
   },
   GEOMETRY: {
-    label: "Geometry — Angles & Area",
-    description: "Angle relationships (complementary, supplementary, vertical, on a line, around a point), triangle angle sum, and perimeter & area of rectangles, squares, triangles and circles. Grades 4–7.",
+    label: "Geometry — Angles, Area & Trigonometry",
+    description: "Angle relationships (complementary, supplementary, vertical, on a line, around a point, triangles), perimeter & area of rectangles, squares, triangles and circles, and an introduction to right-triangle trigonometry — the Pythagorean theorem and the sine, cosine and tangent ratios. Grades 4–9.",
     iconEmoji: "📐",
     totalSheets: 100,
     problemsPerSheet: 24,
     bands: [
-      { id: "g-angles",   label: "Complementary, supplementary & vertical angles", sheetCount: 38, difficulty: "easy",        problemCount: 24 },
-      { id: "g-line-pt",  label: "Angles on a line, around a point & in triangles", sheetCount: 42, difficulty: "standard",    problemCount: 24 },
-      { id: "g-perim",    label: "Perimeter & area of rectangles and squares",      sheetCount: 12, difficulty: "standard",    problemCount: 24 },
-      { id: "g-area",     label: "Area of triangles & circles",                     sheetCount: 8,  difficulty: "challenging", problemCount: 16 },
+      { id: "g-angles",  label: "Angle relationships & triangle angle sum",         sheetCount: 36, difficulty: "easy",        problemCount: 24 },
+      { id: "g-area",    label: "Perimeter & area (rectangles, triangles, circles)", sheetCount: 26, difficulty: "standard",    problemCount: 24 },
+      { id: "g-pythag",  label: "Pythagorean theorem",                              sheetCount: 20, difficulty: "challenging", problemCount: 24 },
+      { id: "g-trig",    label: "Trigonometry — sine, cosine & tangent",            sheetCount: 18, difficulty: "challenging", problemCount: 24 },
     ],
   },
 };
@@ -233,9 +240,9 @@ export interface ShopBundle {
 export const SHOP_BUNDLES: ShopBundle[] = [
   { id: "times-tables-bootcamp",     name: "Times-Tables Bootcamp",        tagline: "Master multiplication & division facts",            gradeBand: "Grades 3–4", skills: ["MULTIPLICATION", "DIVISION"],                                                priceCents: 699 },
   { id: "arithmetic-foundations",    name: "Arithmetic Foundations",       tagline: "The four operations, start to fluent",              gradeBand: "Grades 1–4", skills: ["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION"],                     priceCents: 1099 },
-  { id: "fractions-decimals-ratios", name: "Fractions, Decimals & Ratios", tagline: "Upper-elementary number sense",                     gradeBand: "Grades 4–6", skills: ["FRACTIONS", "DECIMALS", "RATIOS"],                                           priceCents: 899 },
+  { id: "fractions-decimals-ratios", name: "Fractions, Decimals & Ratios", tagline: "Upper-elementary number sense",                     gradeBand: "Grades 4–6", skills: ["FRACTIONS", "DECIMALS"],                                           priceCents: 899 },
   { id: "prealgebra-algebra",        name: "Pre-Algebra & Algebra",        tagline: "The bridge to high-school math",                    gradeBand: "Grades 6–9", skills: ["PRE_ALGEBRA", "LINEAR_EQUATIONS", "POLYNOMIALS"],                            priceCents: 899 },
-  { id: "full-math-mastery",         name: "Full Math Mastery",            tagline: "Every skill, K through 8 — our complete curriculum", gradeBand: "Grades K–8", skills: ["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION", "FRACTIONS", "DECIMALS", "RATIOS", "PRE_ALGEBRA", "LINEAR_EQUATIONS", "POLYNOMIALS"], priceCents: 1999 },
+  { id: "full-math-mastery",         name: "Full Math Mastery",            tagline: "Every skill, K through 8 — our complete curriculum", gradeBand: "Grades K–8", skills: ["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION", "FRACTIONS", "DECIMALS", "PRE_ALGEBRA", "LINEAR_EQUATIONS", "POLYNOMIALS"], priceCents: 1999 },
 ];
 
 export function getBundle(id: string): ShopBundle | undefined {
@@ -290,7 +297,18 @@ export function generatePackForSkill(skill: ShopSkill): GeneratedPack {
       const PROGRESSIVE_SKILLS = ["ADDITION","SUBTRACTION","MULTIPLICATION","DIVISION","FRACTIONS","DECIMALS","RATIOS","PRE_ALGEBRA","LINEAR_EQUATIONS","POLYNOMIALS","GEOMETRY"];
       let problems: any[], answerKey: any[], wsData: WorksheetData | null = null;
       if (PROGRESSIVE_SKILLS.includes(skill)) {
-        wsData = generateProgressiveSheet(skill, sheetNum, config.totalSheets ?? 100, band.problemCount);
+        // COMBINED PACK: the DECIMALS product carries both curricula — sheets
+        // 1–50 sample the decimals curriculum, 51–100 the ratios curriculum
+        // (every other sheet, so every unit and the full difficulty ramp are
+        // preserved at half the volume). The student platform's M8/M9 levels
+        // are untouched — this mapping is shop-pack-only.
+        let genSkill = skill as ShopSkill;
+        let genSheet = sheetNum;
+        if (skill === "DECIMALS") {
+          if (sheetNum <= 50) { genSheet = sheetNum * 2 - 1; }
+          else { genSkill = "RATIOS"; genSheet = (sheetNum - 50) * 2 - 1; }
+        }
+        wsData = generateProgressiveSheet(genSkill, genSheet, 100, band.problemCount);
         problems = wsData.problems;
         answerKey = wsData.answerKey;
       } else {
@@ -301,6 +319,10 @@ export function generatePackForSkill(skill: ShopSkill): GeneratedPack {
         problems = result.problems;
         answerKey = result.answerKey;
       }
+      // Strip true/false items from sold packs — they print poorly (inconsistent
+      // options, verbose answers). Same rule already applied to daily/vacation
+      // printouts; the shop packs were missing it.
+      ({ problems, answerKey } = stripTrueFalse(problems, answerKey));
       sheets.push({
         sheetNumber: sheetNum,
         title: wsData ? `${wsData.meta.subSkillLabel} — Sheet ${sheetNum}` : `${band.label} — Sheet ${i}`,

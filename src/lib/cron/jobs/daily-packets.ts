@@ -2,6 +2,7 @@
 // Runs every morning at 6am — generates each active student's daily packet
 // PDF and emails the parent a download link.
 
+import { appDayStart } from "@/lib/time";
 import { db } from "@/lib/db";
 import { generateWorksheetPdf, uploadToS3 } from "@/lib/pdf/generator";
 import { sendDailyPacketEmail } from "@/lib/email";
@@ -15,7 +16,7 @@ export async function generateDailyPackets(): Promise<{
   recordsProcessed: number;
   metadata: Record<string, any>;
 }> {
-  const todayStart = startOfDay(new Date());
+  const todayStart = appDayStart();
   const yesterday = subDays(todayStart, 1);
 
   // Find all active students with at least one IN_PROGRESS level
@@ -55,7 +56,7 @@ export async function generateDailyPackets(): Promise<{
       const completedToday = await db.completedSheet.findMany({
         where: {
           studentId: student.id,
-          completedAt: { gte: todayStart },
+          completedAt: { gte: appDayStart(new Date(), (student as any).timezone) },
           worksheet: { levelId: activeProgress.levelId },
         },
         select: { worksheetId: true },

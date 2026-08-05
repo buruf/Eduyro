@@ -7,7 +7,9 @@ import { ok } from "@/lib/api/helpers";
 import { SHOP_SKILLS, SHOP_PRICING, SHOP_BUNDLES, calculatePrice } from "@/lib/shop/pack-generator";
 
 export async function GET(_req: NextRequest) {
-  const skills = Object.entries(SHOP_SKILLS).map(([id, def]) => {
+  // `hidden` skills stay purchasable/fulfillable (old links, bundles) but are
+  // not listed — e.g. RATIOS, folded into the combined Decimals pack.
+  const skills = Object.entries(SHOP_SKILLS).filter(([, def]) => !(def as any).hidden).map(([id, def]) => {
     // True total = sum of (band.sheetCount × band.problemCount) across all bands
     const trueProblemCount = def.bands.reduce(
       (sum, b) => sum + b.sheetCount * b.problemCount,
@@ -52,7 +54,9 @@ export async function GET(_req: NextRequest) {
       alaCarteCents,
       savingsCents: Math.max(0, alaCarteCents - b.priceCents),
       savingsLabel: `$${(Math.max(0, alaCarteCents - b.priceCents) / 100).toFixed(2)}`,
-      sheetCount: b.skills.length * 100,
+      // Sum the ACTUAL pack sizes (Fractions is 50 sheets, not 100) — the old
+      // skills×100 shortcut overstated bundle counts, a false-advertising risk.
+      sheetCount: b.skills.reduce((sum, s) => sum + (SHOP_SKILLS[s]?.totalSheets ?? 100), 0),
     };
   });
 

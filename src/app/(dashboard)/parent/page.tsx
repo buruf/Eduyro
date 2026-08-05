@@ -11,6 +11,7 @@ import { useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { DashboardSidebar, DashboardTopbar } from "@/components/layout";
+import { ReportProblemButton } from "@/components/ReportProblemButton";
 import { Button } from "@/components/ui/Button";
 import { Card, EmptyState, Badge, Modal, Input } from "@/components/ui";
 import { cn, formatDate, formatCurrency } from "@/lib/utils";
@@ -23,10 +24,29 @@ const GRADES = [
   "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12",
 ];
 
+// The 10 primary sections (user spec): everything else nests inside these —
+// no separate top-level pages for detailed reports.
+const SECTIONS = [
+  { id: "dashboard",    label: "Dashboard",         icon: "🏠" },
+  { id: "subjects",     label: "Subjects",          icon: "📚" },
+  { id: "path",         label: "Learning Path",     icon: "🛤" },
+  { id: "progress",     label: "Progress",          icon: "📊" },
+  { id: "improve",      label: "Skills to Improve", icon: "⚠️" },
+  { id: "history",      label: "Practice History",  icon: "📝" },
+  { id: "achievements", label: "Achievements",      icon: "🏆" },
+  { id: "goals",        label: "Goals",             icon: "🎯" },
+  { id: "controls",     label: "Parent Controls",   icon: "👨‍👩‍👧" },
+  { id: "subscription", label: "Subscription",      icon: "💳" },
+] as const;
+type SectionId = (typeof SECTIONS)[number]["id"];
+
 function ParentDashboardInner() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const showDemo = searchParams.get("demo") === "1";
+  const section = (SECTIONS.some((s) => s.id === searchParams.get("section"))
+    ? searchParams.get("section")
+    : "dashboard") as SectionId;
 
   const [dashboard, setDashboard] = useState<ParentDashboard | null>(null);
   const [activeChildIndex, setActiveChildIndex] = useState(0);
@@ -54,7 +74,7 @@ function ParentDashboardInner() {
     }
   }
 
-  if (loading && !showDemo) {
+  if (loading && !dashboard && !showDemo) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-cream-dark">
         <div className="text-muted text-sm">Loading your dashboard…</div>
@@ -80,50 +100,50 @@ function ParentDashboardInner() {
           name: data.parent.user.name ?? "Parent",
           subtitle: `${data.children.length} ${data.children.length === 1 ? "child" : "children"}`,
         }}
-        items={[
-          { href: "/parent", label: "Overview", icon: "📊", active: true },
-        ]}
-        footerContent={
-          <div className="space-y-2">
-            <div>
-              <div className="text-[10px] uppercase tracking-wider text-cream/40 mb-2">My children</div>
-              <div className="space-y-1">
-                {data.children.map((child, i) => (
+        items={[]}
+        topContent={
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-cream/40 mb-2 px-1">My children</div>
+            <div className="space-y-1" role="group" aria-label="Select child">
+              {data.children.map((child, i) => {
+                const name = child.student.user.firstName ?? child.student.user.name ?? "Child";
+                return (
                   <button
                     key={i}
                     onClick={() => setActiveChildIndex(i)}
+                    aria-pressed={i === activeChildIndex}
                     className={cn(
-                      "w-full flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors text-left",
+                      "w-full flex items-center gap-2 px-2 py-2 rounded-md transition-colors text-left",
                       i === activeChildIndex
-                        ? "bg-brand-blue/30 border border-brand-blue/50"
+                        ? "bg-brand-blue/30 border border-brand-blue/60"
                         : "border border-transparent hover:bg-white/5"
                     )}
                   >
-                    <div
-                      className="w-7 h-7 rounded-full text-white text-[10px] font-semibold flex items-center justify-center flex-shrink-0"
+                    <span
+                      className="w-8 h-8 rounded-full text-white text-[10px] font-semibold flex items-center justify-center flex-shrink-0"
                       style={{ background: CHILD_COLORS[i % CHILD_COLORS.length] }}
                     >
                       {initials(child.student.user.name)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[11px] text-cream/80 truncate">{child.student.user.firstName ?? child.student.user.name}</div>
-                      <div className="text-[9px] text-cream/40 truncate">
-                        {child.currentLevel ? `Lvl ${child.currentLevel.code}` : "Not placed"}
-                      </div>
-                    </div>
-                    <div className={cn(
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-xs text-cream/90 font-medium truncate">{name}</span>
+                      <span className="block text-[10px] text-cream/40 truncate">
+                        {child.currentLevel ? `Level ${child.currentLevel.code}` : "Not placed"}
+                      </span>
+                    </span>
+                    <span className={cn(
                       "w-2 h-2 rounded-full flex-shrink-0",
                       child.status === "EXCELLENT" || child.status === "ON_TRACK" ? "bg-brand-green"
                         : child.status === "NEEDS_REVIEW" ? "bg-gold"
                         : "bg-brand-red"
                     )} />
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
             <button
               onClick={() => setAddChildOpen(true)}
-              className="w-full px-3 py-2 border border-dashed border-cream/20 rounded-md text-[11px] text-cream/50 hover:text-cream/80 hover:border-cream/40 transition-colors text-center"
+              className="w-full mt-2 px-3 py-2 border border-dashed border-cream/20 rounded-md text-[11px] text-cream/50 hover:text-cream/80 hover:border-cream/40 transition-colors text-center"
             >
               + Add child
             </button>
@@ -141,20 +161,8 @@ function ParentDashboardInner() {
           }
           action={
             <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setAddChildOpen(true)}
-              >
-                + Add child
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => window.open(`/print/writing-prompt`, "_blank")}
-              >
-                Writing prompts
-              </Button>
+              {/* Keep only the everyday action here — everything else lives in
+                  the Parent Controls section (10-section simplicity rule). */}
               <Button
                 variant="primary"
                 size="sm"
@@ -166,6 +174,25 @@ function ParentDashboardInner() {
           }
           notificationCount={data.notifications.filter((n) => !n.isRead).length}
         />
+
+        {/* ── Section tabs across the top (children live in the left sidebar
+            under the parent — the two swapped per user preference). ── */}
+        <div className="border-b border-border bg-white px-6 flex gap-1 overflow-x-auto">
+          {SECTIONS.map((s) => (
+            <Link
+              key={s.id}
+              href={s.id === "dashboard" ? "/parent" : `/parent?section=${s.id}`}
+              className={cn(
+                "px-3 py-3 text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition-colors",
+                section === s.id
+                  ? "border-brand-blue text-brand-blue"
+                  : "border-transparent text-muted hover:text-ink"
+              )}
+            >
+              <span className="mr-1">{s.icon}</span>{s.label}
+            </Link>
+          ))}
+        </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {showDemo && (
@@ -187,9 +214,14 @@ function ParentDashboardInner() {
             </div>
           ) : (
             <>
-              {activeChild && <ChildOverviewCard child={activeChild} colorIndex={activeChildIndex} />}
+              {section === "dashboard" && (
+                <>
+                  {activeChild && <ChildOverviewCard child={activeChild} colorIndex={activeChildIndex} />}
+                  <NotificationsCard notifications={data.notifications} />
+                </>
+              )}
 
-              {activeChild?.student?.id && (
+              {section === "subjects" && activeChild?.student?.id && (
                 <SubjectsManagerCard
                   key={activeChild.student.id}
                   studentId={activeChild.student.id}
@@ -197,20 +229,46 @@ function ParentDashboardInner() {
                 />
               )}
 
-              <div className="grid lg:grid-cols-3 gap-5">
-                <RecentPdfsCard pdfs={activeChild?.recentPdfs ?? []} />
-                <WeaknessChartCard child={activeChild} />
-                <AttendanceCard child={activeChild} />
-              </div>
+              {section === "path" && <LearningPathCard child={activeChild} />}
 
-              <div className="grid lg:grid-cols-2 gap-5">
-                <NotificationsCard notifications={data.notifications} />
+              {section === "progress" && (
+                <div className="grid lg:grid-cols-2 gap-5">
+                  {activeChild && <ChildOverviewCard child={activeChild} colorIndex={activeChildIndex} />}
+                  <AttendanceCard child={activeChild} />
+                </div>
+              )}
+
+              {section === "improve" && <WeaknessChartCard child={activeChild} />}
+
+              {section === "history" && <PracticeHistoryCard child={activeChild} />}
+
+              {section === "achievements" && <AchievementsCard child={activeChild} />}
+
+              {section === "goals" && <GoalsCard child={activeChild} />}
+
+              {section === "controls" && (
+                <>
+                  <ParentControlsCard
+                    studentId={activeChild?.student?.id}
+                    onAddChild={() => setAddChildOpen(true)}
+                    onRefresh={fetchDashboard}
+                  />
+                  <div className="grid lg:grid-cols-2 gap-5">
+                    <RecentPdfsCard pdfs={activeChild?.recentPdfs ?? []} />
+                    <PrivacyCard />
+                  </div>
+                </>
+              )}
+
+              {section === "subscription" && (
                 <BillingCard subscription={data.subscription} childCount={data.children.length} />
-              </div>
+              )}
             </>
           )}
         </div>
       </main>
+
+      <ReportProblemButton />
 
       {/* Add Child Modal */}
       <AddChildModal
@@ -226,6 +284,91 @@ function ParentDashboardInner() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Vacation pack — print the next N days ahead so a child can keep
+// working on paper while away from interactive practice.
+// ─────────────────────────────────────────────────────────────
+
+function VacationPackButton({ studentId }: { studentId?: string }) {
+  const [open, setOpen] = useState(false);
+  const [days, setDays] = useState(5);
+  if (!studentId) return null;
+  return (
+    <>
+      <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>Print upcoming (vacation)</Button>
+      <Modal open={open} onClose={() => setOpen(false)} title="Print upcoming sessions" description="Going away? Print the next several days of work so your child can keep practicing on paper. The work continues right where they left off." size="sm">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-ink mb-1">How many days to print?</label>
+            <div className="flex items-center gap-3">
+              <input type="range" min={1} max={14} value={days} onChange={(e) => setDays(parseInt(e.target.value, 10))} className="flex-1 accent-brand-blue" />
+              <span className="text-sm font-semibold w-16 text-right">{days} day{days === 1 ? "" : "s"}</span>
+            </div>
+            <p className="text-[11px] text-muted mt-1">{days * 3} worksheets + {days * 3} answer keys = {days * 6} pages.</p>
+          </div>
+          <Button variant="primary" fullWidth onClick={() => { window.open(`/print/${studentId}/upcoming?days=${days}`, "_blank"); setOpen(false); }}>
+            Open printable pack →
+          </Button>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Skip sessions — PARENT ONLY. Excuse a date range (e.g. vacation / sick days):
+// no missed-day or streak penalty, and the curriculum advances so the skipped
+// sheets aren't repeated. Students have no equivalent control.
+// ─────────────────────────────────────────────────────────────
+
+function SkipSessionsButton({ studentId, onDone }: { studentId?: string; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const today = new Date().toISOString().slice(0, 10);
+  const [start, setStart] = useState(today);
+  const [end, setEnd] = useState(today);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  if (!studentId) return null;
+
+  const submit = async () => {
+    setError(null);
+    if (end < start) return setError("End date must be on or after the start date.");
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/parents/me/children/${studentId}/skip-sessions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ startDate: start, endDate: end }),
+      });
+      const data = await res.json();
+      if (!data.success) { setError(data.error ?? "Couldn't skip those sessions."); setBusy(false); return; }
+      setOpen(false); setBusy(false);
+      onDone();
+    } catch {
+      setError("Network error — please try again."); setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>Skip sessions</Button>
+      <Modal open={open} onClose={() => setOpen(false)} title="Skip sessions" description="Excuse a range of days — for a vacation or a sick break. Those days won't count as missed and won't break the streak, and your child's curriculum simply continues where it left off afterwards." size="sm">
+        {error && <div className="bg-brand-red-light border border-brand-red/30 text-brand-red text-sm rounded-lg p-3 mb-4">{error}</div>}
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="From" type="date" min={today} value={start} onChange={(e) => setStart(e.target.value)} />
+            <Input label="To" type="date" min={start} value={end} onChange={(e) => setEnd(e.target.value)} />
+          </div>
+          <div className="bg-cream-dark rounded-lg p-3 text-xs text-muted leading-relaxed">
+            Only you (the parent) can skip sessions — your child can't skip their own work. Past days can't be skipped.
+          </div>
+          <Button variant="primary" fullWidth onClick={submit} loading={busy}>Skip these days →</Button>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // Add Child Modal
 // ─────────────────────────────────────────────────────────────
 
@@ -236,6 +379,7 @@ function AddChildModal({ open, onClose, onSuccess }: { open: boolean; onClose: (
   const [password, setPassword] = useState("");
   const [grade, setGrade] = useState("");
   const [dob, setDob] = useState("");
+  const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -263,13 +407,14 @@ function AddChildModal({ open, onClose, onSuccess }: { open: boolean; onClose: (
     if (password.length < 8) return setError("Password must be at least 8 characters");
     if (!/[A-Z]/.test(password)) return setError("Password must have at least one uppercase letter");
     if (!/[0-9]/.test(password)) return setError("Password must have at least one number");
+    if (!consent) return setError("Please confirm you are this child's parent/guardian and accept the Terms & Privacy Policy on their behalf");
 
     setLoading(true);
     try {
       const res = await fetch("/api/parents/me/children", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email, password, grade: grade || undefined, dateOfBirth: dob }),
+        body: JSON.stringify({ firstName, lastName, email, password, grade: grade || undefined, dateOfBirth: dob, acceptedTerms: consent }),
       });
       const data = await res.json();
       if (!data.success) {
@@ -348,11 +493,27 @@ function AddChildModal({ open, onClose, onSuccess }: { open: boolean; onClose: (
           💡 Share these login details with your child so they can sign in at <strong>eduyro.com</strong> and start their placement test.
         </div>
 
+        <label className="flex items-start gap-2 text-xs text-ink leading-relaxed cursor-pointer">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-0.5 accent-brand-blue"
+          />
+          <span>
+            I confirm I am {firstName ? `${firstName}'s` : "this child's"} parent or legal guardian and, on their behalf, I agree to the{" "}
+            <a href="/terms" target="_blank" className="text-brand-blue hover:underline">Terms of Service</a> and{" "}
+            <a href="/privacy" target="_blank" className="text-brand-blue hover:underline">Privacy Policy</a>
+            {age !== null && age < 16 ? ", and I provide verifiable parental consent to create their account." : "."}
+          </span>
+        </label>
+
         <Button
           variant="primary"
           fullWidth
           onClick={handleSubmit}
           loading={loading}
+          disabled={!consent}
         >
           Create child account →
         </Button>
@@ -403,12 +564,39 @@ function EmptyParentDashboard({ onAddChild, addChildOpen, setAddChildOpen, onChi
 // ─────────────────────────────────────────────────────────────
 
 function ChildOverviewCard({ child, colorIndex }: { child: ChildSummary; colorIndex: number }) {
+  // Each status explains ITSELF (user: "I don't know what on track means").
   const statusConfig = {
-    EXCELLENT: { label: "Excellent", color: "green" },
-    ON_TRACK: { label: "On track", color: "blue" },
-    NEEDS_REVIEW: { label: "Needs review", color: "gold" },
-    NEEDS_SUPPORT: { label: "Needs support", color: "red" },
+    EXCELLENT: { label: "Excellent", color: "green", explain: "Averaging 90%+ over the last 2 weeks." },
+    ON_TRACK: { label: "On track", color: "blue", explain: "Averaging 85%+ and practising most days over the last 2 weeks." },
+    NEEDS_REVIEW: { label: "Needs review", color: "gold", explain: "Recent average is below 85%, or several practice days were missed." },
+    NEEDS_SUPPORT: { label: "Needs support", color: "red", explain: "Recent average is below 75% — worth sitting with them for the next session." },
   }[child.status];
+
+  // Plain-language "what happened today → what happens tomorrow".
+  const firstName = child.student.user.firstName ?? child.student.user.name?.split(" ")[0] ?? "Your child";
+  const ts = child.todayStory;
+  const story = (() => {
+    if (!ts) return null;
+    const lesson = ts.lessonLabel ? `“${ts.lessonLabel}”` : `this ${ts.subjectName ?? ""} lesson`;
+    // Two different reasons a lesson repeats — saying "below the bar" when the
+    // average is ABOVE it reads as a mistake to a parent.
+    if (ts.outcome === "repeat" && (ts as any).slowToday) return {
+      icon: "⏱️", tone: "text-gold-dark bg-gold-light/50 border-gold/40",
+      text: `${firstName} got ${ts.avgToday}% on ${lesson} today — accuracy is there, speed isn't yet. Basic facts should be recalled in a few seconds, not worked out, so this lesson repeats tomorrow to build that speed.`,
+    };
+    if (ts.outcome === "repeat") return {
+      icon: "🔁", tone: "text-gold-dark bg-gold-light/50 border-gold/40",
+      text: `Today's average was ${ts.avgToday}% — below the ${ts.bar}% needed, so ${firstName} will repeat ${lesson} tomorrow. Repeat days are how mastery is built — nothing is wrong.`,
+    };
+    if (ts.outcome === "advance") return {
+      icon: "✅", tone: "text-brand-green bg-brand-green/5 border-brand-green/30",
+      text: `Cleared ${lesson} today at ${ts.avgToday}% — tomorrow unlocks the next lesson${ts.nextLessonLabel ? `: “${ts.nextLessonLabel}”` : ""}.`,
+    };
+    return {
+      icon: "📘", tone: "text-ink/80 bg-cream-dark/40 border-border",
+      text: `${ts.doneToday} of ${ts.perDay} sheets done today on ${lesson}${ts.avgToday != null ? ` (average so far ${ts.avgToday}%)` : ""}. ${firstName} needs ${ts.bar}%+ across all ${ts.perDay} to unlock the next lesson.`,
+    };
+  })();
 
   return (
     <Card className="grid grid-cols-[auto_1fr_auto] gap-6 items-center">
@@ -430,10 +618,25 @@ function ChildOverviewCard({ child, colorIndex }: { child: ChildSummary; colorIn
           {child.currentLevel && <Badge variant="blue">Level {child.currentLevel.code}</Badge>}
           <Badge variant="gold">🔥 {child.streakDays}-day streak</Badge>
           {child.todayAccuracyPct != null && (
-            <Badge variant={child.todayAccuracyPct >= 95 ? "green" : "gold"}>{Math.round(child.todayAccuracyPct)}% today</Badge>
+            <Badge variant={child.todayAccuracyPct >= 90 ? "green" : "gold"}>{Math.round(child.todayAccuracyPct)}% today</Badge>
           )}
-          <Badge variant={statusConfig.color as any}>{statusConfig.label}</Badge>
+          <span title={statusConfig.explain} className="cursor-help">
+            <Badge variant={statusConfig.color as any}>{statusConfig.label} ⓘ</Badge>
+          </span>
         </div>
+        <p className="text-[11px] text-muted mt-1">{statusConfig.explain}</p>
+        {child.todayStory?.lessonLabel && (
+          <p className="text-[11px] text-muted mt-0.5">
+            Current lesson: <span className="font-semibold text-ink/80">{child.todayStory.lessonLabel}</span>
+            {child.todayStory.lessonPos ? ` — lesson ${child.todayStory.lessonPos} of ${child.todayStory.lessonTotal} in ${child.currentLevel?.code}` : ""}
+          </p>
+        )}
+        {story && (
+          <div className={`mt-2 flex items-start gap-2 text-sm rounded-lg border px-3 py-2 ${story.tone}`}>
+            <span aria-hidden>{story.icon}</span>
+            <span className="leading-snug">{story.text}</span>
+          </div>
+        )}
       </div>
       <div className="hidden md:flex gap-6">
         <div className="text-center">
@@ -642,14 +845,16 @@ function AttendanceCard({ child }: { child?: ChildSummary }) {
         {days.map((d, i) => {
           const color = d.status === "COMPLETE" ? "bg-brand-green"
             : d.status === "MISSED" ? "bg-brand-red"
+            : d.status === "EXCUSED" ? "bg-brand-blue"
             : d.status === "WEEKEND" ? "bg-border"
             : "bg-cream-dark border border-border";
-          return <div key={i} className={cn("aspect-square rounded-sm", color)} title={d.date} />;
+          return <div key={i} className={cn("aspect-square rounded-sm", color)} title={`${d.date}${d.status === "EXCUSED" ? " · excused" : ""}`} />;
         })}
       </div>
       <div className="flex gap-3 mt-3 text-[10px] text-muted flex-wrap items-center">
         <span className="flex items-center gap-1"><span className="w-2 h-2 bg-brand-green rounded-sm" /> Complete</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 bg-brand-red rounded-sm" /> Missed</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 bg-brand-blue rounded-sm" /> Excused</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 bg-border rounded-sm" /> Weekend</span>
       </div>
     </Card>
@@ -692,8 +897,9 @@ function BillingCard({ subscription, childCount }: { subscription: any; childCou
   const plan = subscription?.plan ?? "FREE";
   const isPremium = plan !== "FREE";
   // Real pricing model (PLANS.PREMIUM): $9.99 first child + $5.99 each additional.
-  const monthlyTotal = 9.99 + Math.max(0, childCount - 1) * 5.99;
-  const planPrice = isPremium ? monthlyTotal : 0;
+  // Compute in CENTS — float math printed "$39.940000000000005/mo" for 6 kids.
+  const monthlyTotalCents = 999 + Math.max(0, childCount - 1) * 599;
+  const planPrice = isPremium ? (monthlyTotalCents / 100).toFixed(2) : null;
 
   return (
     <Card>
@@ -713,7 +919,7 @@ function BillingCard({ subscription, childCount }: { subscription: any; childCou
           </div>
         </div>
         <div className={cn("font-serif text-xl font-bold", isPremium ? "text-brand-green" : "text-ink")}>
-          {planPrice > 0 ? `$${planPrice}/mo` : "Free trial"}
+          {planPrice ? `$${planPrice}/mo` : "Free trial"}
         </div>
       </div>
 
@@ -740,13 +946,13 @@ function BillingCard({ subscription, childCount }: { subscription: any; childCou
             className="w-full flex justify-between items-center px-3 py-2.5 border border-border rounded-lg hover:border-brand-blue hover:bg-brand-blue-light transition-all text-sm text-left"
           >
             <span className="font-medium">
-              Premium — unlimited daily practice
+              Premium — fresh daily practice, every subject
               <span className="block text-[11px] text-muted font-normal mt-0.5">
                 $9.99/mo first child · +$5.99 each additional · 7-day free trial
               </span>
             </span>
             <span className="text-brand-blue font-semibold whitespace-nowrap">
-              {childCount > 1 ? `$${monthlyTotal.toFixed(2)}/mo` : "$9.99/mo"} →
+              {childCount > 1 ? `$${(monthlyTotalCents / 100).toFixed(2)}/mo` : "$9.99/mo"} →
             </span>
           </button>
         </div>
@@ -777,9 +983,210 @@ function BillingCard({ subscription, childCount }: { subscription: any; childCou
   );
 }
 
+// Privacy & data rights (GDPR / CCPA / PIPEDA / APPI / PIPA / PIPL): every
+// account can download its data and delete itself — worldwide requirements.
+function PrivacyCard() {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Card>
+      <h3 className="font-serif text-lg font-bold mb-1.5">Privacy & your data</h3>
+      <p className="text-xs text-muted mb-3">
+        Download everything we store about you and your children, or permanently delete your
+        account and all of its data. See our <a href="/privacy" className="text-brand-blue hover:underline">privacy policy</a>.
+      </p>
+      <div className="flex flex-col gap-2">
+        <a href="/api/account/export" download>
+          <Button variant="secondary" size="sm" fullWidth>Download my data (JSON)</Button>
+        </a>
+        <Button
+          variant="ghost"
+          size="sm"
+          fullWidth
+          disabled={busy}
+          onClick={async () => {
+            const phrase = prompt(
+              'This permanently deletes your account, your children\'s accounts, and ALL learning history. Any subscription is cancelled immediately.\n\nType DELETE MY ACCOUNT to confirm:'
+            );
+            if (phrase !== "DELETE MY ACCOUNT") return;
+            setBusy(true);
+            try {
+              const res = await fetch("/api/account/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ confirm: phrase }),
+              });
+              const j = await res.json();
+              if (j.success) window.location.href = "/";
+              else alert(j.error ?? "Deletion failed — please email support@eduyro.com.");
+            } catch {
+              alert("Deletion failed — please email support@eduyro.com.");
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          <span className="text-brand-red">Delete my account…</span>
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────
+
+// ── 🛤 Learning Path — the level's lesson map with the child's position ──────
+function LearningPathCard({ child }: { child?: ChildSummary | null }) {
+  const lp = child?.learningPath;
+  return (
+    <Card>
+      <h3 className="text-sm font-semibold mb-1">Learning path</h3>
+      {!lp ? (
+        <p className="text-sm text-muted">Take the placement test to start a learning path.</p>
+      ) : (
+        <>
+          <p className="text-xs text-muted mb-4">
+            Level <strong>{lp.levelCode}</strong> — {lp.levelName}
+            {lp.lessons.length > 0 && <> · lesson {lp.currentIndex + 1} of {lp.lessons.length}</>}
+          </p>
+          {lp.lessons.length === 0 ? (
+            <p className="text-sm text-muted">This subject progresses by mastering each skill (see the Subjects and Progress sections).</p>
+          ) : (
+            <ol className="space-y-1.5">
+              {lp.lessons.map((label, i) => (
+                <li key={i} className={cn(
+                  "flex items-center gap-2.5 text-sm rounded-md px-2.5 py-1.5",
+                  i < lp.currentIndex ? "text-muted" : i === lp.currentIndex ? "bg-brand-blue/10 border border-brand-blue/30 font-medium" : "text-muted/70"
+                )}>
+                  <span className={cn(
+                    "w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0",
+                    i < lp.currentIndex ? "bg-brand-green text-white" : i === lp.currentIndex ? "bg-brand-blue text-white" : "bg-cream-dark text-muted"
+                  )}>
+                    {i < lp.currentIndex ? "✓" : i + 1}
+                  </span>
+                  {label}
+                  {i === lp.currentIndex && <Badge variant="blue">current</Badge>}
+                </li>
+              ))}
+            </ol>
+          )}
+        </>
+      )}
+    </Card>
+  );
+}
+
+// ── 📝 Practice History — recent completed sheets with scores ────────────────
+function PracticeHistoryCard({ child }: { child?: ChildSummary | null }) {
+  const sheets = child?.recentSheets ?? [];
+  return (
+    <Card>
+      <h3 className="text-sm font-semibold mb-3">Practice history</h3>
+      {sheets.length === 0 ? (
+        <p className="text-sm text-muted">No completed sheets yet.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-muted border-b border-border">
+                <th className="py-2">Date</th><th>Sheet</th><th>Level</th><th>Score</th><th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sheets.map((s, i) => (
+                <tr key={i} className="border-b border-border/60">
+                  <td className="py-2 text-xs text-muted whitespace-nowrap">{formatDate(s.completedAt as any, "MMM d, p")}</td>
+                  <td className="text-xs">{s.title}</td>
+                  <td className="text-xs text-muted">{s.levelCode}</td>
+                  <td>
+                    <span className={cn("text-xs font-semibold", s.accuracyPct >= 90 ? "text-brand-green" : s.accuracyPct >= 70 ? "text-gold-dark" : "text-brand-red")}>
+                      {Math.round(s.accuracyPct)}%
+                    </span>
+                  </td>
+                  <td className="text-xs text-muted">{s.timeSeconds ? `${Math.floor(s.timeSeconds / 60)}:${String(s.timeSeconds % 60).padStart(2, "0")}` : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// ── 🏆 Achievements — earned badges ──────────────────────────────────────────
+function AchievementsCard({ child }: { child?: ChildSummary | null }) {
+  const badges = child?.badges ?? [];
+  return (
+    <Card>
+      <h3 className="text-sm font-semibold mb-3">Achievements</h3>
+      {badges.length === 0 ? (
+        <p className="text-sm text-muted">No badges yet — they're earned through streaks, perfect scores and mastered lessons.</p>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {badges.map((b, i) => (
+            <div key={i} className="flex items-start gap-3 border border-border rounded-lg p-3">
+              <div className="text-2xl">{b.iconEmoji}</div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold">{b.name}</div>
+                <div className="text-xs text-muted">{b.description}</div>
+                <div className="text-[10px] text-muted mt-1">{formatDate(b.earnedAt as any, "MMM d, yyyy")}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// ── 🎯 Goals — daily target, mastery bar, streaks ────────────────────────────
+function GoalsCard({ child }: { child?: ChildSummary | null }) {
+  const g = child?.goals;
+  if (!g) return <Card><p className="text-sm text-muted">No goals yet — complete placement first.</p></Card>;
+  const items = [
+    { icon: "📄", label: "Daily practice", value: `${g.sheetsPerDay} sheets / day`, note: "Complete the daily packet to advance one lesson." },
+    { icon: "🎯", label: "Mastery bar", value: `${g.masteryThresholdPct}%+ average`, note: "The daily average needed to unlock the next lesson." },
+    { icon: "🔥", label: "Current streak", value: `${g.streakDays} day${g.streakDays === 1 ? "" : "s"}`, note: `Best ever: ${g.bestStreak} days.` },
+  ];
+  return (
+    <Card>
+      <h3 className="text-sm font-semibold mb-3">Goals</h3>
+      <div className="grid sm:grid-cols-3 gap-4">
+        {items.map((it) => (
+          <div key={it.label} className="border border-border rounded-lg p-4">
+            <div className="text-2xl mb-1.5">{it.icon}</div>
+            <div className="text-xs uppercase tracking-wider text-muted">{it.label}</div>
+            <div className="font-serif text-xl font-bold mt-0.5">{it.value}</div>
+            <div className="text-xs text-muted mt-1.5">{it.note}</div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+// ── 👨‍👩‍👧 Parent Controls — account/family actions in one place ────────────────
+function ParentControlsCard({ studentId, onAddChild, onRefresh }: { studentId?: string; onAddChild: () => void; onRefresh: () => void }) {
+  return (
+    <Card>
+      <h3 className="text-sm font-semibold mb-3">Parent controls</h3>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="secondary" size="sm" onClick={onAddChild}>+ Add child</Button>
+        <Button variant="secondary" size="sm" onClick={() => window.open(`/print/${studentId}`, "_blank")} disabled={!studentId}>Print today's packet</Button>
+        <Button variant="secondary" size="sm" onClick={() => window.open(`/print/writing-prompt`, "_blank")}>Writing prompts</Button>
+        <Button variant="secondary" size="sm" onClick={() => window.open(`/print/handwriting`, "_blank")}>Handwriting (W0)</Button>
+        <Button variant="secondary" size="sm" onClick={() => window.open(`/print/fluency`, "_blank")}>Reading fluency</Button>
+        <VacationPackButton studentId={studentId} />
+        <SkipSessionsButton studentId={studentId} onDone={onRefresh} />
+      </div>
+      <p className="text-xs text-muted mt-3">
+        Vacation pack prints the next few days of sheets ahead of time; skip sessions excuses days so they don't break the streak.
+      </p>
+    </Card>
+  );
+}
 
 function initials(name?: string | null) {
   if (!name) return "?";

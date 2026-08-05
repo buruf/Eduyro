@@ -7,6 +7,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { MathText } from "@/components/MathText";
 
 const FIELD =
   "h-12 border-[1.5px] rounded-lg text-2xl text-center font-bold font-serif tabular-nums " +
@@ -165,7 +166,9 @@ export function MultipleChoice({
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/50",
               on ? "border-brand-blue bg-brand-blue/10 text-brand-blue"
                  : "border-border-mid bg-cream-dark/20 hover:border-brand-blue/50")}>
-            {opt}
+            {/* MathText: options can carry LaTeX (\frac{1}{10}) — students saw
+                the raw markup as literal text. */}
+            <MathText>{opt}</MathText>
           </button>
         );
       })}

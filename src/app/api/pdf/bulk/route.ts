@@ -1,4 +1,5 @@
 // src/app/api/pdf/bulk/route.ts
+import { appDayStart } from "@/lib/time";
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { ok, err, handleRouteError, withRole, parseRequest } from "@/lib/api/helpers";
@@ -46,9 +47,9 @@ export async function POST(req: NextRequest) {
           if (!activeProgress) return null;
 
           let dateFilter: Date;
-          if (exportType === "TODAY") dateFilter = startOfDay(new Date());
+          if (exportType === "TODAY") dateFilter = appDayStart();
           else if (exportType === "THIS_WEEK") dateFilter = subDays(new Date(), 7);
-          else dateFilter = startOfDay(new Date());
+          else dateFilter = appDayStart();
 
           // Get next 3 worksheets the student should work on (excluding completed today)
           const completedToday = await db.completedSheet.findMany({

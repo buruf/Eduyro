@@ -27,11 +27,23 @@ function curvePoints(spec: string): string {
 }
 
 export function GraphThumb({ spec, height = 84 }: { spec: string; height?: number }) {
+  // Faint grid lines at every integer so the student can actually READ the slope
+  // and intercept (without them the plane was blank except for the axes + line).
+  const ticks: number[] = [];
+  for (let i = -R; i <= R; i++) ticks.push(i);
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={height} style={{ overflow: "hidden" }} aria-hidden>
-      {/* axes */}
-      <line x1={PX(-R)} y1={PY(0)} x2={PX(R)} y2={PY(0)} stroke="#B8AC9C" strokeWidth={1} />
-      <line x1={PX(0)} y1={PY(-R)} x2={PX(0)} y2={PY(R)} stroke="#B8AC9C" strokeWidth={1} />
+      {/* grid — clearly visible so the student can count units to read the slope
+          and intercept (the old #EDE6D8/0.7 grid was invisible on white). */}
+      {ticks.map((i) => (
+        <line key={`gx${i}`} x1={PX(i)} y1={PY(-R)} x2={PX(i)} y2={PY(R)} stroke="#CFC4AE" strokeWidth={0.8} />
+      ))}
+      {ticks.map((i) => (
+        <line key={`gy${i}`} x1={PX(-R)} y1={PY(i)} x2={PX(R)} y2={PY(i)} stroke="#CFC4AE" strokeWidth={0.8} />
+      ))}
+      {/* axes — darker than the grid for contrast */}
+      <line x1={PX(-R)} y1={PY(0)} x2={PX(R)} y2={PY(0)} stroke="#8A7E6C" strokeWidth={1.2} />
+      <line x1={PX(0)} y1={PY(-R)} x2={PX(0)} y2={PY(R)} stroke="#8A7E6C" strokeWidth={1.2} />
       <polyline points={curvePoints(spec)} fill="none" stroke="#1B4F8A" strokeWidth={2.2} strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );

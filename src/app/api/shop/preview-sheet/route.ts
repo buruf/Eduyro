@@ -11,7 +11,7 @@ import { generateProgressiveSheet, type ShopSkill } from "@/lib/shop/progressive
 import { renderWorksheetToPdf } from "@/lib/pdf/renderer";
 import { withRateLimit } from "@/lib/api/helpers";
 
-export const maxDuration = 60;
+export const maxDuration = 120; // Pro plan — cold engine + render comfortably inside the cap
 
 const VALID_SKILLS: ShopSkill[] = [
   "ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION", "FRACTIONS",

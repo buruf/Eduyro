@@ -23,8 +23,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     try {
       const student = await db.student.findUnique({ where: { id: params.id } });
       if (!student) return notFound("Student");
-      if (student.userId !== ctx.userId && ctx.role !== "ADMIN" && ctx.role !== "TEACHER") {
-        return forbidden();
+      // AuthZ: student self, ADMIN, or a TEACHER linked to THIS student (blanket
+      // TEACHER access was a cross-tenant IDOR — see submit-sheet).
+      if (student.userId !== ctx.userId && ctx.role !== "ADMIN" && ctx.role !== "SUPER_ADMIN") {
+        const isLinkedTeacher =
+          ctx.role === "TEACHER" &&
+          (await db.teacherStudent.findFirst({
+            where: { studentId: student.id, teacher: { userId: ctx.userId } },
+            select: { id: true },
+          })) !== null;
+        if (!isLinkedTeacher) return forbidden();
       }
 
       const worksheet = await db.worksheet.findUnique({

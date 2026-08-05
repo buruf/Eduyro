@@ -17,7 +17,11 @@
 "use client";
 import { MathText } from "@/components/MathText";
 import { QuestionWithViz } from "@/components/FractionViz";
+import { Narration } from "@/components/Narration";
 import { buildScaffold } from "@/lib/tutor/scaffold";
+import { factPaceTargetSec } from "@/lib/mastery/fluency";
+import { isFactLevel } from "@/lib/mastery/fact-sprint";
+import { FactSprintModal } from "@/components/practice/FactSprintModal";
 import { parseColumnar, parseLongDivision } from "@/lib/math/columnar";
 
 import { useEffect, useRef, useState } from "react";
@@ -29,6 +33,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, StatCard, Progress, Modal, EmptyState } from "@/components/ui";
 import { StudentRealtime } from "@/components/realtime/StudentRealtime";
 import { ConceptTutorialModal } from "@/components/tutorial/ConceptTutorialModal";
+import { ReportProblemButton } from "@/components/ReportProblemButton";
 import { cn, formatTime } from "@/lib/utils";
 import type { AnswerType, InteractiveSpec } from "@/types";
 import dynamic from "next/dynamic";
@@ -67,6 +72,7 @@ export default function StudentDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [practiceOpen, setPracticeOpen] = useState(false);
   const [practiceSheet, setPracticeSheet] = useState<TodaySheet | null>(null);
+  const [sprintOpen, setSprintOpen] = useState(false);
 
   // Parent-enabled subjects for the "My subjects" switcher. The child can only
   // ever see/switch among subjects the parent enabled; enrollment is not
@@ -85,20 +91,25 @@ export default function StudentDashboardPage() {
     key?: string; // per-micro-skill completion key
   } | null>(null);
 
-  // Timer state — persisted across refreshes
+  // Timer state — PER SHEET. The old version was one global ever-running timer
+  // that accumulated wall-clock time across sheets, subjects and days (students
+  // saw 26-hour timers). Now the persisted timer is keyed to the worksheet being
+  // practiced: opening a different sheet starts from 0, reopening the same sheet
+  // resumes, and finishing resets. Time away from the page is NOT counted.
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerElapsed, setTimerElapsed] = useState(0);
+  const [timerSheetId, setTimerSheetId] = useState<string | null>(null);
 
-  // Restore timer from localStorage on mount
+  // Restore timer from localStorage on mount (elapsed only — no wall-clock delta).
   useEffect(() => {
     try {
       const saved = localStorage.getItem(TIMER_STORAGE_KEY);
       if (saved) {
-        const { elapsed, running, savedAt } = JSON.parse(saved);
-        // If timer was running, add elapsed time since it was saved
-        const delta = running ? Math.floor((Date.now() - savedAt) / 1000) : 0;
-        setTimerElapsed(elapsed + delta);
-        setTimerRunning(running);
+        const { elapsed, worksheetId } = JSON.parse(saved);
+        if (worksheetId && typeof elapsed === "number") {
+          setTimerElapsed(elapsed);
+          setTimerSheetId(worksheetId);
+        }
       }
     } catch {
       // Corrupted state — ignore
@@ -108,14 +119,15 @@ export default function StudentDashboardPage() {
   // Persist timer to localStorage whenever it changes
   useEffect(() => {
     try {
+      if (!timerSheetId) { localStorage.removeItem(TIMER_STORAGE_KEY); return; }
       localStorage.setItem(
         TIMER_STORAGE_KEY,
-        JSON.stringify({ elapsed: timerElapsed, running: timerRunning, savedAt: Date.now() })
+        JSON.stringify({ elapsed: timerElapsed, worksheetId: timerSheetId })
       );
     } catch {
       // Storage full or blocked — non-critical
     }
-  }, [timerElapsed, timerRunning]);
+  }, [timerElapsed, timerSheetId]);
 
   useEffect(() => {
     if (!session?.user?.id) {
@@ -163,6 +175,22 @@ export default function StudentDashboardPage() {
     }
   }
 
+  // Report the browser's timezone once per session so the server rolls this
+  // student's "day" at THEIR local midnight (students are worldwide).
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz) {
+        fetch("/api/students/me/timezone", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ timezone: tz }),
+        }).catch(() => {});
+      }
+    } catch { /* ignore */ }
+  }, [session?.user?.id]);
+
   // Load the parent-enabled subjects for the switcher.
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -204,7 +232,11 @@ export default function StudentDashboardPage() {
 
   // #S1 FIX: Only show demo on explicit request. Loading shows a loader.
   // Authenticated users with no data get a proper empty state.
-  if (loading && !showDemo) {
+  // The full-screen loader shows ONLY on the initial load (no data yet):
+  // background refetches (notification events, sheet-completed refreshes)
+  // used to replace the page and UNMOUNT an open practice modal mid-question —
+  // the student's session appeared to "refresh and start over".
+  if (loading && !dashboard && !showDemo) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-cream-dark">
         <div className="text-muted text-sm">Loading your dashboard…</div>
@@ -231,7 +263,12 @@ export default function StudentDashboardPage() {
   function beginPractice(sheet: TodaySheet) {
     setPracticeSheet(sheet);
     setPracticeOpen(true);
-    if (!timerRunning) setTimerRunning(true);
+    // Per-sheet timer: a DIFFERENT sheet starts at 0; the SAME sheet resumes.
+    if (sheet.worksheetId !== timerSheetId) {
+      setTimerElapsed(0);
+      setTimerSheetId(sheet.worksheetId);
+    }
+    setTimerRunning(true);
   }
 
   // Per-MICRO-SKILL tutorial key, so each micro-skill teaches once (council rule:
@@ -255,12 +292,17 @@ export default function StudentDashboardPage() {
     }
   }
 
-  function openTutorialReview() {
-    if (!currentConcept) return;
+  // Reopen the lesson for a given sheet (or the current one). Always works —
+  // reachable from the dashboard link AND from inside the practice modal, so a
+  // student can re-watch the examples any time, not just on first visit.
+  function openTutorialReview(forSheet?: TodaySheet) {
+    const sheet = forSheet ?? currentSheet ?? null;
     const levelCode = data.levelProgress?.levelCode;
-    const label = currentSheet?.skillName ?? "";
+    const label = sheet?.skillName ?? "";
+    const concept = (sheet ? conceptForSkill(levelCode, sheet.skillName) : null) ?? currentConcept;
+    if (!concept) return;
     const microLesson = getMicroSkillLesson(subjectNameToSlug(data.levelProgress?.subjectName), levelCode ?? "", label);
-    setConceptModal({ concept: currentConcept, sheet: null, mode: "review", microLesson, key: microKey(levelCode, label) });
+    setConceptModal({ concept, sheet: sheet ?? null, mode: "review", microLesson, key: microKey(levelCode, label) });
   }
 
   async function onConceptTutorialDone() {
@@ -290,12 +332,15 @@ export default function StudentDashboardPage() {
   function closePractice() {
     setPracticeOpen(false);
     setPracticeSheet(null);
+    // Pause (don't reset) — reopening the same sheet resumes where it left off.
+    setTimerRunning(false);
   }
 
   // Called when a sheet is successfully submitted
   async function onSheetSubmitted() {
     setTimerRunning(false);
     setTimerElapsed(0);
+    setTimerSheetId(null); // finished → clear the persisted per-sheet timer
     closePractice();
     // Refetch dashboard to show updated streak/mastery/etc.
     await fetchDashboard();
@@ -343,19 +388,23 @@ export default function StudentDashboardPage() {
             <StatCard
               label="Accuracy today"
               value={data.todayAccuracyPct != null ? `${Math.round(data.todayAccuracyPct)}%` : "—"}
-              sub="Target: 95% to advance"
+              sub={`Target: ${(data.levelProgress as any)?.thresholdPct ?? 90}% to advance`}
               color="green"
             />
             <StatCard
               label="Level progress"
               value={data.levelProgress ? `${data.levelProgress.progressPct}%` : "—"}
-              sub={data.levelProgress ? `${data.levelProgress.sheetsCompleted} sheets done` : ""}
+              sub={
+                data.levelProgress?.totalSkills
+                  ? `${data.levelProgress.skillsMastered ?? 0} of ${data.levelProgress.totalSkills} lessons mastered`
+                  : ""
+              }
               color="blue"
             />
             <StatCard
-              label="Days to advance"
-              value={data.levelProgress?.daysUntilAdvance ?? "—"}
-              sub="At 95% accuracy"
+              label="Sheets to advance"
+              value={data.levelProgress?.sheetsToAdvance ?? "—"}
+              sub={`Today at ≥${(data.levelProgress as any)?.thresholdPct ?? 90}% to unlock the next lesson`}
               color="red"
             />
           </div>
@@ -380,13 +429,21 @@ export default function StudentDashboardPage() {
                   </h3>
                 </div>
                 <div className="flex items-center gap-3">
-                  {currentConcept && completedConcepts.has(currentConcept.id) && (
+                  {/* Always available (was gated on a stale completion key that
+                      never matched → the link almost never appeared, so students
+                      couldn't replay the lesson). */}
+                  {currentConcept && (
                     <button
-                      onClick={openTutorialReview}
+                      onClick={() => openTutorialReview()}
                       className="text-xs text-brand-blue hover:underline whitespace-nowrap"
                     >
                       ↻ Review tutorial
                     </button>
+                  )}
+                  {isFactLevel(data.levelProgress?.levelCode ?? "") && (
+                    <Button variant="secondary" size="sm" onClick={() => setSprintOpen(true)} title="A quick 90-second recall warm-up">
+                      ⚡ Fact Sprint
+                    </Button>
                   )}
                   <Button
                     variant="blue"
@@ -398,6 +455,19 @@ export default function StudentDashboardPage() {
                   </Button>
                 </div>
               </div>
+
+              {/* Accurate-but-slow: the facts are right, but not yet automatic —
+                  today's fact sheets repeat, and the Fact Sprint is the fast way
+                  to build speed. Framed as encouragement, never failure. */}
+              {(data.levelProgress as any)?.slowToday && (
+                <div className="mb-3 rounded-lg bg-brand-blue/8 border border-brand-blue/25 p-3 flex items-center gap-3">
+                  <span className="text-2xl">⏱️</span>
+                  <div className="flex-1 text-sm text-ink">
+                    <b>Great accuracy!</b> Now let&apos;s make these facts automatic — try to answer a little faster. A 90-second Fact Sprint is the quickest way there.
+                  </div>
+                  <Button variant="blue" size="sm" onClick={() => setSprintOpen(true)}>Start ⚡</Button>
+                </div>
+              )}
 
               {data.todayPacket.sheets.length === 0 ? (
                 <NotPlacedEmptyState hasLevel={!!data.levelProgress} />
@@ -446,25 +516,34 @@ export default function StudentDashboardPage() {
                 </div>
               </div>
 
-              {/* Mastery progress */}
-              {data.levelProgress && (
-                <div className="mt-4">
-                  <div className="flex justify-between text-xs mb-1.5">
-                    <span className="font-semibold">Advancement progress</span>
-                    <span className="text-muted">
-                      {data.levelProgress.consecutivePassDays} / {data.levelProgress.consecutivePassDays + data.levelProgress.daysUntilAdvance} days at 95%+
-                    </span>
+              {/* Skill-map progress — one lesson per day, ≥90% to advance */}
+              {data.levelProgress && (() => {
+                const lp = data.levelProgress as any;
+                const done = lp.todayDone ?? 0, need = lp.todayNeeded ?? 3;
+                return (
+                  <div className="mt-4">
+                    <div className="flex justify-between text-xs mb-1.5">
+                      <span className="font-semibold">Today's lesson{lp.currentSkillName ? ` — ${lp.currentSkillName}` : ""}</span>
+                      <span className="text-muted">{Math.min(done, need)} / {need} sheets{done > 0 ? ` · ${lp.todayAvgPct}% today` : ""}</span>
+                    </div>
+                    <Progress value={Math.min(done / Math.max(need, 1), 1) * 100} color={lp.dayCleared ? "green" : "gold"} />
+                    {(() => {
+                      // The day clears on THREE conditions (sheets done, average
+                      // ≥ the level's bar, every fact sheet on pace) — so the
+                      // message has to name the one actually blocking, or a kid
+                      // at 93% gets told to "reach 90%".
+                      const bar = lp.thresholdPct ?? 90;
+                      if (lp.dayCleared) return <p className="text-[11px] text-brand-green mt-1.5">🎉 Lesson cleared at {lp.todayAvgPct}%! The next lesson unlocks tomorrow.</p>;
+                      if (lp.slowToday) return <p className="text-[11px] text-muted mt-1.5">Great accuracy — {lp.todayAvgPct}%! Now speed: these are facts to <em>remember</em>, not work out{lp.paceTargetSec ? ` (aim for about ${lp.paceTargetSec} seconds a question)` : ""}. You'll practise this lesson again tomorrow to get quicker.</p>;
+                      if (done >= need) return <p className="text-[11px] text-muted mt-1.5">So close — today's average is {lp.todayAvgPct}%. Reach {bar}%+ to unlock the next lesson.</p>;
+                      return <p className="text-[11px] text-muted mt-1.5">Finish today's {need} sheets at {bar}%+ to unlock the next lesson.</p>;
+                    })()}
+                    {lp.totalSkills > 0 && (
+                      <p className="text-[11px] text-muted mt-1">Lesson {(lp.skillsMastered ?? 0) + 1} of {lp.totalSkills} in {lp.levelCode}.</p>
+                    )}
                   </div>
-                  <Progress
-                    value={
-                      data.levelProgress.consecutivePassDays /
-                      Math.max(data.levelProgress.consecutivePassDays + data.levelProgress.daysUntilAdvance, 1) *
-                      100
-                    }
-                    color="gold"
-                  />
-                </div>
-              )}
+                );
+              })()}
             </Card>
 
             <Card>
@@ -515,6 +594,8 @@ export default function StudentDashboardPage() {
         </div>
       </main>
 
+      <ReportProblemButton />
+
       {/* Concept tutorial — auto-opens before a skill's FIRST practice;
           reachable later via the "Review tutorial" link */}
       {conceptModal && (
@@ -528,6 +609,8 @@ export default function StudentDashboardPage() {
           skillName={conceptModal.sheet?.skillName ?? currentSheet?.skillName ?? ""}
           microLesson={conceptModal.microLesson}
           mode={conceptModal.mode}
+          worksheetId={conceptModal.sheet?.worksheetId ?? currentSheet?.worksheetId ?? null}
+          questionCount={conceptModal.sheet?.problemCount ?? currentSheet?.problemCount ?? null}
           onStart={onConceptTutorialDone}
           onClose={() => setConceptModal(null)}
         />
@@ -544,7 +627,13 @@ export default function StudentDashboardPage() {
           levelCode={data.levelProgress?.levelCode ?? "M5"}
           timerSeconds={timerElapsed}
           onSubmitted={onSheetSubmitted}
+          onShowLesson={() => openTutorialReview(practiceSheet)}
         />
+      )}
+
+      {/* Daily fact sprint — rapid-fire retrieval drill (fact levels only) */}
+      {sprintOpen && (
+        <FactSprintModal open={sprintOpen} onClose={() => setSprintOpen(false)} studentId={data.student.id} />
       )}
     </div>
   );
@@ -787,6 +876,7 @@ function PracticeModal({
   levelCode,
   timerSeconds,
   onSubmitted,
+  onShowLesson,
 }: {
   open: boolean;
   onClose: () => void;
@@ -796,7 +886,31 @@ function PracticeModal({
   levelCode: string;
   timerSeconds: number;
   onSubmitted: () => void;
+  /** Reopen the lesson (worked examples) for THIS sheet — always available. */
+  onShowLesson?: () => void;
 }) {
+  // Scaffold with a WORKED-EXAMPLE fallback: when buildScaffold has no real
+  // handler for a question form (bland "the correct answer is X"), reuse the
+  // unit's authored tutorial example as the hint sequence — a similar problem
+  // fully worked, step by step — so EVERY question form coaches, across the
+  // board, without per-form authoring.
+  const scaffoldFor = (question: string, correctAnswer: string, studentAnswer: string, explanation?: string) => {
+    const sc = buildScaffold(question, correctAnswer, studentAnswer, { subjectSlug, explanation, directive: sheet.skillName });
+    const bland = sc.hints.length === 1 && /^The correct answer is/.test(sc.hints[0]);
+    if (!bland) return sc;
+    const ex = getMicroSkillLesson(subjectSlug, levelCode, sheet.skillName)?.example;
+    if (!ex?.steps?.length) return sc;
+    return {
+      explanation: studentAnswer ? `You answered ${studentAnswer}. Let's walk through a similar example first.` : `Let's walk through a similar example first.`,
+      hints: [
+        `Similar example: ${ex.problem}`,
+        ...ex.steps,
+        `The example's answer is ${ex.answer}. Use the SAME steps on yours — the correct answer is ${correctAnswer}.`,
+      ],
+      answer: correctAnswer,
+    };
+  };
+
   const [problems, setProblems] = useState<PracticeProblem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -820,6 +934,10 @@ function PracticeModal({
   // First-try correctness (recorded the FIRST time a question is checked) so the
   // results screen can show honest first-try accuracy, separate from mastery.
   const [firstTry, setFirstTry] = useState<Record<string, boolean>>({});
+  // Momentum: consecutive first-try corrects (🔥 combo) + transient milestone
+  // shout-outs at ¼ / ½ / ¾ — long sheets need a sense of motion, not a grind.
+  const [streak, setStreak] = useState(0);
+  const [milestone, setMilestone] = useState<string | null>(null);
 
   // Load the STORED problems for this exact worksheet so their IDs match the
   // answer key in the DB — without this, submit-sheet can't grade and every
@@ -829,8 +947,16 @@ function PracticeModal({
     if (!open || !sheet.worksheetId) return;
     setLoading(true);
     setLoadError(null);
-    setIdx(0); setAnswers({}); setLive({}); setLiveHints({}); setFirstTry({});
-    setResult(null); setReviewing(false);
+    // Restore an in-progress session (survives navigating away / a page reload)
+    // so the student resumes where they were instead of starting over.
+    let saved: any = null;
+    try { saved = JSON.parse(sessionStorage.getItem(`practice:${sheet.worksheetId}`) || "null"); } catch { /* ignore */ }
+    setIdx(saved?.idx ?? 0);
+    setAnswers(saved?.answers ?? {});
+    setLive(saved?.live ?? {});
+    setLiveHints(saved?.liveHints ?? {});
+    setFirstTry(saved?.firstTry ?? {});
+    setResult(null); setReviewing(false); setStreak(0); setMilestone(null);
 
     fetch(`/api/worksheet/by-id/${sheet.worksheetId}`)
       .then((r) => r.json())
@@ -854,6 +980,13 @@ function PracticeModal({
       .finally(() => setLoading(false));
   }, [open, sheet.worksheetId]);
 
+  // Persist the in-progress session so leaving the page and coming back (or a
+  // reload) resumes instead of restarting. Cleared when the sheet is submitted.
+  useEffect(() => {
+    if (!open || !sheet.worksheetId || loading) return;
+    try { sessionStorage.setItem(`practice:${sheet.worksheetId}`, JSON.stringify({ idx, answers, live, liveHints, firstTry })); } catch { /* ignore */ }
+  }, [open, sheet.worksheetId, loading, idx, answers, live, liveHints, firstTry]);
+
   // #S3 FIX: real submit to backend
   async function submit() {
     setSubmitting(true);
@@ -864,6 +997,11 @@ function PracticeModal({
       answer: answers[p.id] ?? "",
     }));
 
+    // Honest FIRST-TRY accuracy (retry-till-right makes the final answers all
+    // correct) — the server uses this for the recorded score + mastery.
+    const ftVals = problems.map((p) => firstTry[p.id]).filter((v) => v !== undefined) as boolean[];
+    const firstTryAccuracyPct = ftVals.length ? Math.round((ftVals.filter(Boolean).length / ftVals.length) * 100) : undefined;
+
     try {
       const res = await fetch(`/api/students/${studentId}/submit-sheet`, {
         method: "POST",
@@ -873,6 +1011,7 @@ function PracticeModal({
           answers: submissionAnswers,
           // Clamp to the server's 2h cap so a long-open session never gets rejected.
           timeSeconds: Math.min(Math.max(0, Math.round(timerSeconds)), 7200),
+          ...(firstTryAccuracyPct !== undefined ? { firstTryAccuracyPct } : {}),
         }),
       });
       const data = await res.json();
@@ -881,6 +1020,8 @@ function PracticeModal({
         setSubmitting(false);
         return;
       }
+      // Sheet is done — drop the saved in-progress session so re-opening starts fresh.
+      try { sessionStorage.removeItem(`practice:${sheet.worksheetId}`); } catch { /* ignore */ }
       setResult({
         score: data.data.score,
         total: data.data.totalProblems,
@@ -917,6 +1058,31 @@ function PracticeModal({
         if (!data.data.isCorrect) setLiveHints((h) => ({ ...h, [p.id]: 0 }));
         // Record first-try result once (used for honest accuracy on the results screen).
         setFirstTry((f) => (p.id in f ? f : { ...f, [p.id]: data.data.isCorrect }));
+        // Momentum: combo counts FRESH first-try corrects only (re-checking an
+        // already-answered question doesn't inflate it); any miss resets it.
+        if (!(p.id in firstTry)) {
+          if (data.data.isCorrect) {
+            setStreak((s) => s + 1);
+            // Milestone shout-outs as the sheet fills up (count includes this one).
+            const done = Object.values(live).filter((v) => v.isCorrect).length + 1;
+            const q = (f: number) => Math.floor(total * f);
+            const msg = done === total ? null // the results screen celebrates the finish
+              : done === q(0.25) && total >= 12 ? "¼ done — great start! 🌱"
+              : done === q(0.5) ? "Halfway there — keep it rolling! ⚡"
+              : done === q(0.75) ? "¾ done — the finish line is in sight! 🏁"
+              : null;
+            if (msg) { setMilestone(msg); setTimeout(() => setMilestone(null), 2600); }
+          } else {
+            setStreak(0);
+          }
+        }
+        // Auto-advance on a CORRECT answer after a brief ✓ (removes the separate
+        // "Next" click — one deliberate action per question instead of two).
+        if (data.data.isCorrect) {
+          const pIdx = problems.findIndex((x) => x.id === p.id);
+          const last = pIdx === problems.length - 1;
+          setTimeout(() => { if (last) submit(); else setIdx(pIdx + 1); }, 750);
+        }
       }
     } catch {
       /* ignore — student can retry */
@@ -940,6 +1106,12 @@ function PracticeModal({
     const pos = problems.indexOf(cur);
     for (let i = pos - 1; i >= 0; i--) { if (isPassage(problems[i])) { passage = problems[i]; break; } }
   }
+
+  // Somewhere to write the carry — the child asked for this ("no spot to put
+  // the carry over"). Held OUTSIDE `answers` on purpose: it is the child's
+  // working space, never scored and never submitted. A child who multiplies
+  // 27 × 4 in their head and leaves it blank is doing MORE, not less.
+  const [carries, setCarries] = useState<Record<string, string[]>>({});
 
   // Number pad writes into the current question's answer.
   const padKey = (k: string) => {
@@ -986,8 +1158,32 @@ function PracticeModal({
     }
 
     if (stack) {
+      // One carry box per column of the top number, sitting above it and offset
+      // half a cell left — the way it is written on paper, so the box reads as
+      // "belongs to the next column" rather than as a digit of the number.
+      const carryWidth = stack.top.replace(/\D/g, "").length;
+      const carryVals = carries[p.id] ?? [];
+      const setCarry = (i: number, v: string) =>
+        setCarries((c) => {
+          const next = [...(c[p.id] ?? [])];
+          next[i] = v.replace(/\D/g, "").slice(-1);
+          return { ...c, [p.id]: next };
+        });
       return (
         <div className="inline-block min-w-[6rem] mx-auto">
+          <div className="flex justify-end gap-1 mb-1 -translate-x-[0.55em]" aria-label="Carry — optional working space, not marked">
+            {Array.from({ length: carryWidth }).map((_, i) => (
+              <input
+                key={i}
+                inputMode="numeric"
+                maxLength={1}
+                value={carryVals[i] ?? ""}
+                onChange={(e) => setCarry(i, e.target.value)}
+                aria-label={`carry into column ${carryWidth - i}, optional`}
+                className="w-7 h-7 min-w-[28px] text-center text-sm font-serif tabular-nums rounded border border-dashed border-border-mid text-brand-blue bg-cream-dark/20 focus:outline-none focus:border-brand-blue focus:border-solid"
+              />
+            ))}
+          </div>
           <div className="font-serif font-bold text-3xl text-right tabular-nums leading-tight">{stack.top}</div>
           <div className="flex items-end justify-between gap-5 font-serif font-bold text-3xl tabular-nums leading-tight">
             <span>{stack.op}</span><span>{stack.bottom}</span>
@@ -1072,6 +1268,36 @@ function PracticeModal({
               <div className="h-full bg-brand-green transition-all" style={{ width: `${(safeIdx / total) * 100}%` }} />
             </div>
             <span className="text-[11px] font-bold text-muted shrink-0">{safeIdx + 1}/{total}</span>
+            {(() => {
+              // Gentle pace goal on fact sheets (M3–M6): a personal "beat your
+              // time" target, framed as a race — NOT a scary countdown. Amber
+              // once over the goal, but never blocks; the gate is enforced server-side.
+              const paceSec = factPaceTargetSec(levelCode, sheet.skillName);
+              if (!paceSec || total < 10) return null;
+              const goal = paceSec * total;
+              const over = timerSeconds > goal;
+              return (
+                <span className={`shrink-0 text-[11px] font-bold rounded-full px-2 py-0.5 ${over ? "text-brand-red bg-brand-red/10" : "text-brand-blue bg-brand-blue/10"}`}
+                  title="Try to finish under the goal time to master these facts">
+                  ⏱️ goal {formatTime(goal)}
+                </span>
+              );
+            })()}
+            {streak >= 3 && (
+              <span className="shrink-0 text-[11px] font-bold text-gold-dark bg-gold-light/70 rounded-full px-2 py-0.5" title={`${streak} correct in a row`}>
+                🔥 {streak}
+              </span>
+            )}
+            {onShowLesson && (
+              <button
+                type="button"
+                onClick={onShowLesson}
+                className="shrink-0 text-[11px] font-bold text-brand-blue border border-brand-blue/30 rounded-md px-2 py-1 hover:bg-brand-blue/5"
+                title="Watch the lesson and worked examples for this sheet again"
+              >
+                📖 See examples
+              </button>
+            )}
           </div>
 
           {passage && (
@@ -1090,12 +1316,23 @@ function PracticeModal({
           {showPad && !curLive && <NumberPad onKey={padKey} extras={padExtras} />}
 
           {curLive && !curLive.isCorrect && (() => {
-            const sc = buildScaffold(cur.question, curLive.correctAnswer, answers[cur.id] ?? "", { subjectSlug, directive: sheet.skillName });
+            const sc = scaffoldFor(cur.question, curLive.correctAnswer, answers[cur.id] ?? "");
             const shown = liveHints[cur.id] ?? 0;
+            // Speak the newest thing shown: the latest hint if one is revealed,
+            // otherwise the explanation. (Auto-plays; silent if TTS isn't set up.)
+            const speak = shown > 0 ? sc.hints[Math.min(shown, sc.hints.length) - 1] : sc.explanation;
             return (
               <div className="mt-3 space-y-1.5">
-                <div className="text-sm font-bold text-brand-red">Not quite — let&apos;s work through it 💪</div>
+                <div className="text-sm font-bold text-brand-red flex items-center gap-1.5">
+                  <span>Not quite — let&apos;s work through it 💪</span>
+                  <Narration key={`${cur.id}:${shown}`} text={speak} />
+                </div>
                 <div className="bg-cream-dark/40 rounded-md p-2.5 text-sm"><MathText>{sc.explanation}</MathText></div>
+                {sc.visual && (
+                  <div className="flex justify-center bg-white rounded-md p-2 border border-border">
+                    <QuestionWithViz text={sc.visual} />
+                  </div>
+                )}
                 {sc.hints.slice(0, shown).map((h, hi) => (
                   <div key={hi} className="flex gap-2 text-sm bg-gold-light/60 rounded-md p-2">
                     <span className="font-bold text-gold-dark shrink-0">Hint {hi + 1}</span><MathText className="flex-1">{h}</MathText>
@@ -1109,7 +1346,15 @@ function PracticeModal({
             );
           })()}
 
-          {curLive?.isCorrect && <div className="mt-3 text-sm font-bold text-brand-green text-center">✓ Correct! Nice work.</div>}
+          {curLive?.isCorrect && (
+            <div className="mt-3 text-sm font-bold text-brand-green text-center">
+              {milestone ?? (
+                streak >= 5 ? `✓ Correct — ${streak} in a row, you're unstoppable! 🔥`
+                : streak >= 3 ? `✓ Correct — that's ${streak} straight! 🔥`
+                : ["✓ Correct! Nice work.", "✓ Got it! 💪", "✓ Exactly right!", "✓ Yes — well done!"][safeIdx % 4]
+              )}
+            </div>
+          )}
 
           {submitError && <div className="mt-3 bg-brand-red-light border border-brand-red/30 text-brand-red text-xs rounded-md p-2.5">{submitError}</div>}
 
@@ -1123,8 +1368,11 @@ function PracticeModal({
                 {liveChecking === cur.id ? "Checking…" : "Check answer"}
               </Button>
             ) : curLive.isCorrect ? (
-              <Button variant="green" fullWidth loading={submitting}
-                onClick={() => { if (isLast) submit(); else setIdx((i) => i + 1); }}>
+              // On a FRESH correct answer checkOne auto-advances after a brief ✓;
+              // but when the student navigates BACK to an already-correct question
+              // there's no pending auto-advance, so this must be a real clickable
+              // button to move forward again (Back worked, Next didn't).
+              <Button variant="primary" fullWidth onClick={() => { if (isLast) submit(); else setIdx(safeIdx + 1); }}>
                 {isLast ? "Finish →" : "Next question →"}
               </Button>
             ) : (
@@ -1146,7 +1394,7 @@ function PracticeModal({
         // ── Coaching review of a single missed problem ──────────────────────
         if (reviewing && misses[reviewIdx]) {
           const { g, p } = misses[reviewIdx];
-          const sc = buildScaffold(p.question, g.correctAnswer, g.answer, { subjectSlug, explanation: g.explanation, directive: sheet.skillName });
+          const sc = scaffoldFor(p.question, g.correctAnswer, g.answer, g.explanation);
           const allHints = hintsShown >= sc.hints.length;
           const isMC = !!(p.options && p.options.length);
 
@@ -1169,6 +1417,12 @@ function PracticeModal({
                 <div className="bg-cream-dark/40 rounded-md p-2.5 text-sm">
                   <MathText>{sc.explanation}</MathText>
                 </div>
+
+                {sc.visual && (
+                  <div className="flex justify-center bg-white rounded-md p-2 border border-border">
+                    <QuestionWithViz text={sc.visual} />
+                  </div>
+                )}
 
                 {/* progressive hints, revealed one at a time */}
                 <div className="space-y-1.5">
@@ -1381,12 +1635,19 @@ function demoDashboard(): StudentDashboard {
       levelCode: "M5",
       levelName: "Multiplication Fluency",
       subjectName: "Mathematics",
-      sheetsCompleted: 136,
-      totalSheets: 200,
-      progressPct: 68,
-      consecutivePassDays: 4,
-      daysUntilAdvance: 1,
       status: "IN_PROGRESS",
+      progressPct: 68,
+      currentSkillIndex: 6,
+      currentSkillName: "×6, ×7, ×8, ×9 (the hard facts)",
+      totalSkills: 10,
+      skillsMastered: 6,
+      todayDone: 2,
+      todayNeeded: 3,
+      todayAvgPct: 95,
+      dayCleared: false,
+      sheetsToAdvance: 1,
+      isReadyToAdvance: false,
+      currentSkill: "×6, ×7, ×8, ×9 (the hard facts)",
     },
     todayPacket: {
       sheets: [

@@ -16,7 +16,8 @@ import {
   createCheckoutSession,
   addChildToSubscription,
 } from "@/lib/stripe";
-import { requiresParentalConsent, calculateAge } from "@/lib/coppa";
+import { requiresParentalConsent, calculateAge } from "@/lib/compliance/consent-age";
+import { recordConsent, getRequestCountry, getClientIp } from "@/lib/compliance/consent";
 import { ensureDefaultEnrollments } from "@/lib/enrollment";
 import { nanoid } from "nanoid";
 
@@ -31,6 +32,10 @@ const AddChildSchema = z.object({
     .regex(/[0-9]/, "Password must contain at least one number"),
   grade: z.string().optional(),
   dateOfBirth: z.string().optional(),
+  // Parent/guardian affirms (on the child's behalf) the Terms, Privacy Policy,
+  // and — for a child under the local digital-consent age — verifiable parental
+  // consent. Required, un-ticked by default on the client.
+  acceptedTerms: z.literal(true, { errorMap: () => ({ message: "You must accept the Terms and Privacy Policy on your child's behalf" }) }),
 });
 
 export async function POST(req: NextRequest) {
@@ -55,11 +60,14 @@ export async function POST(req: NextRequest) {
       if (existing) return conflict("An account with this email already exists");
 
       const dob = dateOfBirth ? new Date(dateOfBirth) : null;
-      // COPPA: when a parent creates a child's account under their own (paid)
-      // subscription, the parent IS the verifiable consent-giver — so for an
-      // under-13 child we mark consent VERIFIED and log the evidence rather than
-      // sending the separate micro-charge verification email.
-      const needsCoppa = !!dob && requiresParentalConsent(dob);
+      const country = getRequestCountry(req);
+      const ipAddress = getClientIp(req);
+      // When a parent creates a child's account under their own (paid)
+      // subscription, the parent IS the verifiable consent-giver — so for a
+      // below-threshold child we mark consent VERIFIED and log the evidence
+      // rather than sending a separate verification email. Threshold is
+      // jurisdiction-aware (digital consent age varies by country).
+      const needsCoppa = !!dob && requiresParentalConsent(dob, country);
       const passwordHash = await bcrypt.hash(password, 12);
 
       // Create user + student + parent link in a transaction
@@ -142,6 +150,15 @@ export async function POST(req: NextRequest) {
         return { user: newUser, student: newStudent };
       });
 
+      // Record the parent's on-behalf acceptance of Terms, Privacy, and (for a
+      // below-threshold child) parental consent — with jurisdiction + IP + who
+      // gave consent. Non-blocking.
+      await recordConsent({
+        userId: result.user.id,
+        types: needsCoppa ? ["TERMS", "PRIVACY", "COPPA_CONSENT"] : ["TERMS", "PRIVACY"],
+        country, ipAddress, acceptedByUserId: ctx.userId,
+      });
+
       const isFirstChild = parent.children.length === 0;
 
       // Handle subscription
@@ -151,7 +168,15 @@ export async function POST(req: NextRequest) {
 
       let checkoutUrl: string | null = null;
 
-      if (isFirstChild && !subscription?.stripeSubscriptionId) {
+      // Complimentary access (admin-granted, Stripe-less): a TRIALING row with
+      // no Stripe subscription and a future trialEndsAt. No checkout, no card —
+      // children are created directly until the comp window ends.
+      const isComp = !!subscription && !subscription.stripeSubscriptionId &&
+        subscription.status === "TRIALING" && !!subscription.trialEndsAt && subscription.trialEndsAt > new Date();
+
+      if (isComp) {
+        // fall through — child already created above; nothing to bill
+      } else if (isFirstChild && !subscription?.stripeSubscriptionId) {
         // First child — start checkout with 7-day trial
         const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
         const customerId = await getOrCreateCustomer({
@@ -186,9 +211,11 @@ export async function POST(req: NextRequest) {
         email,
         isFirstChild,
         checkoutUrl, // Non-null for first child — frontend should redirect
-        message: isFirstChild
-          ? `${firstName}'s account created. Start your 7-day free trial to activate.`
-          : `${firstName}'s account created. $5.99/mo added to your subscription.`,
+        message: isComp
+          ? `${firstName}'s account created and ready to use.`
+          : isFirstChild
+            ? `${firstName}'s account created. Start your 7-day free trial to activate.`
+            : `${firstName}'s account created. $5.99/mo added to your subscription.`,
       }, 201);
     } catch (error) {
       return handleRouteError(error);

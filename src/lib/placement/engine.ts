@@ -123,44 +123,44 @@ export const placementBanks: Record<string, PlacementQuestion[]> = {
     { id: "r-r1-3", subjectSlug: "READING", levelCode: "R1", difficulty: 0.3, question: "What sound does 'ch' make in 'chair'?", options: ["k", "sh", "ch", "s"], correctIndex: 2, skillTag: "letter-sounds" },
 
     // R2 — Phonics (0.4–0.6)
-    { id: "r-r2-1", subjectSlug: "READING", levelCode: "R2", difficulty: 0.4, question: "Which word rhymes with 'cake'?", options: ["car", "bake", "cup", "ball"], correctIndex: 1, skillTag: "phonics" },
-    { id: "r-r2-2", subjectSlug: "READING", levelCode: "R2", difficulty: 0.5, question: "Which word has a silent 'e' that makes the vowel say its name?", options: ["hat", "bit", "hope", "hot"], correctIndex: 2, skillTag: "phonics" },
-    { id: "r-r2-3", subjectSlug: "READING", levelCode: "R2", difficulty: 0.6, question: "Which word contains a long vowel sound?", options: ["bit", "hot", "bike", "cup"], correctIndex: 2, skillTag: "phonics" },
+    { id: "r-r2-1", subjectSlug: "READING", levelCode: "R1", difficulty: 0.4, question: "Which word rhymes with 'cake'?", options: ["car", "bake", "cup", "ball"], correctIndex: 1, skillTag: "phonics" },
+    { id: "r-r2-2", subjectSlug: "READING", levelCode: "R1", difficulty: 0.5, question: "Which word has a silent 'e' that makes the vowel say its name?", options: ["hat", "bit", "hope", "hot"], correctIndex: 2, skillTag: "phonics" },
+    { id: "r-r2-3", subjectSlug: "READING", levelCode: "R1", difficulty: 0.6, question: "Which word contains a long vowel sound?", options: ["bit", "hot", "bike", "cup"], correctIndex: 2, skillTag: "phonics" },
 
     // R3 — Sight Words (0.65–0.8)
-    { id: "r-r3-1", subjectSlug: "READING", levelCode: "R3", difficulty: 0.65, question: "Which is a common sight word?", options: ["xylo", "the", "qaz", "wrx"], correctIndex: 1, skillTag: "sight-words" },
-    { id: "r-r3-2", subjectSlug: "READING", levelCode: "R3", difficulty: 0.75, question: "Which word is spelled correctly?", options: ["becaus", "because", "becauze", "becuse"], correctIndex: 1, skillTag: "sight-words" },
-    { id: "r-r3-3", subjectSlug: "READING", levelCode: "R3", difficulty: 0.8, question: "Choose the correct word: 'She ___ going to the store.' (is/are/am)", options: ["are", "am", "is", "be"], correctIndex: 2, skillTag: "sight-words" },
+    { id: "r-r3-1", subjectSlug: "READING", levelCode: "R2", difficulty: 0.65, question: "Which is a common sight word?", options: ["xylo", "the", "qaz", "wrx"], correctIndex: 1, skillTag: "sight-words" },
+    { id: "r-r3-2", subjectSlug: "READING", levelCode: "R2", difficulty: 0.75, question: "Which word is spelled correctly?", options: ["becaus", "because", "becauze", "becuse"], correctIndex: 1, skillTag: "sight-words" },
+    { id: "r-r3-3", subjectSlug: "READING", levelCode: "R2", difficulty: 0.8, question: "Choose the correct word: 'She ___ going to the store.' (is/are/am)", options: ["are", "am", "is", "be"], correctIndex: 2, skillTag: "sight-words" },
 
     // R4 — Vocabulary (0.85–1.1)
-    { id: "r-r4-1", subjectSlug: "READING", levelCode: "R4", difficulty: 0.85, question: "What does 'enormous' mean?", options: ["Very small", "Very large", "Very fast", "Very old"], correctIndex: 1, skillTag: "vocabulary" },
-    { id: "r-r4-2", subjectSlug: "READING", levelCode: "R4", difficulty: 0.95, question: "What does the prefix 'un-' mean in 'unhappy'?", options: ["very", "not", "again", "before"], correctIndex: 1, skillTag: "vocabulary" },
-    { id: "r-r4-3", subjectSlug: "READING", levelCode: "R4", difficulty: 1.1, question: "What does 'context clues' mean?", options: ["Dictionary words", "Hints in the text that help figure out word meaning", "The title of a book", "The author's name"], correctIndex: 1, skillTag: "context-clues" },
+    { id: "r-r4-1", subjectSlug: "READING", levelCode: "R8", difficulty: 0.85, question: "What does 'enormous' mean?", options: ["Very small", "Very large", "Very fast", "Very old"], correctIndex: 1, skillTag: "vocabulary" },
+    { id: "r-r4-2", subjectSlug: "READING", levelCode: "R8", difficulty: 0.95, question: "What does the prefix 'un-' mean in 'unhappy'?", options: ["very", "not", "again", "before"], correctIndex: 1, skillTag: "vocabulary" },
+    { id: "r-r4-3", subjectSlug: "READING", levelCode: "R8", difficulty: 1.1, question: "What does 'context clues' mean?", options: ["Dictionary words", "Hints in the text that help figure out word meaning", "The title of a book", "The author's name"], correctIndex: 1, skillTag: "context-clues" },
 
     // R5 — Comprehension (1.15–1.4)
-    { id: "r-r5-1", subjectSlug: "READING", levelCode: "R5", difficulty: 1.15, question: "What is the purpose of a topic sentence?", options: ["End paragraph", "Introduce main idea", "Give example", "Ask question"], correctIndex: 1, skillTag: "comprehension" },
-    { id: "r-r5-2", subjectSlug: "READING", levelCode: "R5", difficulty: 1.3, question: "Read: 'The dog barked all night. The neighbors could not sleep.' What is the effect?", options: ["Dog was hungry", "Neighbors lost sleep", "Dog was happy", "Neighbors barked"], correctIndex: 1, skillTag: "cause-effect" },
-    { id: "r-r5-3", subjectSlug: "READING", levelCode: "R5", difficulty: 1.4, question: "What does 'main idea' mean in a passage?", options: ["The first sentence", "The most important point", "The last sentence", "A supporting detail"], correctIndex: 1, skillTag: "main-idea" },
+    { id: "r-r5-1", subjectSlug: "READING", levelCode: "R13", difficulty: 1.15, question: "What is the purpose of a topic sentence?", options: ["End paragraph", "Introduce main idea", "Give example", "Ask question"], correctIndex: 1, skillTag: "comprehension" },
+    { id: "r-r5-2", subjectSlug: "READING", levelCode: "R13", difficulty: 1.3, question: "Read: 'The dog barked all night. The neighbors could not sleep.' What is the effect?", options: ["Dog was hungry", "Neighbors lost sleep", "Dog was happy", "Neighbors barked"], correctIndex: 1, skillTag: "cause-effect" },
+    { id: "r-r5-3", subjectSlug: "READING", levelCode: "R13", difficulty: 1.4, question: "What does 'main idea' mean in a passage?", options: ["The first sentence", "The most important point", "The last sentence", "A supporting detail"], correctIndex: 1, skillTag: "main-idea" },
 
     // R6 — Literary Devices (1.5–1.8)
-    { id: "r-r6-1", subjectSlug: "READING", levelCode: "R6", difficulty: 1.5, question: "What is a synonym for 'swift'?", options: ["Slow", "Loud", "Fast", "Heavy"], correctIndex: 2, skillTag: "synonyms" },
-    { id: "r-r6-2", subjectSlug: "READING", levelCode: "R6", difficulty: 1.65, question: "'Her smile was a ray of sunshine.' This is an example of:", options: ["Simile", "Metaphor", "Alliteration", "Onomatopoeia"], correctIndex: 1, skillTag: "figurative" },
-    { id: "r-r6-3", subjectSlug: "READING", levelCode: "R6", difficulty: 1.8, question: "'The wind whispered through the trees.' This is an example of:", options: ["Simile", "Metaphor", "Personification", "Hyperbole"], correctIndex: 2, skillTag: "figurative" },
+    { id: "r-r6-1", subjectSlug: "READING", levelCode: "R19", difficulty: 1.5, question: "What is a synonym for 'swift'?", options: ["Slow", "Loud", "Fast", "Heavy"], correctIndex: 2, skillTag: "synonyms" },
+    { id: "r-r6-2", subjectSlug: "READING", levelCode: "R19", difficulty: 1.65, question: "'Her smile was a ray of sunshine.' This is an example of:", options: ["Simile", "Metaphor", "Alliteration", "Onomatopoeia"], correctIndex: 1, skillTag: "figurative" },
+    { id: "r-r6-3", subjectSlug: "READING", levelCode: "R19", difficulty: 1.8, question: "'The wind whispered through the trees.' This is an example of:", options: ["Simile", "Metaphor", "Personification", "Hyperbole"], correctIndex: 2, skillTag: "figurative" },
 
     // R7 — Text Analysis (1.85–2.2)
-    { id: "r-r7-1", subjectSlug: "READING", levelCode: "R7", difficulty: 1.85, question: "The sun smiled down on us — this uses which device?", options: ["Simile", "Metaphor", "Personification", "Alliteration"], correctIndex: 2, skillTag: "analysis" },
-    { id: "r-r7-2", subjectSlug: "READING", levelCode: "R7", difficulty: 2.0, question: "What is the difference between 'theme' and 'topic'?", options: ["They are the same", "Theme is the subject; topic is the message", "Topic is the subject; theme is the deeper message", "Neither exists in fiction"], correctIndex: 2, skillTag: "analysis" },
-    { id: "r-r7-3", subjectSlug: "READING", levelCode: "R7", difficulty: 2.2, question: "What does 'point of view' mean in a story?", options: ["The ending of the story", "The narrator's perspective", "The setting", "The conflict"], correctIndex: 1, skillTag: "analysis" },
+    { id: "r-r7-1", subjectSlug: "READING", levelCode: "R20", difficulty: 1.85, question: "The sun smiled down on us — this uses which device?", options: ["Simile", "Metaphor", "Personification", "Alliteration"], correctIndex: 2, skillTag: "analysis" },
+    { id: "r-r7-2", subjectSlug: "READING", levelCode: "R20", difficulty: 2.0, question: "What is the difference between 'theme' and 'topic'?", options: ["They are the same", "Theme is the subject; topic is the message", "Topic is the subject; theme is the deeper message", "Neither exists in fiction"], correctIndex: 2, skillTag: "analysis" },
+    { id: "r-r7-3", subjectSlug: "READING", levelCode: "R20", difficulty: 2.2, question: "What does 'point of view' mean in a story?", options: ["The ending of the story", "The narrator's perspective", "The setting", "The conflict"], correctIndex: 1, skillTag: "analysis" },
 
     // R8 — Critical Reading (2.3–2.6)
-    { id: "r-r8-1", subjectSlug: "READING", levelCode: "R8", difficulty: 2.3, question: "What is the author's tone?", options: ["Loudness of the text", "The writer's attitude or feeling", "Story length", "Number of characters"], correctIndex: 1, skillTag: "tone" },
-    { id: "r-r8-2", subjectSlug: "READING", levelCode: "R8", difficulty: 2.5, question: "What is an 'inference'?", options: ["A direct quote", "A conclusion drawn from evidence", "A summary", "A definition"], correctIndex: 1, skillTag: "inference" },
-    { id: "r-r8-3", subjectSlug: "READING", levelCode: "R8", difficulty: 2.6, question: "What is the difference between a primary and secondary source?", options: ["No difference", "Primary is firsthand; secondary interprets primary sources", "Secondary is more reliable", "Primary sources are always books"], correctIndex: 1, skillTag: "sources" },
+    { id: "r-r8-1", subjectSlug: "READING", levelCode: "R25", difficulty: 2.3, question: "What is the author's tone?", options: ["Loudness of the text", "The writer's attitude or feeling", "Story length", "Number of characters"], correctIndex: 1, skillTag: "tone" },
+    { id: "r-r8-2", subjectSlug: "READING", levelCode: "R25", difficulty: 2.5, question: "What is an 'inference'?", options: ["A direct quote", "A conclusion drawn from evidence", "A summary", "A definition"], correctIndex: 1, skillTag: "inference" },
+    { id: "r-r8-3", subjectSlug: "READING", levelCode: "R25", difficulty: 2.6, question: "What is the difference between a primary and secondary source?", options: ["No difference", "Primary is firsthand; secondary interprets primary sources", "Secondary is more reliable", "Primary sources are always books"], correctIndex: 1, skillTag: "sources" },
 
     // R9 — Advanced Analysis (2.7–3.0)
-    { id: "r-r9-1", subjectSlug: "READING", levelCode: "R9", difficulty: 2.7, question: "What is an 'argument's claim'?", options: ["Evidence", "The main point the author is trying to prove", "A counterargument", "A conclusion"], correctIndex: 1, skillTag: "argument" },
-    { id: "r-r9-2", subjectSlug: "READING", levelCode: "R9", difficulty: 2.85, question: "What makes an argument 'credible'?", options: ["It is long", "It uses reliable evidence and logical reasoning", "It uses emotional language", "It has many examples"], correctIndex: 1, skillTag: "argument" },
-    { id: "r-r9-3", subjectSlug: "READING", levelCode: "R9", difficulty: 3.0, question: "What is a 'rhetorical device'?", options: ["A grammar mistake", "A technique used to persuade or engage the reader", "A type of poem", "A story structure"], correctIndex: 1, skillTag: "rhetoric" },
+    { id: "r-r9-1", subjectSlug: "READING", levelCode: "R31", difficulty: 2.7, question: "What is an 'argument's claim'?", options: ["Evidence", "The main point the author is trying to prove", "A counterargument", "A conclusion"], correctIndex: 1, skillTag: "argument" },
+    { id: "r-r9-2", subjectSlug: "READING", levelCode: "R31", difficulty: 2.85, question: "What makes an argument 'credible'?", options: ["It is long", "It uses reliable evidence and logical reasoning", "It uses emotional language", "It has many examples"], correctIndex: 1, skillTag: "argument" },
+    { id: "r-r9-3", subjectSlug: "READING", levelCode: "R31", difficulty: 3.0, question: "What is a 'rhetorical device'?", options: ["A grammar mistake", "A technique used to persuade or engage the reader", "A type of poem", "A story structure"], correctIndex: 1, skillTag: "rhetoric" },
   ],
 
   WRITING: [
@@ -314,23 +314,36 @@ export async function calculatePlacement(
   });
   if (!subject) throw new Error("Subject not found");
 
-  const maxOrder = Math.max(...subject.levels.map((l) => l.sortOrder));
   const accuracyPct = (correctCount / totalQuestions) * 100;
 
-  // Blend difficulty estimate + accuracy for placement
-  // A child who gets many right at high difficulty → higher level
-  // A child who struggles at low difficulty → lower level
-  const placementScore = finalDifficulty * 0.75 + (accuracyPct / 100) * 3.0 * 0.25;
-  const targetOrder = Math.round((placementScore / 3.0) * maxOrder);
+  // ── Map ability → level using the ACTUAL per-level difficulty bands ──
+  // The adaptive test's `finalDifficulty` is on the SAME 0.1–3.0 scale as each
+  // placement question's difficulty (M1 ≈ 0.2, M5 ≈ 1.05, M8 ≈ 1.8 …). Placing
+  // by that band — instead of linearly rescaling [0.1,3] onto [1,maxOrder] and
+  // adding an accuracy term that only pushes UP — stops the old over-placement
+  // (a multiplication-capable child was landing on M8 Decimals).
+  const bank = placementBanks[subjectSlug] ?? [];
+  const repDiff = (code: string): number | null => {
+    const ds = bank.filter((q) => q.levelCode === code).map((q) => q.difficulty);
+    return ds.length ? ds.reduce((a, b) => a + b, 0) / ds.length : null;
+  };
+  const candidates = subject.levels
+    .map((l) => ({ l, d: repDiff(l.code) }))
+    .filter((x): x is { l: typeof x.l; d: number } => x.d != null)
+    .sort((a, b) => a.l.sortOrder - b.l.sortOrder);
 
-  // Clamp to available levels
-  const clamped = Math.max(1, Math.min(maxOrder, targetOrder));
-
-  const closest = subject.levels.reduce((best, lvl) =>
-    Math.abs(lvl.sortOrder - clamped) < Math.abs(best.sortOrder - clamped)
-      ? lvl
-      : best
-  );
+  // Highest level the child can COMFORTABLY handle: rep difficulty ≤ ability.
+  let closest = candidates.length ? candidates[0].l : subject.levels[0];
+  for (const c of candidates) {
+    if (c.d <= finalDifficulty + 0.05) closest = c.l;
+    else break;
+  }
+  // Conservative (Kumon) start: if accuracy was weak, begin one level lower so
+  // the child starts on solid ground and builds confidence rather than frustration.
+  if (accuracyPct < 60) {
+    const idx = subject.levels.findIndex((l) => l.id === closest.id);
+    if (idx > 0) closest = subject.levels[idx - 1];
+  }
 
   const confidence = calculateConfidence(totalQuestions, correctCount, finalDifficulty);
 
@@ -353,4 +366,155 @@ export function getQuestionById(
   return (
     (placementBanks[subjectSlug] ?? []).find((q) => q.id === questionId) ?? null
   );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LADDER placement (v2) — Kumon-style intake.
+//
+//   • ASCENT: start at the very EASIEST level ("1+1"-easy) and, while the child
+//     is perfect, ask ONE question per level climbing upward — early questions
+//     build confidence, and a strong student ascends quickly.
+//   • FIRST MISTAKE → VERIFICATION: drop to the PREVIOUS level and serve ALL of
+//     its questions. Answering every question at a level correctly certifies it
+//     as the child's "comfortable" level → PLACE AT THE NEXT LEVEL. Any miss
+//     during verification steps down another level and verifies there.
+//   • A miss on the lowest level (or stepping below it) places at level 1.
+//   • Hard cap MAX_QUESTIONS_PER_SUBJECT — on cap, the highest clean level wins.
+//
+// The whole ladder is recomputed statelessly from the answer log, so the state
+// machine can't drift from what was actually asked and answered.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface LadderLogEntry { questionId: string; correct: boolean }
+
+interface LadderLevel { code: string; questions: PlacementQuestion[] }
+
+function ladderLevels(subjectSlug: string): LadderLevel[] {
+  const bank = placementBanks[subjectSlug] ?? [];
+  const byCode = new Map<string, PlacementQuestion[]>();
+  for (const q of bank) {
+    if (!byCode.has(q.levelCode)) byCode.set(q.levelCode, []);
+    byCode.get(q.levelCode)!.push(q);
+  }
+  return [...byCode.entries()]
+    .map(([code, questions]) => ({ code, questions: questions.sort((a, b) => a.difficulty - b.difficulty) }))
+    .sort((a, b) => a.questions[0].difficulty - b.questions[0].difficulty);
+}
+
+export type LadderStep =
+  | { done: false; question: PlacementQuestion }
+  | { done: true; comfortableLevelCode: string | null };
+
+export function ladderNext(subjectSlug: string, log: LadderLogEntry[]): LadderStep {
+  const levels = ladderLevels(subjectSlug);
+  if (!levels.length) return { done: true, comfortableLevelCode: null };
+
+  // Resolve each log entry to its level index.
+  const levelIdxOf = (qid: string): number =>
+    levels.findIndex((l) => l.questions.some((q) => q.id === qid));
+  const askedIds = new Set(log.map((e) => e.questionId));
+  const stats = levels.map((l) => {
+    const entries = log.filter((e) => l.questions.some((q) => q.id === e.questionId));
+    return {
+      asked: entries.length,
+      wrong: entries.filter((e) => !e.correct).length,
+      total: l.questions.length,
+    };
+  });
+
+  // Highest level with at least one answer and ZERO wrong — the cap fallback.
+  const highestCleanIdx = (): number => {
+    for (let i = levels.length - 1; i >= 0; i--) {
+      if (stats[i].asked > 0 && stats[i].wrong === 0) return i;
+    }
+    return -1;
+  };
+
+  // Hard cap.
+  if (log.length >= MAX_QUESTIONS_PER_SUBJECT) {
+    const hi = highestCleanIdx();
+    return { done: true, comfortableLevelCode: hi >= 0 ? levels[hi].code : null };
+  }
+
+  const wrongs = log.filter((e) => !e.correct);
+
+  // ── ASCENT: no mistakes yet → one question per level, climbing. ──
+  const ascend = (fromIdx: number): LadderStep => {
+    for (let i = fromIdx; i < levels.length; i++) {
+      if (stats[i].asked === 0) {
+        return { done: false, question: levels[i].questions[0] };
+      }
+    }
+    // Clean run to the top → comfortable at the highest clean level.
+    const hi = highestCleanIdx();
+    return { done: true, comfortableLevelCode: hi >= 0 ? levels[hi].code : levels[levels.length - 1].code };
+  };
+  if (wrongs.length === 0) return ascend(0);
+
+  // ── A mistake happened. ONE miss might just be a slip/typo — RE-TEST the
+  // same level with its remaining questions before concluding anything. ──
+  const lastWrongIdx = levelIdxOf(wrongs[wrongs.length - 1].questionId);
+  const L = stats[lastWrongIdx];
+  if (L.wrong === 1) {
+    // Retry phase: keep testing THIS level.
+    const nextQ = levels[lastWrongIdx].questions.find((q) => !askedIds.has(q.id));
+    if (nextQ) return { done: false, question: nextQ };
+    // Answered every other question at this level correctly → the single miss
+    // was a slip. Forgive it and RESUME the ascent above this level.
+    return ascend(lastWrongIdx + 1);
+  }
+
+  // ── CONFIRMED struggle (2+ wrong at the level) → verification: walk down
+  // from the level below, certifying the first level the student clears. A
+  // single slip is forgiven at certification too (when the level has ≥3
+  // questions and every other answer was correct) — one typo must never
+  // out-vote an otherwise perfect level. 2+ wrong = genuine struggle → down.
+  const clearable = (s: { wrong: number; total: number }) =>
+    s.wrong === 0 || (s.wrong === 1 && s.total >= 3);
+  for (let t = lastWrongIdx - 1; t >= 0; t--) {
+    if (!clearable(stats[t])) continue;               // genuinely struggled here → keep stepping down
+    if (stats[t].asked === stats[t].total) {
+      return { done: true, comfortableLevelCode: levels[t].code }; // level cleared → certified
+    }
+    const nextQ = levels[t].questions.find((q) => !askedIds.has(q.id));
+    if (nextQ) return { done: false, question: nextQ };
+    return { done: true, comfortableLevelCode: levels[t].code };
+  }
+
+  // Confirmed struggle on the lowest level (or no clean level below) → no
+  // certified level; the student starts at the very first level.
+  return { done: true, comfortableLevelCode: null };
+}
+
+// Map the certified "comfortable" level → the ASSIGNED level (the next one up).
+export async function calculateLadderPlacement(
+  subjectSlug: string,
+  comfortableLevelCode: string | null,
+  correctCount: number,
+  totalQuestions: number
+): Promise<PlacementResult> {
+  const subject = await db.subject.findUnique({
+    where: { slug: subjectSlug as any },
+    include: { levels: { orderBy: { sortOrder: "asc" } } },
+  });
+  if (!subject) throw new Error("Subject not found");
+
+  let assigned = subject.levels[0];
+  if (comfortableLevelCode) {
+    const idx = subject.levels.findIndex((l) => l.code === comfortableLevelCode);
+    // Place at the NEXT level after the fully-cleared one (clamped at the top).
+    assigned = subject.levels[Math.min(idx + 1, subject.levels.length - 1)] ?? subject.levels[0];
+  }
+
+  const accuracyPct = totalQuestions ? (correctCount / totalQuestions) * 100 : 0;
+  return {
+    subjectSlug,
+    subjectName: subject.name,
+    assignedLevelCode: assigned.code,
+    assignedLevelName: assigned.name,
+    confidenceScore: calculateConfidence(totalQuestions, correctCount, 0),
+    correctCount,
+    totalQuestions,
+    accuracyPct,
+  };
 }

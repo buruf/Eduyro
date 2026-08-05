@@ -619,8 +619,14 @@ export function generateProgressiveSheet(
   if (skill === "FRACTIONS" || isArithmeticSkill(skill) || isAdvancedSkill(skill) || isGeometrySkill(skill)) {
     if (!auto) return cleanEngine(problemCount)!;
     // Peek the sheet's question types with a cheap sample, then fill the page.
+    // Cap arithmetic at 30 so flat single-digit sheets don't balloon to 36 while
+    // tall stacked sheets sit at ~24 — keeps the printed count uniform (24–30,
+    // all divisible by the 3-column grid after the renderer's even-column trim).
     const sample = cleanEngine(8)!.problems.map((p) => p.question);
-    return cleanEngine(adaptiveCount(sample))!;
+    // Cap page-fill at 30 for every clean-engine skill so flat sheets don't
+    // balloon to 36 while tall/stacked sheets sit at ~24 — keeps the printed
+    // count uniform (and divisible by the 3-column grid after the renderer trim).
+    return cleanEngine(adaptiveCount(sample, 30))!;
   }
 
   // Legacy micro-skill path — unreachable for clean-engine skills (incl. GEOMETRY),
