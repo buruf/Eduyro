@@ -22,7 +22,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
-    "audit:lessons": "tsx scripts/audit-lesson-coherence.ts && tsx scripts/audit-nonmath-coherence.ts && tsx scripts/audit-tutorial-visuals.ts && tsx scripts/audit-example-depth.ts && tsx scripts/audit-shop-lesson-depth.ts && tsx scripts/audit-lesson-coverage.ts && tsx scripts/test-decodability.ts && tsx scripts/audit-decodable-texts.ts && tsx scripts/audit-word-items.ts && tsx scripts/test-passage-qa.ts && tsx scripts/audit-passages.ts && tsx scripts/audit-sheet-self-containment.ts",
+    "audit:lessons": "tsx scripts/audit-lesson-coherence.ts && tsx scripts/audit-nonmath-coherence.ts && tsx scripts/audit-tutorial-visuals.ts && tsx scripts/audit-example-depth.ts && tsx scripts/audit-shop-lesson-depth.ts && tsx scripts/audit-lesson-coverage.ts && tsx scripts/test-decodability.ts && tsx scripts/audit-decodable-texts.ts && tsx scripts/audit-word-items.ts && tsx scripts/test-passage-qa.ts && tsx scripts/audit-passages.ts && tsx scripts/audit-sheet-self-containment.ts && tsx scripts/test-item-mastery.ts",
     "audit:reading": "tsx scripts/test-decodability.ts && tsx scripts/audit-decodable-texts.ts && tsx scripts/audit-word-items.ts && tsx scripts/test-passage-qa.ts && tsx scripts/audit-passages.ts && tsx scripts/audit-sheet-self-containment.ts"
   },
   "dependencies": {
