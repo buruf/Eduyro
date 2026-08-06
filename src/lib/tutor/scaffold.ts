@@ -72,6 +72,54 @@ export function buildScaffold(
   const q = clean(question).replace(/\s*=\s*\?\s*$/, " =").replace(/\s+=$/, " =");
   const A = String(correct);
 
+  // ── "Break apart to multiply" (M5 bridge unit) ─────────────────────────────
+  // These stems contain TWO multiplications, so they must be handled before the
+  // ordinary a×b handlers mis-parse them. Each stage gets a computed decision
+  // procedure — never the bland "rule out the choices" fallback.
+  {
+    // "23 × 3   Step 1: 20 × 3 =" / "Step 2: 3 × 3 ="
+    // NOTE: `clean()` collapses whitespace and strips the terminal "=" — match
+    // the post-clean form, not the raw stem.
+    const step = q.match(/^(\d{2}) × (\d) Step ([12]): (\d+) × \d$/);
+    if (step) {
+      const [, whole, mult, which, part] = step;
+      return which === "1"
+        ? { explanation: `Multiply just the TENS part of ${whole}.`,
+            hints: [`${whole} breaks into ${part} + ${Number(whole) % 10}. This step only wants the tens: ${part} × ${mult}.`,
+                    `${part} is ${Number(part) / 10} tens. ${Number(part) / 10} tens × ${mult} = ${(Number(part) / 10) * Number(mult)} tens.`,
+                    `${(Number(part) / 10) * Number(mult)} tens is ${A}.`], answer: A }
+        : { explanation: `Multiply just the ONES part of ${whole}.`,
+            hints: [`The ones digit of ${whole} is ${part}. This step only wants ${part} × ${mult}.`,
+                    `That's a times-table fact you know: ${part} × ${mult} = ${A}.`], answer: A };
+    }
+    // "20 × 3 = 60 and 3 × 3 = 9. So 23 × 3 ="
+    const comb = q.match(/^(\d+) × \d = (\d+) and \d+ × \d = (\d+)\. So (\d+) × (\d)$/);
+    if (comb) {
+      const [, , p1, p2, whole, mult] = comb;
+      return { explanation: `Add the two parts you already found.`,
+        hints: [`Both pieces of ${whole} × ${mult} are done: ${p1} and ${p2}. The answer is their SUM, not their product.`,
+                `${p1} + ${p2} = ${A}.`], answer: A };
+    }
+    // "34 × 2 = (30 × 2) + (___ × 2)"
+    const split = q.match(/^(\d{2}) × (\d) = \((\d+) × \d\) \+ \(___ × \d\)$/);
+    if (split) {
+      const [, whole, , tens] = split;
+      return { explanation: `Find the missing part of the break-apart.`,
+        hints: [`${whole} = ${tens} + something. What's left after the tens?`,
+                `${whole} − ${tens} = ${A}. The ones digit of ${whole} is the missing piece.`], answer: A };
+    }
+    // "Break apart: 34 × 2 = (30 × 2) + (4 × 2) ="
+    const oneLine = q.match(/^Break apart: (\d{2}) × (\d) = \((\d+) × (\d)\) \+ \((\d) × \d\)$/);
+    if (oneLine) {
+      const [, , , tens, mult, ones] = oneLine;
+      const pT = Number(tens) * Number(mult), pO = Number(ones) * Number(mult);
+      return { explanation: `Work each bracket, then add.`,
+        hints: [`First bracket: ${tens} × ${mult} = ${pT}.`,
+                `Second bracket: ${ones} × ${mult} = ${pO}.`,
+                `${pT} + ${pO} = ${A}.`], answer: A };
+    }
+  }
+
   // ── Figure markers "[[viz kind n m …]]" — geometry figures get geometry
   // hints; fraction pictures (pie/bar/hexa…) get shaded-over-total. (Previously
   // EVERY marker was treated as a fraction → a right triangle got "Shaded parts".)

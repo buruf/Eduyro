@@ -215,6 +215,43 @@ function divFormats(items: DFact[]): AProblem[] {
 }
 
 // ── MULTIPLICATION enumerators ────────────────────────────────────────────────
+// ── "Break apart to multiply" (the M5 bridge unit) ───────────────────────────
+// Expert-designed bridge between fact recall (×10/11/12) and the written
+// 2-digit × 1-digit algorithm: 27 × 4 was the first non-lookup question in the
+// whole level and nothing taught the split. Three item stages, sequenced by
+// `diff` so the unit's sheet ramp walks them in order:
+//   1. SCAFFOLDED STEPS  — "23 × 3  Step 1: 20 × 3 =" / "Step 2: 3 × 3 =" /
+//      combine. Each step is its own graded item, which is also the diagnostic:
+//      step-1 misses = place value, step-2 = facts, combine = the addition load.
+//   2. SPLIT PRACTICE    — "34 × 2 = (30 × 2) + (___ × 2)" and one-line splits.
+//   3. BARE VERTICAL     — plain "23 × 3" (stacked in the UI), still NO
+//      regrouping anywhere: every partial product stays ≤ 9 by construction.
+// Regrouping is deliberately absent — it is the NEXT unit's job. Teaching the
+// split on carry-free numbers first is the whole point of the bridge.
+function enumBreakApart(): AProblem[] {
+  const out: AProblem[] = [];
+  for (let a = 12; a <= 99; a++) {
+    const tens = Math.floor(a / 10), ones = a % 10;
+    if (ones === 0) continue; // 30 × 2 has no split to practise
+    for (let b = 2; b <= 9; b++) {
+      // BOTH partial products single-digit → no regrouping anywhere.
+      if (tens * b > 9 || ones * b > 9) continue;
+      const pT = tens * 10 * b, pO = ones * b, prod = a * b;
+      const base = a * b; // bigger numbers later within each stage
+      // Stage 1 — scaffolded steps (three separate graded items).
+      out.push({ q: `${a} × ${b}   Step 1: ${tens * 10} × ${b} =`, a: String(pT), diff: base, key: `ba1-${a}x${b}`, strat: "break-apart" });
+      out.push({ q: `${a} × ${b}   Step 2: ${ones} × ${b} =`, a: String(pO), diff: base + 1, key: `ba2-${a}x${b}`, strat: "break-apart" });
+      out.push({ q: `${tens * 10} × ${b} = ${pT} and ${ones} × ${b} = ${pO}. So ${a} × ${b} =`, a: String(prod), diff: base + 2, key: `ba3-${a}x${b}`, strat: "break-apart" });
+      // Stage 2 — the split itself, then a one-line split.
+      out.push({ q: `${a} × ${b} = (${tens * 10} × ${b}) + (___ × ${b})`, a: String(ones), diff: 400 + base, key: `ba4-${a}x${b}`, strat: "break-apart" });
+      out.push({ q: `Break apart: ${a} × ${b} = (${tens * 10} × ${b}) + (${ones} × ${b}) =`, a: String(prod), diff: 500 + base, key: `ba5-${a}x${b}`, strat: "break-apart" });
+      // Stage 3 — bare (renders stacked; carry boxes appear but stay empty).
+      out.push({ q: `${a} × ${b}`, a: String(prod), diff: 900 + base, key: `ba6-${a}x${b}`, strat: "break-apart" });
+    }
+  }
+  return out;
+}
+
 function enumMul(aLo: number, aHi: number, bLo: number, bHi: number, carry?: boolean): AProblem[] {
   const out: AProblem[] = [];
   eachPair(aLo, aHi, bLo, bHi, (a, b) => {
@@ -304,8 +341,13 @@ const CURRICULA: Record<string, Unit[]> = {
     { id:"mul-3-4", label:"×3 and ×4 (build from ×2)", objective:"Student multiplies by 3 and 4 building on doubles", grade:"Grade 3-4", stars:3, range:[13,22], pool:()=>spiral(mulFormats(mTables([3,4],"build-up")), mulFormats(mSquares()), mulFormats(mTables([2,5,10],"skip-count")), "m4"), example:{ problem:"4 × 7 =", steps:["Double 7 is 14","Double again: 28"], answer:"28" } },
     { id:"mul-6-9", label:"×6, ×7, ×8, ×9 (the hard facts)", objective:"Student recalls the 6–9 times tables", grade:"Grade 4", stars:4, range:[23,36], pool:()=>spiral(mulFormats(mTables([6,7,8,9],"hard-facts")), mulFormats(mTables([3,4],"build-up")), mulFormats(mSquares()), "m5"), example:{ problem:"7 × 8 =", steps:["7 × 8 = 56"], answer:"56" } },
     { id:"mul-fact-family", label:"Fact families & missing factor", objective:"Student uses the ×/÷ inverse to find missing factors", grade:"Grade 4", stars:4, range:[37,48], pool:()=>spiral(mulFormats(mAll()), mulFormats(mTables([6,7,8,9],"hard-facts")), mulFormats(mTables([3,4],"build-up")), "m6"), example:{ problem:"6 × ___ = 48", steps:["48 ÷ 6 = 8"], answer:"8" } },
-    { id:"mul-10-12", label:"×10, ×11, ×12", objective:"Student recalls the 10, 11 and 12 times tables", grade:"Grade 4", stars:3, range:[49,58], pool:()=>spiral(mulFormats(mTables([10,11,12],"big-tables")), mulFormats(mAll()), [], "m7"), example:{ problem:"12 × 7 =", steps:["12 × 7 = 84"], answer:"84" } },
-    { id:"mul-2d1d", label:"2-digit × 1-digit", objective:"Student multiplies a 2-digit number by 1 digit (with carrying)", grade:"Grade 4-5", stars:5, range:[59,76], pool:()=>[...enumMul(11,41,2,4,false), ...enumMul(12,99,2,9,true), ...enumMissingFactor(2,12,2,12)], example:{ problem:"47 × 6 =", steps:["6 × 7 = 42 → write 2 carry 4","6 × 4 = 24 + 4 = 28","Answer: 282"], answer:"282" } },
+    // ×11/×12 demoted 10→4 sheets (expert: ~4 sheets of value, and 3 days of
+    // low-value drill sat right before the level's hardest transition).
+    { id:"mul-10-12", label:"×10, ×11, ×12", objective:"Student recalls the 10, 11 and 12 times tables", grade:"Grade 4", stars:3, range:[49,52], pool:()=>spiral(mulFormats(mTables([10,11,12],"big-tables")), mulFormats(mAll()), [], "m7"), example:{ problem:"12 × 7 =", steps:["12 × 7 = 84"], answer:"84" } },
+    // THE BRIDGE (see enumBreakApart). "27 × 4" was the first question in the
+    // level that wasn't a fact lookup; this unit teaches the split first.
+    { id:"mul-break-apart", label:"Break apart to multiply (no carrying)", objective:"Student splits a 2-digit number into tens and ones, multiplies each piece, and adds the two answers together", grade:"Grade 4", stars:4, range:[53,62], pool:()=>enumBreakApart(), example:{ problem:"23 × 3 =", steps:["Break 23 into 20 + 3","20 × 3 = 60","3 × 3 = 9","60 + 9 = 69"], answer:"69" } },
+    { id:"mul-2d1d", label:"2-digit × 1-digit", objective:"Student multiplies a 2-digit number by 1 digit (with carrying)", grade:"Grade 4-5", stars:5, range:[63,76], pool:()=>[...enumMul(11,41,2,4,false), ...enumMul(12,99,2,9,true), ...enumMissingFactor(2,12,2,12)], example:{ problem:"47 × 6 =", steps:["6 × 7 = 42 → write 2 carry 4","6 × 4 = 24 + 4 = 28","Answer: 282"], answer:"282" } },
     { id:"mul-2d2d", label:"2-digit × 2-digit", objective:"Student multiplies two 2-digit numbers", grade:"Grade 5", stars:5, range:[77,92], pool:()=>[...enumMul(11,99,11,99), ...det(mulFormats(mAll()), 20, "m9p")], example:{ problem:"23 × 14 =", steps:["23 × 4 = 92","23 × 10 = 230","92 + 230 = 322"], answer:"322" } },
     { id:"mul-review", label:"Mixed review", objective:"Student multiplies fluently across all types", grade:"Grade 5", stars:5, range:[93,100], pool:()=>[...enumMul(2,12,2,12), ...enumMul(12,99,2,9), ...enumMissingFactor(2,12,2,12)], example:{ problem:"38 × 7 =", steps:["7 × 8 = 56 → 6 carry 5","7 × 3 = 21 + 5 = 26","Answer: 266"], answer:"266" } },
   ],

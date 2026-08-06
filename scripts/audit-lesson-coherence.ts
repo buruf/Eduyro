@@ -93,7 +93,9 @@ const COMPAT: Partial<Record<Tag, Tag[]>> = {
   decimal: ["decimal", "percent", "fraction", "place-value", "addition", "subtraction", "multiplication", "division"],
   percent: ["percent", "decimal", "fraction", "multiplication", "ratio"],
   ratio: ["ratio", "fraction", "multiplication", "division"],
-  multiplication: ["multiplication", "division", "addition", "counting", "exponent"],
+  // place-value added for the M5 bridge ("splits into tens and ones") — the
+  // reverse direction (place-value → multiplication) was already accepted.
+  multiplication: ["multiplication", "division", "addition", "counting", "exponent", "place-value"],
   division: ["division", "multiplication", "fraction"],
   addition: ["addition", "subtraction", "counting", "place-value", "equation"],
   subtraction: ["subtraction", "addition", "counting", "place-value", "equation"],
