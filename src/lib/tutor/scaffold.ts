@@ -92,7 +92,32 @@ export function buildScaffold(
             hints: [`The ones digit of ${whole} is ${part}. This step only wants ${part} × ${mult}.`,
                     `That's a times-table fact you know: ${part} × ${mult} = ${A}.`], answer: A };
     }
-    // "20 × 3 = 60 and 3 × 3 = 9. So 23 × 3 ="
+    // Multiplying-tens paired stem: "2 × 7 = 14, so 20 × 7 =" (also hundreds).
+    const paired = q.match(/^(\d) × (\d) = (\d+), so (\d+) × \d$/);
+    if (paired) {
+      const [, f, m, prod, big] = paired;
+      const unit = big.length === 3 ? "hundreds" : "tens";
+      const n = Number(big) / (big.length === 3 ? 100 : 10);
+      return { explanation: `Use the fact you already know.`,
+        hints: [`${big} is ${n} ${unit}. So this is ${n} ${unit} × ${m}.`,
+                `${f} × ${m} = ${prod}, so ${n} ${unit} × ${m} = ${prod} ${unit}.`,
+                `${prod} ${unit} is ${A}.`], answer: A };
+    }
+    // Carrying-unit scaffold: "27 × 3   Ones first: 7 × 3 =" / "Tens: 20 × 3 ="
+    const carryStep = q.match(/^(\d{2}) × (\d) (Ones first|Tens): (\d+) × \d$/);
+    if (carryStep) {
+      const [, whole, mult, which, part] = carryStep;
+      return which === "Ones first"
+        ? { explanation: `The algorithm starts with the ones.`,
+            hints: [`The ones digit of ${whole} is ${part}. Multiply it first: ${part} × ${mult}.`,
+                    `${part} × ${mult} = ${A}. If it's 10 or more, the tens digit of it becomes the carry.`], answer: A }
+        : { explanation: `Now the tens — multiply FIRST, then add any carry.`,
+            hints: [`The tens part of ${whole} is ${part}. This step wants ${part} × ${mult} on its own.`,
+                    `${part} × ${mult} = ${A}. (The carry gets added AFTER multiplying — never before.)`], answer: A };
+    }
+    // "20 × 3 = 60 and 3 × 3 = 9. So 23 × 3 =" (also matches the carrying
+    // unit's ones-first combine — the guidance "add the two pieces" is right
+    // for both)
     const comb = q.match(/^(\d+) × \d = (\d+) and \d+ × \d = (\d+)\. So (\d+) × (\d)$/);
     if (comb) {
       const [, , p1, p2, whole, mult] = comb;

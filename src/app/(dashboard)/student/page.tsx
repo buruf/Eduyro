@@ -535,6 +535,7 @@ export default function StudentDashboardPage() {
                       const bar = lp.thresholdPct ?? 90;
                       if (lp.dayCleared) return <p className="text-[11px] text-brand-green mt-1.5">🎉 Lesson cleared at {lp.todayAvgPct}%! The next lesson unlocks tomorrow.</p>;
                       if (lp.slowToday) return <p className="text-[11px] text-muted mt-1.5">Great accuracy — {lp.todayAvgPct}%! Now speed: these are facts to <em>remember</em>, not work out{lp.paceTargetSec ? ` (aim for about ${lp.paceTargetSec} seconds a question)` : ""}. You'll practise this lesson again tomorrow to get quicker.</p>;
+                      if (lp.learningDay) return <p className="text-[11px] text-brand-blue mt-1.5">🌱 Learning day — this is a brand-new kind of problem. Finish today's {need} sheets and you move on; your score doesn't count against you today.</p>;
                       if (done >= need) return <p className="text-[11px] text-muted mt-1.5">So close — today's average is {lp.todayAvgPct}%. Reach {bar}%+ to unlock the next lesson.</p>;
                       return <p className="text-[11px] text-muted mt-1.5">Finish today's {need} sheets at {bar}%+ to unlock the next lesson.</p>;
                     })()}

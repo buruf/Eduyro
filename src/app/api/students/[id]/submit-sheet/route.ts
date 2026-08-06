@@ -10,6 +10,7 @@ import { SubmitSheetSchema } from "@/lib/validation/schemas";
 import { answersMatch } from "@/lib/grading";
 import { getMathLevelSkills } from "@/lib/worksheet/generator";
 import { isSheetFluent, isSheetOnPace, isAccurateButSlow, skillLabelFromTitle } from "@/lib/mastery/fluency";
+import { isAlgorithmUnit } from "@/lib/shop/arithmetic-engine";
 import { startOfDay, isSameDay, subDays } from "date-fns";
 import type { GradedAnswer, SheetResult } from "@/types";
 
@@ -291,8 +292,26 @@ async function updateProgressAndMastery(
       levelCode: level.code, skillLabel: skillLabelFromTitle(s.worksheet?.title),
       timeSeconds: s.timeSeconds, problemCount: s.totalProblems,
     }));
+  // LEARNING DAY (expert rule): the FIRST day a child meets an algorithm unit
+  // (a multi-step written procedure, not fact recall), the day clears on
+  // COMPLETION, not accuracy — grading day 1 of an algorithm at >=90% evaluates
+  // the child on the acquisition day. Applies only when no sheet of this unit
+  // was completed on any earlier day. MUST match the dashboard's computation.
+  const todayLabel = skillLabelFromTitle(todaySheets[todaySheets.length - 1]?.worksheet?.title);
+  let learningDay = false;
+  if (isAlgorithmUnit(todayLabel)) {
+    const earlier = await tx.completedSheet.findFirst({
+      where: {
+        studentId,
+        worksheet: { levelId, title: { contains: todayLabel! } },
+        completedAt: { lt: today },
+      },
+      select: { id: true },
+    });
+    learningDay = !earlier;
+  }
   // Trigger exactly once — on the sheet that COMPLETES the day's quota at ≥ threshold AND on pace.
-  const dayCleared = todayCount === sheetsPerDay && todayAvg >= level.masteryThresholdPct && allFluent;
+  const dayCleared = todayCount === sheetsPerDay && (learningDay || (todayAvg >= level.masteryThresholdPct && allFluent));
 
   // Streak display: days-in-a-row at ≥ threshold.
   const recentDays = await tx.dailyAccuracy.findMany({

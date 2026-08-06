@@ -8,6 +8,7 @@ import {
 import { startOfDay, subDays, format } from "date-fns";
 import { generateProblems, getMathSheetMeta, nonMathDistinctSheets, nonMathBankQuestions, getMathLevelSkills } from "@/lib/worksheet/generator";
 import { computeItemMastery, type ItemMastery } from "@/lib/worksheet/item-mastery";
+import { isAlgorithmUnit } from "@/lib/shop/arithmetic-engine";
 import { masteryTarget, isSkillMastered } from "@/lib/mastery";
 import { isSheetOnPace, skillLabelFromTitle, factPaceTargetSec } from "@/lib/mastery/fluency";
 import { buildTodayPacket, skillCompletionStats, itemMasteryBySkill } from "@/lib/worksheet/today-packet";
@@ -152,7 +153,18 @@ export async function GET(
         const slowToday = todayDone > 0 && todayAvg >= threshold && !todayAllFluent;
         // Advancement clears at the LEVEL quota (lvlPerDay) — a raised practice
         // cap only adds extra sheets, it doesn't move the advancement bar.
-        const dayCleared = todayDone >= lvlPerDay && todayAvg >= threshold && todayAllFluent;
+        // LEARNING DAY — first day on an algorithm unit clears on COMPLETION,
+        // not accuracy (MUST match submit-sheet's computation).
+        const dashLabel = skillLabelFromTitle(todayLevelSheets[todayLevelSheets.length - 1]?.worksheet?.title) ?? curSkill?.label;
+        let learningDay = false;
+        if (isAlgorithmUnit(dashLabel)) {
+          const earlier = await db.completedSheet.findFirst({
+            where: { studentId: student.id, worksheet: { levelId: activeProgress.level.id, title: { contains: dashLabel! } }, completedAt: { lt: todayStart } },
+            select: { id: true },
+          });
+          learningDay = !earlier;
+        }
+        const dayCleared = todayDone >= lvlPerDay && (learningDay || (todayAvg >= threshold && todayAllFluent));
         levelProgress = {
           levelCode: activeProgress.level.code,
           levelName: activeProgress.level.name,
@@ -174,6 +186,7 @@ export async function GET(
           // True when today's fact sheets were accurate but too slow — the UI
           // shows "great accuracy, now build speed" and the sheets repeat.
           slowToday,
+          learningDay,
           progressPct: mathSkills.length ? Math.round((skillIdx / mathSkills.length) * 100) : 0,
           // Back-compat with older UI (advancement bar = level quota):
           masterySheetsPassed: todayDone,

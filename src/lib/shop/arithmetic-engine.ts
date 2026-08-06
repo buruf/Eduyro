@@ -252,6 +252,69 @@ function enumBreakApart(): AProblem[] {
   return out;
 }
 
+// ── "Multiplying tens" (bridge prerequisite) ─────────────────────────────────
+// 20 × 4 is NOT in the times table — it's the first conceptual (non-lookup)
+// multiplication and the first blank of every break-apart split. Taught as
+// "2 tens × 4 = 8 tens", never "just add a zero" (that shortcut resurfaces as
+// 3.4 × 10 = 3.40 two levels later in decimals).
+function enumMulTens(): AProblem[] {
+  const out: AProblem[] = [];
+  for (let t = 2; t <= 9; t++) for (let b = 2; b <= 9; b++) {
+    const tens = t * 10, prod = tens * b;
+    // Stage 1 — the fact PAIRED with its ×10 partner (the key item type).
+    out.push({ q: `${t} × ${b} = ${t * b}, so ${tens} × ${b} =`, a: String(prod), diff: t * b, key: `mt1-${t}x${b}`, strat: "mul-tens" });
+    // Stage 2 — bare, both operand orders.
+    out.push({ q: `${tens} × ${b} =`, a: String(prod), diff: 200 + t * b, key: `mt2-${t}x${b}`, strat: "mul-tens" });
+    out.push({ q: `${b} × ${tens} =`, a: String(prod), diff: 220 + t * b, key: `mt3-${t}x${b}`, strat: "mul-tens" });
+    // Stage 3 — reverse (missing factor) + hundreds.
+    out.push({ q: `___ × ${b} = ${prod}`, a: String(tens), diff: 400 + t * b, key: `mt4-${t}x${b}`, strat: "mul-tens" });
+    out.push({ q: `${t * 100} × ${b} =`, a: String(t * 100 * b), diff: 600 + t * b, key: `mt5-${t}x${b}`, strat: "mul-tens" });
+  }
+  return out;
+}
+
+// ── "Carrying in multiplication" (the regrouping unit) ───────────────────────
+// Sequenced AFTER the split is solid so the carried digit has meaning. Stages:
+// ones-column regroup only (2-digit answers) → mixed regroup/no-regroup (the
+// child must DECIDE) → 3-digit products. The worked example spells the order
+// "multiply, THEN add the carry" — the #1 misconception is adding the carry to
+// the tens digit before multiplying (27 × 4 → 168 instead of 108).
+function enumMulCarry(): AProblem[] {
+  const out: AProblem[] = [];
+  for (let a = 13; a <= 99; a++) {
+    const tens = Math.floor(a / 10), ones = a % 10;
+    if (ones === 0) continue;
+    for (let b = 2; b <= 9; b++) {
+      const carry = Math.floor((ones * b) / 10);
+      const prod = a * b;
+      if (carry === 0) {
+        // No-regroup problems appear only in the mixed stage — the decision set.
+        if (tens * b <= 9) out.push({ q: `${a} × ${b}`, a: String(prod), diff: 450 + a, key: `mc0-${a}x${b}`, strat: "mul-carry" });
+        continue;
+      }
+      if (tens * b + carry <= 9) {
+        const pO = ones * b, pT = tens * 10 * b;
+        // Stage 1 — scaffolded, same structure as the break-apart unit but with
+        // the regroup inside. Ones FIRST (the algorithm's order), then tens,
+        // then combine. Three graded items per pair floods the gentle band so
+        // the first sheets stay gentle under the wide selection window.
+        out.push({ q: `${a} × ${b}   Ones first: ${ones} × ${b} =`, a: String(pO), diff: a, key: `mc1a-${a}x${b}`, strat: "mul-carry" });
+        out.push({ q: `${a} × ${b}   Tens: ${tens * 10} × ${b} =`, a: String(pT), diff: a + 1, key: `mc1b-${a}x${b}`, strat: "mul-carry" });
+        out.push({ q: `${ones} × ${b} = ${pO} and ${tens * 10} × ${b} = ${pT}. So ${a} × ${b} =`, a: String(prod), diff: a + 2, key: `mc1c-${a}x${b}`, strat: "mul-carry" });
+        // Stage 2 — the same pairs bare (regroup in the ones, 2-digit answer).
+        out.push({ q: `${a} × ${b}`, a: String(prod), diff: 500 + a, key: `mc2-${a}x${b}`, strat: "mul-carry" });
+      } else if (prod >= 100 && (a + b) % 3 !== 0 && a % 2 === 1) {
+        // Stage 3: full regroup, 3-digit answers — strided to ~1/3, because
+        // unthinned this set dwarfs the gentle stages and the selector's wide
+        // window makes even the FIRST carrying sheet hard-dominant (caught by
+        // test-break-apart's carry-mix check).
+        out.push({ q: `${a} × ${b}`, a: String(prod), diff: 900 + a, key: `mc3-${a}x${b}`, strat: "mul-carry" });
+      }
+    }
+  }
+  return out;
+}
+
 function enumMul(aLo: number, aHi: number, bLo: number, bHi: number, carry?: boolean): AProblem[] {
   const out: AProblem[] = [];
   eachPair(aLo, aHi, bLo, bHi, (a, b) => {
@@ -344,12 +407,15 @@ const CURRICULA: Record<string, Unit[]> = {
     // ×11/×12 demoted 10→4 sheets (expert: ~4 sheets of value, and 3 days of
     // low-value drill sat right before the level's hardest transition).
     { id:"mul-10-12", label:"×10, ×11, ×12", objective:"Student recalls the 10, 11 and 12 times tables", grade:"Grade 4", stars:3, range:[49,52], pool:()=>spiral(mulFormats(mTables([10,11,12],"big-tables")), mulFormats(mAll()), [], "m7"), example:{ problem:"12 × 7 =", steps:["12 × 7 = 84"], answer:"84" } },
-    // THE BRIDGE (see enumBreakApart). "27 × 4" was the first question in the
-    // level that wasn't a fact lookup; this unit teaches the split first.
-    { id:"mul-break-apart", label:"Break apart to multiply (no carrying)", objective:"Student splits a 2-digit number into tens and ones, multiplies each piece, and adds the two answers together", grade:"Grade 4", stars:4, range:[53,62], pool:()=>enumBreakApart(), example:{ problem:"23 × 3 =", steps:["Break 23 into 20 + 3","20 × 3 = 60","3 × 3 = 9","60 + 9 = 69"], answer:"69" } },
-    { id:"mul-2d1d", label:"2-digit × 1-digit", objective:"Student multiplies a 2-digit number by 1 digit (with carrying)", grade:"Grade 4-5", stars:5, range:[63,76], pool:()=>[...enumMul(11,41,2,4,false), ...enumMul(12,99,2,9,true), ...enumMissingFactor(2,12,2,12)], example:{ problem:"47 × 6 =", steps:["6 × 7 = 42 → write 2 carry 4","6 × 4 = 24 + 4 = 28","Answer: 282"], answer:"282" } },
-    { id:"mul-2d2d", label:"2-digit × 2-digit", objective:"Student multiplies two 2-digit numbers", grade:"Grade 5", stars:5, range:[77,92], pool:()=>[...enumMul(11,99,11,99), ...det(mulFormats(mAll()), 20, "m9p")], example:{ problem:"23 × 14 =", steps:["23 × 4 = 92","23 × 10 = 230","92 + 230 = 322"], answer:"322" } },
-    { id:"mul-review", label:"Mixed review", objective:"Student multiplies fluently across all types", grade:"Grade 5", stars:5, range:[93,100], pool:()=>[...enumMul(2,12,2,12), ...enumMul(12,99,2,9), ...enumMissingFactor(2,12,2,12)], example:{ problem:"38 × 7 =", steps:["7 × 8 = 56 → 6 carry 5","7 × 3 = 21 + 5 = 26","Answer: 266"], answer:"266" } },
+    // THE BRIDGE SEQUENCE (expert-designed): multiplying tens → break apart →
+    // carrying. "27 × 4" was the first question in the level that wasn't a fact
+    // lookup; these three units teach the concept before the algorithm.
+    { id:"mul-tens", label:"Multiplying tens (20 × 3)", objective:"Student multiplies tens by a single digit using the matching fact (2 tens × 4 = 8 tens)", grade:"Grade 4", stars:3, range:[53,58], pool:()=>enumMulTens(), example:{ problem:"20 × 4 =", steps:["20 is 2 tens","2 tens × 4 = 8 tens","8 tens = 80"], answer:"80" } },
+    { id:"mul-break-apart", label:"Break apart to multiply (no carrying)", objective:"Student splits a 2-digit number into tens and ones, multiplies each piece, and adds the two answers together", grade:"Grade 4", stars:4, range:[59,68], pool:()=>enumBreakApart(), example:{ problem:"23 × 3 =", steps:["Break 23 into 20 + 3","20 × 3 = 60","3 × 3 = 9","60 + 9 = 69"], answer:"69" } },
+    { id:"mul-carry", label:"Carrying in multiplication", objective:"Student multiplies the ones, writes the ones digit and carries, then multiplies the tens and adds the carry AFTER multiplying", grade:"Grade 4-5", stars:5, range:[69,78], pool:()=>enumMulCarry(), example:{ problem:"27 × 4 =", steps:["Ones: 7 × 4 = 28 → write 8, carry 2","Tens: 2 × 4 = 8 — multiply FIRST","THEN add the carry: 8 + 2 = 10","Answer: 108"], answer:"108" } },
+    { id:"mul-2d1d", label:"2-digit × 1-digit", objective:"Student multiplies a 2-digit number by 1 digit (with carrying)", grade:"Grade 4-5", stars:5, range:[79,84], pool:()=>[...enumMul(11,41,2,4,false), ...enumMul(12,99,2,9,true), ...enumMissingFactor(2,12,2,12)], example:{ problem:"47 × 6 =", steps:["6 × 7 = 42 → write 2 carry 4","6 × 4 = 24 + 4 = 28","Answer: 282"], answer:"282" } },
+    { id:"mul-2d2d", label:"2-digit × 2-digit", objective:"Student multiplies two 2-digit numbers", grade:"Grade 5", stars:5, range:[85,96], pool:()=>[...enumMul(11,99,11,99), ...det(mulFormats(mAll()), 20, "m9p")], example:{ problem:"23 × 14 =", steps:["23 × 4 = 92","23 × 10 = 230","92 + 230 = 322"], answer:"322" } },
+    { id:"mul-review", label:"Mixed review", objective:"Student multiplies fluently across all types", grade:"Grade 5", stars:5, range:[97,100], pool:()=>[...enumMul(2,12,2,12), ...enumMul(12,99,2,9), ...enumMissingFactor(2,12,2,12)], example:{ problem:"38 × 7 =", steps:["7 × 8 = 56 → 6 carry 5","7 × 3 = 21 + 5 = 26","Answer: 266"], answer:"266" } },
   ],
 
   // Strategy-staged (inverse of multiplication): ÷2/5/10 → identity → squares →
@@ -464,6 +530,28 @@ export function getArithmeticMicroLesson(label: string): { goal: string; bigIdea
 
 export function isArithmeticSkill(skill: string): boolean {
   return skill in CURRICULA;
+}
+
+/**
+ * ALGORITHM units — multi-step written procedures, as opposed to fact recall.
+ * Expert finding (the Ridwan incident): algorithm acquisition is a step
+ * function, so grading day 1 of one of these units at >=90% evaluates the
+ * child ON the acquisition day — they were "mathematically guaranteed to fail".
+ * The day-clear gate uses this to grant a LEARNING DAY (advance on completion,
+ * not accuracy) the first day a child meets one of these units.
+ */
+const ALGORITHM_UNIT_LABELS = new Set([
+  "Break apart to multiply (no carrying)",
+  "Carrying in multiplication",
+  "2-digit × 1-digit",
+  "2-digit × 2-digit",
+  "2-digit addition (regrouping)",
+  "2-digit subtraction (regrouping)",
+  "Division with remainders",
+  "2-digit & 3-digit ÷ 1-digit",
+]);
+export function isAlgorithmUnit(label: string | null | undefined): boolean {
+  return !!label && ALGORITHM_UNIT_LABELS.has(label);
 }
 
 // Ordered skill map (real content units) for an arithmetic skill.
