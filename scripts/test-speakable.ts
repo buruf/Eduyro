@@ -2,6 +2,10 @@
 import { speakable } from "../src/lib/tts/speakable";
 
 const cases: [string, string][] = [
+  // Skip-count framing (Ridwan field report: arrow→comma made number soup —
+  // "three times four, three, six, nine, twelve").
+  ["Skip-count to get there: 3 × 4 → 3, 6, 9, 12", "Skip-count to get there: 3 times 4 — count: 3, 6, 9, 12"],
+  ["x → y", "x, y"],
   ["d/dx x²", "the derivative of x squared"],
   ["d/dx 3x²", "the derivative of 3 x squared"],
   ["d/dx 8x⁵", "the derivative of 8 x to the power of 5"],

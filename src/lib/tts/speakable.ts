@@ -33,6 +33,11 @@ export function speakable(raw: string): string {
   // Arrows and list glyphs are VISUAL flow markers — a human teacher pauses,
   // she doesn't say "right arrow" (field report from the fraction lesson).
   s = s
+    // An arrow INTO a number list is a skip-count ("3 × 4 → 3, 6, 9, 12").
+    // Replacing the arrow with a bare comma made it number soup — "three times
+    // four, three, six, nine, twelve" (field report: Ridwan's tutorial). Frame
+    // it the way a teacher would.
+    .replace(/\s*(?:→|⇒|⟶)\s*(?=\d+(?:\s*,\s*\d+){2,})/g, " — count: ")
     .replace(/\s*(?:→|⇒|⟶)\s*/g, ", ")
     .replace(/\s*↔\s*/g, " to ")
     .replace(/[✓✗•▪◦↓↑]/g, " ");

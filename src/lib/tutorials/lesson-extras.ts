@@ -90,7 +90,11 @@ const FAMILIES: Family[] = [
   {
     match: /skip count|times table|×\s*\d|\bx\d|multiplication fact/i,
     why: "Times tables are the backbone of all later math — fractions, division, algebra. Skip-counting builds them: 3, 6, 9, 12 IS the 3 times table.",
-    rule: ["a × b = b groups of a", "Skip-count to get there: 3 × 4 → 3, 6, 9, 12", "Order doesn't matter: 3 × 8 = 8 × 3", "Aim to just KNOW them"],
+    // Concrete numbers, not "a × b" — the narrator reads these aloud, and
+    // "a times b equals b groups of a" is meaningless SPOKEN to a 9-year-old.
+    // Field report (Ridwan's tutorial): "the teacher is making sounds no one
+    // understands."
+    rule: ["3 × 4 means 4 groups of 3", "Skip-count to get there: count by 3s — 3, 6, 9, 12", "Order doesn't matter: 3 × 8 = 8 × 3", "Aim to just KNOW them"],
     mistakes: [
       { wrong: "7 × 0 = 7", right: "Zero groups of anything is 0" },
       { wrong: "Re-counting 6 × 8 every time", right: "Practise until it's instant — that's the goal" },

@@ -152,7 +152,14 @@ export function NarrationConductor({
         {mode === "loading" ? "…" : playing ? "❚❚" : "▶"}
       </button>
       <span className="text-xs text-muted">
-        {playing ? <><span className="inline-block w-2 h-2 rounded-full bg-brand-green animate-pulse mr-1.5" />Your teacher is reading the highlighted part…</> : "Listen to the lesson"}
+        {/* Only claim a highlight when the script actually carries section ids —
+            the level-level "Review tutorial" script has none, and telling the
+            child to look for a highlight that doesn't exist is confusing
+            (field report: Ridwan). */}
+        {playing
+          ? <><span className="inline-block w-2 h-2 rounded-full bg-brand-green animate-pulse mr-1.5" />
+              {sections.some((s) => s.id) ? "Your teacher is reading the highlighted part…" : "Your teacher is reading the lesson…"}</>
+          : "Listen to the lesson"}
       </span>
       {mode === "browser" && <span className="ml-auto text-[10px] text-muted" title="Cloned voice unavailable — using the browser voice.">browser voice</span>}
     </div>
