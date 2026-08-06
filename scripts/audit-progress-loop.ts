@@ -139,8 +139,14 @@ const warn = (who: string, check: string, detail: string) => warns.push({ who, c
     for (const r of rs.slice(0, 6)) console.log(`    ${r.who}: ${r.detail}`);
     if (rs.length > 6) console.log(`    …and ${rs.length - 6} more`);
   }
+  const realWarns = warns.filter((w) => !w.who.includes("eduyro.test"));
+  if (warns.length) {
+    console.log(`\n⚠ warnings — admin set-skill and placement legitimately cause these; review, not failures:`);
+    for (const w of realWarns) console.log(`    ${w.check}: ${w.who}: ${w.detail}`);
+    console.log(`    (+${warns.length - realWarns.length} on QA fixtures, suppressed)`);
+  }
   console.log(`\nstudents checked: ${checked}`);
-  console.log(`${rows.length === 0 ? "✅" : "❌"} progress-loop failures: ${rows.length}`);
+  console.log(`${rows.length === 0 ? "✅" : "❌"} progress-loop failures: ${rows.length} (warnings: ${realWarns.length})`);
   await db.$disconnect();
   process.exit(rows.length ? 1 : 0);
 })();
