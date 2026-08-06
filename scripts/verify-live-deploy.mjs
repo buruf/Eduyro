@@ -12,7 +12,9 @@
 import { execSync } from "node:child_process";
 
 const DOMAIN = "https://eduyro.com";
-const expected = process.argv[2] || null;
+// Accept the id with or without the dpl_ prefix (CLI output omits it).
+const raw = process.argv[2] || null;
+const expected = raw ? (raw.startsWith("dpl_") ? raw : `dpl_${raw}`) : null;
 
 function sh(cmd) { try { return execSync(cmd, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); } catch { return ""; } }
 

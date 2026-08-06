@@ -128,22 +128,25 @@ export async function parseRequest<T>(
 }
 
 // ─────────────────────────────────────────────
-// Rate limiting (simple in-memory, swap for Redis in prod)
+// Rate limiting (Upstash Redis, shared across instances;
+// in-memory fallback when Redis is unconfigured/unreachable)
 // ─────────────────────────────────────────────
 
-// NOTE: this Map is per-serverless-instance and resets on cold start, so it is a
-// best-effort speed-bump, NOT a durable control. A determined attacker fans out
-// across instances. Back critical limits with Redis/Upstash for real protection.
+import { Redis } from "@upstash/redis";
+
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? Redis.fromEnv()
+    : null;
+
+// Fallback Map is per-serverless-instance and resets on cold start — a
+// best-effort speed-bump only. Real protection requires the Redis path.
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
-export function rateLimit(
-  identifier: string,
-  limit: number,
-  windowMs: number
-): boolean {
+function rateLimitInMemory(identifier: string, limit: number, windowMs: number): boolean {
   const now = Date.now();
 
-  // Bounded memory: prune expired entries when the map grows (was never evicted).
+  // Bounded memory: prune expired entries when the map grows.
   if (rateLimitMap.size > 5000) {
     for (const [k, v] of rateLimitMap) if (now > v.resetAt) rateLimitMap.delete(k);
   }
@@ -161,17 +164,37 @@ export function rateLimit(
   return true; // allowed
 }
 
-export function withRateLimit(
+// Fixed-window counter: INCR the key, set the TTL on first hit.
+export async function rateLimit(
+  identifier: string,
+  limit: number,
+  windowMs: number
+): Promise<boolean> {
+  if (!redis) return rateLimitInMemory(identifier, limit, windowMs);
+
+  try {
+    const key = `rl:${identifier}`;
+    const count = await redis.incr(key);
+    if (count === 1) await redis.pexpire(key, windowMs);
+    return count <= limit;
+  } catch {
+    // Redis unreachable — degrade to the per-instance limiter rather than
+    // blocking all traffic or letting everything through untracked.
+    return rateLimitInMemory(identifier, limit, windowMs);
+  }
+}
+
+export async function withRateLimit(
   req: NextRequest,
   limit: number,
   windowMs: number
-): NextResponse | null {
+): Promise<NextResponse | null> {
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     req.headers.get("x-real-ip") ??
     "unknown";
 
-  const allowed = rateLimit(`${req.nextUrl.pathname}:${ip}`, limit, windowMs);
+  const allowed = await rateLimit(`${req.nextUrl.pathname}:${ip}`, limit, windowMs);
   if (!allowed) {
     return err("Too many requests. Please slow down.", 429, "RATE_LIMITED");
   }

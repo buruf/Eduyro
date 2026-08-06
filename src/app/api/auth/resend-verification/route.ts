@@ -9,7 +9,7 @@ import { ok, err, handleRouteError, withRateLimit } from "@/lib/api/helpers";
 import { nanoid } from "nanoid";
 
 export async function POST(req: NextRequest) {
-  const limited = withRateLimit(req, 3, 60_000); // 3 per minute
+  const limited = await withRateLimit(req, 3, 60_000); // 3 per minute
   if (limited) return limited;
 
   try {

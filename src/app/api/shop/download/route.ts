@@ -10,7 +10,7 @@ import { getFreshDownloadUrl } from "@/lib/shop/fulfillment";
 import { SHOP_SKILLS, type ShopSkill } from "@/lib/shop/pack-generator";
 
 export async function GET(req: NextRequest) {
-  const limited = withRateLimit(req, 30, 60_000);
+  const limited = await withRateLimit(req, 30, 60_000);
   if (limited) return limited;
 
   const url = new URL(req.url);

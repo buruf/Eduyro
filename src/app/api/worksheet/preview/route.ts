@@ -24,7 +24,7 @@ const PreviewSchema = z.object({
 
 export async function POST(req: NextRequest) {
   // 30 requests per minute is plenty for a UI tool and blocks scraping
-  const limited = withRateLimit(req, 30, 60_000);
+  const limited = await withRateLimit(req, 30, 60_000);
   if (limited) return limited;
 
   const parsed = await parseRequest(req, PreviewSchema);

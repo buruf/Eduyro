@@ -17,7 +17,7 @@ import { recordConsent, getRequestCountry, getClientIp } from "@/lib/compliance/
 import { nanoid } from "nanoid";
 
 export async function POST(req: NextRequest) {
-  const limited = withRateLimit(req, 5, 60_000); // 5 per minute
+  const limited = await withRateLimit(req, 5, 60_000); // 5 per minute
   if (limited) return limited;
 
   const parsed = await parseRequest(req, RegisterSchema);

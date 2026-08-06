@@ -23,7 +23,7 @@ const esc = (s: string) =>
   String(s).replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c] as string));
 
 export async function POST(req: NextRequest) {
-  const limited = withRateLimit(req, 5, 60_000); // 5/min per IP
+  const limited = await withRateLimit(req, 5, 60_000); // 5/min per IP
   if (limited) return limited;
 
   const parsed = await parseRequest(req, ContactSchema);
