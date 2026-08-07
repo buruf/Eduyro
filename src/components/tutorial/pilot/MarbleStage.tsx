@@ -104,6 +104,29 @@ function bagCenter(group: 1 | 2 | 3) {
   return group === 1 ? BAG1 : group === 2 ? BAG2 : BAG3;
 }
 
+/**
+ * Per-marble transition delay for the current phase, in ms. Marbles that are
+ * ARRIVING somewhere this phase leave their source one after another (a pour /
+ * stream), instead of the whole group teleporting in one motion. Marbles not
+ * moving this phase get 0 so nothing else feels laggy.
+ */
+function getMarbleDelay(phase: Phase, flatIndex: number): number {
+  const col = flatIndex % 30;
+  const row = Math.floor(flatIndex / 30);
+  const group = bagGroupForCol(col);
+  const within = col % 10; // position within its bag's ten
+  const pour = within * 70 + row * 35;
+
+  if (phase === "grid20" && group === 1) return pour;
+  if (phase === "wave1" && group === 1) return pour;
+  if (phase === "wave2" && group === 2) return pour;
+  if (phase === "wave3" && group === 3) return pour;
+  return 0;
+}
+
+// Longest stagger (9*70 + 1*35 = 665ms) + the .7s slide itself.
+const POUR_TOTAL_MS = 665 + 700;
+
 function getMarblePos(phase: Phase, flatIndex: number): Pos {
   const col = flatIndex % 30;
   const row = Math.floor(flatIndex / 30);
@@ -114,8 +137,9 @@ function getMarblePos(phase: Phase, flatIndex: number): Pos {
       return clusterPos(BAG1, flatIndex);
 
     case "bag1":
-      if (group === 1) return { ...clusterPos(BAG1, flatIndex), opacity: 0.9 };
-      return clusterPos(bagCenter(group), flatIndex);
+      // Marbles stay hidden inside the closed bag; they become visible as
+      // they pour out (staggered) on the grid20 transition.
+      return clusterPos(BAG1, flatIndex);
 
     case "grid20":
       if (group === 1) return gridPos(col, row);
@@ -151,38 +175,46 @@ function getMarblePos(phase: Phase, flatIndex: number): Pos {
 // its transition completes.
 const WAVE_LAST_INDEX: Record<1 | 2 | 3, number> = { 1: 39, 2: 49, 3: 59 };
 
+/**
+ * Pouch drawn centered on (0,0) and positioned via CSS transform, so both its
+ * position AND tilt can transition smoothly — that's what makes bag 1 visibly
+ * TIP OVER and pour (rather than one bag fading out and a tilted twin fading
+ * in, which reads as two different bags).
+ */
 function Pouch({
-  cx,
-  cy,
+  x,
+  y,
   opacity,
   tilt = 0,
 }: {
-  cx: number;
-  cy: number;
+  x: number;
+  y: number;
   opacity: number;
-  /** Degrees to rotate around the pouch center — used for the spilled bag 1. */
+  /** Degrees of tilt — animated for bag 1's tip-over. */
   tilt?: number;
 }) {
   return (
     <g
-      style={{ transition: "opacity .7s ease" }}
+      style={{
+        transition: "opacity .7s ease, transform .7s ease",
+        transform: `translate(${x}px, ${y}px) rotate(${tilt}deg)`,
+      }}
       opacity={opacity}
-      transform={tilt ? `rotate(${tilt} ${cx} ${cy})` : undefined}
       aria-hidden="true"
     >
       <path
-        d={`M ${cx - 34},${cy - 8}
-            Q ${cx - 36},${cy + 42} ${cx},${cy + 46}
-            Q ${cx + 36},${cy + 42} ${cx + 34},${cy - 8}
-            Q ${cx + 34},${cy - 32} ${cx},${cy - 28}
-            Q ${cx - 34},${cy - 32} ${cx - 34},${cy - 8}
+        d={`M -34,-8
+            Q -36,42 0,46
+            Q 36,42 34,-8
+            Q 34,-32 0,-28
+            Q -34,-32 -34,-8
             Z`}
         fill="#F5E8C8"
         stroke="#8A5E10"
         strokeWidth={2.5}
       />
       <path
-        d={`M ${cx - 14},${cy - 27} Q ${cx},${cy - 40} ${cx + 14},${cy - 27}`}
+        d={`M -14,-27 Q 0,-40 14,-27`}
         fill="none"
         stroke="#8A5E10"
         strokeWidth={2.5}
@@ -217,15 +249,19 @@ export default function MarbleStage({ phase, onWave }: MarbleStageProps) {
       if (firedForPhaseRef.current === phase) return;
       firedForPhaseRef.current = phase;
       onWave(waveForPhase);
-    }, 750);
+    }, POUR_TOTAL_MS + 100);
 
     return () => clearTimeout(timer);
   }, [phase, onWave]);
 
-  const pouch1Opacity = phase === "bag1" ? 1 : 0;
-  // Once bag 1 spills, its empty tipped shell stays beside the grid so the
-  // marbles still read as "bag 1's marbles" (and the bag count stays at 3).
-  const pouch1TippedOpacity = phase === "grid20" || phase === "bags3" ? 1 : 0;
+  // Bag 1 is ONE element through its whole story: upright center-stage, then
+  // it visibly tips over and slides beside the grid as its marbles pour out,
+  // and its empty shell stays there (so "three bags" still counts three).
+  const bag1Spilled = phase === "grid20" || phase === "bags3";
+  const pouch1Opacity = phase === "bag1" || bag1Spilled ? 1 : 0;
+  const pouch1X = bag1Spilled ? BAG1_TIPPED.x : BAG1.x;
+  const pouch1Y = bag1Spilled ? BAG1_TIPPED.y : BAG1.y;
+  const pouch1Tilt = bag1Spilled ? -75 : 0;
   const pouch2Opacity = phase === "bags3" || phase === "wave1" ? 1 : 0;
   const pouch3Opacity =
     phase === "bags3" || phase === "wave1" || phase === "wave2" ? 1 : 0;
@@ -256,19 +292,14 @@ export default function MarbleStage({ phase, onWave }: MarbleStageProps) {
       role="img"
       aria-label="Marble stage animation"
     >
-      <Pouch cx={BAG1.x} cy={BAG1.y} opacity={pouch1Opacity} />
-      <Pouch
-        cx={BAG1_TIPPED.x}
-        cy={BAG1_TIPPED.y}
-        opacity={pouch1TippedOpacity}
-        tilt={-75}
-      />
-      <Pouch cx={BAG2.x} cy={BAG2.y} opacity={pouch2Opacity} />
-      <Pouch cx={BAG3.x} cy={BAG3.y} opacity={pouch3Opacity} />
+      <Pouch x={pouch1X} y={pouch1Y} opacity={pouch1Opacity} tilt={pouch1Tilt} />
+      <Pouch x={BAG2.x} y={BAG2.y} opacity={pouch2Opacity} />
+      <Pouch x={BAG3.x} y={BAG3.y} opacity={pouch3Opacity} />
 
       {marbles.map((flatIndex) => {
         const row = Math.floor(flatIndex / 30);
         const { x, y, opacity } = getMarblePos(phase, flatIndex);
+        const delay = getMarbleDelay(phase, flatIndex);
         return (
           <circle
             key={flatIndex}
@@ -277,7 +308,9 @@ export default function MarbleStage({ phase, onWave }: MarbleStageProps) {
             r={MARBLE_R}
             fill={row === 0 ? GOLD : BLUE}
             opacity={opacity}
-            style={{ transition: "cx .7s ease, cy .7s ease, opacity .5s ease" }}
+            style={{
+              transition: `cx .7s ease ${delay}ms, cy .7s ease ${delay}ms, opacity .5s ease ${delay}ms`,
+            }}
             onTransitionEnd={(e) => handleTransitionEnd(flatIndex, e)}
           />
         );

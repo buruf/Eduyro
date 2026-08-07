@@ -390,6 +390,27 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
           <div className="relative w-full">
             <MarbleStage phase={phase} onWave={handleWave} />
 
+            {/* Friendly greeter for the hook line — a face + waving hand so
+                "Hey — I need your help" comes from SOMEONE. Fades out once the
+                bag spills and the math takes the stage. */}
+            {beat === 0 && hookStep === "bag1" && (
+              <div className="absolute top-2 left-4 pointer-events-none" aria-hidden="true">
+                <svg width="110" height="110" viewBox="0 0 110 110">
+                  {/* face */}
+                  <circle cx="55" cy="48" r="30" fill="#F5C97B" stroke="#8A5E10" strokeWidth="2.5" />
+                  {/* eyes */}
+                  <circle cx="45" cy="42" r="3.4" fill="#3B2A10" />
+                  <circle cx="65" cy="42" r="3.4" fill="#3B2A10" />
+                  {/* smile */}
+                  <path d="M 43,56 Q 55,66 67,56" fill="none" stroke="#3B2A10" strokeWidth="2.5" strokeLinecap="round" />
+                  {/* waving hand — rotates from the wrist */}
+                  <g style={{ transformOrigin: "94px 88px", animation: "pilot-wave 900ms ease-in-out infinite" }}>
+                    <path d="M 88,92 Q 86,74 94,68 Q 102,74 100,92 Z" fill="#F5C97B" stroke="#8A5E10" strokeWidth="2.5" strokeLinejoin="round" />
+                  </g>
+                </svg>
+              </div>
+            )}
+
             {beat === 2 && compressStep === "symbol" && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="text-4xl font-bold text-ink font-serif">
@@ -547,11 +568,17 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
         </div>
         )}
       </div>
-      <style jsx>{`
+      {/* global: these keyframes are referenced from inline `style` props,
+          which styled-jsx does not rewrite — scoped names would never match. */}
+      <style jsx global>{`
         @keyframes pilot-sparkle {
           0% { opacity: 0; transform: scale(0.5); }
           50% { opacity: 1; transform: scale(1.2); }
           100% { opacity: 0; transform: scale(1); }
+        }
+        @keyframes pilot-wave {
+          0%, 100% { transform: rotate(-14deg); }
+          50% { transform: rotate(22deg); }
         }
       `}</style>
     </div>
