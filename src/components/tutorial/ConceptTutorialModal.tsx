@@ -10,6 +10,7 @@ import { type ConceptTutorial, LESSON_FRAMING } from "@/lib/tutorials/concepts";
 import { getTutorial, type MicroLesson } from "@/lib/worksheet/tutorials";
 import { getLessonExtras, friendlyGoal } from "@/lib/tutorials/lesson-extras";
 import { NarrationConductor } from "@/components/NarrationConductor";
+import { useTutorialLog } from "@/hooks/useTutorialLog";
 import { MathText } from "@/components/MathText";
 import { SpecialTrianglesTable } from "./SpecialTrianglesTable";
 import { TutorialVisual, visualForSkill } from "./TutorialVisual";
@@ -32,6 +33,9 @@ interface Props {
   concept: ConceptTutorial;
   subjectSlug: string;
   skillName: string;
+  /** Owning student — threads into the tutorial funnel logger (baseline
+   *  vs pilot instrumentation, tutorial-redesign-pilot). */
+  studentId: string;
   /** The EXACT micro-skill the student is about to practice. When present its
    *  goal / big idea / worked example drive the lesson, so the tutorial always
    *  matches the upcoming questions (council rule). */
@@ -74,7 +78,17 @@ function ColorMath({ text }: { text: string }) {
 const XP_KEY = "bs:lesson-xp";
 const XP_PER_LESSON = 20;
 
-export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, microLesson, worksheetId, mode, questionCount, passPct, onStart, onClose }: Props) {
+export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, studentId, microLesson, worksheetId, mode, questionCount, passPct, onStart, onClose }: Props) {
+  // Baseline funnel logging for the EXISTING (old) tutorial — this run's data
+  // is the pilot's control group (tutorial-redesign-pilot Task 2).
+  const tlog = useTutorialLog({ studentId, skillId: skillName, variant: "old", enabled: open && mode === "first" });
+  const openedAtRef = useRef(Date.now());
+  const narrationStartedRef = useRef(false);
+  const playStartedAtRef = useRef<number | null>(null);
+  // audioPlayedMs is stored as a plain field server-side (last write wins on
+  // upsert, not accumulated) — so the client must track and send the
+  // RUNNING TOTAL across every play/pause segment, not just the latest delta.
+  const audioPlayedTotalRef = useRef(0);
   // Worked examples from the sheet the student is about to practise — one per
   // distinct question form, built server-side from the sheet's own problems.
   const [sheetExamples, setSheetExamples] = useState<SheetExample[]>([]);
@@ -157,11 +171,32 @@ export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, mi
   const [celebrate, setCelebrate] = useState<number | null>(null); // total XP
   // Bumped to ask the read-along to replay from the top (e.g. "I'm confused").
   const [replay, setReplay] = useState(0);
-  useEffect(() => { if (open) { setExIdx(0); setConfidence(null); setPredictPick(null); setCelebrate(null); } }, [open, skillName]);
+  useEffect(() => {
+    if (open) {
+      setExIdx(0); setConfidence(null); setPredictPick(null); setCelebrate(null);
+      openedAtRef.current = Date.now();
+      narrationStartedRef.current = false;
+      playStartedAtRef.current = null;
+      audioPlayedTotalRef.current = 0;
+    }
+  }, [open, skillName]);
 
   if (!open) return null;
 
+  // X / backdrop close without ever hitting "Start practising" — records the
+  // skip that the pilot is trying to reduce. No-op when mode !== "first"
+  // (tlog is disabled, so its calls are inert) or the lesson already finished.
+  const handleClose = () => {
+    if (mode === "first" && celebrate === null) {
+      tlog.log({ skipTapped: true, skipAtMs: Date.now() - openedAtRef.current });
+      tlog.end();
+    }
+    onClose();
+  };
+
   const finish = () => {
+    tlog.log({ beatIndex: 4 });
+    tlog.end();
     // First completion of a lesson earns XP + a short celebration; review
     // visits skip straight back to practice.
     if (mode !== "first") { onStart(); return; }
@@ -178,7 +213,7 @@ export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, mi
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       {/* z-[60]: must paint ABOVE the practice modal (z-50) — the lesson is now
           reachable mid-practice via the "See examples" button. */}
-      <div className="absolute inset-0 bg-ink/60" onClick={mode === "review" ? onClose : undefined} />
+      <div className="absolute inset-0 bg-ink/60" onClick={mode === "review" ? handleClose : undefined} />
       {/* overflow-anchor:none — the read-along transcript scrolls internally
           during narration, and Chrome's scroll anchoring was "helpfully"
           scrolling the MODAL down in sympathy (student saw the page jump to the
@@ -193,7 +228,7 @@ export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, mi
             <h2 className="font-serif text-xl font-bold leading-tight">{microLesson ? skillName : concept.title}</h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-cream/60 hover:text-cream text-xl leading-none mt-1"
             aria-label="Close tutorial"
           >
@@ -291,7 +326,20 @@ export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, mi
               box was redundant). `paused` freezes the animated visual too. */}
           <div className="mb-4">
             <NarrationConductor text={narration.text} sections={narration.sections} autoPlay replayNonce={replay}
-              onSection={setActiveSection} onPlayingChange={(p) => setPaused(!p)} />
+              onSection={setActiveSection} onPlayingChange={(p) => {
+                setPaused(!p);
+                if (p) {
+                  if (!narrationStartedRef.current) { narrationStartedRef.current = true; tlog.log({ beatIndex: 1 }); }
+                  playStartedAtRef.current = Date.now();
+                } else if (playStartedAtRef.current !== null) {
+                  const delta = Date.now() - playStartedAtRef.current;
+                  playStartedAtRef.current = null;
+                  if (delta > 0) {
+                    audioPlayedTotalRef.current += delta;
+                    tlog.log({ audioPlayedMs: audioPlayedTotalRef.current });
+                  }
+                }
+              }} />
           </div>
 
           {/* 🤔 Predict first — a tiny interaction before the examples locks the

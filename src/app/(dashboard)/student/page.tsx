@@ -603,6 +603,7 @@ export default function StudentDashboardPage() {
         <ConceptTutorialModal
           open={true}
           concept={conceptModal.concept}
+          studentId={data.student.id}
           subjectSlug={subjectNameToSlug(data.levelProgress?.subjectName)}
           // The lesson must teach the MICRO-SKILL the student is about to practise
           // (the unit label, e.g. "Perfect squares & square roots"), not the broad
