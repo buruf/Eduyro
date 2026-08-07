@@ -1046,6 +1046,10 @@ function PracticeModal({
     const submissionAnswers = problems.map((p) => ({
       problemId: p.id,
       answer: answers[p.id] ?? "",
+      // Per-problem first-try correctness (undefined for unanswered problems —
+      // omitted below so it isn't sent as `null`). Used by the tutorial-pilot
+      // report's primary metric; does not affect scoring/mastery.
+      ...(firstTry[p.id] !== undefined ? { firstTry: firstTry[p.id] } : {}),
     }));
 
     // Honest FIRST-TRY accuracy (retry-till-right makes the final answers all

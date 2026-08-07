@@ -64,6 +64,10 @@ export async function POST(
           isCorrect,
           points: isCorrect ? 1 : 0,
           explanation: correct?.explanation,
+          // Per-problem first-try correctness, passed through as-is from the
+          // client for the tutorial-pilot report's primary metric. Not used
+          // for scoring/mastery — those already use firstTryAccuracyPct.
+          ...(submission.firstTry !== undefined ? { firstTry: submission.firstTry } : {}),
         };
       });
 

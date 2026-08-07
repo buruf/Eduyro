@@ -143,17 +143,28 @@ async function main() {
       const firstSheet = await prisma.completedSheet.findFirst({
         where: { studentId: ev.studentId, worksheet: { title: { startsWith: label } } },
         orderBy: { completedAt: "asc" },
-        select: { answers: true },
+        select: { answers: true, accuracyPct: true },
       });
       if (!firstSheet) continue;
       const answers = Array.isArray(firstSheet.answers) ? firstSheet.answers : [];
       // "problems 4-24" = 1-indexed positions 4 through 24 -> 0-indexed
-      // slice [3, 24). answers[].isCorrect is the graded correctness of what
-      // was submitted for that problem (see submit-sheet route).
+      // slice [3, 24). Prefer answers[].firstTry (per-problem, client-honest
+      // first-try correctness) when the submission included it. Older rows
+      // (submitted before this field existed) have answers[].isCorrect ==
+      // FINAL correctness only (retry-till-right ⇒ ~always true), which is
+      // NOT a valid first-try proxy per problem — for those, fall back to the
+      // sheet-level accuracyPct (which IS the client's honest
+      // firstTryAccuracyPct when the client sent one, clamped to the final
+      // score — see submit-sheet route) and flag it as a fallback.
       const windowAnswers = answers.slice(3, 24);
       if (windowAnswers.length === 0) continue;
-      const correct = windowAnswers.filter((a) => a && a.isCorrect === true).length;
-      accuracies.push((correct / windowAnswers.length) * 100);
+      const withFirstTry = windowAnswers.filter((a) => a && typeof a.firstTry === "boolean");
+      if (withFirstTry.length > 0) {
+        const correct = withFirstTry.filter((a) => a.firstTry === true).length;
+        accuracies.push({ pct: (correct / withFirstTry.length) * 100, fallback: false });
+      } else {
+        accuracies.push({ pct: firstSheet.accuracyPct, fallback: true });
+      }
     }
 
     if (accuracies.length === 0) {
@@ -162,11 +173,14 @@ async function main() {
     }
 
     anyGroupHadData = true;
-    const avg = accuracies.reduce((a, b) => a + b, 0) / accuracies.length;
+    const pcts = accuracies.map((a) => a.pct);
+    const fallbackCount = accuracies.filter((a) => a.fallback).length;
+    const avg = pcts.reduce((a, b) => a + b, 0) / pcts.length;
+    const fallbackNote = fallbackCount > 0 ? ` (${fallbackCount}/${accuracies.length} sheet-level fallback)` : "";
     console.log(
       `  [${groupName}] students-with-sheet=${accuracies.length}/${events.length}  avgFirstTryAccuracy=${avg.toFixed(
         1
-      )}%  medianFirstTryAccuracy=${median(accuracies).toFixed(1)}%`
+      )}%  medianFirstTryAccuracy=${median(pcts).toFixed(1)}%${fallbackNote}`
     );
   }
   if (!anyGroupHadData) {

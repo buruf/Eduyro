@@ -61,6 +61,12 @@ export const SubmitSheetSchema = z.object({
         problemId: z.string(),
         answer: z.union([z.string(), z.number()]),
         timeMs: z.number().optional(),
+        // Per-problem first-try correctness, computed client-side by the
+        // retry-till-right practice modal. Optional/absent for paper
+        // submissions and unanswered problems. Persisted as-is on
+        // CompletedSheet.answers for the tutorial-pilot report's primary
+        // metric — never used for scoring/mastery (firstTryAccuracyPct is).
+        firstTry: z.boolean().optional(),
       })
     )
     .min(1, "No answers submitted"),

@@ -201,6 +201,9 @@ export interface GradedAnswer {
   isCorrect: boolean;
   points: number;
   explanation?: string;
+  // Per-problem first-try correctness (client-computed, retry-till-right
+  // practice). Optional — absent for paper submissions/unanswered problems.
+  firstTry?: boolean;
 }
 
 export interface SheetSubmission {
