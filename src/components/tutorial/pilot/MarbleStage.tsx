@@ -13,9 +13,13 @@ export type Phase =
   | "rods"
   | "symbol";
 
+/** Which row the counting beat is pointing at; the other row dims back. */
+export type Highlight = "none" | "gold" | "blue" | "both";
+
 interface MarbleStageProps {
   phase: Phase;
   onWave?: (n: 1 | 2 | 3) => void;
+  highlight?: Highlight;
 }
 
 // ---- stage geometry ----------------------------------------------------
@@ -248,7 +252,7 @@ function Pouch({
   );
 }
 
-export default function MarbleStage({ phase, onWave }: MarbleStageProps) {
+export default function MarbleStage({ phase, onWave, highlight = "none" }: MarbleStageProps) {
   const firedForPhaseRef = useRef<Phase | null>(null);
 
   useEffect(() => {
@@ -327,16 +331,20 @@ export default function MarbleStage({ phase, onWave }: MarbleStageProps) {
         const row = Math.floor(flatIndex / 30);
         const { x, y, opacity } = getMarblePos(phase, flatIndex);
         const delay = getMarbleDelay(phase, flatIndex);
+        // Counting beat: the row being counted swells slightly and the other
+        // one recedes, so "ten yellow" has something to point at.
+        const rowName = row === 0 ? "gold" : "blue";
+        const lit = highlight === "none" || highlight === "both" || highlight === rowName;
         return (
           <circle
             key={flatIndex}
             cx={x}
             cy={y}
-            r={MARBLE_R}
+            r={lit && highlight === rowName ? MARBLE_R * 1.25 : MARBLE_R}
             fill={row === 0 ? GOLD : BLUE}
-            opacity={opacity}
+            opacity={opacity * (lit ? 1 : 0.22)}
             style={{
-              transition: `cx .7s ease ${delay}ms, cy .7s ease ${delay}ms, opacity .5s ease ${delay}ms`,
+              transition: `cx .7s ease ${delay}ms, cy .7s ease ${delay}ms, opacity .5s ease ${delay}ms, r .35s ease`,
             }}
             onTransitionEnd={(e) => handleTransitionEnd(flatIndex, e)}
           />

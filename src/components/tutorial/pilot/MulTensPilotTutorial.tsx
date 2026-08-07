@@ -14,17 +14,34 @@
 
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import MarbleStage, { type Phase } from "./MarbleStage";
+import MarbleStage, { type Phase, type Highlight } from "./MarbleStage";
 import SkipCheck from "./SkipCheck";
 import { PILOT } from "./pilot-script";
 import { useTutorialLog } from "@/hooks/useTutorialLog";
 
 type Beat = 0 | 1 | 2 | 3 | 4;
 
-// Beat 0 sub-steps (hook).
-type HookStep = "bag1" | "grid20" | "bags3" | "guessed";
-// Beat 1 sub-steps (reveal).
-type RevealStep = "idle" | "wave1" | "wave1-done" | "wave2" | "wave2-done" | "wave3" | "wave3-done";
+// Beat 0 sub-steps (hook): greet → the bag falls → count each row → notice the
+// other two bags → the challenge (guess) → guessed.
+type HookStep =
+  | "bag1"
+  | "spill"
+  | "countGold"
+  | "countBlue"
+  | "otherBags"
+  | "challenge"
+  | "guessed";
+// Beat 1 sub-steps (reveal). "sum" states the 20 + 20 + 20 = 60 that the three
+// waves just acted out, before beat 2 compresses it to 6 tens.
+type RevealStep =
+  | "idle"
+  | "wave1"
+  | "wave1-done"
+  | "wave2"
+  | "wave2-done"
+  | "wave3"
+  | "wave3-done"
+  | "sum";
 // Beat 2 sub-steps (compress + payoff).
 type CompressStep = "rods" | "symbol" | "payoff";
 
@@ -69,6 +86,7 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
   const [beat, setBeat] = useState<Beat>(0);
   const [phase, setPhase] = useState<Phase>("empty");
   const [hookStep, setHookStep] = useState<HookStep>("bag1");
+  const [highlight, setHighlight] = useState<Highlight>("none");
   const [revealStep, setRevealStep] = useState<RevealStep>("idle");
   const [compressStep, setCompressStep] = useState<CompressStep>("rods");
 
@@ -144,6 +162,7 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
     setBeat(0);
     setPhase("bag1");
     setHookStep("bag1");
+    setHighlight("none");
     setRevealStep("idle");
     setCompressStep("rods");
     setGuess("");
@@ -177,15 +196,28 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
     if (beat !== 0 || skipRequested) return;
     tapOnly();
     if (hookStep === "bag1") {
-      setHookStep("grid20");
+      // The sack tips over and pours out its twenty marbles.
+      setHookStep("spill");
       setPhase("grid20");
-      playLine(PILOT.narration.hook2);
-    } else if (hookStep === "grid20") {
-      setHookStep("bags3");
+      playLine(PILOT.narration.spill);
+    } else if (hookStep === "spill") {
+      setHookStep("countGold");
+      setHighlight("gold");
+      playLine(PILOT.narration.countGold);
+    } else if (hookStep === "countGold") {
+      setHookStep("countBlue");
+      setHighlight("blue");
+      playLine(PILOT.narration.countBlue);
+    } else if (hookStep === "countBlue") {
+      setHookStep("otherBags");
+      setHighlight("none");
       setPhase("bags3");
-      playLine(PILOT.narration.hook3);
+      playLine(PILOT.narration.otherBags);
+    } else if (hookStep === "otherBags") {
+      setHookStep("challenge");
+      playLine(PILOT.narration.challenge);
     }
-    // "bags3" and "guessed" steps are advanced via the keypad / "let's find
+    // "challenge" and "guessed" are advanced via the keypad / "let's find
     // out" tap below, not the generic stage tap.
   }
 
@@ -194,6 +226,7 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
     tlog.log({ predictionAnswer: guess, predictionCorrect: guess === String(PILOT.answer) });
     setGuessSubmitted(true);
     setHookStep("guessed");
+    playLine(PILOT.narration.checkGuess);
   }
 
   function goToReveal() {
@@ -214,6 +247,11 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
       setRevealStep("wave3");
       setPhase("wave3");
     } else if (revealStep === "wave3-done") {
+      // Name the addition the three waves just acted out, before beat 2
+      // compresses it into tens.
+      setRevealStep("sum");
+      playLine(PILOT.narration.addUp);
+    } else if (revealStep === "sum") {
       advance(2);
       setPhase("rods");
       setCompressStep("rods");
@@ -358,7 +396,7 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
     onClose();
   }
 
-  const showKeypad = beat === 0 && hookStep === "bags3" && !guessSubmitted;
+  const showKeypad = beat === 0 && hookStep === "challenge" && !guessSubmitted;
   const stageTapHandler =
     beat === 0 ? handleHookTap : beat === 1 ? handleRevealTap : beat === 2 ? handleCompressTap : undefined;
 
@@ -393,7 +431,7 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
         ) : (
         <div className="px-6 pt-10 pb-6 flex flex-col items-center text-center gap-4">
           <div className="relative w-full">
-            <MarbleStage phase={phase} onWave={handleWave} />
+            <MarbleStage phase={phase} onWave={handleWave} highlight={highlight} />
 
             {/* Illustrated greeter for the hook line — she waves once and
                 settles, so "Hey — I need your help" comes from SOMEONE.
@@ -476,12 +514,16 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
           {/* Narration text is a visual anchor for what's playing — copy comes
               ONLY from PILOT.narration, never hardcoded. */}
           <div className="min-h-[2.5rem] text-lg font-medium text-ink">
-            {beat === 0 && hookStep === "bag1" && PILOT.narration.hook1}
-            {beat === 0 && hookStep === "grid20" && PILOT.narration.hook2}
-            {beat === 0 && hookStep === "bags3" && !guessSubmitted && PILOT.narration.hook3}
-            {beat === 0 && guessSubmitted && "Let's find out!"}
+            {beat === 0 && hookStep === "bag1" && PILOT.caption.hook1}
+            {beat === 0 && hookStep === "spill" && PILOT.caption.spill}
+            {beat === 0 && hookStep === "countGold" && PILOT.caption.countGold}
+            {beat === 0 && hookStep === "countBlue" && PILOT.caption.countBlue}
+            {beat === 0 && hookStep === "otherBags" && PILOT.caption.otherBags}
+            {beat === 0 && hookStep === "challenge" && !guessSubmitted && PILOT.caption.challenge}
+            {beat === 0 && guessSubmitted && PILOT.caption.checkGuess}
             {beat === 1 && revealStep === "idle" && "Tap to watch."}
-            {beat === 1 && revealStep !== "idle" && PILOT.narration.reveal[
+            {beat === 1 && revealStep === "sum" && PILOT.caption.addUp}
+            {beat === 1 && revealStep !== "idle" && revealStep !== "sum" && PILOT.narration.reveal[
               revealStep === "wave1" || revealStep === "wave1-done" ? 0
                 : revealStep === "wave2" || revealStep === "wave2-done" ? 1
                 : 2
