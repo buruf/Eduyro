@@ -14,6 +14,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import MarbleStage, { type Phase } from "./MarbleStage";
+import SkipCheck from "./SkipCheck";
 import { PILOT } from "./pilot-script";
 import { useTutorialLog } from "@/hooks/useTutorialLog";
 
@@ -70,7 +71,7 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
   const [guessSubmitted, setGuessSubmitted] = useState(false);
 
   const [skipVisible, setSkipVisible] = useState(false);
-  const [skipRequested, setSkipRequested] = useState(false); // TODO(Task 6): show SkipCheck instead of proceeding straight to beat 1
+  const [skipRequested, setSkipRequested] = useState(false);
 
   const [showSparkle, setShowSparkle] = useState(false);
   const [zeroTranslated, setZeroTranslated] = useState(false);
@@ -308,7 +309,18 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
     tlog.bumpTap();
     tlog.log({ skipTapped: true, skipAtMs });
     setSkipRequested(true);
-    // TODO(Task 6): render <SkipCheck /> here instead of auto-advancing.
+  }
+
+  // ---- skip check: pass = legit skip straight to practice; fail = resume
+  // the tutorial at beat 1 (reveal), not back at beat 0. ----
+  function handleSkipPass() {
+    tlog.end();
+    currentAudioRef.current?.pause();
+    onStart();
+  }
+
+  function handleSkipFail() {
+    setSkipRequested(false);
     advance(1);
     setRevealStep("idle");
     setPhase("empty");
@@ -342,6 +354,11 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
           ×
         </button>
 
+        {skipRequested ? (
+          <div className="px-6 pt-10 pb-6 flex flex-col items-center text-center gap-4">
+            <SkipCheck onPass={handleSkipPass} onFail={handleSkipFail} onTap={tlog.bumpTap} />
+          </div>
+        ) : (
         <div className="px-6 pt-10 pb-6 flex flex-col items-center text-center gap-4">
           <div className="relative w-full">
             <MarbleStage phase={phase} onWave={handleWave} />
@@ -501,6 +518,7 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
             </button>
           )}
         </div>
+        )}
       </div>
       <style jsx>{`
         @keyframes pilot-sparkle {
