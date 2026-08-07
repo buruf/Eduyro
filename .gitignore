@@ -60,3 +60,6 @@ prisma/migrations/
 # Local agent + scratch artifacts
 .claude/
 preview*.pdf
+
+# Remotion agent-skill docs (installed locally, not app code)
+agent/
