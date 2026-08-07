@@ -890,12 +890,26 @@ function NumberPad({ onKey, extras = [] }: { onKey: (k: string) => void; extras?
 // "<tens> × <digit>" shape the mul-tens sheets generate; anything else
 // returns null so the caller falls back to the unscaffolded question.
 function parseMulTensSteps(question: string): { a: number; b: number; t: number; tb: number; answer: number } | null {
-  const m = question.match(/^\s*(\d+)\s*[×xX*]\s*(\d+)/);
+  // Stage-1 items are formatted as a lead-in fact + the real problem, e.g.
+  // "2 × 3 = 6, so 20 × 3 =" — parse the segment AFTER "so " when present,
+  // so we read the actual tens problem, not the single-digit warm-up fact.
+  const soIdx = question.toLowerCase().indexOf(", so ");
+  const target = soIdx >= 0 ? question.slice(soIdx + 5) : question;
+  const m = target.match(/(\d+)\s*[×xX*]\s*(\d+)/);
   if (!m) return null;
-  const a = parseInt(m[1], 10);
-  const b = parseInt(m[2], 10);
-  if (!a || a % 10 !== 0) return null;
+  const n1 = parseInt(m[1], 10);
+  const n2 = parseInt(m[2], 10);
+  // Either operand order is valid ("20 × 3" or "3 × 20") — whichever is the
+  // multiple-of-ten operand is `a`, the other is `b`. Reject if neither or
+  // both qualify (ambiguous / not a tens problem).
+  const n1IsTens = n1 >= 20 && n1 % 10 === 0;
+  const n2IsTens = n2 >= 20 && n2 % 10 === 0;
+  if (n1IsTens === n2IsTens) return null;
+  const a = n1IsTens ? n1 : n2;
+  const b = n1IsTens ? n2 : n1;
   const t = a / 10;
+  // Hundreds (t >= 10) aren't scaffolded here — leave unscaffolded.
+  if (t >= 10) return null;
   const tb = t * b;
   return { a, b, t, tb, answer: a * b };
 }
