@@ -30,7 +30,16 @@ const SKILL_ID_TO_LABEL = {
 };
 
 function labelForEvent(ev) {
-  if (ev.variant === "pilot") return SKILL_ID_TO_LABEL[ev.skillId] ?? ev.skillId;
+  if (ev.variant === "pilot") {
+    const label = SKILL_ID_TO_LABEL[ev.skillId];
+    if (label === undefined) {
+      throw new Error(
+        `tutorial-pilot-report: pilot row (runId=${ev.runId}) has skillId "${ev.skillId}" not in SKILL_ID_TO_LABEL — ` +
+          `add it to the map before running the report, or this row will silently mis-join to the wrong CompletedSheet.`
+      );
+    }
+    return label;
+  }
   return ev.skillId; // old variant: skillId IS the label
 }
 
@@ -48,7 +57,7 @@ function pct(n, d) {
 function summarizeVariant(rows) {
   const runs = rows.length;
   if (runs === 0) return { runs: 0 };
-  const completions = rows.filter((r) => r.beatIndex >= 4).length;
+  const completions = rows.filter((r) => r.beatIndex >= 4 && r.endedAt != null).length;
   const skips = rows.filter((r) => r.skipTapped).length;
   const audioMs = rows.map((r) => r.audioPlayedMs).filter((n) => Number.isFinite(n));
   const predicted = rows.filter((r) => r.predictionCorrect !== null);
@@ -124,7 +133,7 @@ async function main() {
   for (const ev of allEvents) {
     if (ev.variant === "old") groups.baseline.push(ev);
     else if (ev.skipTapped) groups.skippers.push(ev);
-    else if (ev.beatIndex >= 4) groups.completers.push(ev);
+    else if (ev.beatIndex >= 4 && ev.endedAt != null) groups.completers.push(ev);
     // events that are neither old, nor skipped, nor completed (abandoned
     // mid-tutorial) are excluded from all three groups — they don't fit any
     // bucket cleanly and would just add noise to the primary metric.

@@ -92,6 +92,10 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
   const openedAtRef = useRef<number | null>(null);
   const audioPlayedMsRef = useRef(0);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  // Set true once the run has reached a terminal outcome (finished to
+  // practice or passed the skip check) so the × close handler below only
+  // logs an abandon event for runs that never resolved.
+  const runFinishedRef = useRef(false);
 
   const advance = (b: Beat) => {
     tlog.bumpTap();
@@ -131,6 +135,7 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
   useEffect(() => {
     if (!open) return;
     openedAtRef.current = Date.now();
+    runFinishedRef.current = false;
     setBeat(0);
     setPhase("bag1");
     setHookStep("bag1");
@@ -261,7 +266,13 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
   }
 
   function goToBeat4() {
-    advance(4);
+    // beatIndex 4 is reserved for actual completion (finishToPractice) so
+    // that walk-aways after entering beat 4 don't count as completers. This
+    // entry advance logs 3 (the highest "reached but not necessarily
+    // finished" marker) — `beat` itself still moves to 4 for rendering.
+    tlog.bumpTap();
+    tlog.log({ beatIndex: 3 });
+    setBeat(4);
     playLine(PILOT.narration.handoff);
   }
 
@@ -276,6 +287,7 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
   ];
 
   function finishToPractice() {
+    runFinishedRef.current = true;
     tlog.log({ beatIndex: 4 });
     tlog.end();
     currentAudioRef.current?.pause();
@@ -314,6 +326,7 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
   // ---- skip check: pass = legit skip straight to practice; fail = resume
   // the tutorial at beat 1 (reveal), not back at beat 0. ----
   function handleSkipPass() {
+    runFinishedRef.current = true;
     tlog.end();
     currentAudioRef.current?.pause();
     onStart();
@@ -323,7 +336,21 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
     setSkipRequested(false);
     advance(1);
     setRevealStep("idle");
-    setPhase("empty");
+    setPhase("bags3");
+  }
+
+  // Mirrors the old modal's handleClose: the × button is reachable on every
+  // beat, so a tap there before the run resolves (finishToPractice /
+  // handleSkipPass) is an abandonment that must be logged, or completion
+  // funnels silently overcount (walk-aways vanish instead of showing up as
+  // non-completers).
+  function handleClose() {
+    if (!runFinishedRef.current) {
+      const skipAtMs = openedAtRef.current ? Date.now() - openedAtRef.current : 0;
+      tlog.log({ skipTapped: true, skipAtMs });
+      tlog.end();
+    }
+    onClose();
   }
 
   const showKeypad = beat === 0 && hookStep === "bags3" && !guessSubmitted;
@@ -347,7 +374,7 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
             beat-0-only skip affordance. */}
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-3 right-3 text-ink/40 hover:text-ink text-lg leading-none z-10"
           aria-label="Close tutorial"
         >

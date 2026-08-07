@@ -67,18 +67,37 @@ export async function POST(req: NextRequest) {
       }
       if (endedAt) updateData.endedAt = new Date(endedAt);
 
-      const row = await db.tutorialEvent.upsert({
-        where: { runId },
-        create: {
-          runId,
-          studentId,
-          skillId,
-          variant,
-          ...rest,
-          endedAt: endedAt ? new Date(endedAt) : undefined,
-        },
-        update: updateData,
-      });
+      const doUpsert = () =>
+        db.tutorialEvent.upsert({
+          where: { runId },
+          create: {
+            runId,
+            studentId,
+            skillId,
+            variant,
+            ...rest,
+            endedAt: endedAt ? new Date(endedAt) : undefined,
+          },
+          update: updateData,
+        });
+
+      let row;
+      try {
+        row = await doUpsert();
+      } catch (e) {
+        // Two concurrent upserts on the same fresh runId (e.g. sendBeacon's
+        // final POST racing the on-open POST) can both take the create
+        // branch; the loser hits P2002 on the runId unique constraint. By
+        // the time we retry, the winner's row exists, so the same upsert
+        // call now takes the update branch instead. Retry exactly once —
+        // a second failure is a real error, not a race.
+        const code = (e as { code?: string } | null)?.code;
+        if (code === "P2002") {
+          row = await doUpsert();
+        } else {
+          throw e;
+        }
+      }
       return ok({ id: row.id });
     } catch (e) {
       return handleRouteError(e);

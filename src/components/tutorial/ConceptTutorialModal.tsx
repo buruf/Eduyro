@@ -81,6 +81,11 @@ const XP_PER_LESSON = 20;
 export function ConceptTutorialModal({ open, concept, subjectSlug, skillName, studentId, microLesson, worksheetId, mode, questionCount, passPct, onStart, onClose }: Props) {
   // Baseline funnel logging for the EXISTING (old) tutorial — this run's data
   // is the pilot's control group (tutorial-redesign-pilot Task 2).
+  // Analytics comparability note: this old variant passes skillId: skillName
+  // (the LABEL, e.g. "Multiplying tens (20 x 3)"), NOT the engine unit id
+  // that the pilot variant uses — see SKILL_ID_TO_LABEL /
+  // labelForEvent() in scripts/tutorial-pilot-report.mjs, which joins on
+  // this difference. Also, tapCount is not populated for this old variant.
   const tlog = useTutorialLog({ studentId, skillId: skillName, variant: "old", enabled: open && mode === "first" });
   const openedAtRef = useRef(Date.now());
   const narrationStartedRef = useRef(false);
