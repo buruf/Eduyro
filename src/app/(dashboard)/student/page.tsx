@@ -33,6 +33,8 @@ import { Button } from "@/components/ui/Button";
 import { Card, StatCard, Progress, Modal, EmptyState } from "@/components/ui";
 import { StudentRealtime } from "@/components/realtime/StudentRealtime";
 import { ConceptTutorialModal } from "@/components/tutorial/ConceptTutorialModal";
+import MulTensPilotTutorial from "@/components/tutorial/pilot/MulTensPilotTutorial";
+import { PILOT } from "@/components/tutorial/pilot/pilot-script";
 import { ReportProblemButton } from "@/components/ReportProblemButton";
 import { cn, formatTime } from "@/lib/utils";
 import type { AnswerType, InteractiveSpec } from "@/types";
@@ -73,6 +75,11 @@ export default function StudentDashboardPage() {
   const [practiceOpen, setPracticeOpen] = useState(false);
   const [practiceSheet, setPracticeSheet] = useState<TodaySheet | null>(null);
   const [sprintOpen, setSprintOpen] = useState(false);
+  // Whether the sheet about to open is this student's FIRST sheet on its skill
+  // (i.e. the tutorial just fired) — drives the pilot's scaffolded first-3
+  // practice problems. Set at the moment practice begins, since by the time
+  // PracticeModal renders, `completedConcepts` already marks the skill done.
+  const [firstPracticeOnSkill, setFirstPracticeOnSkill] = useState(false);
 
   // Parent-enabled subjects for the "My subjects" switcher. The child can only
   // ever see/switch among subjects the parent enabled; enrollment is not
@@ -260,9 +267,10 @@ export default function StudentDashboardPage() {
     ? conceptForSkill(data.levelProgress?.levelCode, currentSheet.skillName)
     : null;
 
-  function beginPractice(sheet: TodaySheet) {
+  function beginPractice(sheet: TodaySheet, isFirstOnSkill = false) {
     setPracticeSheet(sheet);
     setPracticeOpen(true);
+    setFirstPracticeOnSkill(isFirstOnSkill);
     // Per-sheet timer: a DIFFERENT sheet starts at 0; the SAME sheet resumes.
     if (sheet.worksheetId !== timerSheetId) {
       setTimerElapsed(0);
@@ -325,7 +333,7 @@ export default function StudentDashboardPage() {
           body: JSON.stringify({ conceptId: doneId }),
         }).catch(() => { /* localStorage already has it */ });
       }
-      if (sheet) beginPractice(sheet);
+      if (sheet) beginPractice(sheet, true);
     }
   }
 
@@ -599,7 +607,14 @@ export default function StudentDashboardPage() {
 
       {/* Concept tutorial — auto-opens before a skill's FIRST practice;
           reachable later via the "Review tutorial" link */}
-      {conceptModal && (
+      {conceptModal && (conceptModal.sheet?.skillName ?? currentSheet?.skillName) === PILOT.skillLabel && conceptModal.mode === "first" ? (
+        <MulTensPilotTutorial
+          open={true}
+          studentId={data.student.id}
+          onStart={onConceptTutorialDone}
+          onClose={() => setConceptModal(null)}
+        />
+      ) : conceptModal && (
         <ConceptTutorialModal
           open={true}
           concept={conceptModal.concept}
@@ -630,6 +645,7 @@ export default function StudentDashboardPage() {
           timerSeconds={timerElapsed}
           onSubmitted={onSheetSubmitted}
           onShowLesson={() => openTutorialReview(practiceSheet)}
+          scaffoldFirstThree={firstPracticeOnSkill && practiceSheet.skillName === PILOT.skillLabel}
         />
       )}
 
@@ -869,6 +885,21 @@ function NumberPad({ onKey, extras = [] }: { onKey: (k: string) => void; extras?
   );
 }
 
+// Pilot mul-tens scaffold: recompute the 3-step breakdown from the CURRENT
+// problem's own numbers (never hardcoded 20/3/60). Only handles the
+// "<tens> × <digit>" shape the mul-tens sheets generate; anything else
+// returns null so the caller falls back to the unscaffolded question.
+function parseMulTensSteps(question: string): { a: number; b: number; t: number; tb: number; answer: number } | null {
+  const m = question.match(/^\s*(\d+)\s*[×xX*]\s*(\d+)/);
+  if (!m) return null;
+  const a = parseInt(m[1], 10);
+  const b = parseInt(m[2], 10);
+  if (!a || a % 10 !== 0) return null;
+  const t = a / 10;
+  const tb = t * b;
+  return { a, b, t, tb, answer: a * b };
+}
+
 function PracticeModal({
   open,
   onClose,
@@ -879,6 +910,7 @@ function PracticeModal({
   timerSeconds,
   onSubmitted,
   onShowLesson,
+  scaffoldFirstThree = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -890,6 +922,9 @@ function PracticeModal({
   onSubmitted: () => void;
   /** Reopen the lesson (worked examples) for THIS sheet — always available. */
   onShowLesson?: () => void;
+  /** Pilot: this student's first sheet on the mul-tens skill — show the
+   * fully-worked 3-step scaffold above problems 1–3 (fading across them). */
+  scaffoldFirstThree?: boolean;
 }) {
   // Scaffold with a WORKED-EXAMPLE fallback: when buildScaffold has no real
   // handler for a question form (bland "the correct answer is X"), reuse the
@@ -1102,6 +1137,12 @@ function PracticeModal({
   const cur: PracticeProblem | undefined = answerable[safeIdx];
   const curLive = cur ? live[cur.id] : undefined;
   const isLast = safeIdx >= total - 1;
+
+  // Pilot scaffold: tap-to-reveal state for problem index 0 only (steps start
+  // dimmed, each tap lights the next). Resets whenever the question changes.
+  const [scaffoldRevealed, setScaffoldRevealed] = useState(0);
+  useEffect(() => { setScaffoldRevealed(0); }, [safeIdx]);
+  const mulTensScaffold = scaffoldFirstThree && cur && safeIdx < 3 ? parseMulTensSteps(cur.question) : null;
   // Reading: the nearest passage block before the current question is its context.
   let passage: PracticeProblem | null = null;
   if (cur) {
@@ -1310,6 +1351,40 @@ function PracticeModal({
               </p>
             </div>
           )}
+
+          {mulTensScaffold && (() => {
+            const { a, b, t, tb, answer } = mulTensScaffold;
+            // Numbers blank from the end: 0 for problem 1 (full worked example,
+            // tap-gated reveal), 1 for problem 2 (answer blank), 2 for problem 3
+            // (last two numbers blank).
+            const blanksFromEnd = safeIdx;
+            const steps = [
+              `${a} is ${t} tens`,
+              `${t} tens × ${b} = ${blanksFromEnd >= 2 ? "___" : tb} tens`,
+              `${blanksFromEnd >= 2 ? "___" : tb} tens = ${blanksFromEnd >= 1 ? "___" : answer}`,
+            ];
+            return (
+              <div className="mb-3 rounded-lg border border-brand-blue/20 bg-brand-blue/5 px-3 py-2.5 space-y-1.5">
+                <div className="text-[10px] font-bold uppercase tracking-wide text-brand-blue/70">
+                  {safeIdx === 0 ? "Worked example — tap each step" : "Worked example"}
+                </div>
+                {steps.map((s, i) => {
+                  const revealed = safeIdx !== 0 || i < scaffoldRevealed;
+                  return (
+                    <div
+                      key={i}
+                      onClick={safeIdx === 0 ? () => setScaffoldRevealed((r) => Math.max(r, i + 1)) : undefined}
+                      className={`text-sm font-serif font-semibold text-ink transition-opacity ${
+                        safeIdx === 0 ? "cursor-pointer" : ""
+                      } ${revealed ? "opacity-100" : "opacity-30"}`}
+                    >
+                      {revealed ? s : "Tap to reveal →"}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           <div className="rounded-xl border border-border-mid bg-white px-4 py-7 min-h-[150px] flex items-center justify-center">
             {renderBody(cur)}
