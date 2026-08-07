@@ -182,6 +182,29 @@ export default function MarbleStage({ phase, onWave }: MarbleStageProps) {
     firedForPhaseRef.current = null;
   }, [phase]);
 
+  // Fallback for onWave: `transitionend` on SVG geometry attributes (cx/cy)
+  // is unreliable across browser engines and in background tabs, and a
+  // marble that doesn't move on a given phase entry fires no transition at
+  // all. So alongside the transitionend listener below, schedule a one-shot
+  // timer slightly after the .7s CSS transition duration that fires the same
+  // once-per-phase-entry-guarded onWave(n). This is ONLY animation-completion
+  // bookkeeping (letting narration know the marbles have visually settled) —
+  // it is NOT a beat-advance timer; the tutorial still waits for a child tap
+  // to move past this beat.
+  useEffect(() => {
+    const waveForPhase: 1 | 2 | 3 | null =
+      phase === "wave1" ? 1 : phase === "wave2" ? 2 : phase === "wave3" ? 3 : null;
+    if (!onWave || waveForPhase === null) return;
+
+    const timer = setTimeout(() => {
+      if (firedForPhaseRef.current === phase) return;
+      firedForPhaseRef.current = phase;
+      onWave(waveForPhase);
+    }, 750);
+
+    return () => clearTimeout(timer);
+  }, [phase, onWave]);
+
   const pouch1Opacity = phase === "bag1" ? 1 : 0;
   const pouch2Opacity = phase === "bags3" || phase === "wave1" ? 1 : 0;
   const pouch3Opacity =
