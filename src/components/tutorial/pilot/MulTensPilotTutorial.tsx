@@ -75,6 +75,17 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
   const [showSparkle, setShowSparkle] = useState(false);
   const [zeroTranslated, setZeroTranslated] = useState(false);
 
+  // Beat 3 (faded worked example — completion problem).
+  const [beat3Answer, setBeat3Answer] = useState("");
+  const [beat3Wrong, setBeat3Wrong] = useState(false);
+  const [beat3Done, setBeat3Done] = useState(false);
+
+  // Beat 4 (isomorphic check).
+  const [beat4Answer, setBeat4Answer] = useState("");
+  const [beat4Wrong, setBeat4Wrong] = useState(false);
+  const [beat4Scaffold, setBeat4Scaffold] = useState(false);
+  const [beat4ScaffoldAnswer, setBeat4ScaffoldAnswer] = useState("");
+
   const tlog = useTutorialLog({ studentId, skillId: PILOT.skillId, variant: "pilot", enabled: open });
 
   const openedAtRef = useRef<number | null>(null);
@@ -130,6 +141,13 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
     setSkipRequested(false);
     setShowSparkle(false);
     setZeroTranslated(false);
+    setBeat3Answer("");
+    setBeat3Wrong(false);
+    setBeat3Done(false);
+    setBeat4Answer("");
+    setBeat4Wrong(false);
+    setBeat4Scaffold(false);
+    setBeat4ScaffoldAnswer("");
     audioPlayedMsRef.current = 0;
 
     playLine(PILOT.narration.hook1);
@@ -216,11 +234,75 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
       requestAnimationFrame(() => setZeroTranslated(true));
       setTimeout(() => setShowSparkle(false), 250);
     } else if (compressStep === "payoff") {
-      // Task 5 will insert beats 3-4 (faded example / isomorphic check)
-      // here; for now the flow hands off straight to guided practice.
-      tlog.log({ beatIndex: 3 });
-      currentAudioRef.current?.pause();
-      onStart();
+      advance(3);
+    }
+  }
+
+  // ---- beat 3: faded worked example (completion problem) ----
+  const tensA = PILOT.a / 10; // 2
+  const tensAnswer = PILOT.answer / 10; // 6
+  const beat3Steps = [
+    `${PILOT.a} is ${tensA} tens`,
+    `${tensA} tens × ${PILOT.b} = ${tensAnswer} tens`,
+    `${tensAnswer} tens = ___`,
+  ];
+
+  function submitBeat3() {
+    if (!beat3Answer) return;
+    tapOnly();
+    if (beat3Answer === String(PILOT.answer)) {
+      setBeat3Wrong(false);
+      setBeat3Done(true);
+    } else {
+      // Gentle retry — no penalty copy, steps stay visible.
+      setBeat3Wrong(true);
+      setBeat3Answer("");
+    }
+  }
+
+  function goToBeat4() {
+    advance(4);
+    playLine(PILOT.narration.handoff);
+  }
+
+  // ---- beat 4: isomorphic check ----
+  const iso = PILOT.iso;
+  const isoTensA = iso.a / 10; // 3
+  const isoTensAnswer = iso.answer / 10; // 9
+  const beat4Steps = [
+    `${iso.a} is ${isoTensA} tens`,
+    `${isoTensA} tens × ${iso.b} = ${isoTensAnswer} tens`,
+    `${isoTensAnswer} tens = ___`,
+  ];
+
+  function finishToPractice() {
+    tlog.log({ beatIndex: 4 });
+    tlog.end();
+    currentAudioRef.current?.pause();
+    onStart();
+  }
+
+  function submitBeat4() {
+    if (!beat4Answer) return;
+    tapOnly();
+    if (beat4Answer === String(iso.answer)) {
+      finishToPractice();
+    } else {
+      // Wrong on the isomorphic check → reveal the same 3-step scaffold
+      // with the iso numbers, penalty-free retry.
+      setBeat4Wrong(true);
+      setBeat4Scaffold(true);
+      setBeat4Answer("");
+    }
+  }
+
+  function submitBeat4Scaffold() {
+    if (!beat4ScaffoldAnswer) return;
+    tapOnly();
+    if (beat4ScaffoldAnswer === String(iso.answer)) {
+      finishToPractice();
+    } else {
+      setBeat4ScaffoldAnswer("");
     }
   }
 
@@ -303,6 +385,34 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
                 )}
               </div>
             )}
+
+            {beat === 3 && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 pointer-events-none">
+                {beat3Steps.map((s, i) => (
+                  <div key={i} className="text-lg font-semibold text-ink font-serif">
+                    {s}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {beat === 4 && beat4Scaffold && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 pointer-events-none">
+                {beat4Steps.map((s, i) => (
+                  <div key={i} className="text-lg font-semibold text-ink font-serif">
+                    {s}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {beat === 4 && !beat4Scaffold && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-4xl font-bold text-ink font-serif">
+                  {iso.a} × {iso.b} =
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Narration text is a visual anchor for what's playing — copy comes
@@ -321,6 +431,11 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
             {beat === 2 && compressStep === "rods" && "Tap to see it a different way."}
             {beat === 2 && compressStep === "symbol" && PILOT.narration.compress}
             {beat === 2 && compressStep === "payoff" && PILOT.narration.payoff}
+            {beat === 3 && !beat3Done && !beat3Wrong && "Fill in the blank."}
+            {beat === 3 && !beat3Done && beat3Wrong && "Try again — take another look."}
+            {beat === 3 && beat3Done && "Nice work!"}
+            {beat === 4 && !beat4Scaffold && !beat4Wrong && PILOT.narration.handoff}
+            {beat === 4 && beat4Scaffold && "Let's break it down."}
           </div>
 
           {showKeypad && (
@@ -342,7 +457,44 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
             </button>
           )}
 
-          {!showKeypad && !(beat === 0 && guessSubmitted) && stageTapHandler && (
+          {beat === 3 && !beat3Done && (
+            <GuessKeypad
+              value={beat3Answer}
+              onChange={setBeat3Answer}
+              onSubmit={submitBeat3}
+              onTap={tapOnly}
+            />
+          )}
+
+          {beat === 3 && beat3Done && (
+            <button
+              type="button"
+              onClick={goToBeat4}
+              className="px-6 py-3 rounded-full bg-brand-blue text-white font-semibold animate-pulse"
+            >
+              Tap to continue
+            </button>
+          )}
+
+          {beat === 4 && !beat4Scaffold && (
+            <GuessKeypad
+              value={beat4Answer}
+              onChange={setBeat4Answer}
+              onSubmit={submitBeat4}
+              onTap={tapOnly}
+            />
+          )}
+
+          {beat === 4 && beat4Scaffold && (
+            <GuessKeypad
+              value={beat4ScaffoldAnswer}
+              onChange={setBeat4ScaffoldAnswer}
+              onSubmit={submitBeat4Scaffold}
+              onTap={tapOnly}
+            />
+          )}
+
+          {!showKeypad && !(beat === 0 && guessSubmitted) && beat !== 3 && beat !== 4 && stageTapHandler && (
             <button
               type="button"
               onClick={stageTapHandler}
