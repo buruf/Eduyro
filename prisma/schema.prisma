@@ -165,6 +165,7 @@ model Student {
   dailyPackets  DailyPacket[]
   tutorialCompletions TutorialCompletion[]
   subjectEnrollments  StudentSubject[]
+  tutorialEvents      TutorialEvent[]
 
   @@index([userId])
   @@index([schoolId])
@@ -1072,4 +1073,26 @@ model DailyPacket {
   @@unique([studentId, date])
   @@index([studentId])
   @@index([date])
+}
+
+// One row per tutorial RUN (upserted by runId as the run progresses).
+model TutorialEvent {
+  id                String    @id @default(cuid())
+  runId             String    @unique // client-generated uuid per open
+  studentId         String
+  student           Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  skillId           String    // engine unit id, e.g. "mul-tens"
+  variant           String    // "old" | "pilot"
+  startedAt         DateTime  @default(now())
+  endedAt           DateTime?
+  beatIndex         Int       @default(0) // furthest beat reached (0-4); old variant: 0=opened 1=narration-started 4=start-clicked
+  tapCount          Int       @default(0)
+  skipTapped        Boolean   @default(false)
+  skipAtMs          Int?
+  audioPlayedMs     Int       @default(0)
+  predictionAnswer  String?
+  predictionCorrect Boolean?
+
+  @@index([studentId, skillId])
+  @@index([skillId, variant])
 }
