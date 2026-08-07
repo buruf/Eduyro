@@ -48,6 +48,9 @@ type CompressStep = "rods" | "symbol" | "payoff";
 interface Props {
   open: boolean;
   studentId: string;
+  /** False for "Review tutorial" replays — they must not enter the pilot's
+   *  measurement funnel (skip/completion rates are first-run metrics). */
+  logRun?: boolean;
   onStart: () => void;
   onClose: () => void;
 }
@@ -82,7 +85,7 @@ async function fetchClipUrl(text: string): Promise<string | null> {
   }
 }
 
-export default function MulTensPilotTutorial({ open, studentId, onStart, onClose }: Props) {
+export default function MulTensPilotTutorial({ open, studentId, logRun = true, onStart, onClose }: Props) {
   const [beat, setBeat] = useState<Beat>(0);
   const [phase, setPhase] = useState<Phase>("empty");
   const [hookStep, setHookStep] = useState<HookStep>("bag1");
@@ -110,7 +113,7 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
   const [beat4Scaffold, setBeat4Scaffold] = useState(false);
   const [beat4ScaffoldAnswer, setBeat4ScaffoldAnswer] = useState("");
 
-  const tlog = useTutorialLog({ studentId, skillId: PILOT.skillId, variant: "pilot", enabled: open });
+  const tlog = useTutorialLog({ studentId, skillId: PILOT.skillId, variant: "pilot", enabled: open && logRun });
 
   const openedAtRef = useRef<number | null>(null);
   const audioPlayedMsRef = useRef(0);

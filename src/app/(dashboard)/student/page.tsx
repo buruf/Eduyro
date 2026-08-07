@@ -607,10 +607,15 @@ export default function StudentDashboardPage() {
 
       {/* Concept tutorial — auto-opens before a skill's FIRST practice;
           reachable later via the "Review tutorial" link */}
-      {conceptModal && (conceptModal.sheet?.skillName ?? currentSheet?.skillName) === PILOT.skillLabel && conceptModal.mode === "first" ? (
+      {/* The pilot unit serves the pilot tutorial in BOTH modes — a child who
+          taps "Review tutorial" must see the lesson they were actually taught,
+          not the old modal's different one. Only the first run is logged
+          (see `logRun`), so review replays stay out of the pilot funnel. */}
+      {conceptModal && (conceptModal.sheet?.skillName ?? currentSheet?.skillName) === PILOT.skillLabel ? (
         <MulTensPilotTutorial
           open={true}
           studentId={data.student.id}
+          logRun={conceptModal.mode === "first"}
           onStart={onConceptTutorialDone}
           onClose={() => setConceptModal(null)}
         />
