@@ -27,10 +27,15 @@ const BLUE = "#1B4F8A";
 
 const MARBLE_R = 9;
 
-// Pouch (bag) centers.
+// Pouch (bag) centers. The two closed bags live in a bottom band well clear
+// of the 20-marble grid (grid bbox ≈ x 131-509, y 141-219) so "three bags"
+// never reads as "two bags overlapping some marbles".
 const BAG1 = { x: 150, y: 190 };
-const BAG2 = { x: 520, y: 120 };
-const BAG3 = { x: 520, y: 260 };
+const BAG2 = { x: 430, y: 295 };
+const BAG3 = { x: 560, y: 295 };
+// Where bag 1 rests once it has spilled: tipped on its side beside the grid,
+// mouth facing the marbles — the visual anchor that the grid IS bag 1.
+const BAG1_TIPPED = { x: 62, y: 180 };
 
 // Compact 2x10 grid used for the "grid20" guess phase.
 const GRID_START_X = 140;
@@ -146,11 +151,23 @@ function getMarblePos(phase: Phase, flatIndex: number): Pos {
 // its transition completes.
 const WAVE_LAST_INDEX: Record<1 | 2 | 3, number> = { 1: 39, 2: 49, 3: 59 };
 
-function Pouch({ cx, cy, opacity }: { cx: number; cy: number; opacity: number }) {
+function Pouch({
+  cx,
+  cy,
+  opacity,
+  tilt = 0,
+}: {
+  cx: number;
+  cy: number;
+  opacity: number;
+  /** Degrees to rotate around the pouch center — used for the spilled bag 1. */
+  tilt?: number;
+}) {
   return (
     <g
       style={{ transition: "opacity .7s ease" }}
       opacity={opacity}
+      transform={tilt ? `rotate(${tilt} ${cx} ${cy})` : undefined}
       aria-hidden="true"
     >
       <path
@@ -206,6 +223,9 @@ export default function MarbleStage({ phase, onWave }: MarbleStageProps) {
   }, [phase, onWave]);
 
   const pouch1Opacity = phase === "bag1" ? 1 : 0;
+  // Once bag 1 spills, its empty tipped shell stays beside the grid so the
+  // marbles still read as "bag 1's marbles" (and the bag count stays at 3).
+  const pouch1TippedOpacity = phase === "grid20" || phase === "bags3" ? 1 : 0;
   const pouch2Opacity = phase === "bags3" || phase === "wave1" ? 1 : 0;
   const pouch3Opacity =
     phase === "bags3" || phase === "wave1" || phase === "wave2" ? 1 : 0;
@@ -237,6 +257,12 @@ export default function MarbleStage({ phase, onWave }: MarbleStageProps) {
       aria-label="Marble stage animation"
     >
       <Pouch cx={BAG1.x} cy={BAG1.y} opacity={pouch1Opacity} />
+      <Pouch
+        cx={BAG1_TIPPED.x}
+        cy={BAG1_TIPPED.y}
+        opacity={pouch1TippedOpacity}
+        tilt={-75}
+      />
       <Pouch cx={BAG2.x} cy={BAG2.y} opacity={pouch2Opacity} />
       <Pouch cx={BAG3.x} cy={BAG3.y} opacity={pouch3Opacity} />
 

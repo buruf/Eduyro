@@ -61,6 +61,12 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/#pricing", req.url));
   }
 
+  // Dev-only harness pages (/dev/*) — reachable without auth in development;
+  // the pages themselves call notFound() under NODE_ENV === "production".
+  if (process.env.NODE_ENV !== "production" && pathname.startsWith("/dev/")) {
+    return NextResponse.next();
+  }
+
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
