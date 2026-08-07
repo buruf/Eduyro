@@ -249,7 +249,6 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
 
   function submitBeat3() {
     if (!beat3Answer) return;
-    tapOnly();
     if (beat3Answer === String(PILOT.answer)) {
       setBeat3Wrong(false);
       setBeat3Done(true);
@@ -284,7 +283,6 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
 
   function submitBeat4() {
     if (!beat4Answer) return;
-    tapOnly();
     if (beat4Answer === String(iso.answer)) {
       finishToPractice();
     } else {
@@ -298,7 +296,6 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
 
   function submitBeat4Scaffold() {
     if (!beat4ScaffoldAnswer) return;
-    tapOnly();
     if (beat4ScaffoldAnswer === String(iso.answer)) {
       finishToPractice();
     } else {
