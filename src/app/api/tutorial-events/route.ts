@@ -52,22 +52,29 @@ export async function POST(req: NextRequest) {
       // Forward-only semantics for beatIndex/tapCount: never let a stale/out-of-
       // order progressive update regress a further-along run. Read current
       // values and drop any incoming field that isn't actually greater.
-      const existing = await db.tutorialEvent.findUnique({
-        where: { runId },
-        select: { beatIndex: true, tapCount: true },
-      });
-      const updateData: Record<string, unknown> = { ...rest };
-      if (existing) {
-        if (rest.beatIndex !== undefined && rest.beatIndex <= existing.beatIndex) {
-          delete updateData.beatIndex;
+      // Built fresh on every attempt (including the P2002 retry below) so
+      // that a row created concurrently between attempts is re-read and the
+      // guard is filtered against the WINNER's actual values, not against a
+      // stale `existing === null` read from before the race resolved.
+      const buildUpdate = async () => {
+        const existing = await db.tutorialEvent.findUnique({
+          where: { runId },
+          select: { beatIndex: true, tapCount: true },
+        });
+        const updateData: Record<string, unknown> = { ...rest };
+        if (existing) {
+          if (rest.beatIndex !== undefined && rest.beatIndex <= existing.beatIndex) {
+            delete updateData.beatIndex;
+          }
+          if (rest.tapCount !== undefined && rest.tapCount <= existing.tapCount) {
+            delete updateData.tapCount;
+          }
         }
-        if (rest.tapCount !== undefined && rest.tapCount <= existing.tapCount) {
-          delete updateData.tapCount;
-        }
-      }
-      if (endedAt) updateData.endedAt = new Date(endedAt);
+        if (endedAt) updateData.endedAt = new Date(endedAt);
+        return updateData;
+      };
 
-      const doUpsert = () =>
+      const doUpsert = async () =>
         db.tutorialEvent.upsert({
           where: { runId },
           create: {
@@ -78,7 +85,7 @@ export async function POST(req: NextRequest) {
             ...rest,
             endedAt: endedAt ? new Date(endedAt) : undefined,
           },
-          update: updateData,
+          update: await buildUpdate(),
         });
 
       let row;
@@ -90,7 +97,11 @@ export async function POST(req: NextRequest) {
         // branch; the loser hits P2002 on the runId unique constraint. By
         // the time we retry, the winner's row exists, so the same upsert
         // call now takes the update branch instead. Retry exactly once —
-        // a second failure is a real error, not a race.
+        // a second failure is a real error, not a race. doUpsert()
+        // re-invokes buildUpdate() internally, so this retry re-reads the
+        // winner's row and re-applies the forward-only guard against it —
+        // without this, the loser's payload (e.g. a stale tapCount from the
+        // on-open POST) could clobber the winner's further-along values.
         const code = (e as { code?: string } | null)?.code;
         if (code === "P2002") {
           row = await doUpsert();
