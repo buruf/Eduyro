@@ -1,0 +1,393 @@
+// src/components/tutorial/pilot/MulTensPilotTutorial.tsx
+// Pilot redesign of the concept tutorial for "Multiplying tens" (20 × 3).
+// 45-second, one-example, tap-gated flow: Hook (guess) → Reveal (marble
+// waves) → Compress + payoff (rods → symbol, "put the zero back"). Beats
+// 3-4 (faded example / isomorphic check) land in a later task; for now the
+// final tap of beat 2 calls onStart so the flow is usable end-to-end.
+//
+// Every advance is a child TAP — no timer ever changes `beat` or the visual
+// phase. The only timers in this file are (a) the 4s fade-in of the skip
+// button and (b) prefetching the reveal audio clips during beat 0; the
+// ~700ms zero-glyph translate and ~250ms sparkle are motion durations on an
+// already-tapped-into state, not beat advances.
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import MarbleStage, { type Phase } from "./MarbleStage";
+import { PILOT } from "./pilot-script";
+import { useTutorialLog } from "@/hooks/useTutorialLog";
+
+type Beat = 0 | 1 | 2 | 3 | 4;
+
+// Beat 0 sub-steps (hook).
+type HookStep = "bag1" | "grid20" | "bags3" | "guessed";
+// Beat 1 sub-steps (reveal).
+type RevealStep = "idle" | "wave1" | "wave1-done" | "wave2" | "wave2-done" | "wave3" | "wave3-done";
+// Beat 2 sub-steps (compress + payoff).
+type CompressStep = "rods" | "symbol" | "payoff";
+
+interface Props {
+  open: boolean;
+  studentId: string;
+  onStart: () => void;
+  onClose: () => void;
+}
+
+// ---- audio: same /api/tts fetch shape as NarrationConductor, but a bare
+// play-once helper (no visible player UI). Audio failure NEVER blocks the
+// tutorial — every caller treats a failed/missing clip as "silently skip".
+const clipCache = new Map<string, string | null>();
+
+async function fetchClipUrl(text: string): Promise<string | null> {
+  const cached = clipCache.get(text);
+  if (cached !== undefined) return cached;
+  try {
+    const r = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    if (!r.ok) { clipCache.set(text, null); return null; }
+    const j = await r.json();
+    const url = j?.data?.url as string | undefined;
+    if (!url) { clipCache.set(text, null); return null; }
+    clipCache.set(text, url);
+    return url;
+  } catch {
+    clipCache.set(text, null);
+    return null;
+  }
+}
+
+export default function MulTensPilotTutorial({ open, studentId, onStart, onClose }: Props) {
+  const [beat, setBeat] = useState<Beat>(0);
+  const [phase, setPhase] = useState<Phase>("empty");
+  const [hookStep, setHookStep] = useState<HookStep>("bag1");
+  const [revealStep, setRevealStep] = useState<RevealStep>("idle");
+  const [compressStep, setCompressStep] = useState<CompressStep>("rods");
+
+  const [guess, setGuess] = useState("");
+  const [guessSubmitted, setGuessSubmitted] = useState(false);
+
+  const [skipVisible, setSkipVisible] = useState(false);
+  const [skipRequested, setSkipRequested] = useState(false); // TODO(Task 6): show SkipCheck instead of proceeding straight to beat 1
+
+  const [showSparkle, setShowSparkle] = useState(false);
+  const [zeroTranslated, setZeroTranslated] = useState(false);
+
+  const tlog = useTutorialLog({ studentId, skillId: PILOT.skillId, variant: "pilot", enabled: open });
+
+  const openedAtRef = useRef<number | null>(null);
+  const audioPlayedMsRef = useRef(0);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const advance = (b: Beat) => {
+    tlog.bumpTap();
+    tlog.log({ beatIndex: b });
+    setBeat(b);
+  };
+  const tapOnly = () => tlog.bumpTap();
+
+  // Play a narration line by key from PILOT.narration. Never blocks the UI —
+  // resolves immediately if the fetch fails; still counts ms toward the log
+  // once the clip actually plays and ends.
+  const playLine = (text: string) => {
+    fetchClipUrl(text).then((url) => {
+      if (!url) return;
+      try {
+        const a = new Audio(url);
+        currentAudioRef.current = a;
+        a.addEventListener("ended", () => {
+          audioPlayedMsRef.current += (a.duration || 0) * 1000;
+          tlog.log({ audioPlayedMs: Math.round(audioPlayedMsRef.current) });
+        });
+        a.play().catch(() => { /* autoplay blocked — tutorial still works muted */ });
+      } catch { /* noop — audio is best-effort */ }
+    });
+  };
+
+  // ---- open: reset state, kick off beat 0, prefetch reveal clips ----
+  useEffect(() => {
+    if (!open) return;
+    openedAtRef.current = Date.now();
+    setBeat(0);
+    setPhase("bag1");
+    setHookStep("bag1");
+    setRevealStep("idle");
+    setCompressStep("rods");
+    setGuess("");
+    setGuessSubmitted(false);
+    setSkipVisible(false);
+    setSkipRequested(false);
+    setShowSparkle(false);
+    setZeroTranslated(false);
+    audioPlayedMsRef.current = 0;
+
+    playLine(PILOT.narration.hook1);
+    // Prefetch the three reveal clips now so beat 1 playback is instant.
+    PILOT.narration.reveal.forEach((t) => { fetchClipUrl(t); });
+
+    const t = setTimeout(() => setSkipVisible(true), 4000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  if (!open) return null;
+
+  // ---- beat 0: hook ----
+  function handleHookTap() {
+    if (beat !== 0 || skipRequested) return;
+    tapOnly();
+    if (hookStep === "bag1") {
+      setHookStep("grid20");
+      setPhase("grid20");
+      playLine(PILOT.narration.hook2);
+    } else if (hookStep === "grid20") {
+      setHookStep("bags3");
+      setPhase("bags3");
+      playLine(PILOT.narration.hook3);
+    }
+    // "bags3" and "guessed" steps are advanced via the keypad / "let's find
+    // out" tap below, not the generic stage tap.
+  }
+
+  function submitGuess() {
+    if (!guess) return;
+    tlog.bumpTap();
+    tlog.log({ predictionAnswer: guess, predictionCorrect: guess === String(PILOT.answer) });
+    setGuessSubmitted(true);
+    setHookStep("guessed");
+  }
+
+  function goToReveal() {
+    advance(1);
+  }
+
+  // ---- beat 1: reveal ----
+  function handleRevealTap() {
+    if (beat !== 1) return;
+    tapOnly();
+    if (revealStep === "idle") {
+      setRevealStep("wave1");
+      setPhase("wave1");
+    } else if (revealStep === "wave1-done") {
+      setRevealStep("wave2");
+      setPhase("wave2");
+    } else if (revealStep === "wave2-done") {
+      setRevealStep("wave3");
+      setPhase("wave3");
+    } else if (revealStep === "wave3-done") {
+      advance(2);
+      setPhase("rods");
+      setCompressStep("rods");
+    }
+  }
+
+  function handleWave(n: 1 | 2 | 3) {
+    playLine(PILOT.narration.reveal[n - 1]);
+    if (n === 1) setRevealStep("wave1-done");
+    if (n === 2) setRevealStep("wave2-done");
+    if (n === 3) setRevealStep("wave3-done");
+  }
+
+  // ---- beat 2: compress + payoff ----
+  function handleCompressTap() {
+    if (beat !== 2) return;
+    tapOnly();
+    if (compressStep === "rods") {
+      setCompressStep("symbol");
+      setPhase("symbol");
+      playLine(PILOT.narration.compress);
+      // Kick off the payoff overlay shortly after the symbol phase lands —
+      // motion only, no beat/phase change gated behind it.
+      setTimeout(() => {
+        setCompressStep("payoff");
+        playLine(PILOT.narration.payoff);
+        setShowSparkle(true);
+        requestAnimationFrame(() => setZeroTranslated(true));
+        setTimeout(() => setShowSparkle(false), 250);
+      }, 250);
+    } else if (compressStep === "payoff") {
+      // Task 5 will insert beats 3-4 (faded example / isomorphic check)
+      // here; for now the flow hands off straight to guided practice.
+      tlog.log({ beatIndex: 3 });
+      currentAudioRef.current?.pause();
+      onStart();
+    }
+  }
+
+  function handleSkipClick() {
+    const skipAtMs = openedAtRef.current ? Date.now() - openedAtRef.current : 0;
+    tlog.bumpTap();
+    tlog.log({ skipTapped: true, skipAtMs });
+    setSkipRequested(true);
+    // TODO(Task 6): render <SkipCheck /> here instead of auto-advancing.
+    advance(1);
+    setRevealStep("idle");
+    setPhase("empty");
+  }
+
+  const showKeypad = beat === 0 && hookStep === "bags3" && !guessSubmitted;
+  const stageTapHandler =
+    beat === 0 ? handleHookTap : beat === 1 ? handleRevealTap : beat === 2 ? handleCompressTap : undefined;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-ink/60" />
+      <div className="relative bg-[#FDFAF4] rounded-2xl shadow-2xl w-full max-w-xl max-h-[92vh] overflow-y-auto">
+        {skipVisible && beat === 0 && !skipRequested && (
+          <button
+            type="button"
+            onClick={handleSkipClick}
+            className="absolute top-3 right-3 text-xs text-muted hover:text-ink underline transition-opacity duration-500 opacity-100 z-10"
+          >
+            {PILOT.skipLabel}
+          </button>
+        )}
+        {!skipVisible && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-3 right-3 text-ink/40 hover:text-ink text-lg leading-none z-10"
+            aria-label="Close tutorial"
+          >
+            ×
+          </button>
+        )}
+
+        <div className="px-6 pt-10 pb-6 flex flex-col items-center text-center gap-4">
+          <div className="relative w-full">
+            <MarbleStage phase={phase} onWave={handleWave} />
+
+            {beat === 2 && compressStep === "symbol" && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-4xl font-bold text-ink font-serif">
+                  {PILOT.a} × {PILOT.b} = {PILOT.answer}
+                </div>
+              </div>
+            )}
+
+            {beat === 2 && compressStep === "payoff" && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
+                <div className="text-4xl font-bold text-ink font-serif">
+                  {PILOT.a} × {PILOT.b} = {PILOT.answer}
+                </div>
+                <div className="text-lg font-semibold text-brand-blue relative">
+                  {PILOT.a / 10} × {PILOT.b} = {PILOT.answer / 10}
+                  <span
+                    className="inline-block font-bold ml-1"
+                    style={{
+                      transition: "transform 700ms ease",
+                      transform: zeroTranslated ? "translate(28px, 18px)" : "translate(0, 0)",
+                    }}
+                  >
+                    0
+                  </span>
+                </div>
+                {showSparkle && (
+                  <div
+                    aria-hidden="true"
+                    className="absolute text-2xl"
+                    style={{ animation: "pilot-sparkle 250ms ease-out" }}
+                  >
+                    ✨
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Narration text is a visual anchor for what's playing — copy comes
+              ONLY from PILOT.narration, never hardcoded. */}
+          <div className="min-h-[2.5rem] text-lg font-medium text-ink">
+            {beat === 0 && hookStep === "bag1" && PILOT.narration.hook1}
+            {beat === 0 && hookStep === "grid20" && PILOT.narration.hook2}
+            {beat === 0 && hookStep === "bags3" && !guessSubmitted && PILOT.narration.hook3}
+            {beat === 0 && guessSubmitted && "Let's find out!"}
+            {beat === 1 && revealStep === "idle" && "Tap to watch."}
+            {beat === 1 && revealStep !== "idle" && PILOT.narration.reveal[
+              revealStep === "wave1" || revealStep === "wave1-done" ? 0
+                : revealStep === "wave2" || revealStep === "wave2-done" ? 1
+                : 2
+            ]}
+            {beat === 2 && compressStep === "rods" && "Tap to see it a different way."}
+            {beat === 2 && compressStep === "symbol" && PILOT.narration.compress}
+            {beat === 2 && compressStep === "payoff" && PILOT.narration.payoff}
+          </div>
+
+          {showKeypad && (
+            <GuessKeypad
+              value={guess}
+              onChange={setGuess}
+              onSubmit={submitGuess}
+            />
+          )}
+
+          {beat === 0 && guessSubmitted && (
+            <button
+              type="button"
+              onClick={goToReveal}
+              className="px-6 py-3 rounded-full bg-brand-blue text-white font-semibold animate-pulse"
+            >
+              Tap to continue
+            </button>
+          )}
+
+          {!showKeypad && !(beat === 0 && guessSubmitted) && stageTapHandler && (
+            <button
+              type="button"
+              onClick={stageTapHandler}
+              className="px-6 py-3 rounded-full bg-brand-blue text-white font-semibold animate-pulse"
+            >
+              Tap to continue
+            </button>
+          )}
+        </div>
+      </div>
+      <style jsx>{`
+        @keyframes pilot-sparkle {
+          0% { opacity: 0; transform: scale(0.5); }
+          50% { opacity: 1; transform: scale(1.2); }
+          100% { opacity: 0; transform: scale(1); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// Local 0-9 / ⌫ / ✓ keypad for the beat-0 guess. Not extracted from
+// PracticeModal to avoid touching that file in this task.
+function GuessKeypad({
+  value,
+  onChange,
+  onSubmit,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onSubmit: () => void;
+}) {
+  const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "✓"];
+  return (
+    <div className="grid grid-cols-3 gap-2 w-48">
+      <div className="col-span-3 text-2xl font-bold text-ink mb-1 min-h-[2rem]">{value || "?"}</div>
+      {keys.map((k) => (
+        <button
+          key={k}
+          type="button"
+          onClick={() => {
+            if (k === "⌫") onChange(value.slice(0, -1));
+            else if (k === "✓") onSubmit();
+            else if (value.length < 3) onChange(value + k);
+          }}
+          className={
+            k === "✓"
+              ? "rounded-lg bg-brand-blue text-white font-bold py-2"
+              : "rounded-lg bg-white border border-ink/15 text-ink font-semibold py-2 hover:bg-ink/5"
+          }
+        >
+          {k}
+        </button>
+      ))}
+    </div>
+  );
+}
