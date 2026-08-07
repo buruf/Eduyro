@@ -202,24 +202,48 @@ function Pouch({
       opacity={opacity}
       aria-hidden="true"
     >
+      {/* sack body — heavy at the bottom where the marbles sit, gathered in
+          at the neck, with the seam and fabric folds that make cloth read as
+          cloth rather than as a rounded blob */}
       <path
-        d={`M -34,-8
-            Q -36,42 0,46
-            Q 36,42 34,-8
-            Q 34,-32 0,-28
-            Q -34,-32 -34,-8
-            Z`}
-        fill="#F5E8C8"
+        d="M -18,-20
+           Q -38,-6 -38,18
+           Q -38,46 0,50
+           Q 38,46 38,18
+           Q 38,-6 18,-20 Z"
+        fill="#E6D3A4"
         stroke="#8A5E10"
         strokeWidth={2.5}
+        strokeLinejoin="round"
       />
+      {/* shaded side, so the sack has volume */}
       <path
-        d={`M -14,-27 Q 0,-40 14,-27`}
-        fill="none"
+        d="M 12,-19 Q 34,-4 34,18 Q 34,42 4,48 Q 30,38 29,17 Q 28,-2 12,-19 Z"
+        fill="#CDB176"
+        opacity={0.85}
+      />
+      {/* fabric folds radiating from the cinch */}
+      <path d="M -10,-16 Q -16,6 -12,30" fill="none" stroke="#C2A468" strokeWidth={2} strokeLinecap="round" />
+      <path d="M 2,-16 Q 0,8 3,34" fill="none" stroke="#C2A468" strokeWidth={2} strokeLinecap="round" />
+      {/* gathered neck above the drawstring */}
+      <path
+        d="M -18,-20 Q -20,-34 -15,-40 L 15,-40 Q 20,-34 18,-20 Z"
+        fill="#EFE0BC"
         stroke="#8A5E10"
         strokeWidth={2.5}
-        strokeLinecap="round"
+        strokeLinejoin="round"
       />
+      {/* pleats in the gathered neck */}
+      <path d="M -8,-38 L -7,-21" fill="none" stroke="#C2A468" strokeWidth={1.6} />
+      <path d="M 0,-39 L 0,-21" fill="none" stroke="#C2A468" strokeWidth={1.6} />
+      <path d="M 8,-38 L 7,-21" fill="none" stroke="#C2A468" strokeWidth={1.6} />
+      {/* open mouth of the sack */}
+      <ellipse cx={0} cy={-40} rx={15} ry={5} fill="#7A5A24" stroke="#8A5E10" strokeWidth={2} />
+      <ellipse cx={0} cy={-40.5} rx={11} ry={3} fill="#5C4318" />
+      {/* drawstring cinching the neck, with two loose ends */}
+      <path d="M -19,-22 Q 0,-16 19,-22" fill="none" stroke="#6B4A12" strokeWidth={3} strokeLinecap="round" />
+      <path d="M 19,-22 q 7,3 5,10" fill="none" stroke="#6B4A12" strokeWidth={2.5} strokeLinecap="round" />
+      <path d="M -19,-22 q -7,3 -5,10" fill="none" stroke="#6B4A12" strokeWidth={2.5} strokeLinecap="round" />
     </g>
   );
 }
@@ -261,7 +285,10 @@ export default function MarbleStage({ phase, onWave }: MarbleStageProps) {
   const pouch1Opacity = phase === "bag1" || bag1Spilled ? 1 : 0;
   const pouch1X = bag1Spilled ? BAG1_TIPPED.x : BAG1.x;
   const pouch1Y = bag1Spilled ? BAG1_TIPPED.y : BAG1.y;
-  const pouch1Tilt = bag1Spilled ? -75 : 0;
+  // Positive = clockwise, which swings the sack's mouth to the RIGHT — toward
+  // the marbles it is pouring out. (Tipping the other way pointed the opening
+  // away from the spill, so the marbles appeared to come out of its base.)
+  const pouch1Tilt = bag1Spilled ? 78 : 0;
   const pouch2Opacity = phase === "bags3" || phase === "wave1" ? 1 : 0;
   const pouch3Opacity =
     phase === "bags3" || phase === "wave1" || phase === "wave2" ? 1 : 0;
