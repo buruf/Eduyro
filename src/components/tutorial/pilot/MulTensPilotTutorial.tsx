@@ -92,6 +92,15 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
   // resolves immediately if the fetch fails; still counts ms toward the log
   // once the clip actually plays and ends.
   const playLine = (text: string) => {
+    // Interrupt whatever's currently playing so fast taps never overlap
+    // audio; still bank the ms it actually played before being cut off.
+    const prev = currentAudioRef.current;
+    if (prev) {
+      audioPlayedMsRef.current += (prev.currentTime || 0) * 1000;
+      prev.pause();
+      currentAudioRef.current = null;
+      tlog.log({ audioPlayedMs: Math.round(audioPlayedMsRef.current) });
+    }
     fetchClipUrl(text).then((url) => {
       if (!url) return;
       try {
@@ -153,7 +162,6 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
 
   function submitGuess() {
     if (!guess) return;
-    tlog.bumpTap();
     tlog.log({ predictionAnswer: guess, predictionCorrect: guess === String(PILOT.answer) });
     setGuessSubmitted(true);
     setHookStep("guessed");
@@ -198,15 +206,15 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
       setCompressStep("symbol");
       setPhase("symbol");
       playLine(PILOT.narration.compress);
-      // Kick off the payoff overlay shortly after the symbol phase lands —
-      // motion only, no beat/phase change gated behind it.
-      setTimeout(() => {
-        setCompressStep("payoff");
-        playLine(PILOT.narration.payoff);
-        setShowSparkle(true);
-        requestAnimationFrame(() => setZeroTranslated(true));
-        setTimeout(() => setShowSparkle(false), 250);
-      }, 250);
+    } else if (compressStep === "symbol") {
+      // Tap-gated: the child's tap is what triggers the payoff overlay.
+      // The 700ms translate + 250ms sparkle that follow are motion
+      // durations on an already-tapped-into state, not beat advances.
+      setCompressStep("payoff");
+      playLine(PILOT.narration.payoff);
+      setShowSparkle(true);
+      requestAnimationFrame(() => setZeroTranslated(true));
+      setTimeout(() => setShowSparkle(false), 250);
     } else if (compressStep === "payoff") {
       // Task 5 will insert beats 3-4 (faded example / isomorphic check)
       // here; for now the flow hands off straight to guided practice.
@@ -239,21 +247,21 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
           <button
             type="button"
             onClick={handleSkipClick}
-            className="absolute top-3 right-3 text-xs text-muted hover:text-ink underline transition-opacity duration-500 opacity-100 z-10"
+            className="absolute top-3 right-10 text-xs text-muted hover:text-ink underline transition-opacity duration-500 opacity-100 z-10"
           >
             {PILOT.skipLabel}
           </button>
         )}
-        {!skipVisible && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute top-3 right-3 text-ink/40 hover:text-ink text-lg leading-none z-10"
-            aria-label="Close tutorial"
-          >
-            ×
-          </button>
-        )}
+        {/* Close must be reachable on every beat, independent of the
+            beat-0-only skip affordance. */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-3 right-3 text-ink/40 hover:text-ink text-lg leading-none z-10"
+          aria-label="Close tutorial"
+        >
+          ×
+        </button>
 
         <div className="px-6 pt-10 pb-6 flex flex-col items-center text-center gap-4">
           <div className="relative w-full">
@@ -320,6 +328,7 @@ export default function MulTensPilotTutorial({ open, studentId, onStart, onClose
               value={guess}
               onChange={setGuess}
               onSubmit={submitGuess}
+              onTap={tapOnly}
             />
           )}
 
@@ -361,10 +370,12 @@ function GuessKeypad({
   value,
   onChange,
   onSubmit,
+  onTap,
 }: {
   value: string;
   onChange: (v: string) => void;
   onSubmit: () => void;
+  onTap: () => void;
 }) {
   const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "✓"];
   return (
@@ -375,6 +386,7 @@ function GuessKeypad({
           key={k}
           type="button"
           onClick={() => {
+            onTap();
             if (k === "⌫") onChange(value.slice(0, -1));
             else if (k === "✓") onSubmit();
             else if (value.length < 3) onChange(value + k);
