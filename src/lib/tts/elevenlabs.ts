@@ -26,7 +26,7 @@ export const VOICE_PRESETS = {
   // `speed` is the dial to turn if narration feels rushed or draggy. 1.0 was
   // too fast for a child following an explanation; the expressiveness that
   // stops it sounding recited comes from `style`, not from pace.
-  lively: { stability: 0.45, similarity_boost: 0.85, style: 0.45, use_speaker_boost: true, speed: 0.9 },
+  lively: { stability: 0.45, similarity_boost: 0.85, style: 0.45, use_speaker_boost: true, speed: 0.7 },
 } as const;
 
 export type VoicePreset = keyof typeof VOICE_PRESETS;
