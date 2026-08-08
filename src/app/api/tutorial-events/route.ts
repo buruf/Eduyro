@@ -11,7 +11,7 @@ const EventSchema = z.object({
   runId: z.string().min(8).max(64),
   studentId: z.string().min(1),
   skillId: z.string().min(1).max(64),
-  variant: z.enum(["old", "pilot"]),
+  variant: z.enum(["old", "pilot", "video"]),
   endedAt: z.string().datetime().optional(),
   beatIndex: z.number().int().min(0).max(10).optional(),
   tapCount: z.number().int().min(0).max(500).optional(),

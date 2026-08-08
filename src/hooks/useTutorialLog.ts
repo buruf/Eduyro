@@ -11,7 +11,7 @@ export type TutorialPatch = {
   audioPlayedMs?: number; predictionAnswer?: string; predictionCorrect?: boolean;
 };
 
-export function useTutorialLog(opts: { studentId: string; skillId: string; variant: "old" | "pilot"; enabled: boolean }) {
+export function useTutorialLog(opts: { studentId: string; skillId: string; variant: "old" | "pilot" | "video"; enabled: boolean }) {
   const runId = useMemo(() => crypto.randomUUID(), []);
   const pending = useRef<TutorialPatch & { tapCount?: number }>({});
   const taps = useRef(0);

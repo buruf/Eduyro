@@ -33,7 +33,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, StatCard, Progress, Modal, EmptyState } from "@/components/ui";
 import { StudentRealtime } from "@/components/realtime/StudentRealtime";
 import { ConceptTutorialModal } from "@/components/tutorial/ConceptTutorialModal";
-import MulTensPilotTutorial from "@/components/tutorial/pilot/MulTensPilotTutorial";
+import LessonVideoModal from "@/components/tutorial/LessonVideoModal";
 import { PILOT } from "@/components/tutorial/pilot/pilot-script";
 import { ReportProblemButton } from "@/components/ReportProblemButton";
 import { cn, formatTime } from "@/lib/utils";
@@ -607,14 +607,19 @@ export default function StudentDashboardPage() {
 
       {/* Concept tutorial — auto-opens before a skill's FIRST practice;
           reachable later via the "Review tutorial" link */}
-      {/* The pilot unit serves the pilot tutorial in BOTH modes — a child who
-          taps "Review tutorial" must see the lesson they were actually taught,
-          not the old modal's different one. Only the first run is logged
-          (see `logRun`), so review replays stay out of the pilot funnel. */}
+      {/* Units with a rendered lesson video serve that in BOTH modes — a child
+          who taps "Review tutorial" must see the lesson they were actually
+          taught. Only the first run is logged (see `logRun`), so review
+          replays stay out of the funnel the skip/completion rates measure.
+          The interactive pilot tutorial is no longer routed to (kept in
+          src/components/tutorial/pilot/ in case that decision reverses). */}
       {conceptModal && (conceptModal.sheet?.skillName ?? currentSheet?.skillName) === PILOT.skillLabel ? (
-        <MulTensPilotTutorial
+        <LessonVideoModal
           open={true}
           studentId={data.student.id}
+          skillId={PILOT.skillId}
+          src="lesson-video/mul-tens.mp4"
+          title={PILOT.skillLabel}
           logRun={conceptModal.mode === "first"}
           onStart={onConceptTutorialDone}
           onClose={() => setConceptModal(null)}

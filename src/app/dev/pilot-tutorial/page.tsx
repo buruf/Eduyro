@@ -1,11 +1,11 @@
-// DEV-ONLY harness for eyeballing the mul-tens pilot tutorial without a
+// DEV-ONLY harness for eyeballing the mul-tens lesson VIDEO without a
 // student session. 404s in production. Logging posts will 401 (fake student) —
 // the hook is fire-and-forget, so the UI flow is unaffected.
 "use client";
 
 import { useState } from "react";
 import { notFound } from "next/navigation";
-import MulTensPilotTutorial from "@/components/tutorial/pilot/MulTensPilotTutorial";
+import LessonVideoModal from "@/components/tutorial/LessonVideoModal";
 
 export default function PilotTutorialDevPage() {
   if (process.env.NODE_ENV === "production") notFound();
@@ -19,10 +19,13 @@ export default function PilotTutorialDevPage() {
         <button className="border rounded px-2 py-1" onClick={() => { setStatus("running"); setKey((k) => k + 1); }}>restart</button>
       </div>
       {status === "running" && (
-        <MulTensPilotTutorial
+        <LessonVideoModal
           key={key}
           open
           studentId="dev-fake-student"
+          skillId="mul-tens"
+          src="lesson-video/mul-tens.mp4"
+          title="Multiplying tens (20 × 3)"
           onStart={() => setStatus("onStart called (→ practice)")}
           onClose={() => setStatus("onClose called")}
         />
