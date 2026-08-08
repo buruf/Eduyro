@@ -62,23 +62,28 @@ const Greeter = dynamic(() => import("./Greeter"), { ssr: false });
 // ---- audio: same /api/tts fetch shape as NarrationConductor, but a bare
 // play-once helper (no visible player UI). Audio failure NEVER blocks the
 // tutorial — every caller treats a failed/missing clip as "silently skip".
-const clipCache = new Map<string, string | null>();
+interface Alignment { words: string[]; startsSec: number[]; endsSec: number[] }
+interface Clip { url: string; alignment: Alignment | null }
 
-async function fetchClipUrl(text: string): Promise<string | null> {
+const clipCache = new Map<string, Clip | null>();
+
+async function fetchClip(text: string): Promise<Clip | null> {
   const cached = clipCache.get(text);
   if (cached !== undefined) return cached;
   try {
     const r = await fetch("/api/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      // "lively" delivery: these are short story beats, not lesson prose.
+      body: JSON.stringify({ text, preset: "lively" }),
     });
     if (!r.ok) { clipCache.set(text, null); return null; }
     const j = await r.json();
     const url = j?.data?.url as string | undefined;
     if (!url) { clipCache.set(text, null); return null; }
-    clipCache.set(text, url);
-    return url;
+    const clip: Clip = { url, alignment: (j.data.alignment ?? null) as Alignment | null };
+    clipCache.set(text, clip);
+    return clip;
   } catch {
     clipCache.set(text, null);
     return null;
@@ -90,6 +95,11 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
   const [phase, setPhase] = useState<Phase>("empty");
   const [hookStep, setHookStep] = useState<HookStep>("bag1");
   const [highlight, setHighlight] = useState<Highlight>("none");
+  // The line currently being spoken, and how far through it the voice is —
+  // the caption renders this so reading and hearing stay in lockstep.
+  const [spokenLine, setSpokenLine] = useState("");
+  const [spokenEmoji, setSpokenEmoji] = useState("");
+  const [spokenWordIdx, setSpokenWordIdx] = useState(-1);
   const [revealStep, setRevealStep] = useState<RevealStep>("idle");
   const [compressStep, setCompressStep] = useState<CompressStep>("rods");
 
@@ -133,7 +143,14 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
   // Play a narration line by key from PILOT.narration. Never blocks the UI —
   // resolves immediately if the fetch fails; still counts ms toward the log
   // once the clip actually plays and ends.
-  const playLine = (text: string) => {
+  const playLine = (text: string, emojiKey?: string) => {
+    // The caption IS the spoken line — the child reads exactly what they hear,
+    // one word lighting up at a time. Set it before the audio resolves so the
+    // sentence is on screen even while the clip is still being fetched.
+    setSpokenLine(text);
+    setSpokenEmoji(emojiKey ? PILOT.emoji[emojiKey] ?? "" : "");
+    setSpokenWordIdx(-1);
+
     // Interrupt whatever's currently playing so fast taps never overlap
     // audio; still bank the ms it actually played before being cut off.
     const prev = currentAudioRef.current;
@@ -143,19 +160,56 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
       currentAudioRef.current = null;
       tlog.log({ audioPlayedMs: Math.round(audioPlayedMsRef.current) });
     }
-    fetchClipUrl(text).then((url) => {
-      if (!url) return;
+    try { window.speechSynthesis?.cancel(); } catch { /* noop */ }
+
+    fetchClip(text).then((clip) => {
+      if (!clip) { speakWithBrowserVoice(text); return; }
       try {
-        const a = new Audio(url);
+        const a = new Audio(clip.url);
         currentAudioRef.current = a;
+        const al = clip.alignment;
+        if (al?.startsSec?.length) {
+          a.addEventListener("timeupdate", () => {
+            const t = a.currentTime;
+            let i = 0;
+            while (i < al.startsSec.length && al.startsSec[i] <= t) i++;
+            setSpokenWordIdx(i - 1);
+          });
+        }
         a.addEventListener("ended", () => {
           audioPlayedMsRef.current += (a.duration || 0) * 1000;
           tlog.log({ audioPlayedMs: Math.round(audioPlayedMsRef.current) });
+          setSpokenWordIdx(-1); // stop mid-sentence highlighting once silent
         });
-        a.play().catch(() => { /* autoplay blocked — tutorial still works muted */ });
-      } catch { /* noop — audio is best-effort */ }
+        a.play().catch(() => { speakWithBrowserVoice(text); });
+      } catch {
+        speakWithBrowserVoice(text);
+      }
     });
   };
+
+  // Fallback when the cloned voice is unavailable (TTS off, or the clip failed):
+  // the browser's own voice, whose word-boundary events drive the same
+  // highlighting. Silent narration would leave a non-reader with nothing.
+  function speakWithBrowserVoice(text: string) {
+    try {
+      const synth = window.speechSynthesis;
+      if (!synth) return;
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 1;
+      const voices = synth.getVoices().filter((v) => v.lang.startsWith("en"));
+      const preferred =
+        voices.find((v) => /natural|neural|female|samantha|aria|jenny|zira/i.test(v.name)) ?? voices[0];
+      if (preferred) u.voice = preferred;
+      u.onboundary = (e) => {
+        if (e.name && e.name !== "word") return;
+        const upTo = text.slice(0, e.charIndex ?? 0);
+        setSpokenWordIdx(upTo.split(/\s+/).filter(Boolean).length);
+      };
+      u.onend = () => setSpokenWordIdx(-1);
+      synth.speak(u);
+    } catch { /* noop — narration is best-effort */ }
+  }
 
   // ---- open: reset state, kick off beat 0, prefetch reveal clips ----
   useEffect(() => {
@@ -185,7 +239,7 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
 
     playLine(PILOT.narration.hook1);
     // Prefetch the three reveal clips now so beat 1 playback is instant.
-    PILOT.narration.reveal.forEach((t) => { fetchClipUrl(t); });
+    PILOT.narration.reveal.forEach((t) => { fetchClip(t); });
 
     const t = setTimeout(() => setSkipVisible(true), 4000);
     return () => clearTimeout(t);
@@ -202,7 +256,7 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
       // The sack tips over and pours out its twenty marbles.
       setHookStep("spill");
       setPhase("grid20");
-      playLine(PILOT.narration.spill);
+      playLine(PILOT.narration.spill, "spill");
     } else if (hookStep === "spill") {
       setHookStep("countGold");
       setHighlight("gold");
@@ -215,10 +269,10 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
       setHookStep("otherBags");
       setHighlight("none");
       setPhase("bags3");
-      playLine(PILOT.narration.otherBags);
+      playLine(PILOT.narration.otherBags, "otherBags");
     } else if (hookStep === "otherBags") {
       setHookStep("challenge");
-      playLine(PILOT.narration.challenge);
+      playLine(PILOT.narration.challenge, "challenge");
     }
     // "challenge" and "guessed" are advanced via the keypad / "let's find
     // out" tap below, not the generic stage tap.
@@ -253,7 +307,7 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
       // Name the addition the three waves just acted out, before beat 2
       // compresses it into tens.
       setRevealStep("sum");
-      playLine(PILOT.narration.addUp);
+      playLine(PILOT.narration.addUp, "addUp");
     } else if (revealStep === "sum") {
       advance(2);
       setPhase("rods");
@@ -399,6 +453,17 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
     onClose();
   }
 
+  // Silent UI prompts — instructions and feedback the voice does not say.
+  // Anything not listed here falls through to the spoken read-along caption.
+  const promptOverride: string | null =
+    beat === 1 && revealStep === "idle" ? "Tap to watch."
+      : beat === 2 && compressStep === "rods" ? "Tap to see it a different way."
+      : beat === 3 && beat3Done ? "Nice work!"
+      : beat === 3 && beat3Wrong ? "Try again — take another look."
+      : beat === 3 ? "Fill in the blank."
+      : beat === 4 && beat4Scaffold ? "Let's break it down."
+      : null;
+
   const showKeypad = beat === 0 && hookStep === "challenge" && !guessSubmitted;
   const stageTapHandler =
     beat === 0 ? handleHookTap : beat === 1 ? handleRevealTap : beat === 2 ? handleCompressTap : undefined;
@@ -517,28 +582,12 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
           {/* Narration text is a visual anchor for what's playing — copy comes
               ONLY from PILOT.narration, never hardcoded. */}
           <div className="min-h-[2.5rem] text-lg font-medium text-ink">
-            {beat === 0 && hookStep === "bag1" && PILOT.caption.hook1}
-            {beat === 0 && hookStep === "spill" && PILOT.caption.spill}
-            {beat === 0 && hookStep === "countGold" && PILOT.caption.countGold}
-            {beat === 0 && hookStep === "countBlue" && PILOT.caption.countBlue}
-            {beat === 0 && hookStep === "otherBags" && PILOT.caption.otherBags}
-            {beat === 0 && hookStep === "challenge" && !guessSubmitted && PILOT.caption.challenge}
-            {beat === 0 && guessSubmitted && PILOT.caption.checkGuess}
-            {beat === 1 && revealStep === "idle" && "Tap to watch."}
-            {beat === 1 && revealStep === "sum" && PILOT.caption.addUp}
-            {beat === 1 && revealStep !== "idle" && revealStep !== "sum" && PILOT.narration.reveal[
-              revealStep === "wave1" || revealStep === "wave1-done" ? 0
-                : revealStep === "wave2" || revealStep === "wave2-done" ? 1
-                : 2
-            ]}
-            {beat === 2 && compressStep === "rods" && "Tap to see it a different way."}
-            {beat === 2 && compressStep === "symbol" && PILOT.narration.compress}
-            {beat === 2 && compressStep === "payoff" && PILOT.narration.payoff}
-            {beat === 3 && !beat3Done && !beat3Wrong && "Fill in the blank."}
-            {beat === 3 && !beat3Done && beat3Wrong && "Try again — take another look."}
-            {beat === 3 && beat3Done && "Nice work!"}
-            {beat === 4 && !beat4Scaffold && !beat4Wrong && PILOT.narration.handoff}
-            {beat === 4 && beat4Scaffold && "Let's break it down."}
+            {/* Prompts that are never spoken show as plain text; everything
+                the voice says is rendered as the read-along below, so the
+                child never reads one thing while hearing another. */}
+            {promptOverride ?? (
+              <ReadAlong text={spokenLine} wordIdx={spokenWordIdx} emoji={spokenEmoji} />
+            )}
           </div>
 
           {showKeypad && (
@@ -619,6 +668,42 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
         }
       `}</style>
     </div>
+  );
+}
+
+/**
+ * Renders the sentence currently being spoken, lighting each word as the voice
+ * reaches it (word timings come from the TTS alignment, or from the browser
+ * voice's boundary events). Words already spoken stay dark; upcoming words are
+ * dimmed, so a child can follow along instead of reading a caption that says
+ * something different from what they hear.
+ */
+function ReadAlong({ text, wordIdx, emoji }: { text: string; wordIdx: number; emoji: string }) {
+  if (!text) return null;
+  const words = text.split(/\s+/).filter(Boolean);
+  return (
+    <span>
+      {words.map((w, i) => {
+        const spoken = wordIdx >= 0 && i <= wordIdx;
+        const current = wordIdx >= 0 && i === wordIdx;
+        return (
+          <span
+            key={i}
+            className={
+              current
+                ? "text-brand-blue font-bold"
+                : spoken || wordIdx < 0
+                ? "text-ink"
+                : "text-ink/40"
+            }
+            style={{ transition: "color 120ms linear" }}
+          >
+            {w}{i < words.length - 1 ? " " : ""}
+          </span>
+        );
+      })}
+      {emoji && <span className="ml-2">{emoji}</span>}
+    </span>
   );
 }
 

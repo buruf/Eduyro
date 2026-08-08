@@ -16,7 +16,12 @@ export const maxDuration = 30;
 
 // 2500 covers the longest lesson narration (goal + why + rule + worked example
 // ≈ 1300 chars); each unique line is synthesized once and cached forever.
-const Schema = z.object({ text: z.string().min(1).max(2500) });
+const Schema = z.object({
+  text: z.string().min(1).max(2500),
+  // Delivery preset — omitted means the original lesson read, so every
+  // existing caller keeps its cached clips.
+  preset: z.enum(["lesson", "lively"]).optional(),
+});
 
 export async function POST(req: NextRequest) {
   return withAuth(req, async () => {
@@ -25,17 +30,23 @@ export async function POST(req: NextRequest) {
     if ("status" in parsed) return parsed;
     const text = speakable(parsed.data.text);
     if (!text) return err("Nothing to speak", 400);
+    const preset = parsed.data.preset ?? "lesson";
 
     try {
       // "v3" = delivery version (speed 0.88 + word-timestamp alignment). Bump to
       // invalidate cached clips whenever the voice settings or payload change.
-      const hash = crypto.createHash("sha256").update(`${VOICE_ID}|v3|${text}`).digest("hex");
+      // The preset joins the key so the two deliveries cache separately; the
+      // default keeps the exact key existing lesson clips were stored under.
+      const hash = crypto
+        .createHash("sha256")
+        .update(`${VOICE_ID}|v3|${preset === "lesson" ? "" : preset + "|"}${text}`)
+        .digest("hex");
       const existing = await db.ttsClip.findUnique({ where: { hash } });
       if (existing) {
         return ok({ url: await getSignedDownloadUrl(existing.fileKey, 60 * 60 * 24), alignment: (existing as any).alignment ?? null });
       }
       // Cache miss — synthesize once (with word timings), store, record.
-      const { mp3, alignment } = await synthesizeSpeechWithTimestamps(text);
+      const { mp3, alignment } = await synthesizeSpeechWithTimestamps(text, preset);
       const fileKey = `tts/${VOICE_ID}/${hash}.mp3`;
       await uploadToS3(mp3, fileKey, "audio/mpeg");
       await db.ttsClip.create({ data: { hash, voiceId: VOICE_ID, fileKey, chars: text.length, alignment: alignment as any } }).catch(() => {});

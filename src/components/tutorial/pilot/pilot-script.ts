@@ -28,16 +28,15 @@ export const PILOT = {
     payoff: "Two times three is six — then put the zero back. Sixty.",
     handoff: "Your turn. Same idea.",
   },
-  caption: {
-    hook1: "Hey — I need your help with something.",
-    spill: "Oh no! The bag fell! 😮",
-    countGold: "🟡 10 yellow!",
-    countBlue: "🔵 10 blue — that's 20 in this bag!",
-    otherBags: "Two bags are still closed… 👀",
-    challenge: "How many in ALL THREE bags? Don't count — guess! 🎯",
-    checkGuess: "Let's see if your guess was right!",
-    addUp: "20 + 20 + 20 = 60 🎉",
-  },
+  // The caption shows the spoken sentence verbatim, word-highlighted in time
+  // with the voice — so a child reads exactly what they hear. These emoji are
+  // appended after the sentence as a mood cue; they are never spoken.
+  emoji: {
+    spill: "😮",
+    otherBags: "👀",
+    challenge: "🎯",
+    addUp: "🎉",
+  } as Record<string, string>,
   skipLabel: "I already know this",
   skipFailLine: "Let me show you a quick way.",
 } as const;

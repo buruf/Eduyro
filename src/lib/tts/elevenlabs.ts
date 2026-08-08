@@ -16,21 +16,29 @@ export function isTtsEnabled(): boolean {
   return Boolean(API_KEY && VOICE_ID);
 }
 
-// Warm, steady delivery for a child audience. `speed` (0.7–1.2) slows the pace
-// so students can follow; kept in one place so both synthesis paths match.
-const VOICE_SETTINGS = { stability: 0.5, similarity_boost: 0.8, style: 0.15, use_speaker_boost: true, speed: 0.88 };
+// Delivery presets. `lesson` is the original warm, deliberately-slow read for
+// explanatory narration. `lively` is for short story beats ("Oh no! The bag
+// fell!") — at 0.88 speed with almost no style those drawl and sound robotic,
+// which is the opposite of excited; near-natural pace plus more style variance
+// makes them land as speech rather than recitation.
+export const VOICE_PRESETS = {
+  lesson: { stability: 0.5, similarity_boost: 0.8, style: 0.15, use_speaker_boost: true, speed: 0.88 },
+  lively: { stability: 0.38, similarity_boost: 0.85, style: 0.45, use_speaker_boost: true, speed: 1.0 },
+} as const;
+
+export type VoicePreset = keyof typeof VOICE_PRESETS;
 
 // Word-level timing for read-along highlighting. `words[i]` is spoken from
 // startsSec[i] to endsSec[i] (seconds into the audio).
 export interface Alignment { words: string[]; startsSec: number[]; endsSec: number[] }
 
 // Synthesize `text` to mp3 bytes in the configured voice. Throws on API error.
-export async function synthesizeSpeech(text: string): Promise<Buffer> {
+export async function synthesizeSpeech(text: string, preset: VoicePreset = "lesson"): Promise<Buffer> {
   if (!isTtsEnabled()) throw new Error("TTS not configured");
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
     method: "POST",
     headers: { "xi-api-key": API_KEY!, "Content-Type": "application/json", Accept: "audio/mpeg" },
-    body: JSON.stringify({ text, model_id: MODEL_ID, voice_settings: VOICE_SETTINGS }),
+    body: JSON.stringify({ text, model_id: MODEL_ID, voice_settings: VOICE_PRESETS[preset] }),
   });
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
@@ -43,12 +51,12 @@ export async function synthesizeSpeech(text: string): Promise<Buffer> {
 // read-along highlighting. Uses the /with-timestamps endpoint (returns base64
 // audio + per-character start/end times). Falls back to no alignment on shape
 // changes so narration never breaks.
-export async function synthesizeSpeechWithTimestamps(text: string): Promise<{ mp3: Buffer; alignment: Alignment | null }> {
+export async function synthesizeSpeechWithTimestamps(text: string, preset: VoicePreset = "lesson"): Promise<{ mp3: Buffer; alignment: Alignment | null }> {
   if (!isTtsEnabled()) throw new Error("TTS not configured");
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/with-timestamps`, {
     method: "POST",
     headers: { "xi-api-key": API_KEY!, "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ text, model_id: MODEL_ID, voice_settings: VOICE_SETTINGS }),
+    body: JSON.stringify({ text, model_id: MODEL_ID, voice_settings: VOICE_PRESETS[preset] }),
   });
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
