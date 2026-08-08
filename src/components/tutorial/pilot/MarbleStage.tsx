@@ -51,10 +51,13 @@ const ARR_START_X = 31;
 const ARR_COL_SPACING = 20;
 const ARR_ROW_Y = [150, 210] as const;
 
-// Six 1x10 vertical rods used for the "rods" (and "symbol") phase.
+// Six 1x10 vertical rods used for the "rods" (and "symbol") phase. Each rod is
+// one ten, so the running total under them counts by tens to sixty.
 const ROD_X = [80, 180, 280, 380, 480, 580];
-const ROD_Y_START = 40;
-const ROD_Y_END = 320;
+const ROD_LABEL_Y = 340;
+const ROD_Y_START = 30;
+// Stops short of the stage floor to leave clear room for the running totals.
+const ROD_Y_END = 296;
 const ROD_SPACING = (ROD_Y_END - ROD_Y_START) / 9;
 
 type Pos = { x: number; y: number; opacity: number };
@@ -326,6 +329,31 @@ export default function MarbleStage({ phase, onWave, highlight = "none" }: Marbl
       <Pouch x={pouch1X} y={pouch1Y} opacity={pouch1Opacity} tilt={pouch1Tilt} />
       <Pouch x={BAG2.x} y={BAG2.y} opacity={pouch2Opacity} />
       <Pouch x={BAG3.x} y={BAG3.y} opacity={pouch3Opacity} />
+
+      {/* Running total under each rod — the skip-count made visible, so the
+          last label IS the answer sitting under the sixth ten. */}
+      {ROD_X.map((x, i) => (
+        <text
+          key={x}
+          x={x}
+          y={ROD_LABEL_Y}
+          textAnchor="middle"
+          fontSize={26}
+          fontWeight={700}
+          fill={i === ROD_X.length - 1 ? "#1B4F8A" : "#8A7A5E"}
+          opacity={phase === "rods" ? 1 : 0}
+          // `visibility` (not just opacity) so the labels are absent from the
+          // accessibility tree on every other phase, instead of being read out
+          // as a stray "10 20 30 40 50 60" during the hook.
+          style={{
+            transition: "opacity .4s ease",
+            transitionDelay: `${i * 120}ms`,
+            visibility: phase === "rods" ? "visible" : "hidden",
+          }}
+        >
+          {(i + 1) * 10}
+        </text>
+      ))}
 
       {marbles.map((flatIndex) => {
         const row = Math.floor(flatIndex / 30);

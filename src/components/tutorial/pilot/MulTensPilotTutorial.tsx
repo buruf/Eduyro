@@ -312,6 +312,8 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
       advance(2);
       setPhase("rods");
       setCompressStep("rods");
+      // Say it while the rods are up — this is the picture the line is about.
+      playLine(PILOT.narration.rods);
     }
   }
 
@@ -457,7 +459,6 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
   // Anything not listed here falls through to the spoken read-along caption.
   const promptOverride: string | null =
     beat === 1 && revealStep === "idle" ? "Tap to watch."
-      : beat === 2 && compressStep === "rods" ? "Tap to see it a different way."
       : beat === 3 && beat3Done ? "Nice work!"
       : beat === 3 && beat3Wrong ? "Try again — take another look."
       : beat === 3 ? "Fill in the blank."
@@ -526,16 +527,27 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
                 <div className="text-4xl font-bold text-ink font-serif">
                   {PILOT.a} × {PILOT.b} = {PILOT.answer}
                 </div>
-                <div className="text-lg font-semibold text-brand-blue relative">
-                  {PILOT.a / 10} × {PILOT.b} = {PILOT.answer / 10}
-                  <span
-                    className="inline-block font-bold ml-1"
-                    style={{
-                      transition: "transform 700ms ease",
-                      transform: zeroTranslated ? "translate(28px, 18px)" : "translate(0, 0)",
-                    }}
-                  >
-                    0
+                {/* The easy fact stays TRUE the whole time. The zero drops in
+                    as a separate result — putting it inside the equation
+                    rendered "2 × 3 = 60", wrong math on screen in a math
+                    lesson. */}
+                <div className="text-lg font-semibold text-brand-blue flex items-center gap-2">
+                  <span>
+                    {PILOT.a / 10} × {PILOT.b} = {PILOT.answer / 10}
+                  </span>
+                  <span className="text-ink/45">→</span>
+                  <span className="text-2xl font-bold">
+                    {PILOT.answer / 10}
+                    <span
+                      className="inline-block"
+                      style={{
+                        transition: "transform 700ms ease, opacity 500ms ease",
+                        transform: zeroTranslated ? "translate(0, 0)" : "translate(-6px, -26px)",
+                        opacity: zeroTranslated ? 1 : 0,
+                      }}
+                    >
+                      0
+                    </span>
                   </span>
                 </div>
                 {showSparkle && (
