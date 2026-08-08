@@ -13,7 +13,7 @@ import {
   GREETER_FPS,
 } from "@/remotion/pilot/GreeterScene";
 
-export default function Greeter() {
+export default function Greeter({ start }: { start: boolean }) {
   const ref = useRef<PlayerRef>(null);
 
   // `autoPlay` alone is unreliable: the Player mounts a silent <audio> element
@@ -23,7 +23,11 @@ export default function Greeter() {
   // finished mounting after its own autoPlay attempt.
   useEffect(() => {
     const p = ref.current;
-    if (!p) return;
+    // Hold on frame 0 (she is not yet on screen) until the greeting is
+    // actually being SPOKEN. The clip has to be fetched from /api/tts first,
+    // so a self-starting animation finishes waving before the voice says
+    // "Hey!" — the wave has to begin when the line does.
+    if (!p || !start) return;
     // On `ended` the Player rewinds to frame 0 — which for this composition is
     // the pre-entrance state (scale 0), i.e. she vanishes the moment she
     // finishes waving. Pin her to the final resting pose instead.
@@ -49,7 +53,7 @@ export default function Greeter() {
         /* noop */
       }
     };
-  }, []);
+  }, [start]);
 
   return (
     <Player
@@ -59,7 +63,8 @@ export default function Greeter() {
       compositionWidth={300}
       compositionHeight={300}
       fps={GREETER_FPS}
-      autoPlay
+      // No autoPlay — playback is driven by the effect above so the wave
+      // starts on the spoken line, not on mount.
       initiallyMuted
       // No loop: she waves once and settles. The spec forbids decorative
       // motion while the child is reading or thinking.

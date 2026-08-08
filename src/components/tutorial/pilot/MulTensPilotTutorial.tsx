@@ -100,6 +100,9 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
   const [highlight, setHighlight] = useState<Highlight>("none");
   // The line currently being spoken, and how far through it the voice is —
   // the caption renders this so reading and hearing stay in lockstep.
+  // Flips true the moment the first line is genuinely audible, so the
+  // greeter's wave starts with the voice rather than on mount.
+  const [narrationStarted, setNarrationStarted] = useState(false);
   const [spokenLine, setSpokenLine] = useState("");
   const [spokenEmoji, setSpokenEmoji] = useState("");
   const [spokenWordIdx, setSpokenWordIdx] = useState(-1);
@@ -179,6 +182,8 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
             setSpokenWordIdx(i - 1);
           });
         }
+        // "playing" is the first moment sound actually reaches the child.
+        a.addEventListener("playing", () => setNarrationStarted(true));
         a.addEventListener("ended", () => {
           audioPlayedMsRef.current += (a.duration || 0) * 1000;
           tlog.log({ audioPlayedMs: Math.round(audioPlayedMsRef.current) });
@@ -209,6 +214,7 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
         const upTo = text.slice(0, e.charIndex ?? 0);
         setSpokenWordIdx(upTo.split(/\s+/).filter(Boolean).length);
       };
+      u.onstart = () => setNarrationStarted(true);
       u.onend = () => setSpokenWordIdx(-1);
       synth.speak(u);
     } catch { /* noop — narration is best-effort */ }
@@ -240,12 +246,16 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
     setBeat4ScaffoldAnswer("");
     audioPlayedMsRef.current = 0;
 
+    setNarrationStarted(false);
     playLine(PILOT.narration.hook1);
+    // If no voice ever arrives (TTS off, autoplay blocked, no speech synth),
+    // wave anyway rather than leaving her frozen off-screen forever.
+    const waveFallback = setTimeout(() => setNarrationStarted(true), 2500);
     // Prefetch the three reveal clips now so beat 1 playback is instant.
     PILOT.narration.reveal.forEach((t) => { fetchClip(t); });
 
     const t = setTimeout(() => setSkipVisible(true), 4000);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); clearTimeout(waveFallback); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -517,7 +527,7 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
                 className="absolute bottom-0 right-1 w-[185px] h-[185px] pointer-events-none"
                 aria-hidden="true"
               >
-                <Greeter />
+                <Greeter start={narrationStarted} />
               </div>
             )}
 
