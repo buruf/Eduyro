@@ -7,7 +7,7 @@ import { NextRequest } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { ok, err, handleRouteError, withAuth, parseRequest } from "@/lib/api/helpers";
-import { isTtsEnabled, synthesizeSpeechWithTimestamps, VOICE_ID } from "@/lib/tts/elevenlabs";
+import { isTtsEnabled, synthesizeSpeechWithTimestamps, VOICE_ID, presetCacheKey } from "@/lib/tts/elevenlabs";
 import { speakable } from "@/lib/tts/speakable";
 import { uploadToS3, getSignedDownloadUrl } from "@/lib/pdf/generator";
 import { z } from "zod";
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       // default keeps the exact key existing lesson clips were stored under.
       const hash = crypto
         .createHash("sha256")
-        .update(`${VOICE_ID}|v3|${preset === "lesson" ? "" : preset + "|"}${text}`)
+        .update(`${VOICE_ID}|v3|${presetCacheKey(preset)}${text}`)
         .digest("hex");
       const existing = await db.ttsClip.findUnique({ where: { hash } });
       if (existing) {

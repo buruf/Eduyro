@@ -23,10 +23,25 @@ export function isTtsEnabled(): boolean {
 // makes them land as speech rather than recitation.
 export const VOICE_PRESETS = {
   lesson: { stability: 0.5, similarity_boost: 0.8, style: 0.15, use_speaker_boost: true, speed: 0.88 },
-  lively: { stability: 0.38, similarity_boost: 0.85, style: 0.45, use_speaker_boost: true, speed: 1.0 },
+  // `speed` is the dial to turn if narration feels rushed or draggy. 1.0 was
+  // too fast for a child following an explanation; the expressiveness that
+  // stops it sounding recited comes from `style`, not from pace.
+  lively: { stability: 0.45, similarity_boost: 0.85, style: 0.45, use_speaker_boost: true, speed: 0.9 },
 } as const;
 
 export type VoicePreset = keyof typeof VOICE_PRESETS;
+
+/**
+ * Cache-key fragment for a preset. Clips are cached forever, so changing a
+ * preset's settings has to change the key or every already-synthesized line
+ * keeps playing at the OLD delivery and the edit looks like it did nothing.
+ * `lesson` returns "" to preserve the keys its existing clips are stored under.
+ */
+export function presetCacheKey(preset: VoicePreset): string {
+  if (preset === "lesson") return "";
+  const s = VOICE_PRESETS[preset];
+  return `${preset}:${s.stability}:${s.style}:${s.speed}|`;
+}
 
 // Word-level timing for read-along highlighting. `words[i]` is spoken from
 // startsSec[i] to endsSec[i] (seconds into the audio).
