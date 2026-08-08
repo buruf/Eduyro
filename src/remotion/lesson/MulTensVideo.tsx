@@ -1,10 +1,9 @@
 // src/remotion/lesson/MulTensVideo.tsx
 // A short, plain explainer for 20 × 3. Four scenes, one idea each:
-//   1. what 20 × 3 asks           (0.0-6.0s)
-//   2. three bags of 20           (6.0-16.0s)
-//   3. count them: 20, 40, 60     (16.0-27.0s)
-//   4. the shortcut: 2×3=6, +0    (27.0-40.0s)
-// Everything is frame-driven, so picture and (later) voice share one clock.
+//   1. what 20 × 3 asks        2. three groups of 20
+//   3. count them: 20, 40, 60   4. the shortcut: 2×3=6, put the zero back
+// Scene lengths come from ./timeline (derived from the narration clips), so
+// picture and voice share one clock and cannot drift apart.
 import {
   AbsoluteFill,
   Audio,
@@ -28,6 +27,11 @@ const MUTED = "#8A7A5E";
 // Scene timing lives in ./timeline, derived from the narration clip lengths —
 // so a scene can never end before its line has finished being spoken.
 
+/** Scenes are told how long they are so their beats can scale to the voice. */
+interface SceneProps {
+  dur: number;
+}
+
 /** Fade + slight rise, the only entrance used anywhere in the video. */
 function useEnter(atFrame: number, durFrames = 14) {
   const frame = useCurrentFrame();
@@ -45,15 +49,15 @@ function useEnter(atFrame: number, durFrames = 14) {
   };
 }
 
-/** One bag of 20 marbles: two rows of ten, gold over blue. */
-function BagOf20({ appearAt }: { appearAt: number }) {
+/** One group of 20 dots: two rows of ten, gold over blue. */
+function GroupOf20({ appearAt }: { appearAt: number }) {
   const frame = useCurrentFrame();
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {[GOLD, BLUE].map((colour, row) => (
         <div key={row} style={{ display: "flex", gap: 10 }}>
           {Array.from({ length: 10 }, (_, i) => {
-            // Marbles land one after another, so each bag is visibly counted
+            // Dots land one after another, so each group is visibly counted
             // out rather than appearing as a block.
             const at = appearAt + (row * 10 + i) * 2;
             return (
@@ -116,13 +120,17 @@ function SceneAsk() {
   );
 }
 
-// ---- Scene 2: three bags of twenty ---------------------------------------
-function SceneBags() {
+// ---- Scene 2: three groups of twenty -------------------------------------
+function SceneGroups({ dur }: SceneProps) {
   const frame = useCurrentFrame();
   const title = useEnter(4);
-  // Each bag's "20" label appears once that bag has finished filling.
+  // Beats are FRACTIONS of the scene, not fixed frames: the scene stretches to
+  // fit its narration, so fixed beats would finish early and leave the picture
+  // sitting still while the voice keeps talking. Groups land near "here's one
+  // group" / "now another one" / "and one more".
+  const groupAt = (g: number) => Math.round(dur * (0.14 + g * 0.27));
   const labelOpacity = (g: number) =>
-    interpolate(frame, [30 + g * 66 + 42, 30 + g * 66 + 54], [0, 1], {
+    interpolate(frame, [groupAt(g) + 42, groupAt(g) + 54], [0, 1], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
     });
@@ -142,7 +150,7 @@ function SceneBags() {
       <div style={{ display: "flex", gap: 100 }}>
         {[0, 1, 2].map((g) => (
           <div key={g} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 22 }}>
-            <BagOf20 appearAt={30 + g * 66} />
+            <GroupOf20 appearAt={groupAt(g)} />
             <div
               style={{
                 fontSize: 86,
@@ -161,10 +169,21 @@ function SceneBags() {
 }
 
 // ---- Scene 3: count the groups: 20, 40, 60 -------------------------------
-function SceneCount() {
+function SceneCount({ dur }: SceneProps) {
   const frame = useCurrentFrame();
   const title = useEnter(4);
-  const running = [20, 40, 60];
+  // Each group stays labelled 20, because that is what each group actually holds —
+  // and it matches how the previous scene labelled them. The running total
+  // (20 → 40 → 60) lives in the EQUATION instead, where 40 is a genuine result
+  // rather than a number sitting under a group that contains 20.
+  const countAt = (g: number) => Math.round(dur * (0.16 + g * 0.13));
+  const multiplyAt = Math.round(dur * 0.82);
+  // How much of the addition has been written: 0 none, 1 "20", 2 "20 + 20 =
+  // 40", 3 the whole thing. Each step lands with the group being counted.
+  const stage = [0, 1, 2].reduce((n, g) => (frame >= countAt(g) ? g + 1 : n), 0);
+  const equation =
+    stage >= 3 ? "20 + 20 + 20 = 60" : stage === 2 ? "20 + 20 = 40" : stage === 1 ? "20" : "";
+  const stageStart = stage > 0 ? countAt(stage - 1) : 0;
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 56 }}>
       <div
@@ -180,7 +199,7 @@ function SceneCount() {
       </div>
       <div style={{ display: "flex", gap: 100 }}>
         {[0, 1, 2].map((g) => {
-          const at = 40 + g * 60;
+          const at = countAt(g);
           const lit = interpolate(frame, [at, at + 10], [0, 1], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
@@ -188,38 +207,60 @@ function SceneCount() {
           return (
             <div key={g} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 22 }}>
               <div style={{ opacity: 0.35 + 0.65 * lit }}>
-                <BagOf20 appearAt={-100} />
+                <GroupOf20 appearAt={-100} />
               </div>
               <div
                 style={{
-                  fontSize: 104,
+                  fontSize: 86,
                   fontWeight: 800,
-                  // The last total is the answer, so it lands in the accent
-                  // colour the final scene repeats.
-                  color: g === 2 ? BLUE : MUTED,
-                  opacity: lit,
-                  scale: String(interpolate(frame, [at, at + 10], [0.6, 1], {
-                    extrapolateLeft: "clamp",
-                    extrapolateRight: "clamp",
-                    easing: Easing.bezier(0.34, 1.56, 0.64, 1),
-                  })),
+                  color: GOLD,
+                  // Dim until this group is the one being counted, so the eye
+                  // follows the count without the number ever changing.
+                  opacity: 0.4 + 0.6 * lit,
                 }}
               >
-                {running[g]}
+                20
               </div>
             </div>
           );
         })}
       </div>
+      {/* The count, written down as it happens — this is where the running
+          total belongs, because here 40 is a result rather than a label on a
+          group that holds 20. Fixed height so nothing shifts as it grows. */}
       <div
         style={{
-          fontSize: 96,
+          fontSize: 88,
           fontWeight: 700,
-          color: INK,
-          opacity: interpolate(frame, [210, 226], [0, 1], {
+          color: MUTED,
+          height: 110,
+          display: "flex",
+          alignItems: "center",
+          opacity: interpolate(frame, [stageStart, stageStart + 10], [0, 1], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
           }),
+        }}
+      >
+        {equation}
+      </div>
+      {/* …and the shorthand for it. */}
+      <div
+        style={{
+          fontSize: 100,
+          fontWeight: 800,
+          color: INK,
+          opacity: interpolate(frame, [multiplyAt, multiplyAt + 16], [0, 1], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          }),
+          scale: String(
+            interpolate(frame, [multiplyAt, multiplyAt + 16], [0.85, 1], {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+              easing: Easing.bezier(0.34, 1.56, 0.64, 1),
+            }),
+          ),
         }}
       >
         20 × 3 = 60
@@ -229,18 +270,21 @@ function SceneCount() {
 }
 
 // ---- Scene 4: the shortcut ------------------------------------------------
-function SceneTrick() {
+function SceneTrick({ dur }: SceneProps) {
   const frame = useCurrentFrame();
   const title = useEnter(4);
-  // Beat A (~f60): the zeros collapse → 2 × 3 = 6. Beat B (~f170): back on.
+  // The zeros collapse on "cover up the zero" and return on "put the zero back
+  // on" — as fractions of the scene, so they track the narration's length.
+  const coverAt = Math.round(dur * 0.2);
+  const restoreAt = Math.round(dur * 0.55);
   const zeroAnim = interpolate(
     frame,
-    [50, 62, 168, 182],
+    [coverAt - 12, coverAt, restoreAt, restoreAt + 14],
     [1, 0, 0, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.bezier(0.4, 0, 0.2, 1) },
   );
   const caption =
-    frame < 62 ? "There's a faster way" : frame < 170 ? "Cover the zero — that's just 2 × 3 = 6" : "Put the zero back — 60";
+    frame < coverAt ? "There's a faster way" : frame < restoreAt ? "Cover the zero — that's just 2 × 3 = 6" : "Put the zero back — 60";
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 64 }}>
       <div
@@ -286,9 +330,9 @@ function Zero({ anim, accent = false }: { anim: number; accent?: boolean }) {
   );
 }
 
-const SCENE_BODIES: Record<string, React.FC> = {
+const SCENE_BODIES: Record<string, React.FC<SceneProps>> = {
   ask: SceneAsk,
-  bags: SceneBags,
+  groups: SceneGroups,
   count: SceneCount,
   trick: SceneTrick,
 };
@@ -312,7 +356,7 @@ export const MulTensVideo: React.FC = () => {
                 always starts exactly when its scene does. Absent until
                 scripts/build-lesson-voice.mjs has produced the mp3s. */}
             {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-            <Body />
+            <Body dur={scene.dur} />
           </Sequence>
         );
       })}

@@ -10,12 +10,12 @@ export const LESSON_LINES = [
     text: "So… what does 20 × 3 actually mean?",
   },
   {
-    id: "bags",
-    text: "It means 3 groups of 20. Here's one bag… 10 yellow, and 10 blue. That's 20. Now another one. And one more.",
+    id: "groups",
+    text: "It means 3 groups of 20. Here's one group… 10 yellow, and 10 blue. That's 20. Now another one. And one more.",
   },
   {
     id: "count",
-    text: "Let's count them up. 20… 40… 60. So 20 × 3 is 60.",
+    text: "Let's count them up. 20… 40… 60. So that's 20 + 20 + 20, which is 60. And 20 × 3 means exactly the same thing.",
   },
   {
     id: "trick",

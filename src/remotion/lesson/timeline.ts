@@ -11,15 +11,17 @@ import { VOICE_CLIPS } from "./voice-manifest";
 export const FPS = 30;
 
 /** Minimum on-screen time per scene, in seconds, used when there is no voice. */
+// Floors for the silent case only. Keep them BELOW the spoken lengths, or a
+// minimum longer than its clip pads the scene with dead air.
 const MIN_SECONDS: Record<string, number> = {
-  ask: 6,
-  bags: 10,
-  count: 11,
-  trick: 13,
+  ask: 4,
+  groups: 8,
+  count: 9,
+  trick: 9,
 };
 
 /** Silence after a line finishes, so scenes don't cut on the last syllable. */
-const TAIL_SECONDS = 1.2;
+const TAIL_SECONDS = 0.8;
 
 export interface SceneTiming {
   id: string;

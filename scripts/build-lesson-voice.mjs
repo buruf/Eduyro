@@ -53,10 +53,13 @@ if (!API_KEY || !VOICE_ID) {
 const LINES = [
   { id: "ask", text: "So… what does 20 times 3 actually mean?" },
   {
-    id: "bags",
-    text: "It means 3 groups of 20. Here's one bag… 10 yellow, and 10 blue. That's 20. Now another one. And one more.",
+    id: "groups",
+    text: "It means 3 groups of 20. Here's one group… 10 yellow, and 10 blue. That's 20. Now another one. And one more.",
   },
-  { id: "count", text: "Let's count them up. 20… 40… 60. So 20 times 3 is 60." },
+  {
+    id: "count",
+    text: "Let's count them up. 20… 40… 60. So that's 20 plus 20 plus 20, which is 60. And 20 times 3 means exactly the same thing.",
+  },
   {
     id: "trick",
     text: "But here's a faster way. Cover up the zero… 2 times 3 is 6. Now put the zero back on… 60. Same answer, much quicker.",
