@@ -51,9 +51,15 @@ const ARR_START_X = 31;
 const ARR_COL_SPACING = 20;
 const ARR_ROW_Y = [150, 210] as const;
 
-// Six 1x10 vertical rods used for the "rods" (and "symbol") phase. Each rod is
-// one ten, so the running total under them counts by tens to sixty.
-const ROD_X = [80, 180, 280, 380, 480, 580];
+// Six 1x10 vertical rods for the "rods" (and "symbol") phase, laid out as
+// THREE PAIRS — one pair per bag, each pair being that bag's 10 gold + 10 blue
+// = 20. Evenly spaced rods read as 6 × 10, which contradicts the 20 × 3 on
+// screen; paired, the same picture shows both readings at once (3 twenties,
+// and six tens), which is exactly the bridge this unit teaches.
+// Pair centres at 130 / 320 / 510, rods ±28 within a pair: the gap BETWEEN
+// bags (134) has to be clearly bigger than the gap inside one (56), or the six
+// rods just read as an even row again.
+const ROD_X = [102, 158, 292, 348, 482, 538];
 const ROD_LABEL_Y = 340;
 const ROD_Y_START = 30;
 // Stops short of the stage floor to leave clear room for the running totals.
@@ -86,8 +92,12 @@ function arrayPos(col: number, row: number): Pos {
 }
 
 function rodPos(flatIndex: number): Pos {
-  const rod = Math.floor(flatIndex / 10);
-  const posInRod = flatIndex % 10;
+  // Rods are ordered bag-by-bag (bag 1's gold rod, bag 1's blue rod, bag 2's…)
+  // so each adjacent pair is one bag's twenty.
+  const col = flatIndex % 30;
+  const row = Math.floor(flatIndex / 30);
+  const rod = bagGroupForCol(col) * 2 - 2 + row; // groups are 1..3 → rods 0..5
+  const posInRod = col % 10;
   return {
     x: ROD_X[rod],
     y: ROD_Y_START + posInRod * ROD_SPACING,
@@ -338,9 +348,12 @@ export default function MarbleStage({ phase, onWave, highlight = "none" }: Marbl
           x={x}
           y={ROD_LABEL_Y}
           textAnchor="middle"
-          fontSize={26}
           fontWeight={700}
-          fill={i === ROD_X.length - 1 ? "#1B4F8A" : "#8A7A5E"}
+          // Every second label closes a bag's pair, so 20 / 40 / 60 are the
+          // bag totals — emphasised, they make "20, three times" readable in
+          // the same picture as "six tens".
+          fill={i % 2 === 1 ? "#1B4F8A" : "#A99977"}
+          fontSize={i % 2 === 1 ? 28 : 22}
           opacity={phase === "rods" ? 1 : 0}
           // `visibility` (not just opacity) so the labels are absent from the
           // accessibility tree on every other phase, instead of being read out

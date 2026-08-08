@@ -16,22 +16,30 @@ export const PILOT = {
     // has to match the digits on the stage (rod totals, the worked example).
     // `speakable()` converts +, =, × for the voice one token for one token, so
     // the word-by-word highlighting stays aligned with what is read.
-    hook1: "Hey! I need your help with something.",
-    spill: "Oh no! The bag fell! Whoosh! Marbles everywhere!",
-    countGold: "Let's see what we've got. 10 yellow!",
-    countBlue: "And 10 blue. That's 20 marbles in this bag!",
+    // Written to be SPOKEN, not read. Short beats, contractions, direct
+    // address, and "…" where a teacher would actually pause — read-aloud prose
+    // ("Here's your challenge. Look for the pattern.") is what made the old
+    // tutorial sound recited. Numerals, not number-words, so the caption
+    // matches the digits on the stage.
+    hook1: "Hey! Come here a second, I need your help.",
+    spill: "Oh no… the bag fell! Marbles everywhere!",
+    countGold: "Okay, what have we got? Yellow ones… 10 of those.",
+    countBlue: "And 10 blue. So this one bag, that's 20.",
     otherBags:
-      "But look over there. 2 bags are still closed. I wonder what's inside them. Do you think they have 20 marbles too?",
+      "But hang on… look over there. 2 more bags, still closed. What do you think is in them? 20 each?",
     challenge:
-      "Here's your challenge. How many marbles are in all 3 bags? Don't count! Look for the pattern. Make your best guess!",
-    checkGuess: "Let's see if your guess was right!",
+      "Okay… here's the tricky part. All 3 bags… how many is that? Don't count them. Just take a guess.",
+    checkGuess: "Alright… let's find out.",
     reveal: ["20…", "40…", "60!"],
-    addUp: "1 bag has 20. There are 3 bags. So 20 + 20 + 20 = 60. That's 60 marbles!",
+    addUp: "See? One bag's 20. So 3 bags is 20, and 20, and 20. That's 60.",
     // Said WHILE the six rods are on screen — the line has to land on the
     // picture that makes the point, not one tap after it.
-    rods: "Now look at them another way. Count by tens: 10, 20, 30, 40, 50, 60. 6 tens make 60!",
-    compress: "So 20, 3 times, is 6 tens. And 6 tens is 60.",
-    payoff: "Here's the quick way. 2 × 3 = 6, then put the zero back. 60!",
+    rods: "Now watch this. Same marbles, just lined up in tens. Count with me… 10, 20, 30, 40, 50, 60. 6 tens. That's 60.",
+    compress: "So 20, three times over, gives you 6 tens. And 6 tens is 60.",
+    // Two beats, because the child taps between them to put the zero back —
+    // they do the trick, they don't watch it happen on a timer.
+    payoffCover: "Okay, here's the shortcut. Cover up the zero… now it's just 2 × 3. And that's 6.",
+    payoffRestore: "Now put the zero back on… 60. Same answer. Way faster.",
     handoff: "Your turn. Same idea.",
   },
   // The caption shows the spoken sentence verbatim, word-highlighted in time

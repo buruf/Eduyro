@@ -43,7 +43,10 @@ type RevealStep =
   | "wave3-done"
   | "sum";
 // Beat 2 sub-steps (compress + payoff).
-type CompressStep = "rods" | "symbol" | "payoff";
+// Beat 2 sub-steps: six rods → the symbol → the zero covered → the zero put
+// back. "cover" and "restore" are separate taps so the child performs the
+// trick rather than watching a timer perform it.
+type CompressStep = "rods" | "symbol" | "cover" | "restore";
 
 interface Props {
   open: boolean;
@@ -333,15 +336,19 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
       setPhase("symbol");
       playLine(PILOT.narration.compress);
     } else if (compressStep === "symbol") {
-      // Tap-gated: the child's tap is what triggers the payoff overlay.
-      // The 700ms translate + 250ms sparkle that follow are motion
-      // durations on an already-tapped-into state, not beat advances.
-      setCompressStep("payoff");
-      playLine(PILOT.narration.payoff);
+      // Cover the zeros — what stays on screen reads 2 × 3 = 6.
+      setCompressStep("cover");
+      setZeroTranslated(false);
+      playLine(PILOT.narration.payoffCover);
+    } else if (compressStep === "cover") {
+      // The child's tap is what puts the zero back: 20 × 3 = 60. The 400ms
+      // sparkle is motion inside an already-tapped-into state, not an advance.
+      setCompressStep("restore");
+      setZeroTranslated(true);
+      playLine(PILOT.narration.payoffRestore);
       setShowSparkle(true);
-      requestAnimationFrame(() => setZeroTranslated(true));
-      setTimeout(() => setShowSparkle(false), 250);
-    } else if (compressStep === "payoff") {
+      setTimeout(() => setShowSparkle(false), 400);
+    } else if (compressStep === "restore") {
       advance(3);
     }
   }
@@ -522,33 +529,20 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
               </div>
             )}
 
-            {beat === 2 && compressStep === "payoff" && (
+            {beat === 2 && (compressStep === "cover" || compressStep === "restore") && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
-                <div className="text-4xl font-bold text-ink font-serif">
-                  {PILOT.a} × {PILOT.b} = {PILOT.answer}
-                </div>
-                {/* The easy fact stays TRUE the whole time. The zero drops in
-                    as a separate result — putting it inside the equation
-                    rendered "2 × 3 = 60", wrong math on screen in a math
-                    lesson. */}
-                <div className="text-lg font-semibold text-brand-blue flex items-center gap-2">
-                  <span>
-                    {PILOT.a / 10} × {PILOT.b} = {PILOT.answer / 10}
-                  </span>
-                  <span className="text-ink/45">→</span>
-                  <span className="text-2xl font-bold">
-                    {PILOT.answer / 10}
-                    <span
-                      className="inline-block"
-                      style={{
-                        transition: "transform 700ms ease, opacity 500ms ease",
-                        transform: zeroTranslated ? "translate(0, 0)" : "translate(-6px, -26px)",
-                        opacity: zeroTranslated ? 1 : 0,
-                      }}
-                    >
-                      0
-                    </span>
-                  </span>
+                {/* ONE equation that acts out the trick: both zeros fade away
+                    ("cover the zero" — what's left reads 2 × 3 = 6), then come
+                    back ("stick the zero back on" — 20 × 3 = 60). Every frame
+                    is true math; nothing ever reads "2 × 3 = 60". */}
+                <div className="text-5xl font-bold text-ink font-serif tracking-tight">
+                  {PILOT.a / 10}
+                  <PayoffZero shown={zeroTranslated} />
+                  <span className="mx-3">×</span>
+                  {PILOT.b}
+                  <span className="mx-3">=</span>
+                  {PILOT.answer / 10}
+                  <PayoffZero shown={zeroTranslated} highlight />
                 </div>
                 {showSparkle && (
                   <div
@@ -680,6 +674,28 @@ export default function MulTensPilotTutorial({ open, studentId, logRun = true, o
         }
       `}</style>
     </div>
+  );
+}
+
+/**
+ * A zero in the payoff equation. Hidden it collapses to nothing so the digits
+ * close up into "2 × 3 = 6"; shown it springs back to full width. Width is
+ * animated (not just opacity) — a dimmed-but-still-spaced zero looks like a
+ * gap, not like the zero was taken away.
+ */
+function PayoffZero({ shown, highlight = false }: { shown: boolean; highlight?: boolean }) {
+  return (
+    <span
+      className={`inline-block overflow-hidden align-baseline ${highlight ? "text-brand-blue" : ""}`}
+      style={{
+        transition: "opacity 400ms ease, max-width 400ms ease, transform 400ms ease",
+        opacity: shown ? 1 : 0,
+        maxWidth: shown ? "1.2em" : "0em",
+        transform: shown ? "scale(1)" : "scale(0.6)",
+      }}
+    >
+      0
+    </span>
   );
 }
 
