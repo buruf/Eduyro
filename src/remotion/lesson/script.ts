@@ -123,12 +123,6 @@ export function tenFrameLines(u: TenFrameUnit): LessonLine[] {
   // voice describe make-ten while the picture performed doubles.
   let strategy: string;
   switch (u.strategy) {
-    case "doubles":
-      strategy =
-        u.x === u.y
-          ? `Two frames, filled exactly the same way. ${u.x} here… and ${u.x} here. That's a double… ${n.answer}.`
-          : `Start with the double you already know. ${u.x} and ${u.x} is ${u.x * 2}… and then just one more. ${n.answer}.`;
-      break;
     case "make-ten":
       strategy = n.makesTen
         ? `The frame has ${n.gap} empty spaces. So slide ${n.fillers} across… and the ten is full. That leaves ${n.rest}. 10 and ${n.rest} is ${n.answer}.`

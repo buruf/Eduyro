@@ -173,7 +173,6 @@ export interface TenFrameUnit {
    *  contradicts the unit and its own narration. */
   strategy:
     | "make-ten"
-    | "doubles"
     | "count-on"
     | "count-back"
     | "turnaround"
@@ -199,7 +198,7 @@ export const TEN_FRAME_UNITS: TenFrameUnit[] = [
     x: 6,
     y: 6,
     op: "+",
-    strategy: "doubles",
+    strategy: "make-ten",
     tip: "Doubles are worth just knowing",
   },
   {
@@ -217,7 +216,7 @@ export const TEN_FRAME_UNITS: TenFrameUnit[] = [
     x: 6,
     y: 7,
     op: "+",
-    strategy: "doubles",
+    strategy: "make-ten",
     tip: "6 + 6 is 12, so one more is 13",
   },
   {

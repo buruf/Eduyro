@@ -25,11 +25,10 @@ for (const u of TEN_FRAME_UNITS) {
         fail(u.id, `strategy "make-ten" but ${u.x} + ${u.y} cannot fill a ten (gap ${n.gap})`);
       }
       break;
-    case "doubles":
-      if (!(u.x === u.y || u.y === u.x + 1)) {
-        fail(u.id, `strategy "doubles" but ${u.x} + ${u.y} is neither a double nor a near-double`);
-      }
-      break;
+    // NOTE: doubles and near-doubles use "make-ten" too. A ten-frame lesson
+    // must actually FILL the frame — the doubles shortcut belongs in the
+    // closing tip, not instead of the ten. Skipping the slide meant a lesson
+    // that said "let's use a ten-frame" and never showed one filled.
     case "count-on":
       if (u.op !== "+") fail(u.id, `strategy "count-on" only applies to addition`);
       if (u.y > 3) fail(u.id, `strategy "count-on" but counting on ${u.y} is too many`);

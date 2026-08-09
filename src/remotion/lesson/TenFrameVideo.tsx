@@ -319,7 +319,6 @@ function SceneBuild({ dur, unit }: SceneProps) {
 function SceneStrategy(props: SceneProps) {
   // The unit's own strategy drives the animation. Running make-ten on a
   // doubles fact taught the wrong thing AND contradicted its narration.
-  if (props.unit.strategy === "doubles") return <SceneDoubles {...props} />;
   if (props.unit.strategy === "turnaround") return <SceneTurnaround {...props} />;
   return props.unit.op === "+" ? <SceneAdd {...props} /> : <SceneSubtract {...props} />;
 }
@@ -396,65 +395,6 @@ function SceneTurnaround({ dur, unit }: SceneProps) {
   );
 }
 
-/** Doubles: the second number lands in its OWN frame, in the identical shape,
- *  so the two are visibly the same — that symmetry is the memory hook. */
-function SceneDoubles({ dur, unit }: SceneProps) {
-  const frame = useCurrentFrame();
-  const title = useEnter(4);
-  const total = unit.x + unit.y;
-  const moveAt = Math.round(dur * 0.24);
-  const travel = 18;
-  const stagger = 4;
-  const landed = Array.from({ length: unit.y }, (_, i) => moveAt + i * stagger + travel * 0.8).filter(
-    (t) => frame >= t,
-  ).length;
-  const value = unit.x + landed;
-  const lastTick = landed > 0 ? moveAt + (landed - 1) * stagger + travel * 0.8 : null;
-  const near = unit.x !== unit.y; // near-double: one extra beyond the double
-  return (
-    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 24 }}>
-      <div
-        style={{
-          fontSize: 88,
-          fontWeight: 700,
-          color: INK,
-          opacity: title.opacity,
-          translate: `0 ${title.translateY}px`,
-        }}
-      >
-        {near ? `${unit.x} + ${unit.x} — then one more` : "The same twice"}
-      </div>
-      <Stage>
-        <FrameGrid x={FRAME_X} y={FRAME_Y} />
-        <FrameGrid x={FRAME2_X} y={FRAME_Y} />
-        {Array.from({ length: unit.x }, (_, i) => (
-          <Dot key={`x${i}`} from={cellPos(i, FRAME_X, FRAME_Y)} to={cellPos(i, FRAME_X, FRAME_Y)} at={0} />
-        ))}
-        {Array.from({ length: unit.y }, (_, i) => (
-          <Dot
-            key={`y${i}`}
-            from={loosePos(i)}
-            // Same cell index as the first frame → identical shape, mirrored.
-            to={cellPos(i, FRAME2_X, FRAME_Y)}
-            at={moveAt + i * stagger}
-            travel={travel}
-            // The extra dot of a near-double is marked, so "the double you
-            // know, plus one" is visible rather than merely asserted.
-            color={near && i >= unit.x ? GREEN : BLUE}
-          />
-        ))}
-        <Total value={value} changedAt={lastTick} />
-      </Stage>
-      {value === total && (
-        <div style={{ fontSize: 50, color: GREEN, fontWeight: 700 }}>
-          {near
-            ? `${unit.x} + ${unit.x} is ${unit.x * 2}, and one more is ${total}`
-            : `${unit.x} twice — that's ${total}`}
-        </div>
-      )}
-    </AbsoluteFill>
-  );
-}
 
 /** Addition: fill the ten first, then the rest — the make-ten move made literal. */
 function SceneAdd({ dur, unit }: SceneProps) {
@@ -465,10 +405,13 @@ function SceneAdd({ dur, unit }: SceneProps) {
   const fillers = Math.min(gap, unit.y); // dots that complete the ten
   const rest = unit.y - fillers;
 
-  const fillAt = Math.round(dur * 0.2);
-  const restAt = Math.round(dur * 0.58);
-  const travel = 18;
-  const stagger = 4;
+  // The slide IS the lesson, so it gets room: the loose dots sit still for a
+  // beat, then cross one at a time, slowly enough to follow. A quick, tightly
+  // staggered fill read as "the dots were simply already there".
+  const fillAt = Math.round(dur * 0.26);
+  const restAt = Math.round(dur * 0.64);
+  const travel = 26;
+  const stagger = 9;
 
   const filled = Array.from({ length: fillers }, (_, i) => fillAt + i * stagger + travel * 0.8).filter(
     (t) => frame >= t,
