@@ -9,8 +9,8 @@
 // numbers instead and read the make-ten script — so the voice said "slide 4
 // across" while nothing slid. Any unit whose declared strategy isn't true of
 // its own numbers can produce that kind of contradiction, so it fails here.
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, tenFrameNumbers } from "../src/remotion/lesson/units";
-import { lessonLines, columnLines, tenFrameLines } from "../src/remotion/lesson/script";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, tenFrameNumbers, dealingNumbers } from "../src/remotion/lesson/units";
+import { lessonLines, columnLines, tenFrameLines, dealingLines } from "../src/remotion/lesson/script";
 
 const problems: string[] = [];
 const fail = (id: string, msg: string) => problems.push(`${id}: ${msg}`);
@@ -50,12 +50,26 @@ for (const u of TEN_FRAME_UNITS) {
   if (u.op === "−" && u.x - u.y < 0) fail(u.id, `${u.x} − ${u.y} is negative`);
 }
 
+
+// Dealing units: the plate/ring layouts and the spoken answer all come from
+// these numbers, so a divisor that does not fit the stage — or a dividend too
+// big to draw as dots — must fail here rather than render as a mess.
+for (const u of DEALING_UNITS) {
+  const n = dealingNumbers(u);
+  if (u.divisor < 1) fail(u.id, `divisor ${u.divisor} is not usable`);
+  if (u.total > 60) fail(u.id, `${u.total} dots is too many to draw individually`);
+  if (n.each < 1) fail(u.id, `${u.total} ÷ ${u.divisor} gives less than one each`);
+  if (u.divisor > 12) fail(u.id, `${u.divisor} plates will not fit the stage`);
+  if (n.each > 12) fail(u.id, `${n.each} rings will not fit the stage`);
+}
+
 // Every unit must produce a full set of non-empty lines — an unhandled branch
 // silently yielding undefined would ship a video with a missing narration.
 const allUnits: { id: string; lines: () => { id: string; text: string }[] }[] = [
   ...EQUAL_GROUP_UNITS.map((u) => ({ id: u.id, lines: () => lessonLines(u) })),
   ...COLUMN_UNITS.map((u) => ({ id: u.id, lines: () => columnLines(u) })),
   ...TEN_FRAME_UNITS.map((u) => ({ id: u.id, lines: () => tenFrameLines(u) })),
+  ...DEALING_UNITS.map((u) => ({ id: u.id, lines: () => dealingLines(u) })),
 ];
 
 for (const u of allUnits) {
@@ -72,4 +86,4 @@ if (problems.length) {
   for (const p of problems) console.error(`  ${p}`);
   process.exit(1);
 }
-console.log(`OK — ${allUnits.length} units coherent (${TEN_FRAME_UNITS.length} strategy-checked).`);
+console.log(`OK — ${allUnits.length} units coherent (${TEN_FRAME_UNITS.length + DEALING_UNITS.length} strategy-checked).`);
