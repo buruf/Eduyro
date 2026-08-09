@@ -43,6 +43,10 @@ for (const u of TEN_FRAME_UNITS) {
     case "bridge-down":
       if (u.op !== "−") fail(u.id, `strategy "bridge-down" only applies to subtraction`);
       break;
+    case "count-up":
+      if (u.op !== "−") fail(u.id, `strategy "count-up" only applies to subtraction`);
+      if (u.x - u.y > 6) fail(u.id, `strategy "count-up" but the gap of ${u.x - u.y} is too far to count`);
+      break;
     case "take-all":
       if (u.x !== u.y) fail(u.id, `strategy "take-all" but ${u.x} − ${u.y} does not take all`);
       break;

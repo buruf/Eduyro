@@ -263,9 +263,13 @@ function SceneBuild({ dur, unit }: SceneProps) {
   const still = (p: { x: number; y: number }) => ({ from: p, to: p, at: 0 });
   const firstAt = 16;
   const secondAt = Math.round(dur * 0.52);
+  // Count-up starts from the SMALLER number — the gap up to the larger one is
+  // what the strategy scene then measures — so the build shows y, not x.
+  const countUp = unit.strategy === "count-up";
+  const shown = countUp ? unit.y : unit.x;
   // x fills the frame(s); y waits below (addition) or is what we remove.
-  const xInFrame2 = Math.max(0, unit.x - 10);
-  const landed = Math.max(0, Math.min(unit.x, Math.floor((frame - firstAt - 8) / 4) + 1));
+  const xInFrame2 = Math.max(0, shown - 10);
+  const landed = Math.max(0, Math.min(shown, Math.floor((frame - firstAt - 8) / 4) + 1));
   const landedY = Math.max(0, Math.min(unit.y, Math.floor((frame - secondAt - 8) / 4) + 1));
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 24 }}>
@@ -278,12 +282,12 @@ function SceneBuild({ dur, unit }: SceneProps) {
           translate: `0 ${title.translateY}px`,
         }}
       >
-        {unit.op === "+" ? `${unit.x}, and ${unit.y} more` : `${unit.x} to start with`}
+        {unit.op === "+" ? unit.x + ", and " + unit.y + " more" : countUp ? "Start from " + unit.y : unit.x + " to start with"}
       </div>
       <Stage>
         <FrameGrid x={FRAME_X} y={FRAME_Y} />
-        {unit.x > 10 && <FrameGrid x={FRAME2_X} y={FRAME_Y} />}
-        {Array.from({ length: Math.min(unit.x, 10) }, (_, i) => (
+        {shown > 10 && <FrameGrid x={FRAME2_X} y={FRAME_Y} />}
+        {Array.from({ length: Math.min(shown, 10) }, (_, i) => (
           <Dot key={`x${i}`} {...still(cellPos(i, FRAME_X, FRAME_Y))} appearAt={firstAt + i * 4} />
         ))}
         {Array.from({ length: xInFrame2 }, (_, i) => (
@@ -320,7 +324,91 @@ function SceneStrategy(props: SceneProps) {
   // The unit's own strategy drives the animation. Running make-ten on a
   // doubles fact taught the wrong thing AND contradicted its narration.
   if (props.unit.strategy === "turnaround") return <SceneTurnaround {...props} />;
+  if (props.unit.strategy === "count-up") return <SceneCountUp {...props} />;
   return props.unit.op === "+" ? <SceneAdd {...props} /> : <SceneSubtract {...props} />;
+}
+
+/** Count up: dots are ADDED from the smaller number to the larger, and the
+ *  ones you added are the answer — subtraction as the distance between two
+ *  numbers rather than as removal. The added dots stay green and get their own
+ *  count, so "how far" is a thing on screen, not just a claim. */
+function SceneCountUp({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const title = useEnter(4);
+  const gap = unit.x - unit.y; // the answer
+
+  const addAt = Math.round(dur * 0.24);
+  const travel = 22;
+  const stagger = 10; // slow: each added dot is one count
+
+  const added = Array.from({ length: gap }, (_, i) => addAt + i * stagger + travel * 0.8).filter(
+    (t) => frame >= t,
+  ).length;
+  const lastTick = added > 0 ? addAt + (added - 1) * stagger + travel * 0.8 : null;
+
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 24 }}>
+      <div
+        style={{
+          fontSize: 88,
+          fontWeight: 700,
+          color: INK,
+          opacity: title.opacity,
+          translate: `0 ${title.translateY}px`,
+        }}
+      >
+        How far from {unit.y} up to {unit.x}?
+      </div>
+      <Stage>
+        <FrameGrid x={FRAME_X} y={FRAME_Y} />
+        <FrameGrid x={FRAME2_X} y={FRAME_Y} />
+        {/* The starting number, already seated */}
+        {Array.from({ length: unit.y }, (_, i) => {
+          const pos =
+            i < 10 ? cellPos(i, FRAME_X, FRAME_Y) : cellPos(i - 10, FRAME2_X, FRAME_Y);
+          return <Dot key={`s${i}`} from={pos} to={pos} at={0} />;
+        })}
+        {/* The gap, arriving one dot at a time from below */}
+        {Array.from({ length: gap }, (_, i) => {
+          const idx = unit.y + i;
+          const to = idx < 10 ? cellPos(idx, FRAME_X, FRAME_Y) : cellPos(idx - 10, FRAME2_X, FRAME_Y);
+          return (
+            <Dot
+              key={`g${i}`}
+              from={loosePos(i)}
+              to={to}
+              at={addAt + i * stagger}
+              travel={travel}
+              color={GREEN}
+            />
+          );
+        })}
+        {/* Two counts: where we've reached, and how many we've added. The
+            second is the answer, so it is the one in the accent colour. */}
+        <Total value={unit.y + added} changedAt={lastTick} label="reached" />
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: STAGE_H - 200,
+            width: STAGE_W,
+            textAlign: "center",
+            fontSize: 64,
+            fontWeight: 800,
+            color: GREEN,
+            opacity: added > 0 ? 1 : 0,
+          }}
+        >
+          {added} added
+        </div>
+      </Stage>
+      {added >= gap && (
+        <div style={{ fontSize: 50, color: GREEN, fontWeight: 700 }}>
+          {unit.y} to {unit.x} is {gap} — so {unit.x} − {unit.y} = {gap}
+        </div>
+      )}
+    </AbsoluteFill>
+  );
 }
 
 /** Turnaround: the two groups physically trade places and the total doesn't

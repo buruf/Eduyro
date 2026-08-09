@@ -144,6 +144,10 @@ export function tenFrameLines(u: TenFrameUnit): LessonLine[] {
         ? `${u.x} is a ten and ${n.extras} more. Take those ${n.firstOff} off first… and we're down to 10. Now ${n.thenOff} more to go… ${n.answer}.`
         : `Take ${u.y} off, one at a time… ${n.answer} left.`;
       break;
+    case "count-up":
+      // Difference-as-distance: the dots you ADD are the answer.
+      strategy = `Instead of taking 8 away one by one, ask how far it is from ${u.y} up to ${u.x}. Add one… ${Array.from({ length: n.answer }, (_, i) => u.y + i + 1).join("… ")}. Count what you added — ${n.answer}. That's the gap between them.`;
+      break;
     case "take-all":
       strategy = `Take all ${u.y} of them off… and there's nothing left. Zero.`;
       break;
@@ -156,7 +160,9 @@ export function tenFrameLines(u: TenFrameUnit): LessonLine[] {
       text:
         u.op === "+"
           ? `Here's ${u.x} in the frame. And here are the other ${u.y}, waiting underneath.`
-          : `Here's ${u.x}… ${u.x > 10 ? `a full ten, and ${n.extras} more.` : "filling up the frame."}`,
+          : u.strategy === "count-up"
+            ? `This time, start with the smaller number. Here's ${u.y} in the frame.`
+            : `Here's ${u.x}… ${u.x > 10 ? `a full ten, and ${n.extras} more.` : "filling up the frame."}`,
     },
     { id: "strategy", text: strategy },
     { id: "record", text: `So ${u.x} ${opWord} ${u.y} is ${n.answer}. ${u.tip}.` },

@@ -224,6 +224,11 @@ export interface TenFrameUnit {
     | "count-back"
     | "turnaround"
     | "bridge-down"
+    // Subtraction as DISTANCE rather than removal: count up from the smaller
+    // number to the larger and the answer is how far you travelled. Most
+    // teaching only ever shows take-away, which is why "count up to subtract"
+    // later feels like an unrelated trick.
+    | "count-up"
     | "take-all";
   /** The strategy line shown and spoken at the end. */
   tip: string;
@@ -283,6 +288,17 @@ export const TEN_FRAME_UNITS: TenFrameUnit[] = [
     op: "−",
     strategy: "count-back",
     tip: "Small numbers off? Just count back",
+  },
+  {
+    id: "sub-count-up",
+    label: "Find the difference (count up)",
+    x: 13,
+    y: 8,
+    op: "−",
+    // 13 − 8: taking 8 away one at a time is laborious, but the gap from 8 up
+    // to 13 is short — which is exactly when counting up wins.
+    strategy: "count-up",
+    tip: "When the numbers are close, count up instead",
   },
   {
     id: "sub-zero",
