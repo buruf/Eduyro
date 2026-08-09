@@ -44,7 +44,11 @@ const VOICE_SETTINGS = {
   similarity_boost: 0.85,
   style: 0.45,
   use_speaker_boost: true,
-  speed: 0.7,
+  // 0.7 (the API floor) time-stretches the audio rather than making the voice
+  // speak slowly — it flattens prosody and is what made the narration sound
+  // robotic. Pacing now comes from short sentences and "…" pauses in the
+  // script, which cost nothing and sound natural.
+  speed: 0.85,
 };
 
 interface VoiceClip {
