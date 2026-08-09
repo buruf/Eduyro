@@ -59,8 +59,12 @@ function useEnter(atFrame: number, durFrames = 14) {
   };
 }
 
-/** Safe drawing width inside the 1920 frame (80px margins, per video layout). */
-const SAFE_W = 1760;
+/**
+ * Safe drawing width inside the 1920 frame. The 80px margin in the layout
+ * guidance is quoted for a 1080-wide video, which is ~142px here — and players
+ * crop, so edge-hugging content is the first thing lost.
+ */
+const SAFE_W = 1640;
 
 /**
  * Dots sized from BOTH the group size and the NUMBER of groups, so the row
@@ -222,7 +226,10 @@ function SceneCount({ dur, unit }: SceneProps) {
   );
   // Past six terms the written-out sum is noise rather than insight, so show
   // the running total instead — matching what the narration says.
-  const compact = b > 6;
+  // Even at 7+ groups the written-out sum still fits the frame at a smaller
+  // size, and it is the whole bridge from counting to multiplying — replacing
+  // it with a bare running total left an unexplained number floating there.
+  const compact = b > 8;
   const equation =
     stage === 0
       ? ""
@@ -272,7 +279,9 @@ function SceneCount({ dur, unit }: SceneProps) {
       </div>
       <div
         style={{
-          fontSize: compact ? 104 : 88,
+          // The written sum grows with the number of groups; shrink it so
+          // "4 + 4 + 4 + 4 + 4 + 4 + 4 = 28" still sits inside the safe area.
+          fontSize: compact ? 104 : b >= 7 ? 68 : b >= 5 ? 78 : 88,
           fontWeight: 700,
           color: MUTED,
           height: 110,

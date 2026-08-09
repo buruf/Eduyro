@@ -617,57 +617,46 @@ function SceneSubtract({ dur, unit }: SceneProps) {
           return <MovingRod key={`t${i}`} from={rodSlot(i)} to={rodSlot(i)} at={0} />;
         })}
 
-        {/* The borrowed rod's ten cubes fly over and fan into the ones grid */}
-        {n.borrows &&
-          frame >= borrowAt &&
-          Array.from({ length: 10 }, (_, k) => (
-            <MovingCube
-              key={`b${k}`}
-              from={rodCubePos(rodSlot(n.xTens - 1), k)}
-              to={onesSlot(n.xOnes + k)}
-              at={borrowAt + k * borrowStagger}
-              travel={borrowTravel}
-              color={GREEN}
-            />
-          ))}
-
-        {/* Ones: survivors stay, the taken-away ones slide off the stage */}
+        {/* ONE journey per cube. Splitting arrival and removal across separate
+            render blocks drew borrowed-then-removed cubes twice — parked AND
+            flying — so the column showed more cubes than the count. */}
         {Array.from({ length: onesAvailable }, (_, i) => {
-          if (n.borrows && i >= n.xOnes) return null; // rendered above as borrowed
+          const isBorrowed = n.borrows && i >= n.xOnes;
+          const k = i - n.xOnes; // index within the borrowed ten
+          // Borrowed cubes don't exist until their flight starts.
+          if (isBorrowed && frame < borrowAt + k * borrowStagger) return null;
+
+          // Cubes leave highest-index first, so survivors stay a tidy block.
           const removalIdx = onesAvailable - 1 - i;
-          if (removalIdx < n.yOnes) {
+          const removalStart = removeAt + removalIdx * stagger;
+          const leaving = removalIdx < n.yOnes && frame >= removalStart;
+
+          if (leaving) {
             return (
               <MovingCube
                 key={`o${i}`}
                 from={onesSlot(i)}
                 to={offStage(onesSlot(i))}
-                at={removeAt + removalIdx * stagger}
+                at={removalStart}
                 travel={travel + 8}
+                color={isBorrowed ? GREEN : undefined}
+              />
+            );
+          }
+          if (isBorrowed) {
+            return (
+              <MovingCube
+                key={`o${i}`}
+                from={rodCubePos(rodSlot(n.xTens - 1), k)}
+                to={onesSlot(i)}
+                at={borrowAt + k * borrowStagger}
+                travel={borrowTravel}
+                color={GREEN}
               />
             );
           }
           return <MovingCube key={`o${i}`} from={onesSlot(i)} to={onesSlot(i)} at={0} />;
         })}
-
-        {/* Borrowed cubes that then get taken away leave from their new home */}
-        {n.borrows &&
-          Array.from({ length: 10 }, (_, k) => {
-            const i = n.xOnes + k;
-            const removalIdx = onesAvailable - 1 - i;
-            if (removalIdx >= 0 && removalIdx < n.yOnes && frame >= removeAt + removalIdx * stagger) {
-              return (
-                <MovingCube
-                  key={`br${k}`}
-                  from={onesSlot(i)}
-                  to={offStage(onesSlot(i))}
-                  at={removeAt + removalIdx * stagger}
-                  travel={travel + 8}
-                  color={GREEN}
-                />
-              );
-            }
-            return null;
-          })}
 
         <LiveCount value={onesCount} x={ONES_X0 - 100} label="ones" changedAt={lastOnesTick} />
         <LiveCount value={tensCount} x={TENS_X0 - 60} label="tens" changedAt={lastTensTick} />
