@@ -320,7 +320,80 @@ function SceneStrategy(props: SceneProps) {
   // The unit's own strategy drives the animation. Running make-ten on a
   // doubles fact taught the wrong thing AND contradicted its narration.
   if (props.unit.strategy === "doubles") return <SceneDoubles {...props} />;
+  if (props.unit.strategy === "turnaround") return <SceneTurnaround {...props} />;
   return props.unit.op === "+" ? <SceneAdd {...props} /> : <SceneSubtract {...props} />;
+}
+
+/** Turnaround: the two groups physically trade places and the total doesn't
+ *  budge — "3 + 8 is the same as 8 + 3" shown rather than asserted. */
+function SceneTurnaround({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const title = useEnter(4);
+  const total = unit.x + unit.y;
+  const settleAt = Math.round(dur * 0.18);
+  const swapAt = Math.round(dur * 0.5);
+  const travel = 24;
+  const swapped = frame >= swapAt + travel * 0.9;
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 24 }}>
+      <div
+        style={{
+          fontSize: 88,
+          fontWeight: 700,
+          color: INK,
+          opacity: title.opacity,
+          translate: `0 ${title.translateY}px`,
+        }}
+      >
+        {swapped ? `${unit.y} + ${unit.x} — the same` : `${unit.x} + ${unit.y}`}
+      </div>
+      <Stage>
+        <FrameGrid x={FRAME_X} y={FRAME_Y} />
+        <FrameGrid x={FRAME2_X} y={FRAME_Y} />
+        {/* x starts left, ends right */}
+        {Array.from({ length: unit.x }, (_, i) => (
+          <Dot
+            key={`x${i}`}
+            from={cellPos(i, FRAME_X, FRAME_Y)}
+            to={cellPos(i, FRAME2_X, FRAME_Y)}
+            at={swapAt}
+            travel={travel}
+          />
+        ))}
+        {/* y starts below, settles right, then swaps left */}
+        {Array.from({ length: unit.y }, (_, i) => (
+          <Dot
+            key={`y${i}`}
+            from={frame < swapAt ? loosePos(i) : cellPos(i, FRAME2_X, FRAME_Y)}
+            to={frame < swapAt ? cellPos(i, FRAME2_X, FRAME_Y) : cellPos(i, FRAME_X, FRAME_Y)}
+            at={frame < swapAt ? settleAt + i * 3 : swapAt}
+            travel={frame < swapAt ? 16 : travel}
+            color={BLUE}
+          />
+        ))}
+        {/* Counts up as the second group settles, then holds through the swap —
+            the total NOT changing while the dots move sides is the whole
+            point. Showing the finished total from frame 0 gave the answer away
+            before anything happened. */}
+        <Total
+          value={
+            frame >= swapAt
+              ? total
+              : unit.x +
+                Array.from({ length: unit.y }, (_, i) => settleAt + i * 3 + 16 * 0.8).filter(
+                  (t) => frame >= t,
+                ).length
+          }
+          changedAt={swapped ? swapAt + travel : null}
+        />
+      </Stage>
+      {swapped && (
+        <div style={{ fontSize: 50, color: GREEN, fontWeight: 700 }}>
+          same dots — still {total}
+        </div>
+      )}
+    </AbsoluteFill>
+  );
 }
 
 /** Doubles: the second number lands in its OWN frame, in the identical shape,

@@ -171,7 +171,14 @@ export interface TenFrameUnit {
   /** Which strategy the animation should PERFORM. The unit teaches this, so
    *  the visual has to match it — showing make-ten for a doubles fact
    *  contradicts the unit and its own narration. */
-  strategy: "make-ten" | "doubles" | "count-on" | "bridge-down" | "take-all";
+  strategy:
+    | "make-ten"
+    | "doubles"
+    | "count-on"
+    | "count-back"
+    | "turnaround"
+    | "bridge-down"
+    | "take-all";
   /** The strategy line shown and spoken at the end. */
   tip: string;
 }
@@ -201,7 +208,7 @@ export const TEN_FRAME_UNITS: TenFrameUnit[] = [
     x: 3,
     y: 8,
     op: "+",
-    strategy: "make-ten",
+    strategy: "turnaround",
     tip: "Swap them round — 3 + 8 is the same as 8 + 3",
   },
   {
@@ -228,7 +235,7 @@ export const TEN_FRAME_UNITS: TenFrameUnit[] = [
     x: 9,
     y: 2,
     op: "−",
-    strategy: "bridge-down",
+    strategy: "count-back",
     tip: "Small numbers off? Just count back",
   },
   {

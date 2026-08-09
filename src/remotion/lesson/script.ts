@@ -116,34 +116,53 @@ export const TEN_FRAME_LINE_IDS = ["ask", "build", "strategy", "record"] as cons
 
 export function tenFrameLines(u: TenFrameUnit): LessonLine[] {
   const n = tenFrameNumbers(u);
+  const opWord = u.op === "+" ? "plus" : "take away";
 
-  if (u.op === "−") {
-    const strategy = n.bridgesDown
-      ? `${u.x} is a ten and ${n.extras} more. Take those ${n.firstOff} off first… and we're down to 10. Now ${n.thenOff} more to go… ${n.answer}.`
-      : u.y === u.x
-        ? `Take all ${u.y} of them off… and there's nothing left. Zero.`
+  // Branch on the unit's DECLARED strategy — the same field the animation
+  // branches on. Deriving the spoken strategy from the numbers instead let the
+  // voice describe make-ten while the picture performed doubles.
+  let strategy: string;
+  switch (u.strategy) {
+    case "doubles":
+      strategy =
+        u.x === u.y
+          ? `Two frames, filled exactly the same way. ${u.x} here… and ${u.x} here. That's a double… ${n.answer}.`
+          : `Start with the double you already know. ${u.x} and ${u.x} is ${u.x * 2}… and then just one more. ${n.answer}.`;
+      break;
+    case "make-ten":
+      strategy = n.makesTen
+        ? `The frame has ${n.gap} empty spaces. So slide ${n.fillers} across… and the ten is full. That leaves ${n.rest}. 10 and ${n.rest} is ${n.answer}.`
+        : `Now add the other ${u.y} on… ${n.answer}.`;
+      break;
+    case "count-on":
+      strategy = `Start at ${u.x}… and just count on. ${Array.from({ length: u.y }, (_, i) => u.x + i + 1).join("… ")}.`;
+      break;
+    case "count-back":
+      strategy = `Start at ${u.x}… and count back. ${Array.from({ length: u.y }, (_, i) => u.x - i - 1).join("… ")}.`;
+      break;
+    case "turnaround":
+      strategy = `${u.x} and ${u.y}. Now watch — swap them round. ${u.y} and ${u.x}. Same dots, just the other way about… still ${n.answer}. So if you know one, you know the other.`;
+      break;
+    case "bridge-down":
+      strategy = n.bridgesDown
+        ? `${u.x} is a ten and ${n.extras} more. Take those ${n.firstOff} off first… and we're down to 10. Now ${n.thenOff} more to go… ${n.answer}.`
         : `Take ${u.y} off, one at a time… ${n.answer} left.`;
-    return [
-      { id: "ask", text: `${u.x} take away ${u.y}. Let's use a ten-frame.` },
-      { id: "build", text: `Here's ${u.x}… ${u.x > 10 ? "a full ten, and " + n.extras + " more." : "filling up the frame."}` },
-      { id: "strategy", text: strategy },
-      { id: "record", text: `So ${u.x} take away ${u.y} is ${n.answer}. ${u.tip}.` },
-    ];
+      break;
+    case "take-all":
+      strategy = `Take all ${u.y} of them off… and there's nothing left. Zero.`;
+      break;
   }
 
-  const strategy = n.makesTen
-    ? `The frame has ${n.gap} empty spaces. So slide ${n.fillers} across… and the ten is full. That leaves ${n.rest}. 10 and ${n.rest} is ${n.answer}.`
-    : u.x === u.y
-      ? `Two rows the same — that's a double. ${u.x} and ${u.x}… ${n.answer}.`
-      : `Now add the other ${u.y} on… ${n.answer}.`;
-
   return [
-    { id: "ask", text: `${u.x} plus ${u.y}. Let's use a ten-frame.` },
+    { id: "ask", text: `${u.x} ${opWord} ${u.y}. Let's use a ten-frame.` },
     {
       id: "build",
-      text: `Here's ${u.x} in the frame. And here are the other ${u.y}, waiting underneath.`,
+      text:
+        u.op === "+"
+          ? `Here's ${u.x} in the frame. And here are the other ${u.y}, waiting underneath.`
+          : `Here's ${u.x}… ${u.x > 10 ? `a full ten, and ${n.extras} more.` : "filling up the frame."}`,
     },
     { id: "strategy", text: strategy },
-    { id: "record", text: `So ${u.x} plus ${u.y} is ${n.answer}. ${u.tip}.` },
+    { id: "record", text: `So ${u.x} ${opWord} ${u.y} is ${n.answer}. ${u.tip}.` },
   ];
 }
