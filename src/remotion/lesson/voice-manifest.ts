@@ -391,5 +391,269 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
         "durationInSeconds": 5.526
       }
     ]
+  },
+  "mul-identity": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/mul-identity/ramlah/ask.mp3",
+        "durationInSeconds": 3.111
+      },
+      {
+        "id": "groups",
+        "file": "lesson-voice/mul-identity/ramlah/groups.mp3",
+        "durationInSeconds": 5.666
+      },
+      {
+        "id": "count",
+        "file": "lesson-voice/mul-identity/ramlah/count.mp3",
+        "durationInSeconds": 9.009
+      },
+      {
+        "id": "trick",
+        "file": "lesson-voice/mul-identity/ramlah/trick.mp3",
+        "durationInSeconds": 11.981
+      }
+    ]
+  },
+  "mul-squares": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/mul-squares/ramlah/ask.mp3",
+        "durationInSeconds": 2.972
+      },
+      {
+        "id": "groups",
+        "file": "lesson-voice/mul-squares/ramlah/groups.mp3",
+        "durationInSeconds": 6.037
+      },
+      {
+        "id": "count",
+        "file": "lesson-voice/mul-squares/ramlah/count.mp3",
+        "durationInSeconds": 11.796
+      },
+      {
+        "id": "trick",
+        "file": "lesson-voice/mul-squares/ramlah/trick.mp3",
+        "durationInSeconds": 6.455
+      }
+    ]
+  },
+  "mul-6-9": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/mul-6-9/ramlah/ask.mp3",
+        "durationInSeconds": 3.019
+      },
+      {
+        "id": "groups",
+        "file": "lesson-voice/mul-6-9/ramlah/groups.mp3",
+        "durationInSeconds": 6.223
+      },
+      {
+        "id": "count",
+        "file": "lesson-voice/mul-6-9/ramlah/count.mp3",
+        "durationInSeconds": 11.146
+      },
+      {
+        "id": "trick",
+        "file": "lesson-voice/mul-6-9/ramlah/trick.mp3",
+        "durationInSeconds": 9.474
+      }
+    ]
+  },
+  "mul-10-12": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/mul-10-12/ramlah/ask.mp3",
+        "durationInSeconds": 2.368
+      },
+      {
+        "id": "groups",
+        "file": "lesson-voice/mul-10-12/ramlah/groups.mp3",
+        "durationInSeconds": 5.759
+      },
+      {
+        "id": "count",
+        "file": "lesson-voice/mul-10-12/ramlah/count.mp3",
+        "durationInSeconds": 11.146
+      },
+      {
+        "id": "trick",
+        "file": "lesson-voice/mul-10-12/ramlah/trick.mp3",
+        "durationInSeconds": 5.759
+      }
+    ]
+  },
+  "div-skip": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/div-skip/ramlah/ask.mp3",
+        "durationInSeconds": 5.526
+      },
+      {
+        "id": "deal",
+        "file": "lesson-voice/div-skip/ramlah/deal.mp3",
+        "durationInSeconds": 9.706
+      },
+      {
+        "id": "group",
+        "file": "lesson-voice/div-skip/ramlah/group.mp3",
+        "durationInSeconds": 11.749
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/div-skip/ramlah/record.mp3",
+        "durationInSeconds": 4.876
+      }
+    ]
+  },
+  "div-identity": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/div-identity/ramlah/ask.mp3",
+        "durationInSeconds": 5.526
+      },
+      {
+        "id": "deal",
+        "file": "lesson-voice/div-identity/ramlah/deal.mp3",
+        "durationInSeconds": 9.195
+      },
+      {
+        "id": "group",
+        "file": "lesson-voice/div-identity/ramlah/group.mp3",
+        "durationInSeconds": 12.399
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/div-identity/ramlah/record.mp3",
+        "durationInSeconds": 3.483
+      }
+    ]
+  },
+  "div-squares": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/div-squares/ramlah/ask.mp3",
+        "durationInSeconds": 6.409
+      },
+      {
+        "id": "deal",
+        "file": "lesson-voice/div-squares/ramlah/deal.mp3",
+        "durationInSeconds": 8.731
+      },
+      {
+        "id": "group",
+        "file": "lesson-voice/div-squares/ramlah/group.mp3",
+        "durationInSeconds": 11.378
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/div-squares/ramlah/record.mp3",
+        "durationInSeconds": 5.759
+      }
+    ]
+  },
+  "div-3-4": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/div-3-4/ramlah/ask.mp3",
+        "durationInSeconds": 5.666
+      },
+      {
+        "id": "deal",
+        "file": "lesson-voice/div-3-4/ramlah/deal.mp3",
+        "durationInSeconds": 7.941
+      },
+      {
+        "id": "group",
+        "file": "lesson-voice/div-3-4/ramlah/group.mp3",
+        "durationInSeconds": 12.817
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/div-3-4/ramlah/record.mp3",
+        "durationInSeconds": 5.851
+      }
+    ]
+  },
+  "div-6-9": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/div-6-9/ramlah/ask.mp3",
+        "durationInSeconds": 5.851
+      },
+      {
+        "id": "deal",
+        "file": "lesson-voice/div-6-9/ramlah/deal.mp3",
+        "durationInSeconds": 9.242
+      },
+      {
+        "id": "group",
+        "file": "lesson-voice/div-6-9/ramlah/group.mp3",
+        "durationInSeconds": 12.539
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/div-6-9/ramlah/record.mp3",
+        "durationInSeconds": 5.294
+      }
+    ]
+  },
+  "div-10-12": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/div-10-12/ramlah/ask.mp3",
+        "durationInSeconds": 5.991
+      },
+      {
+        "id": "deal",
+        "file": "lesson-voice/div-10-12/ramlah/deal.mp3",
+        "durationInSeconds": 9.892
+      },
+      {
+        "id": "group",
+        "file": "lesson-voice/div-10-12/ramlah/group.mp3",
+        "durationInSeconds": 12.91
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/div-10-12/ramlah/record.mp3",
+        "durationInSeconds": 5.619
+      }
+    ]
+  },
+  "div-remainder": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/div-remainder/ramlah/ask.mp3",
+        "durationInSeconds": 5.759
+      },
+      {
+        "id": "deal",
+        "file": "lesson-voice/div-remainder/ramlah/deal.mp3",
+        "durationInSeconds": 16.3
+      },
+      {
+        "id": "group",
+        "file": "lesson-voice/div-remainder/ramlah/group.mp3",
+        "durationInSeconds": 16.254
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/div-remainder/ramlah/record.mp3",
+        "durationInSeconds": 7.105
+      }
+    ]
   }
 };

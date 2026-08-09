@@ -56,6 +56,48 @@ export const EQUAL_GROUP_UNITS: LessonUnit[] = [
       caption: "Cover the zero, then put it back",
     },
   },
+  {
+    id: "mul-identity",
+    label: "×1 and ×0",
+    a: 1,
+    b: 7,
+    trick: {
+      // Only claims what's on screen. The ×0 half of this unit is framed as an
+      // absence you can picture, not asserted as something already shown.
+      text: "Every group has just 1 in it, so you end up with exactly what you started with. That's why anything times 1 is itself. And if there were no groups at all? Nothing. That's times 0.",
+      caption: "×1 keeps it as it is",
+    },
+  },
+  {
+    id: "mul-squares",
+    label: "Square facts (n × n)",
+    a: 6,
+    b: 6,
+    trick: {
+      text: "When the two numbers match, the groups make a perfect square. That's why {a} × {a} is called {a} squared.",
+      caption: "Same number twice = a square",
+    },
+  },
+  {
+    id: "mul-6-9",
+    label: "×6, ×7, ×8, ×9 (the hard facts)",
+    a: 6,
+    b: 7,
+    trick: {
+      text: "Here's the trick for the hard ones. {b} × 5 is {half5}, and {b} more makes {product}. Break it into a five you know, plus the rest.",
+      caption: "×5 you know, then add one more group",
+    },
+  },
+  {
+    id: "mul-10-12",
+    label: "×10, ×11, ×12",
+    a: 12,
+    b: 4,
+    trick: {
+      text: "Split the 12. {b} × 10 is {times10}, and {b} × 2 is {times2}. Put them together… {product}.",
+      caption: "12 = 10 + 2, do both and add",
+    },
+  },
 ];
 
 export function unitById(id: string): LessonUnit {
@@ -75,6 +117,11 @@ export function unitNumbers(u: LessonUnit) {
     productNoZero: (u.a / 10) * u.b,
     // For the double-and-double-again move.
     double1: u.b * 2,
+    // For the "×5 you know, plus one more group" move on the hard facts.
+    half5: u.b * 5,
+    // For splitting 12 into 10 + 2.
+    times10: u.b * 10,
+    times2: u.b * 2,
     /** Running totals: a, 2a, 3a … used by the count scene and its narration. */
     running: Array.from({ length: u.b }, (_, i) => u.a * (i + 1)),
   };
@@ -286,5 +333,48 @@ export function tenFrameNumbers(u: TenFrameUnit) {
     thenOff: Math.max(0, u.y - Math.min(extras, u.y)),
     makesTen: u.op === "+" && gap > 0 && u.y >= gap,
     bridgesDown: u.op === "−" && extras > 0 && u.y > extras,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// DEALING template (division, shown as sharing AND as grouping).
+// ---------------------------------------------------------------------------
+// `total` dots are dealt onto `divisor` plates, then re-formed into rings of
+// `divisor`. Both readings land on the same answer, which is the point.
+// Dividends stay small enough to show as individual dots — div-larger needs a
+// base-ten treatment instead, not 84 dots on screen.
+export interface DealingUnit {
+  id: string;
+  label: string;
+  total: number;
+  divisor: number;
+  /** Closing line, usually tying the fact back to its multiplication twin. */
+  tip: string;
+}
+
+export const DEALING_UNITS: DealingUnit[] = [
+  { id: "div-skip", label: "÷2, ÷5, ÷10", total: 30, divisor: 5, tip: "5 × 6 = 30, so 30 ÷ 5 = 6" },
+  { id: "div-identity", label: "÷1 and dividing a number by itself", total: 7, divisor: 1, tip: "÷1 changes nothing" },
+  { id: "div-squares", label: "Square-root facts (n² ÷ n)", total: 36, divisor: 6, tip: "6 × 6 = 36, so 36 ÷ 6 = 6" },
+  { id: "div-3-4", label: "÷3 and ÷4", total: 24, divisor: 4, tip: "4 × 6 = 24, so 24 ÷ 4 = 6" },
+  { id: "div-6-9", label: "÷6, ÷7, ÷8, ÷9", total: 42, divisor: 7, tip: "7 × 6 = 42, so 42 ÷ 7 = 6" },
+  { id: "div-10-12", label: "÷10, ÷11, ÷12", total: 48, divisor: 12, tip: "12 × 4 = 48, so 48 ÷ 12 = 4" },
+  { id: "div-remainder", label: "Division with remainders", total: 29, divisor: 4, tip: "4 × 7 = 28, and 1 is left over" },
+];
+
+export function dealingUnitById(id: string): DealingUnit {
+  const u = DEALING_UNITS.find((x) => x.id === id);
+  if (!u) throw new Error(`No dealing unit "${id}"`);
+  return u;
+}
+
+export function dealingNumbers(u: DealingUnit) {
+  const each = Math.floor(u.total / u.divisor);
+  return {
+    total: u.total,
+    divisor: u.divisor,
+    each,
+    remainder: u.total % u.divisor,
+    dealt: each * u.divisor,
   };
 }

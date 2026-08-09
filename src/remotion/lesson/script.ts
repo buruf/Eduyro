@@ -13,6 +13,8 @@ import {
   type LessonUnit,
   type ColumnUnit,
   type TenFrameUnit,
+  dealingNumbers,
+  type DealingUnit,
 } from "./units";
 
 export const LINE_IDS = ["ask", "groups", "count", "trick"] as const;
@@ -158,5 +160,39 @@ export function tenFrameLines(u: TenFrameUnit): LessonLine[] {
     },
     { id: "strategy", text: strategy },
     { id: "record", text: `So ${u.x} ${opWord} ${u.y} is ${n.answer}. ${u.tip}.` },
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Dealing (division as sharing AND as grouping)
+// ---------------------------------------------------------------------------
+export const DEALING_LINE_IDS = ["ask", "deal", "group", "record"] as const;
+
+export function dealingLines(u: DealingUnit): LessonLine[] {
+  const n = dealingNumbers(u);
+  const leftover =
+    n.remainder > 0
+      ? ` And ${n.remainder} won't go — there just isn't enough for another one each. That's the remainder.`
+      : "";
+  return [
+    { id: "ask", text: `${u.total} divided by ${u.divisor}. There are two ways to picture this, and they both give the same answer.` },
+    {
+      id: "deal",
+      text: `First way — sharing. Deal them out, one at a time, like cards… ${u.divisor === 1 ? "onto one plate" : `onto ${u.divisor} plates`}. Keep going… and everyone ends up with ${n.each}.${leftover}`,
+    },
+    {
+      id: "group",
+      // The leftover is on screen in this scene too, so it has to be spoken
+      // here — not only in the sharing scene.
+      text: `Now the other way. Instead of sharing, ask how many ${u.divisor}s actually fit inside ${u.total}. Make a group of ${u.divisor}… and another… and count the groups. ${n.each}.${
+        n.remainder > 0
+          ? ` And the same ${n.remainder} is still stranded — not enough for a whole group.`
+          : " Same answer."
+      }`,
+    },
+    {
+      id: "record",
+      text: `So ${u.total} divided by ${u.divisor} is ${n.each}${n.remainder > 0 ? `, remainder ${n.remainder}` : ""}. ${u.tip}.`,
+    },
   ];
 }
