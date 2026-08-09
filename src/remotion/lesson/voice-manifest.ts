@@ -775,5 +775,101 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
         "durationInSeconds": 3.808
       }
     ]
+  },
+  "mul-break-apart": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/mul-break-apart/ramlah/ask.mp3",
+        "durationInSeconds": 4.18
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/mul-break-apart/ramlah/build.mp3",
+        "durationInSeconds": 6.269
+      },
+      {
+        "id": "split",
+        "file": "lesson-voice/mul-break-apart/ramlah/split.mp3",
+        "durationInSeconds": 9.706
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/mul-break-apart/ramlah/record.mp3",
+        "durationInSeconds": 6.409
+      }
+    ]
+  },
+  "mul-carry": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/mul-carry/ramlah/ask.mp3",
+        "durationInSeconds": 4.783
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/mul-carry/ramlah/build.mp3",
+        "durationInSeconds": 6.502
+      },
+      {
+        "id": "split",
+        "file": "lesson-voice/mul-carry/ramlah/split.mp3",
+        "durationInSeconds": 9.752
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/mul-carry/ramlah/record.mp3",
+        "durationInSeconds": 6.13
+      }
+    ]
+  },
+  "mul-2d1d": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/mul-2d1d/ramlah/ask.mp3",
+        "durationInSeconds": 4.319
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/mul-2d1d/ramlah/build.mp3",
+        "durationInSeconds": 6.92
+      },
+      {
+        "id": "split",
+        "file": "lesson-voice/mul-2d1d/ramlah/split.mp3",
+        "durationInSeconds": 9.242
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/mul-2d1d/ramlah/record.mp3",
+        "durationInSeconds": 5.248
+      }
+    ]
+  },
+  "mul-2d2d": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/mul-2d2d/ramlah/ask.mp3",
+        "durationInSeconds": 4.644
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/mul-2d2d/ramlah/build.mp3",
+        "durationInSeconds": 8.081
+      },
+      {
+        "id": "split",
+        "file": "lesson-voice/mul-2d2d/ramlah/split.mp3",
+        "durationInSeconds": 17.926
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/mul-2d2d/ramlah/record.mp3",
+        "durationInSeconds": 9.427
+      }
+    ]
   }
 };

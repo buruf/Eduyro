@@ -9,10 +9,14 @@ import {
   COLUMN_UNITS,
   TEN_FRAME_UNITS,
   DEALING_UNITS,
+  FACT_FAMILY_UNITS,
+  AREA_UNITS,
   unitNumbers,
   columnNumbers,
   tenFrameNumbers,
   dealingNumbers,
+  factFamilyFacts,
+  areaRegions,
 } from "@/remotion/lesson/units";
 import { DEFAULT_VOICE_KEY } from "@/remotion/lesson/voices";
 
@@ -61,6 +65,24 @@ const GROUPS: { title: string; blurb: string; rows: Row[] }[] = [
         example: `${u.total} ÷ ${u.divisor} = ${n.each}${n.remainder ? ` r ${n.remainder}` : ""}`,
       };
     }),
+  },
+  {
+    title: "Fact family",
+    blurb: "One picture, four questions — the four facts are the same relationship asked different ways.",
+    rows: FACT_FAMILY_UNITS.map((u) => ({
+      id: u.id,
+      label: u.label,
+      example: factFamilyFacts(u).map((f) => f.text).join("   "),
+    })),
+  },
+  {
+    title: "Area model",
+    blurb: "Why long multiplication has the steps it has: the partial products ARE the rectangle regions.",
+    rows: AREA_UNITS.map((u) => ({
+      id: u.id,
+      label: u.label,
+      example: u.x + " × " + u.y + " = " + u.x * u.y + "  ·  " + areaRegions(u).map((r) => r.product).join(" + "),
+    })),
   },
 ];
 

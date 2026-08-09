@@ -470,3 +470,79 @@ export function factFamilyFacts(u: FactFamilyUnit) {
     { text: `${product} ÷ ${u.b} = ${u.a}`, lit: "cols" },
   ];
 }
+
+// ---------------------------------------------------------------------------
+// AREA template (why long multiplication has the steps it has).
+// ---------------------------------------------------------------------------
+// The rectangle is cut at the tens boundary of each side, so a 2-digit x
+// 1-digit problem yields two regions and 2-digit x 2-digit yields four — which
+// is exactly the number of partial products each written algorithm has.
+export interface AreaUnit {
+  id: string;
+  label: string;
+  x: number; // across
+  y: number; // down
+  tip: string;
+}
+
+export const AREA_UNITS: AreaUnit[] = [
+  {
+    id: "mul-break-apart",
+    label: "Break apart to multiply (no carrying)",
+    x: 23,
+    y: 4,
+    tip: "Split the big number, do the easy bits, add them",
+  },
+  {
+    id: "mul-carry",
+    label: "Carrying in multiplication",
+    x: 27,
+    y: 4,
+    tip: "The carried digit is just the ones piece spilling over",
+  },
+  {
+    id: "mul-2d1d",
+    label: "2-digit × 1-digit",
+    x: 34,
+    y: 6,
+    tip: "Tens piece, ones piece, add",
+  },
+  {
+    id: "mul-2d2d",
+    label: "2-digit × 2-digit",
+    x: 23,
+    y: 14,
+    tip: "Cut both ways — that's why there are four partial products",
+  },
+];
+
+export function areaUnitById(id: string): AreaUnit {
+  const u = AREA_UNITS.find((x) => x.id === id);
+  if (!u) throw new Error(`No area unit "${id}"`);
+  return u;
+}
+
+/** The regions of the cut rectangle, in reading order. */
+export function areaRegions(u: AreaUnit) {
+  const xTens = Math.floor(u.x / 10) * 10;
+  const xOnes = u.x % 10;
+  const yTens = Math.floor(u.y / 10) * 10;
+  const yOnes = u.y % 10;
+  const cols = xOnes ? [xTens, xOnes] : [xTens];
+  const rows = yTens ? [yTens, yOnes] : [yOnes];
+  const out: { w: number; h: number; product: number; col: number; row: number }[] = [];
+  rows.forEach((h, row) =>
+    cols.forEach((w, col) => out.push({ w, h, product: w * h, col, row })),
+  );
+  return out;
+}
+
+/** Convenience accessors used by the composition's geometry. */
+export function areaSides(u: AreaUnit) {
+  return {
+    xTens: Math.floor(u.x / 10) * 10,
+    xOnes: u.x % 10,
+    yTens: Math.floor(u.y / 10) * 10,
+    yOnes: u.y % 10,
+  };
+}

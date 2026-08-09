@@ -9,7 +9,7 @@
 // Timing is per UNIT and per VOICE: different units have different-length
 // lines, and two voices read the same script at very different speeds. Each
 // combination therefore gets its own render and its own total duration.
-import { LINE_IDS, COLUMN_LINE_IDS, TEN_FRAME_LINE_IDS, DEALING_LINE_IDS, FACT_FAMILY_LINE_IDS } from "./script";
+import { LINE_IDS, COLUMN_LINE_IDS, TEN_FRAME_LINE_IDS, DEALING_LINE_IDS, FACT_FAMILY_LINE_IDS, AREA_LINE_IDS } from "./script";
 import { CLIPS_BY_UNIT } from "./voice-manifest";
 import { DEFAULT_VOICE_KEY } from "./voices";
 
@@ -184,4 +184,34 @@ export function factFamilyTotalFrames(
   voiceKey: string = DEFAULT_VOICE_KEY,
 ): number {
   return factFamilySceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the area template. */
+const AREA_MIN_SECONDS: Record<string, number> = {
+  ask: 5,
+  build: 7,
+  split: 12,
+  record: 7,
+};
+
+export function areaSceneTimings(
+  unitId: string,
+  voiceKey: string = DEFAULT_VOICE_KEY,
+): SceneTiming[] {
+  const clips = CLIPS_BY_UNIT[unitId]?.[voiceKey] ?? [];
+  let cursor = 0;
+  return AREA_LINE_IDS.map((id) => {
+    const clip = clips.find((c) => c.id === id);
+    const seconds = clip
+      ? Math.max(AREA_MIN_SECONDS[id] ?? 6, clip.durationInSeconds + TAIL_SECONDS)
+      : (AREA_MIN_SECONDS[id] ?? 6);
+    const dur = Math.round(seconds * FPS);
+    const timing: SceneTiming = { id, from: cursor, dur, voiceFile: clip?.file ?? null };
+    cursor += dur;
+    return timing;
+  });
+}
+
+export function areaTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return areaSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }

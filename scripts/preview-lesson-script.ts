@@ -10,11 +10,13 @@ import {
   TEN_FRAME_UNITS,
   DEALING_UNITS,
   FACT_FAMILY_UNITS,
+  AREA_UNITS,
   unitNumbers,
   columnNumbers,
   tenFrameNumbers,
   dealingNumbers,
   factFamilyFacts,
+  areaRegions,
 } from "../src/remotion/lesson/units";
 import {
   lessonLines,
@@ -22,6 +24,7 @@ import {
   tenFrameLines,
   dealingLines,
   factFamilyLines,
+  areaLines,
   sumString,
 } from "../src/remotion/lesson/script";
 
@@ -59,6 +62,13 @@ const ALL: Entry[] = [
     head: u.kind === "additive" ? u.a + " + " + u.b + " = " + (u.a + u.b) : u.a + " x " + u.b + " = " + (u.a * u.b),
     lines: () => factFamilyLines(u),
     extra: "facts: " + factFamilyFacts(u).map((f) => f.text).join("   "),
+  })),
+  ...AREA_UNITS.map((u) => ({
+    id: u.id,
+    label: u.label,
+    head: u.x + " x " + u.y + " = " + u.x * u.y,
+    lines: () => areaLines(u),
+    extra: "regions: " + areaRegions(u).map((r) => r.w + "x" + r.h + "=" + r.product).join("  "),
   })),
   ...DEALING_UNITS.map((u) => {
     const n = dealingNumbers(u);

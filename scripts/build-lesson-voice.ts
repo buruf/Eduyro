@@ -15,8 +15,8 @@
 // drift out of agreement.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS } from "../src/remotion/lesson/units";
-import { lessonLines, columnLines, tenFrameLines, dealingLines, factFamilyLines } from "../src/remotion/lesson/script";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS } from "../src/remotion/lesson/units";
+import { lessonLines, columnLines, tenFrameLines, dealingLines, factFamilyLines, areaLines } from "../src/remotion/lesson/script";
 import { LESSON_VOICES, voiceIdEnvVar } from "../src/remotion/lesson/voices";
 import { speakable } from "../src/lib/tts/speakable";
 
@@ -105,6 +105,7 @@ const ALL = [
   ...TEN_FRAME_UNITS.map((u) => ({ id: u.id, lines: () => tenFrameLines(u) })),
   ...DEALING_UNITS.map((u) => ({ id: u.id, lines: () => dealingLines(u) })),
   ...FACT_FAMILY_UNITS.map((u) => ({ id: u.id, lines: () => factFamilyLines(u) })),
+  ...AREA_UNITS.map((u) => ({ id: u.id, lines: () => areaLines(u) })),
 ];
 const units = only.length ? ALL.filter((u) => only.includes(u.id)) : ALL;
 if (!units.length) {

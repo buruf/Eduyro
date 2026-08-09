@@ -17,6 +17,8 @@ import {
   type DealingUnit,
   factFamilyFacts,
   type FactFamilyUnit,
+  areaRegions,
+  type AreaUnit,
 } from "./units";
 
 export const LINE_IDS = ["ask", "groups", "count", "trick"] as const;
@@ -253,6 +255,40 @@ export function factFamilyLines(u: FactFamilyUnit): LessonLine[] {
     {
       id: "record",
       text: `That's the family. ${u.tip}.`,
+    },
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Area model (why long multiplication has the steps it has)
+// ---------------------------------------------------------------------------
+export const AREA_LINE_IDS = ["ask", "build", "split", "record"] as const;
+
+export function areaLines(u: AreaUnit): LessonLine[] {
+  const regions = areaRegions(u);
+  const answer = u.x * u.y;
+  const pieces = regions.map((r) => `${r.w} times ${r.h} is ${r.product}`).join(". ");
+  const sum = regions.map((r) => r.product).join(" plus ");
+  const twoWay = regions.length === 4;
+
+  return [
+    {
+      id: "ask",
+      text: `${u.x} times ${u.y}. That's too big to just know… so let's draw it instead.`,
+    },
+    {
+      id: "build",
+      text: `Here's a rectangle. ${u.x} across… and ${u.y} down. The answer is how many little squares are inside it.`,
+    },
+    {
+      id: "split",
+      text: twoWay
+        ? `Now cut it. Across, at the tens… and down, at the tens as well. That gives four pieces, and every one of them is a fact you already know. ${pieces}.`
+        : `Now cut it at the tens. ${u.x} is ${regions[0].w} and ${regions[1].w}. And look — both pieces are easy. ${pieces}.`,
+    },
+    {
+      id: "record",
+      text: `Add the pieces up. ${sum}… ${answer}. ${u.tip}.`,
     },
   ];
 }

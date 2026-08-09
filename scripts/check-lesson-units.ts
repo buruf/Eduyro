@@ -9,8 +9,8 @@
 // numbers instead and read the make-ten script — so the voice said "slide 4
 // across" while nothing slid. Any unit whose declared strategy isn't true of
 // its own numbers can produce that kind of contradiction, so it fails here.
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, tenFrameNumbers, dealingNumbers } from "../src/remotion/lesson/units";
-import { lessonLines, columnLines, tenFrameLines, dealingLines, factFamilyLines } from "../src/remotion/lesson/script";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, tenFrameNumbers, dealingNumbers } from "../src/remotion/lesson/units";
+import { lessonLines, columnLines, tenFrameLines, dealingLines, factFamilyLines, areaLines } from "../src/remotion/lesson/script";
 
 const problems: string[] = [];
 const fail = (id: string, msg: string) => problems.push(`${id}: ${msg}`);
@@ -75,6 +75,7 @@ const allUnits: { id: string; lines: () => { id: string; text: string }[] }[] = 
   ...TEN_FRAME_UNITS.map((u) => ({ id: u.id, lines: () => tenFrameLines(u) })),
   ...DEALING_UNITS.map((u) => ({ id: u.id, lines: () => dealingLines(u) })),
   ...FACT_FAMILY_UNITS.map((u) => ({ id: u.id, lines: () => factFamilyLines(u) })),
+  ...AREA_UNITS.map((u) => ({ id: u.id, lines: () => areaLines(u) })),
 ];
 
 for (const u of allUnits) {
