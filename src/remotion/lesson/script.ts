@@ -5,7 +5,15 @@
 // teacher would pause. Read-aloud prose is what made the earlier tutorials
 // sound recited. Numerals rather than number-words, so the caption matches the
 // digits on screen.
-import { fill, unitNumbers, columnNumbers, type LessonUnit, type ColumnUnit } from "./units";
+import {
+  fill,
+  unitNumbers,
+  columnNumbers,
+  tenFrameNumbers,
+  type LessonUnit,
+  type ColumnUnit,
+  type TenFrameUnit,
+} from "./units";
 
 export const LINE_IDS = ["ask", "groups", "count", "trick"] as const;
 export type LessonLineId = (typeof LINE_IDS)[number];
@@ -98,5 +106,44 @@ export function columnLines(u: ColumnUnit): LessonLine[] {
         ? `So when you write it down, that little 1 above the tens is the ten you just made. ${u.x} plus ${u.y} is ${n.answer}.`
         : `So when you write it down, the columns just add straight down. ${u.x} plus ${u.y} is ${n.answer}.`,
     },
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Ten-frame (addition and subtraction facts)
+// ---------------------------------------------------------------------------
+export const TEN_FRAME_LINE_IDS = ["ask", "build", "strategy", "record"] as const;
+
+export function tenFrameLines(u: TenFrameUnit): LessonLine[] {
+  const n = tenFrameNumbers(u);
+
+  if (u.op === "−") {
+    const strategy = n.bridgesDown
+      ? `${u.x} is a ten and ${n.extras} more. Take those ${n.firstOff} off first… and we're down to 10. Now ${n.thenOff} more to go… ${n.answer}.`
+      : u.y === u.x
+        ? `Take all ${u.y} of them off… and there's nothing left. Zero.`
+        : `Take ${u.y} off, one at a time… ${n.answer} left.`;
+    return [
+      { id: "ask", text: `${u.x} take away ${u.y}. Let's use a ten-frame.` },
+      { id: "build", text: `Here's ${u.x}… ${u.x > 10 ? "a full ten, and " + n.extras + " more." : "filling up the frame."}` },
+      { id: "strategy", text: strategy },
+      { id: "record", text: `So ${u.x} take away ${u.y} is ${n.answer}. ${u.tip}.` },
+    ];
+  }
+
+  const strategy = n.makesTen
+    ? `The frame has ${n.gap} empty spaces. So slide ${n.fillers} across… and the ten is full. That leaves ${n.rest}. 10 and ${n.rest} is ${n.answer}.`
+    : u.x === u.y
+      ? `Two rows the same — that's a double. ${u.x} and ${u.x}… ${n.answer}.`
+      : `Now add the other ${u.y} on… ${n.answer}.`;
+
+  return [
+    { id: "ask", text: `${u.x} plus ${u.y}. Let's use a ten-frame.` },
+    {
+      id: "build",
+      text: `Here's ${u.x} in the frame. And here are the other ${u.y}, waiting underneath.`,
+    },
+    { id: "strategy", text: strategy },
+    { id: "record", text: `So ${u.x} plus ${u.y} is ${n.answer}. ${u.tip}.` },
   ];
 }

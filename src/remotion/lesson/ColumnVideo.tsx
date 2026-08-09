@@ -130,14 +130,17 @@ function useJourney({ from, to, at, travel = 18 }: Move) {
 
 function MovingCube(props: Move & { color?: string; appearAt?: number }) {
   const frame = useCurrentFrame();
-  const { x, y } = useJourney(props);
-  const opacity =
+  const { x, y, t } = useJourney(props);
+  const appearing =
     props.appearAt === undefined
       ? 1
       : interpolate(frame, [props.appearAt, props.appearAt + 8], [0, 1], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
         });
+  // Blocks heading off the stage fade as they go, rather than sailing straight
+  // through the live counts on their way down.
+  const opacity = appearing * (props.to.y >= STAGE_H ? 1 - t * 0.95 : 1);
   return (
     <div
       style={{
@@ -156,14 +159,17 @@ function MovingCube(props: Move & { color?: string; appearAt?: number }) {
 
 function MovingRod(props: Move & { color?: string; appearAt?: number }) {
   const frame = useCurrentFrame();
-  const { x, y } = useJourney(props);
-  const opacity =
+  const { x, y, t } = useJourney(props);
+  const appearing =
     props.appearAt === undefined
       ? 1
       : interpolate(frame, [props.appearAt, props.appearAt + 8], [0, 1], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
         });
+  // Blocks heading off the stage fade as they go, rather than sailing straight
+  // through the live counts on their way down.
+  const opacity = appearing * (props.to.y >= STAGE_H ? 1 - t * 0.95 : 1);
   return (
     <div
       style={{

@@ -15,8 +15,8 @@
 // drift out of agreement.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS } from "../src/remotion/lesson/units";
-import { lessonLines, columnLines } from "../src/remotion/lesson/script";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS } from "../src/remotion/lesson/units";
+import { lessonLines, columnLines, tenFrameLines } from "../src/remotion/lesson/script";
 import { LESSON_VOICES, voiceIdEnvVar } from "../src/remotion/lesson/voices";
 
 const ROOT = process.cwd();
@@ -101,6 +101,7 @@ const only = process.argv.slice(2);
 const ALL = [
   ...EQUAL_GROUP_UNITS.map((u) => ({ id: u.id, lines: () => lessonLines(u) })),
   ...COLUMN_UNITS.map((u) => ({ id: u.id, lines: () => columnLines(u) })),
+  ...TEN_FRAME_UNITS.map((u) => ({ id: u.id, lines: () => tenFrameLines(u) })),
 ];
 const units = only.length ? ALL.filter((u) => only.includes(u.id)) : ALL;
 if (!units.length) {

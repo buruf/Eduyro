@@ -155,3 +155,130 @@ export function columnNumbers(u: ColumnUnit) {
     answer: u.op === "+" ? u.x + u.y : u.x - u.y,
   };
 }
+
+// ---------------------------------------------------------------------------
+// TEN-FRAME template (addition and subtraction facts).
+// ---------------------------------------------------------------------------
+// One example per unit, chosen so the unit's OWN strategy is the thing the
+// animation performs — 8 + 5 shows make-ten because two dots visibly complete
+// the frame; 6 + 7 shows near-doubles because it is 6 + 6 with one extra.
+export interface TenFrameUnit {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  op: "+" | "−";
+  /** Which strategy the animation should PERFORM. The unit teaches this, so
+   *  the visual has to match it — showing make-ten for a doubles fact
+   *  contradicts the unit and its own narration. */
+  strategy: "make-ten" | "doubles" | "count-on" | "bridge-down" | "take-all";
+  /** The strategy line shown and spoken at the end. */
+  tip: string;
+}
+
+export const TEN_FRAME_UNITS: TenFrameUnit[] = [
+  {
+    id: "add-count-on",
+    label: "Adding by counting on (+1, +2, +3)",
+    x: 7,
+    y: 2,
+    op: "+",
+    strategy: "count-on",
+    tip: "Start at the big number and count on",
+  },
+  {
+    id: "add-doubles",
+    label: "Doubles (1+1 … 9+9)",
+    x: 6,
+    y: 6,
+    op: "+",
+    strategy: "doubles",
+    tip: "Doubles are worth just knowing",
+  },
+  {
+    id: "add-zero-comm",
+    label: "Adding zero & turnarounds",
+    x: 3,
+    y: 8,
+    op: "+",
+    strategy: "make-ten",
+    tip: "Swap them round — 3 + 8 is the same as 8 + 3",
+  },
+  {
+    id: "add-near-doubles",
+    label: "Near-doubles (use the double you know)",
+    x: 6,
+    y: 7,
+    op: "+",
+    strategy: "doubles",
+    tip: "6 + 6 is 12, so one more is 13",
+  },
+  {
+    id: "add-make-ten",
+    label: "Make ten & bridging through 10",
+    x: 8,
+    y: 5,
+    op: "+",
+    strategy: "make-ten",
+    tip: "Fill the ten, then add what's left",
+  },
+  {
+    id: "sub-count-back",
+    label: "Subtracting by counting back (−1, −2, −3)",
+    x: 9,
+    y: 2,
+    op: "−",
+    strategy: "bridge-down",
+    tip: "Small numbers off? Just count back",
+  },
+  {
+    id: "sub-zero",
+    label: "Subtract 0 and subtract all",
+    x: 7,
+    y: 7,
+    op: "−",
+    strategy: "take-all",
+    tip: "Take away everything and nothing is left",
+  },
+  {
+    id: "sub-halves",
+    label: "Halving & near-halves (using doubles)",
+    x: 12,
+    y: 6,
+    op: "−",
+    strategy: "bridge-down",
+    tip: "6 + 6 is 12, so 12 take away 6 is 6",
+  },
+  {
+    id: "sub-bridge",
+    label: "Bridging down through 10",
+    x: 15,
+    y: 7,
+    op: "−",
+    strategy: "bridge-down",
+    tip: "Go down to 10 first, then take the rest",
+  },
+];
+
+export function tenFrameUnitById(id: string): TenFrameUnit {
+  const u = TEN_FRAME_UNITS.find((x) => x.id === id);
+  if (!u) throw new Error(`No ten-frame unit "${id}"`);
+  return u;
+}
+
+export function tenFrameNumbers(u: TenFrameUnit) {
+  const answer = u.op === "+" ? u.x + u.y : u.x - u.y;
+  const gap = Math.max(0, 10 - u.x);
+  const extras = Math.max(0, u.x - 10);
+  return {
+    answer,
+    gap,
+    fillers: Math.min(gap, u.y),
+    rest: Math.max(0, u.y - Math.min(gap, u.y)),
+    extras,
+    firstOff: Math.min(extras, u.y),
+    thenOff: Math.max(0, u.y - Math.min(extras, u.y)),
+    makesTen: u.op === "+" && gap > 0 && u.y >= gap,
+    bridgesDown: u.op === "−" && extras > 0 && u.y > extras,
+  };
+}
