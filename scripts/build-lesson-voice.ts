@@ -18,6 +18,7 @@ import { join } from "node:path";
 import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS } from "../src/remotion/lesson/units";
 import { lessonLines, columnLines, tenFrameLines, dealingLines } from "../src/remotion/lesson/script";
 import { LESSON_VOICES, voiceIdEnvVar } from "../src/remotion/lesson/voices";
+import { speakable } from "../src/lib/tts/speakable";
 
 const ROOT = process.cwd();
 const MANIFEST = join(ROOT, "src", "remotion", "lesson", "voice-manifest.ts");
@@ -125,7 +126,10 @@ async function main() {
       const clips: VoiceClip[] = [];
       for (const line of unit.lines()) {
         process.stdout.write(`  ${line.id}… `);
-        const { mp3, duration } = await synthesize(line.text, voiceId);
+        // Normalise notation to what a teacher would SAY before synthesis — the
+        // app's TTS route does this, and skipping it here made the video voice
+        // read "4 × 7" as "4 ex 7".
+        const { mp3, duration } = await synthesize(speakable(line.text), voiceId);
         writeFileSync(join(outDir, `${line.id}.mp3`), mp3);
         clips.push({
           id: line.id,

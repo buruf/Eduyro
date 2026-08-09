@@ -43,7 +43,9 @@ export function speakable(raw: string): string {
     .replace(/[✓✗•▪◦↓↑]/g, " ");
   // Split coefficient from variable so "3x" reads "3 x" and equals/operators.
   s = s
-    .replace(/(\d)([a-zA-Z]\b)/g, "$1 $2")
+    // Split a coefficient from its variable so "3x" reads "3 x" — but NOT a
+    // plural "s", or "count by 5s" becomes "count by 5 ess".
+    .replace(/(\d)([a-rt-zA-Z]\b)/g, "$1 $2")
     .replace(/√\s*\(?([^)\s,]+)\)?/g, "the square root of $1")
     .replace(/π/g, "pi").replace(/θ/g, "theta").replace(/°/g, " degrees")
     .replace(/≥/g, " is greater than or equal to ").replace(/≤/g, " is less than or equal to ")
