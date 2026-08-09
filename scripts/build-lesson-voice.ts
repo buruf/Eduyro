@@ -48,7 +48,7 @@ const VOICE_SETTINGS = {
   // speak slowly — it flattens prosody and is what made the narration sound
   // robotic. Pacing now comes from short sentences and "…" pauses in the
   // script, which cost nothing and sound natural.
-  speed: 0.85,
+  speed: 0.8,
 };
 
 interface VoiceClip {
