@@ -6,29 +6,7 @@ export interface VoiceClip {
   durationInSeconds: number;
 }
 
-export const VOICE_CLIPS_BY_VOICE: Record<string, VoiceClip[]> = {
-  "jessica": [
-    {
-      "id": "ask",
-      "file": "lesson-voice/jessica/ask.mp3",
-      "durationInSeconds": 5.991
-    },
-    {
-      "id": "groups",
-      "file": "lesson-voice/jessica/groups.mp3",
-      "durationInSeconds": 14.118
-    },
-    {
-      "id": "count",
-      "file": "lesson-voice/jessica/count.mp3",
-      "durationInSeconds": 17.74
-    },
-    {
-      "id": "trick",
-      "file": "lesson-voice/jessica/trick.mp3",
-      "durationInSeconds": 14.303
-    }
-  ],
+export const VOICE_CLIPS_BY_VOICE: Record<string, VoiceClip[]> =  {
   "ramlah": [
     {
       "id": "ask",

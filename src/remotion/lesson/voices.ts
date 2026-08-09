@@ -17,12 +17,9 @@ export interface LessonVoice {
   label: string; // what the student sees
 }
 
-export const LESSON_VOICES: LessonVoice[] = [
-  { key: "jessica", label: "Jessica" },
-  { key: "ramlah", label: "Ramlah" },
-];
+export const LESSON_VOICES: LessonVoice[] = [{ key: "ramlah", label: "Ramlah" }];
 
-export const DEFAULT_VOICE_KEY = "jessica";
+export const DEFAULT_VOICE_KEY = "ramlah";
 
 /** Env var holding the ElevenLabs voice id for a given key. */
 export function voiceIdEnvVar(key: string): string {
