@@ -618,7 +618,7 @@ export default function StudentDashboardPage() {
           open={true}
           studentId={data.student.id}
           skillId={PILOT.skillId}
-          src="lesson-video/mul-tens.mp4"
+          srcBase="lesson-video/mul-tens"
           title={PILOT.skillLabel}
           logRun={conceptModal.mode === "first"}
           onStart={onConceptTutorialDone}

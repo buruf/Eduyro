@@ -14,13 +14,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTutorialLog } from "@/hooks/useTutorialLog";
+import { LESSON_VOICES, DEFAULT_VOICE_KEY } from "@/remotion/lesson/voices";
 
 interface Props {
   open: boolean;
   studentId: string;
   skillId: string;
-  /** Path under public/, e.g. "lesson-video/mul-tens.mp4". */
-  src: string;
+  /** Base path under public/ without the voice suffix or extension, e.g.
+   *  "lesson-video/mul-tens" → "lesson-video/mul-tens.<voiceKey>.mp4". */
+  srcBase: string;
   title: string;
   /** False for "Review tutorial" replays so they stay out of the funnel. */
   logRun?: boolean;
@@ -28,11 +30,14 @@ interface Props {
   onClose: () => void;
 }
 
+/** Remembered across lessons so a child picks their voice once, not every time. */
+const VOICE_PREF_KEY = "eduyro:lesson-voice";
+
 export default function LessonVideoModal({
   open,
   studentId,
   skillId,
-  src,
+  srcBase,
   title,
   logRun = true,
   onStart,
@@ -41,8 +46,33 @@ export default function LessonVideoModal({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [started, setStarted] = useState(false);
   const [ended, setEnded] = useState(false);
+  const [voice, setVoice] = useState<string>(DEFAULT_VOICE_KEY);
   const watchedMsRef = useRef(0);
   const finishedRef = useRef(false);
+
+  // Restore the saved choice on open (client-only, so it can't run during SSR).
+  useEffect(() => {
+    if (!open) return;
+    try {
+      const saved = localStorage.getItem(VOICE_PREF_KEY);
+      if (saved && LESSON_VOICES.some((v) => v.key === saved)) setVoice(saved);
+    } catch {
+      /* private mode — the default voice is fine */
+    }
+  }, [open]);
+
+  function chooseVoice(key: string) {
+    if (key === voice) return;
+    setVoice(key);
+    setStarted(false);
+    setEnded(false);
+    watchedMsRef.current = 0;
+    try {
+      localStorage.setItem(VOICE_PREF_KEY, key);
+    } catch {
+      /* preference just won't persist */
+    }
+  }
 
   const tlog = useTutorialLog({ studentId, skillId, variant: "video", enabled: open && logRun });
 
@@ -123,10 +153,37 @@ export default function LessonVideoModal({
           <h2 className="font-serif text-xl font-bold text-ink">{title}</h2>
         </div>
 
+        {/* Voice choice. Only worth showing when there is an actual choice. */}
+        {LESSON_VOICES.length > 1 && (
+          <div className="px-6 pb-3 flex items-center justify-center gap-2">
+            <span className="text-xs text-muted">Who should explain it?</span>
+            <div className="flex gap-1.5">
+              {LESSON_VOICES.map((v) => (
+                <button
+                  key={v.key}
+                  type="button"
+                  onClick={() => chooseVoice(v.key)}
+                  aria-pressed={v.key === voice}
+                  className={
+                    v.key === voice
+                      ? "px-3 py-1 rounded-full bg-brand-blue text-white text-xs font-semibold"
+                      : "px-3 py-1 rounded-full border border-ink/20 text-ink/70 hover:bg-ink/5 text-xs font-medium"
+                  }
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="relative bg-black/5">
           <video
             ref={videoRef}
-            src={`/${src}`}
+            // Keyed by voice so switching swaps the file rather than leaving
+            // the old one loaded at the old playhead.
+            key={voice}
+            src={`/${srcBase}.${voice}.mp4`}
             controls={started}
             playsInline
             preload="metadata"

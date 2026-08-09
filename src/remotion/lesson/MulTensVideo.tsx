@@ -14,9 +14,17 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { SCENES } from "./timeline";
+import { sceneTimings } from "./timeline";
+import { DEFAULT_VOICE_KEY } from "./voices";
 
-export { FPS, TOTAL_FRAMES as DURATION } from "./timeline";
+/** Which narration voice this render bakes in. The index signature is what
+ *  lets Remotion's <Composition> accept these as input props. */
+export type MulTensProps = {
+  voice: string;
+  [key: string]: unknown;
+};
+
+export { FPS } from "./timeline";
 
 const CREAM = "#FDFAF4";
 const INK = "#2E2016";
@@ -337,8 +345,11 @@ const SCENE_BODIES: Record<string, React.FC<SceneProps>> = {
   trick: SceneTrick,
 };
 
-export const MulTensVideo: React.FC = () => {
+export const MulTensVideo: React.FC<MulTensProps> = ({ voice = DEFAULT_VOICE_KEY }) => {
   const { width } = useVideoConfig();
+  // Per-voice, because the same script runs to very different lengths in
+  // different voices — each scene sizes itself to the line it has to cover.
+  const SCENES = sceneTimings(voice);
   return (
     <AbsoluteFill
       style={{

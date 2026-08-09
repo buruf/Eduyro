@@ -24,7 +24,7 @@ export default function PilotTutorialDevPage() {
           open
           studentId="dev-fake-student"
           skillId="mul-tens"
-          src="lesson-video/mul-tens.mp4"
+          srcBase="lesson-video/mul-tens"
           title="Multiplying tens (20 × 3)"
           onStart={() => setStatus("onStart called (→ practice)")}
           onClose={() => setStatus("onClose called")}
