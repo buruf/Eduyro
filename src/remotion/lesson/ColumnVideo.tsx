@@ -430,9 +430,14 @@ function SceneAdd({ dur, unit }: SceneProps) {
         {Array.from({ length: n.xTens }, (_, i) => (
           <MovingRod key={`xt${i}`} from={rodSlot(i)} to={rodSlot(i)} at={0} />
         ))}
-        {Array.from({ length: n.xOnes }, (_, i) => (
-          <MovingCube key={`xo${i}`} from={onesSlot(i)} to={onesSlot(i)} at={0} />
-        ))}
+        {Array.from({ length: n.xOnes }, (_, i) => {
+          // Once a cube's turn in the carry comes, its green flying copy takes
+          // over — the static original must leave with it, or the ones column
+          // keeps showing cubes the count says are gone.
+          const isCarried = n.carries && i >= n.leftover;
+          if (isCarried && frame >= carryAt + (i - n.leftover) * carryStagger) return null;
+          return <MovingCube key={`xo${i}`} from={onesSlot(i)} to={onesSlot(i)} at={0} />;
+        })}
 
         {/* y's blocks travel up into the columns */}
         {Array.from({ length: n.yTens }, (_, i) => (
