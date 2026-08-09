@@ -394,3 +394,79 @@ export function dealingNumbers(u: DealingUnit) {
     dealt: each * u.divisor,
   };
 }
+
+// ---------------------------------------------------------------------------
+// FACT FAMILY template (one picture, four questions).
+// ---------------------------------------------------------------------------
+// `additive` units draw a part-part-whole bar from a + b; `multiplicative`
+// units draw an a-by-b array. The four facts are DERIVED from those two
+// numbers, so a family can never contain a fact its own picture contradicts.
+export interface FactFamilyUnit {
+  id: string;
+  label: string;
+  a: number;
+  b: number;
+  kind: "additive" | "multiplicative";
+  tip: string;
+}
+
+export const FACT_FAMILY_UNITS: FactFamilyUnit[] = [
+  {
+    id: "add-fact-family",
+    label: "Fact families to 18",
+    a: 5,
+    b: 8,
+    kind: "additive",
+    tip: "Know one, and you know all four",
+  },
+  {
+    id: "sub-fact-family",
+    label: "Fact families to 18",
+    a: 6,
+    b: 9,
+    kind: "additive",
+    tip: "Subtraction asks which part is missing",
+  },
+  {
+    id: "mul-fact-family",
+    label: "Fact families & missing factor",
+    a: 3,
+    b: 4,
+    kind: "multiplicative",
+    tip: "Division asks how big one row is",
+  },
+  {
+    id: "div-fact-family",
+    label: "Fact families & missing dividend",
+    a: 4,
+    b: 6,
+    kind: "multiplicative",
+    tip: "Every division has a multiplication twin",
+  },
+];
+
+export function factFamilyUnitById(id: string): FactFamilyUnit {
+  const u = FACT_FAMILY_UNITS.find((x) => x.id === id);
+  if (!u) throw new Error(`No fact-family unit "${id}"`);
+  return u;
+}
+
+/** The four facts, each tagged with the piece of the picture it asks about. */
+export function factFamilyFacts(u: FactFamilyUnit) {
+  if (u.kind === "additive") {
+    const whole = u.a + u.b;
+    return [
+      { text: `${u.a} + ${u.b} = ${whole}`, lit: "whole" },
+      { text: `${u.b} + ${u.a} = ${whole}`, lit: "whole" },
+      { text: `${whole} − ${u.b} = ${u.a}`, lit: "a" },
+      { text: `${whole} − ${u.a} = ${u.b}`, lit: "b" },
+    ];
+  }
+  const product = u.a * u.b;
+  return [
+    { text: `${u.a} × ${u.b} = ${product}`, lit: "rows" },
+    { text: `${u.b} × ${u.a} = ${product}`, lit: "cols" },
+    { text: `${product} ÷ ${u.a} = ${u.b}`, lit: "rows" },
+    { text: `${product} ÷ ${u.b} = ${u.a}`, lit: "cols" },
+  ];
+}

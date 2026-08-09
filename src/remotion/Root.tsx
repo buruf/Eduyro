@@ -8,12 +8,13 @@
 // chosen combination's clips rather than fixed.
 import { Composition } from "remotion";
 import { EqualGroupsVideo, FPS } from "./lesson/EqualGroupsVideo";
-import { totalFrames, columnTotalFrames, tenFrameTotalFrames, dealingTotalFrames } from "./lesson/timeline";
+import { totalFrames, columnTotalFrames, tenFrameTotalFrames, dealingTotalFrames, factFamilyTotalFrames } from "./lesson/timeline";
 import { DEFAULT_VOICE_KEY } from "./lesson/voices";
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS } from "./lesson/units";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS } from "./lesson/units";
 import { ColumnVideo } from "./lesson/ColumnVideo";
 import { TenFrameVideo } from "./lesson/TenFrameVideo";
 import { DealingVideo } from "./lesson/DealingVideo";
+import { FactFamilyVideo } from "./lesson/FactFamilyVideo";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -60,6 +61,17 @@ export const RemotionRoot: React.FC = () => {
       defaultProps={{ unit: DEALING_UNITS[0].id, voice: DEFAULT_VOICE_KEY }}
       calculateMetadata={({ props }) => ({
         durationInFrames: dealingTotalFrames(props.unit, props.voice),
+      })}
+    />
+    <Composition
+      id="FactFamily"
+      component={FactFamilyVideo}
+      fps={FPS}
+      width={1920}
+      height={1080}
+      defaultProps={{ unit: FACT_FAMILY_UNITS[0].id, voice: DEFAULT_VOICE_KEY }}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: factFamilyTotalFrames(props.unit, props.voice),
       })}
     />
     </>

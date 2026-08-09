@@ -9,16 +9,19 @@ import {
   COLUMN_UNITS,
   TEN_FRAME_UNITS,
   DEALING_UNITS,
+  FACT_FAMILY_UNITS,
   unitNumbers,
   columnNumbers,
   tenFrameNumbers,
   dealingNumbers,
+  factFamilyFacts,
 } from "../src/remotion/lesson/units";
 import {
   lessonLines,
   columnLines,
   tenFrameLines,
   dealingLines,
+  factFamilyLines,
   sumString,
 } from "../src/remotion/lesson/script";
 
@@ -49,6 +52,13 @@ const ALL: Entry[] = [
     label: u.label,
     head: `${u.x} ${u.op} ${u.y} = ${tenFrameNumbers(u).answer}  [${u.strategy}]`,
     lines: () => tenFrameLines(u),
+  })),
+  ...FACT_FAMILY_UNITS.map((u) => ({
+    id: u.id,
+    label: u.label,
+    head: u.kind === "additive" ? u.a + " + " + u.b + " = " + (u.a + u.b) : u.a + " x " + u.b + " = " + (u.a * u.b),
+    lines: () => factFamilyLines(u),
+    extra: "facts: " + factFamilyFacts(u).map((f) => f.text).join("   "),
   })),
   ...DEALING_UNITS.map((u) => {
     const n = dealingNumbers(u);

@@ -15,6 +15,8 @@ import {
   type TenFrameUnit,
   dealingNumbers,
   type DealingUnit,
+  factFamilyFacts,
+  type FactFamilyUnit,
 } from "./units";
 
 export const LINE_IDS = ["ask", "groups", "count", "trick"] as const;
@@ -199,6 +201,58 @@ export function dealingLines(u: DealingUnit): LessonLine[] {
     {
       id: "record",
       text: `So ${u.total} divided by ${u.divisor} is ${n.each}${n.remainder > 0 ? `, remainder ${n.remainder}` : ""}. ${u.tip}.`,
+    },
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Fact families (one picture, four questions)
+// ---------------------------------------------------------------------------
+export const FACT_FAMILY_LINE_IDS = ["ask", "build", "facts", "record"] as const;
+
+export function factFamilyLines(u: FactFamilyUnit): LessonLine[] {
+  const whole = u.kind === "additive" ? u.a + u.b : u.a * u.b;
+  const facts = factFamilyFacts(u);
+  const say = (i: number) =>
+    facts[i].text.replace(/×/g, "times").replace(/÷/g, "divided by").replace(/−/g, "take away").replace(/\+/g, "plus").replace(/=/g, "is");
+
+  if (u.kind === "additive") {
+    return [
+      {
+        id: "ask",
+        text: `${u.a}, ${u.b} and ${whole}. These three belong together — and once you know how, they give you four facts for the price of one.`,
+      },
+      {
+        id: "build",
+        text: `Here's the whole thing… ${whole}. And it's made of two parts. ${u.a}… and ${u.b}.`,
+      },
+      {
+        id: "facts",
+        text: `Now ask the picture four different questions. Put the parts together — ${say(0)}. Swap them round — ${say(1)}. Or start from the whole and take a part away. ${say(2)}. And ${say(3)}. Same picture every time.`,
+      },
+      {
+        id: "record",
+        text: `That's the family. ${u.tip}.`,
+      },
+    ];
+  }
+
+  return [
+    {
+      id: "ask",
+      text: `${u.a}, ${u.b} and ${whole}. These three belong together — and they give you four facts for the price of one.`,
+    },
+    {
+      id: "build",
+      text: `Here it is as an array. ${u.a} rows… with ${u.b} in each row. That's ${whole} altogether.`,
+    },
+    {
+      id: "facts",
+      text: `Now ask it four questions. Count it as rows — ${say(0)}. Turn it and count columns — ${say(1)}. Or start from ${whole} and ask how many are in each row. ${say(2)}. And ${say(3)}. One array, four facts.`,
+    },
+    {
+      id: "record",
+      text: `That's the family. ${u.tip}.`,
     },
   ];
 }
