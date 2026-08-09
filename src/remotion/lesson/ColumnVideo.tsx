@@ -239,6 +239,44 @@ function LiveCount({
   );
 }
 
+/** Frames a block's fade-in takes — a block only counts once it's visible. */
+const FADE = 8;
+
+/** The value a building row has reached: blocks count when their fade ENDS,
+ *  not when it starts, so the label never runs ahead of what's on screen. */
+function rowValueAt(frame: number, startAt: number, tens: number, ones: number): number {
+  const tensLanded = Math.max(0, Math.min(tens, Math.floor((frame - startAt - FADE) / 5) + 1));
+  const onesLanded = Math.max(
+    0,
+    Math.min(ones, Math.floor((frame - startAt - tens * 5 - FADE) / 3) + 1),
+  );
+  return tensLanded * 10 + onesLanded;
+}
+
+/** A row's own value, shown beside its blocks and counting up as they land —
+ *  so both numbers in a build are labelled, not just the top one. Hidden
+ *  until the row starts building (a stray 0 beside empty space reads as a
+ *  mistake). */
+function RowValue({ value, y, visible }: { value: number; y: number; visible: boolean }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: STAGE_W - 240,
+        top: y,
+        width: 220,
+        textAlign: "left",
+        fontSize: 110,
+        fontWeight: 800,
+        color: INK,
+        opacity: visible ? 1 : 0,
+      }}
+    >
+      {value}
+    </div>
+  );
+}
+
 function ColumnHead({ x, label }: { x: number; label: string }) {
   return (
     <div
@@ -323,24 +361,22 @@ function SceneBuild({ dur, unit }: SceneProps) {
         {Array.from({ length: n.xOnes }, (_, i) => (
           <MovingCube key={`xo${i}`} {...still(onesSlot(i))} appearAt={16 + n.xTens * 5 + i * 3} />
         ))}
-        <LiveCount
-          value={Math.max(
-            0,
-            Math.min(n.xTens, Math.floor((frame - 16) / 5) + 1),
-          )}
-          x={TENS_X0 - 60}
-          label="tens"
-          changedAt={null}
+        {/* Each ROW carries its own value, counting up as its blocks land —
+            column counters here described only the top number, which made the
+            second one read as unlabeled clutter (user-caught: "you have the
+            37 but no 45"). */}
+        <RowValue
+          value={rowValueAt(frame, 16, n.xTens, n.xOnes)}
+          y={ROW_Y + 90}
+          visible={frame >= 16 + FADE}
         />
-        <LiveCount
-          value={Math.max(
-            0,
-            Math.min(n.xOnes, Math.floor((frame - 16 - n.xTens * 5) / 3) + 1),
-          )}
-          x={ONES_X0 - 100}
-          label="ones"
-          changedAt={null}
-        />
+        {unit.op === "+" && (
+          <RowValue
+            value={rowValueAt(frame, secondRowAt, n.yTens, n.yOnes)}
+            y={STAGE_ROW_Y + 90}
+            visible={frame >= secondRowAt + FADE}
+          />
+        )}
         {/* y staged below (addition only) — it will travel up in the next scene */}
         {unit.op === "+" &&
           Array.from({ length: n.yTens }, (_, i) => (
