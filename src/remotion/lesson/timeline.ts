@@ -1,16 +1,16 @@
 // src/remotion/lesson/timeline.ts
-// Scene timing for the 20 × 3 explainer.
+// Scene timing for the equal-groups lesson template.
 //
 // The AUDIO drives the timing, not the other way round: each scene runs for at
 // least its minimum, but stretches to fit its narration plus a short tail. That
 // is what makes voice and picture impossible to desync — there is one clock,
 // and a line can never be cut off by a scene ending early.
 //
-// Timing is per VOICE, because two voices read the same script at very
-// different lengths (Jessica ~52s, Ramlah ~32s). Each voice therefore gets its
-// own render, and its own total duration.
-import { LESSON_LINES } from "./script";
-import { VOICE_CLIPS_BY_VOICE } from "./voice-manifest";
+// Timing is per UNIT and per VOICE: different units have different-length
+// lines, and two voices read the same script at very different speeds. Each
+// combination therefore gets its own render and its own total duration.
+import { LINE_IDS, COLUMN_LINE_IDS } from "./script";
+import { CLIPS_BY_UNIT } from "./voice-manifest";
 import { DEFAULT_VOICE_KEY } from "./voices";
 
 export const FPS = 30;
@@ -34,26 +34,55 @@ export interface SceneTiming {
   voiceFile: string | null;
 }
 
-export function sceneTimings(voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
-  const clips = VOICE_CLIPS_BY_VOICE[voiceKey] ?? [];
+export function sceneTimings(
+  unitId: string,
+  voiceKey: string = DEFAULT_VOICE_KEY,
+): SceneTiming[] {
+  const clips = CLIPS_BY_UNIT[unitId]?.[voiceKey] ?? [];
   let cursor = 0;
-  return LESSON_LINES.map((line) => {
-    const clip = clips.find((c) => c.id === line.id);
+  return LINE_IDS.map((id) => {
+    const clip = clips.find((c) => c.id === id);
     const seconds = clip
-      ? Math.max(MIN_SECONDS[line.id] ?? 6, clip.durationInSeconds + TAIL_SECONDS)
-      : (MIN_SECONDS[line.id] ?? 6);
+      ? Math.max(MIN_SECONDS[id] ?? 6, clip.durationInSeconds + TAIL_SECONDS)
+      : (MIN_SECONDS[id] ?? 6);
     const dur = Math.round(seconds * FPS);
-    const timing: SceneTiming = {
-      id: line.id,
-      from: cursor,
-      dur,
-      voiceFile: clip?.file ?? null,
-    };
+    const timing: SceneTiming = { id, from: cursor, dur, voiceFile: clip?.file ?? null };
     cursor += dur;
     return timing;
   });
 }
 
-export function totalFrames(voiceKey: string = DEFAULT_VOICE_KEY): number {
-  return sceneTimings(voiceKey).reduce((n, s) => n + s.dur, 0);
+export function totalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return sceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the base-ten blocks template. Same rule: the audio drives
+ *  the length, so a scene can never end mid-sentence. */
+const COLUMN_MIN_SECONDS: Record<string, number> = {
+  ask: 4,
+  build: 6,
+  regroup: 10,
+  written: 6,
+};
+
+export function columnSceneTimings(
+  unitId: string,
+  voiceKey: string = DEFAULT_VOICE_KEY,
+): SceneTiming[] {
+  const clips = CLIPS_BY_UNIT[unitId]?.[voiceKey] ?? [];
+  let cursor = 0;
+  return COLUMN_LINE_IDS.map((id) => {
+    const clip = clips.find((c) => c.id === id);
+    const seconds = clip
+      ? Math.max(COLUMN_MIN_SECONDS[id] ?? 6, clip.durationInSeconds + TAIL_SECONDS)
+      : (COLUMN_MIN_SECONDS[id] ?? 6);
+    const dur = Math.round(seconds * FPS);
+    const timing: SceneTiming = { id, from: cursor, dur, voiceFile: clip?.file ?? null };
+    cursor += dur;
+    return timing;
+  });
+}
+
+export function columnTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return columnSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }
