@@ -236,7 +236,171 @@ function SceneAsk({ unit }: SceneProps) {
 }
 
 // ---- Scene 2: share them out ---------------------------------------------
+/** A ten-rod: ten cubes fused, so a rod is visibly ten ones. */
+function Rod({ x, y, size }: { x: number; y: number; size: number }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: y,
+        width: size,
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+      }}
+    >
+      {Array.from({ length: 10 }, (_, k) => (
+        <div key={k} style={{ width: size, height: size, borderRadius: 3, backgroundColor: BLUE }} />
+      ))}
+    </div>
+  );
+}
+
+/** Block sharing: deal whole TENS first, then the ones — which is exactly
+ *  what long division does, and why 84 ÷ 4 is easy without counting 84 things. */
+function SceneDealBlocks({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const n = dealingNumbers(unit);
+  const title = useEnter(4);
+  const tens = Math.floor(unit.total / 10);
+  const ones = unit.total % 10;
+  const tensEach = tens / unit.divisor;
+  const onesEach = ones / unit.divisor;
+
+  const size = 18;
+  const rodH = size * 10 + 9 * 2;
+  const plateW = Math.max(200, tensEach * (size + 14) + onesEach * (size + 6) + 60);
+  const gap = 40;
+  const totalW = unit.divisor * plateW + (unit.divisor - 1) * gap;
+  const x0 = (STAGE_W - totalW) / 2;
+  const plateY = 300;
+
+  const tensAt = Math.round(dur * 0.2);
+  const onesAt = Math.round(dur * 0.6);
+  const travel = 16;
+  const stagger = 6;
+
+  const rodsDealt = Array.from({ length: tens }, (_, i) => tensAt + i * stagger + travel * 0.8).filter(
+    (t) => frame >= t,
+  ).length;
+  const cubesDealt = Array.from({ length: ones }, (_, i) => onesAt + i * stagger + travel * 0.8).filter(
+    (t) => frame >= t,
+  ).length;
+
+  const pileRod = (i: number) => ({ x: 420 + i * (size + 22), y: 90 });
+  const pileCube = (i: number) => ({ x: 420 + i * (size + 8), y: 90 + rodH + 30 });
+  const seatRod = (p: number, k: number) => ({
+    x: x0 + p * (plateW + gap) + 22 + k * (size + 14),
+    y: plateY + 24,
+  });
+  const seatCube = (p: number, k: number) => ({
+    x: x0 + p * (plateW + gap) + 22 + tensEach * (size + 14) + k * (size + 6),
+    y: plateY + 24 + rodH - size,
+  });
+
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 16 }}>
+      <div
+        style={{
+          fontSize: 80,
+          fontWeight: 700,
+          color: INK,
+          opacity: title.opacity,
+          translate: `0 ${title.translateY}px`,
+        }}
+      >
+        {frame < onesAt ? `Share the ${tens} tens` : `Now share the ${ones} ones`}
+      </div>
+      <Stage>
+        {Array.from({ length: unit.divisor }, (_, p) => (
+          <div
+            key={p}
+            style={{
+              position: "absolute",
+              left: x0 + p * (plateW + gap),
+              top: plateY,
+              width: plateW,
+              height: rodH + 48,
+              borderRadius: 16,
+              backgroundColor: PLATE,
+            }}
+          />
+        ))}
+        {/* Tens travel first */}
+        {Array.from({ length: tens }, (_, i) => {
+          const p = i % unit.divisor;
+          const k = Math.floor(i / unit.divisor);
+          const from = pileRod(i);
+          const to = seatRod(p, k);
+          const t = interpolate(frame, [tensAt + i * stagger, tensAt + i * stagger + travel], [0, 1], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+            easing: Easing.bezier(0.4, 0, 0.2, 1),
+          });
+          return (
+            <Rod
+              key={`r${i}`}
+              x={from.x + (to.x - from.x) * t}
+              y={from.y + (to.y - from.y) * t}
+              size={size}
+            />
+          );
+        })}
+        {/* Then the ones */}
+        {Array.from({ length: ones }, (_, i) => {
+          const p = i % unit.divisor;
+          const k = Math.floor(i / unit.divisor);
+          const from = pileCube(i);
+          const to = seatCube(p, k);
+          return (
+            <Dot
+              key={`c${i}`}
+              size={size}
+              from={from}
+              to={to}
+              at={onesAt + i * stagger}
+              travel={travel}
+              color={GOLD}
+            />
+          );
+        })}
+        {/* Per-plate running value, so each plate visibly becomes 21 */}
+        {Array.from({ length: unit.divisor }, (_, p) => {
+          const r = Math.max(0, Math.min(tensEach, Math.floor((rodsDealt - p - 1) / unit.divisor) + 1));
+          const c = Math.max(0, Math.min(onesEach, Math.floor((cubesDealt - p - 1) / unit.divisor) + 1));
+          return (
+            <div
+              key={`v${p}`}
+              style={{
+                position: "absolute",
+                left: x0 + p * (plateW + gap),
+                top: plateY + rodH + 60,
+                width: plateW,
+                textAlign: "center",
+                fontSize: 62,
+                fontWeight: 800,
+                color: INK,
+              }}
+            >
+              {r * 10 + c}
+            </div>
+          );
+        })}
+      </Stage>
+      <div style={{ fontSize: 50, color: MUTED, fontWeight: 700 }}>
+        {frame < onesAt ? `${tensEach} tens each` : `${tensEach} tens and ${onesEach} — that's ${n.each}`}
+      </div>
+    </AbsoluteFill>
+  );
+}
+
 function SceneDeal({ dur, unit }: SceneProps) {
+  if (unit.blocks) return <SceneDealBlocks dur={dur} unit={unit} />;
+  return <SceneDealDots dur={dur} unit={unit} />;
+}
+
+function SceneDealDots({ dur, unit }: SceneProps) {
   const frame = useCurrentFrame();
   const n = dealingNumbers(unit);
   const title = useEnter(4);
@@ -308,7 +472,43 @@ function SceneDeal({ dur, unit }: SceneProps) {
 }
 
 // ---- Scene 3: the other meaning — how many groups fit? -------------------
-function SceneGroup({ dur, unit }: SceneProps) {
+function SceneGroup(props: SceneProps) {
+  // 84 in groups of 4 would need 21 rings — impossible to show and not what
+  // this unit teaches. Block units get the place-value record instead, which
+  // is the written partner to the sharing they just watched.
+  if (props.unit.blocks) return <SceneGroupBlocks {...props} />;
+  return <SceneGroupDots {...props} />;
+}
+
+function SceneGroupBlocks({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const n = dealingNumbers(unit);
+  const title = useEnter(4);
+  const tens = Math.floor(unit.total / 10);
+  const ones = unit.total % 10;
+  const rows = [
+    { text: tens + " tens ÷ " + unit.divisor + " = " + tens / unit.divisor + " tens", at: Math.round(dur * 0.18) },
+    { text: ones + " ones ÷ " + unit.divisor + " = " + ones / unit.divisor + " one" + (ones / unit.divisor === 1 ? "" : "s"), at: Math.round(dur * 0.46) },
+  ];
+  const totalAt = Math.round(dur * 0.74);
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 44 }}>
+      <div style={{ fontSize: 80, fontWeight: 700, color: INK, opacity: title.opacity, translate: `0 ${title.translateY}px` }}>
+        Written down, place by place
+      </div>
+      {rows.map((r) => (
+        <div key={r.text} style={{ fontSize: 92, fontWeight: 800, color: MUTED, opacity: interpolate(frame, [r.at, r.at + 16], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
+          {r.text}
+        </div>
+      ))}
+      <div style={{ fontSize: 120, fontWeight: 800, color: GREEN, opacity: interpolate(frame, [totalAt, totalAt + 16], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
+        {n.each}
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+function SceneGroupDots({ dur, unit }: SceneProps) {
   const frame = useCurrentFrame();
   const n = dealingNumbers(unit);
   const title = useEnter(4);

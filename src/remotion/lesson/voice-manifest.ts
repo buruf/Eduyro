@@ -871,5 +871,29 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
         "durationInSeconds": 9.427
       }
     ]
+  },
+  "div-larger": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/div-larger/ramlah/ask.mp3",
+        "durationInSeconds": 5.898
+      },
+      {
+        "id": "deal",
+        "file": "lesson-voice/div-larger/ramlah/deal.mp3",
+        "durationInSeconds": 10.17
+      },
+      {
+        "id": "group",
+        "file": "lesson-voice/div-larger/ramlah/group.mp3",
+        "durationInSeconds": 9.242
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/div-larger/ramlah/record.mp3",
+        "durationInSeconds": 4.505
+      }
+    ]
   }
 };

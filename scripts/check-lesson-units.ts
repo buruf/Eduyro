@@ -61,10 +61,25 @@ for (const u of TEN_FRAME_UNITS) {
 for (const u of DEALING_UNITS) {
   const n = dealingNumbers(u);
   if (u.divisor < 1) fail(u.id, `divisor ${u.divisor} is not usable`);
-  if (u.total > 60) fail(u.id, `${u.total} dots is too many to draw individually`);
   if (n.each < 1) fail(u.id, `${u.total} ÷ ${u.divisor} gives less than one each`);
   if (u.divisor > 12) fail(u.id, `${u.divisor} plates will not fit the stage`);
-  if (n.each > 12) fail(u.id, `${n.each} rings will not fit the stage`);
+
+  if (u.blocks) {
+    // Block sharing deals whole tens and then ones. If either place doesn't
+    // divide evenly the animation would need a regroup step it doesn't have —
+    // that's a different lesson, not this one.
+    const tens = Math.floor(u.total / 10);
+    const ones = u.total % 10;
+    if (tens % u.divisor !== 0) {
+      fail(u.id, `${tens} tens don't share evenly between ${u.divisor} — needs a regroup step`);
+    }
+    if (ones % u.divisor !== 0) {
+      fail(u.id, `${ones} ones don't share evenly between ${u.divisor} — needs a remainder step`);
+    }
+  } else {
+    if (u.total > 60) fail(u.id, `${u.total} dots is too many to draw individually`);
+    if (n.each > 12) fail(u.id, `${n.each} rings will not fit the stage`);
+  }
 }
 
 // Every unit must produce a full set of non-empty lines — an unhandled branch

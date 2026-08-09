@@ -180,6 +180,32 @@ export const DEALING_LINE_IDS = ["ask", "deal", "group", "record"] as const;
 
 export function dealingLines(u: DealingUnit): LessonLine[] {
   const n = dealingNumbers(u);
+
+  // Block units share whole tens and then ones — long division's own method,
+  // and the only way a dividend this size is teachable without counting.
+  if (u.blocks) {
+    const tens = Math.floor(u.total / 10);
+    const ones = u.total % 10;
+    return [
+      {
+        id: "ask",
+        text: `${u.total} divided by ${u.divisor}. That's a lot of things to share… so don't count them one at a time. Use blocks.`,
+      },
+      {
+        id: "deal",
+        text: `${u.total} is ${tens} tens and ${ones} ones. Share the tens first — ${tens} tens between ${u.divisor}… that's ${tens / u.divisor} tens each. Now the ones. ${ones} between ${u.divisor}… ${ones / u.divisor} each.`,
+      },
+      {
+        id: "group",
+        text: `Written down it's just those two steps. ${tens} tens divided by ${u.divisor} is ${tens / u.divisor} tens. ${ones} ones divided by ${u.divisor} is ${ones / u.divisor}. Put them together… ${n.each}.`,
+      },
+      {
+        id: "record",
+        text: `So ${u.total} divided by ${u.divisor} is ${n.each}. ${u.tip}.`,
+      },
+    ];
+  }
+
   const leftover =
     n.remainder > 0
       ? ` And ${n.remainder} won't go — there just isn't enough for another one each. That's the remainder.`

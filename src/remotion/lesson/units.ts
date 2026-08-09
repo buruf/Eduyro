@@ -176,6 +176,23 @@ export const COLUMN_UNITS: ColumnUnit[] = [
     y: 27,
     op: "−",
   },
+  {
+    id: "add-3d-three",
+    label: "3-digit addition & three addends",
+    x: 248,
+    y: 167,
+    op: "+",
+  },
+  {
+    // The engine's own example borrows across a zero, which is the hardest
+    // case in the unit and a poor FIRST sight of 3-digit regrouping. These
+    // numbers borrow twice with no zero, which is the representative case.
+    id: "sub-3d",
+    label: "3-digit subtraction (regrouping)",
+    x: 342,
+    y: 158,
+    op: "−",
+  },
 ];
 
 export function columnUnitById(id: string): ColumnUnit {
@@ -186,6 +203,7 @@ export function columnUnitById(id: string): ColumnUnit {
 
 export function columnNumbers(u: ColumnUnit) {
   const onesSum = (u.x % 10) + (u.y % 10);
+  const tensSumRaw = Math.floor((u.x % 100) / 10) + Math.floor((u.y % 100) / 10);
   return {
     x: u.x,
     y: u.y,
@@ -194,12 +212,25 @@ export function columnNumbers(u: ColumnUnit) {
     yTens: Math.floor(u.y / 10),
     yOnes: u.y % 10,
     onesSum,
-    carries: onesSum >= 10,
+    // Addition only — this used to report true for subtraction too, since it
+    // just summed the ones digits.
+    carries: u.op === "+" && onesSum >= 10,
     // Subtraction needs a borrow when the top ones digit is too small.
     borrows: u.op === "−" && u.x % 10 < u.y % 10,
     leftover: onesSum % 10,
     tensSum: Math.floor(u.x / 10) + Math.floor(u.y / 10),
     answer: u.op === "+" ? u.x + u.y : u.x - u.y,
+    // Hundreds support. Two-digit units simply have zero here, so the
+    // hundreds column is hidden rather than drawn empty.
+    xHundreds: Math.floor(u.x / 100),
+    yHundreds: Math.floor(u.y / 100),
+    hasHundreds: u.x >= 100 || u.y >= 100,
+    // A second carry happens when the tens column itself overflows.
+    tensCarry: u.op === "+" && tensSumRaw + (onesSum >= 10 ? 1 : 0) >= 10,
+    // A second borrow when the tens digit cannot cover the subtraction.
+    tensBorrow:
+      u.op === "−" &&
+      Math.floor((u.x % 100) / 10) - (u.x % 10 < u.y % 10 ? 1 : 0) < Math.floor((u.y % 100) / 10),
   };
 }
 
@@ -366,6 +397,8 @@ export interface DealingUnit {
   divisor: number;
   /** Closing line, usually tying the fact back to its multiplication twin. */
   tip: string;
+  /** Share base-ten blocks (tens then ones) instead of individual dots. */
+  blocks?: boolean;
 }
 
 export const DEALING_UNITS: DealingUnit[] = [
@@ -376,6 +409,17 @@ export const DEALING_UNITS: DealingUnit[] = [
   { id: "div-6-9", label: "÷6, ÷7, ÷8, ÷9", total: 42, divisor: 7, tip: "7 × 6 = 42, so 42 ÷ 7 = 6" },
   { id: "div-10-12", label: "÷10, ÷11, ÷12", total: 48, divisor: 12, tip: "12 × 4 = 48, so 48 ÷ 12 = 4" },
   { id: "div-remainder", label: "Division with remainders", total: 29, divisor: 4, tip: "4 × 7 = 28, and 1 is left over" },
+  {
+    id: "div-larger",
+    label: "2-digit & 3-digit ÷ 1-digit",
+    total: 84,
+    divisor: 4,
+    tip: "Share the tens first, then the ones",
+    // 84 loose dots is unreadable, and counting them one by one is not what
+    // this unit teaches. As blocks it becomes: 8 tens shared 4 ways is 2 tens
+    // each, 4 ones shared 4 ways is 1 each — which IS long division.
+    blocks: true,
+  },
 ];
 
 export function dealingUnitById(id: string): DealingUnit {
