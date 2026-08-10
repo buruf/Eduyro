@@ -40,6 +40,9 @@ interface Row {
 async function main() {
 const rows: Row[] = [];
 for (const u of ALL_VIDEO_UNITS) {
+  // "cur-" units are named after a CURRICULUM skill, not an engine unit —
+  // they exist precisely because no engine unit carries that name.
+  const isCurriculum = u.id.startsWith("cur-");
   const e = meta.get(u.id);
   const url = `${base}/lesson-video/${u.id}.${DEFAULT_VOICE_KEY}.mp4`;
   let live = false;
@@ -54,11 +57,11 @@ for (const u of ALL_VIDEO_UNITS) {
   }
   rows.push({
     id: u.id,
-    level: e ? `${e.from}-${e.to}` : "??",
+    level: e ? `${e.from}-${e.to}` : isCurriculum ? "curric" : "??",
     composition: u.composition,
     live,
-    labelOk: e?.label === u.label,
-    inEngine: Boolean(e),
+    labelOk: isCurriculum ? true : e?.label === u.label,
+    inEngine: isCurriculum ? true : Boolean(e),
     bytes,
   });
 }
