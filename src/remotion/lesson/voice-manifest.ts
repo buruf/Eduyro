@@ -895,5 +895,53 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
         "durationInSeconds": 4.505
       }
     ]
+  },
+  "add-3d-three": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/add-3d-three/ramlah/ask.mp3",
+        "durationInSeconds": 3.065
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/add-3d-three/ramlah/build.mp3",
+        "durationInSeconds": 4.923
+      },
+      {
+        "id": "regroup",
+        "file": "lesson-voice/add-3d-three/ramlah/regroup.mp3",
+        "durationInSeconds": 18.669
+      },
+      {
+        "id": "written",
+        "file": "lesson-voice/add-3d-three/ramlah/written.mp3",
+        "durationInSeconds": 7.709
+      }
+    ]
+  },
+  "sub-3d": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/sub-3d/ramlah/ask.mp3",
+        "durationInSeconds": 3.715
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/sub-3d/ramlah/build.mp3",
+        "durationInSeconds": 4.04
+      },
+      {
+        "id": "regroup",
+        "file": "lesson-voice/sub-3d/ramlah/regroup.mp3",
+        "durationInSeconds": 14.118
+      },
+      {
+        "id": "written",
+        "file": "lesson-voice/sub-3d/ramlah/written.mp3",
+        "durationInSeconds": 9.288
+      }
+    ]
   }
 };

@@ -741,11 +741,500 @@ function SceneWritten({ dur, unit }: SceneProps) {
   );
 }
 
+// ===========================================================================
+// THREE-DIGIT: hundreds, tens and ones.
+// ===========================================================================
+// Deliberately a separate code path rather than a generalisation of the
+// two-digit scenes above. Those four videos are correct and reviewed, and the
+// three-digit case is genuinely different: two regroups instead of one, and a
+// third block shape. Widening the working scenes risked all six to serve two.
+//
+// The mechanic is identical, applied twice: ten of a place group up, turn
+// green, and travel to the next place as ONE block of the next size. That is
+// the whole of carrying, and reversed, the whole of borrowing.
+
+const U3 = 13; // cube edge at three-digit scale
+const G3 = 2;
+const ROD3_H = U3 * 10 + 9 * G3;
+const FLAT3_W = U3 * 10 + 9 * G3;
+
+// Widened: four flats span 706px, so the tens column cannot start at 700 —
+// the fourth hundred overran it. Worst cases are 4 flats (248+167), 13 rods
+// (342-158 after borrowing a hundred) and 15 ones.
+const COL3_X = [60, 800, 1280]; // hundreds, tens, ones
+const ROW3_Y = 150;
+const STAGE3_ROW_Y = 470;
+const COUNT3_Y = 700;
+
+/** A hundred: ten rods side by side, so it is visibly ten tens. */
+function Flat3({ x, y, colour = GREEN }: { x: number; y: number; colour?: string }) {
+  return (
+    <div style={{ position: "absolute", left: x, top: y, display: "flex", gap: G3 }}>
+      {Array.from({ length: 10 }, (_, c) => (
+        <div key={c} style={{ display: "flex", flexDirection: "column", gap: G3 }}>
+          {Array.from({ length: 10 }, (_, r) => (
+            <div
+              key={r}
+              style={{ width: U3, height: U3, borderRadius: 2, backgroundColor: colour }}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Rod3({ x, y, colour = BLUE }: { x: number; y: number; colour?: string }) {
+  return (
+    <div
+      style={{ position: "absolute", left: x, top: y, display: "flex", flexDirection: "column", gap: G3 }}
+    >
+      {Array.from({ length: 10 }, (_, r) => (
+        <div key={r} style={{ width: U3, height: U3, borderRadius: 2, backgroundColor: colour }} />
+      ))}
+    </div>
+  );
+}
+
+function Cube3({ x, y, colour = GOLD }: { x: number; y: number; colour?: string }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: y,
+        width: U3,
+        height: U3,
+        borderRadius: 2,
+        backgroundColor: colour,
+      }}
+    />
+  );
+}
+
+const flat3Slot = (i: number, y = ROW3_Y) => ({ x: COL3_X[0] + i * (FLAT3_W + 14), y });
+const rod3Slot = (i: number, y = ROW3_Y) => ({ x: COL3_X[1] + i * (U3 + 12), y });
+const cube3Slot = (i: number, y = ROW3_Y) => ({
+  x: COL3_X[2] + (i % 5) * (U3 + G3 + 3),
+  y: y + Math.floor(i / 5) * (U3 + G3 + 3),
+});
+
+function Head3({ i, label }: { i: number; label: string }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: COL3_X[i],
+        top: 70,
+        width: 320,
+        fontSize: 34,
+        color: MUTED,
+        fontWeight: 700,
+        letterSpacing: 1,
+      }}
+    >
+      {label}
+    </div>
+  );
+}
+
+function Count3({ value, i, label, changedAt }: { value: number; i: number; label: string; changedAt: number | null }) {
+  const frame = useCurrentFrame();
+  const flash =
+    changedAt === null
+      ? 0
+      : interpolate(frame, [changedAt, changedAt + 12], [1, 0], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+        });
+  return (
+    <div style={{ position: "absolute", left: COL3_X[i], top: COUNT3_Y, width: 320 }}>
+      <span
+        style={{
+          fontSize: 72,
+          fontWeight: 800,
+          color: flash > 0.05 ? GREEN : INK,
+          scale: String(1 + flash * 0.16),
+          display: "inline-block",
+        }}
+      >
+        {value}
+      </span>
+      <span style={{ fontSize: 36, color: MUTED, fontWeight: 700, marginLeft: 10 }}>{label}</span>
+    </div>
+  );
+}
+
+function Stage3({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ position: "relative", width: 1640, height: 800 }}>
+      <Head3 i={0} label="HUNDREDS" />
+      <Head3 i={1} label="TENS" />
+      <Head3 i={2} label="ONES" />
+      {children}
+    </div>
+  );
+}
+
+/** Straight-line travel between two points. */
+function useTrip(from: { x: number; y: number }, to: { x: number; y: number }, at: number, travel = 22) {
+  const frame = useCurrentFrame();
+  const t = interpolate(frame, [at, at + travel], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.4, 0, 0.2, 1),
+  });
+  return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t, t };
+}
+
+function SceneBuild3({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const n = columnNumbers(unit);
+  const title = useEnter(4);
+  const secondAt = Math.round(dur * 0.52);
+  const xDigits = [n.xHundreds, Math.floor((unit.x % 100) / 10), unit.x % 10];
+  const yDigits = [n.yHundreds, Math.floor((unit.y % 100) / 10), unit.y % 10];
+  const rows: { d: number[]; y: number; at: number }[] =
+    unit.op === "−"
+      ? [{ d: xDigits, y: ROW3_Y, at: 16 }]
+      : [
+          { d: xDigits, y: ROW3_Y, at: 16 },
+          { d: yDigits, y: STAGE3_ROW_Y, at: secondAt },
+        ];
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 18 }}>
+      <div
+        style={{
+          fontSize: 80,
+          fontWeight: 700,
+          color: INK,
+          opacity: title.opacity,
+          translate: `0 ${title.translateY}px`,
+        }}
+      >
+        {unit.op === "−" ? `${unit.x} to start with` : `${unit.x} and ${unit.y}`}
+      </div>
+      <Stage3>
+        {rows.map((row, ri) => (
+          <div key={ri}>
+            {Array.from({ length: row.d[0] }, (_, i) =>
+              frame >= row.at + i * 6 ? (
+                <Flat3 key={`f${ri}${i}`} {...flat3Slot(i, row.y)} />
+              ) : null,
+            )}
+            {Array.from({ length: row.d[1] }, (_, i) =>
+              frame >= row.at + row.d[0] * 6 + i * 4 ? (
+                <Rod3 key={`r${ri}${i}`} {...rod3Slot(i, row.y)} />
+              ) : null,
+            )}
+            {Array.from({ length: row.d[2] }, (_, i) =>
+              frame >= row.at + row.d[0] * 6 + row.d[1] * 4 + i * 3 ? (
+                <Cube3 key={`c${ri}${i}`} {...cube3Slot(i, row.y)} />
+              ) : null,
+            )}
+            <div
+              style={{
+                position: "absolute",
+                left: 1480,
+                top: row.y + 60,
+                fontSize: 86,
+                fontWeight: 800,
+                color: INK,
+              }}
+            >
+              {ri === 0 ? unit.x : unit.y}
+            </div>
+          </div>
+        ))}
+      </Stage3>
+    </AbsoluteFill>
+  );
+}
+
+/** Addition: ones merge and carry, then tens merge and carry. */
+function SceneAdd3({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const n = columnNumbers(unit);
+  const title = useEnter(4);
+  const xT = Math.floor((unit.x % 100) / 10);
+  const yT = Math.floor((unit.y % 100) / 10);
+  const onesSum = n.onesSum;
+  const tensAfterCarry = xT + yT + (n.carries ? 1 : 0);
+
+  const mergeAt = Math.round(dur * 0.08);
+  const carry1At = Math.round(dur * 0.34); // ones → tens
+  const carry2At = Math.round(dur * 0.66); // tens → hundreds
+  const trip = 22;
+
+  const merged = frame >= mergeAt + 20;
+  const carried1 = frame >= carry1At + trip * 0.9;
+  const carried2 = n.tensCarry && frame >= carry2At + trip * 0.9;
+
+  const onesShown = carried1 ? n.leftover : merged ? onesSum : unit.x % 10;
+  const tensShown =
+    (carried2 ? tensAfterCarry - 10 : merged ? xT + yT : xT) + (carried1 && !carried2 ? 1 : 0);
+  const hundredsShown = n.xHundreds + (merged ? n.yHundreds : 0) + (carried2 ? 1 : 0);
+
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 18 }}>
+      <div
+        style={{
+          fontSize: 76,
+          fontWeight: 700,
+          color: INK,
+          opacity: title.opacity,
+          translate: `0 ${title.translateY}px`,
+        }}
+      >
+        {frame < carry1At
+          ? "Put them together"
+          : frame < carry2At
+            ? "Ten ones make a ten"
+            : "And ten tens make a hundred"}
+      </div>
+      <Stage3>
+        {Array.from({ length: hundredsShown }, (_, i) => (
+          <Flat3 key={`f${i}`} {...flat3Slot(i)} colour={carried2 && i === hundredsShown - 1 ? GREEN : GREEN} />
+        ))}
+        {Array.from({ length: Math.max(0, tensShown) }, (_, i) => (
+          <Rod3 key={`r${i}`} {...rod3Slot(i)} />
+        ))}
+        {Array.from({ length: Math.max(0, onesShown) }, (_, i) => (
+          <Cube3 key={`c${i}`} {...cube3Slot(i)} />
+        ))}
+
+        {/* The ten ones travelling to the tens column as one rod */}
+        {n.carries && frame >= carry1At && !carried1 && (
+          <TravellingRod from={cube3Slot(n.leftover)} to={rod3Slot(xT + yT)} at={carry1At} travel={trip} />
+        )}
+        {/* The ten tens travelling to the hundreds column as one flat */}
+        {n.tensCarry && frame >= carry2At && !carried2 && (
+          <TravellingFlat
+            from={rod3Slot(tensAfterCarry - 10)}
+            to={flat3Slot(n.xHundreds + n.yHundreds)}
+            at={carry2At}
+            travel={trip}
+          />
+        )}
+
+        <Count3 value={hundredsShown} i={0} label="h" changedAt={carried2 ? carry2At + trip : null} />
+        <Count3 value={Math.max(0, tensShown)} i={1} label="t" changedAt={carried1 ? carry1At + trip : null} />
+        <Count3 value={Math.max(0, onesShown)} i={2} label="o" changedAt={carried1 ? carry1At : null} />
+      </Stage3>
+    </AbsoluteFill>
+  );
+}
+
+function TravellingRod({
+  from,
+  to,
+  at,
+  travel,
+}: {
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+  at: number;
+  travel: number;
+}) {
+  const p = useTrip(from, to, at, travel);
+  return <Rod3 x={p.x} y={p.y} colour={GREEN} />;
+}
+
+function TravellingFlat({
+  from,
+  to,
+  at,
+  travel,
+}: {
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+  at: number;
+  travel: number;
+}) {
+  const p = useTrip(from, to, at, travel);
+  return <Flat3 x={p.x} y={p.y} colour={GREEN} />;
+}
+
+/** Subtraction: borrow a hundred into tens if needed, then a ten into ones. */
+function SceneSub3({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const n = columnNumbers(unit);
+  const title = useEnter(4);
+  const xH = n.xHundreds;
+  const xT = Math.floor((unit.x % 100) / 10);
+  const xO = unit.x % 10;
+  const yH = n.yHundreds;
+  const yT = Math.floor((unit.y % 100) / 10);
+  const yO = unit.y % 10;
+
+  const borrow1At = Math.round(dur * 0.16); // ten → ones
+  const borrow2At = Math.round(dur * 0.44); // hundred → tens
+  const takeAt = Math.round(dur * 0.7);
+  const trip = 22;
+
+  const b1 = n.borrows && frame >= borrow1At + trip * 0.9;
+  const b2 = n.tensBorrow && frame >= borrow2At + trip * 0.9;
+  const took = frame >= takeAt + trip * 0.9;
+
+  const onesNow = took ? xO + (n.borrows ? 10 : 0) - yO : xO + (b1 ? 10 : 0);
+  const tensNow =
+    (took ? xT - (n.borrows ? 1 : 0) + (n.tensBorrow ? 10 : 0) - yT : xT - (b1 ? 1 : 0) + (b2 ? 10 : 0));
+  const hundredsNow = took ? xH - (n.tensBorrow ? 1 : 0) - yH : xH - (b2 ? 1 : 0);
+
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 18 }}>
+      <div
+        style={{
+          fontSize: 76,
+          fontWeight: 700,
+          color: INK,
+          opacity: title.opacity,
+          translate: `0 ${title.translateY}px`,
+        }}
+      >
+        {frame < borrow2At
+          ? "Not enough ones — break a ten"
+          : frame < takeAt
+            ? "Not enough tens — break a hundred"
+            : `Now take away ${unit.y}`}
+      </div>
+      <Stage3>
+        {Array.from({ length: Math.max(0, hundredsNow) }, (_, i) => (
+          <Flat3 key={`f${i}`} {...flat3Slot(i)} />
+        ))}
+        {Array.from({ length: Math.max(0, tensNow) }, (_, i) => (
+          <Rod3 key={`r${i}`} {...rod3Slot(i)} />
+        ))}
+        {Array.from({ length: Math.max(0, onesNow) }, (_, i) => (
+          <Cube3 key={`c${i}`} {...cube3Slot(i)} />
+        ))}
+
+        {n.borrows && frame >= borrow1At && !b1 && (
+          <TravellingRod from={rod3Slot(xT - 1)} to={cube3Slot(xO)} at={borrow1At} travel={trip} />
+        )}
+        {n.tensBorrow && frame >= borrow2At && !b2 && (
+          <TravellingFlat from={flat3Slot(xH - 1)} to={rod3Slot(xT)} at={borrow2At} travel={trip} />
+        )}
+
+        <Count3 value={Math.max(0, hundredsNow)} i={0} label="h" changedAt={b2 ? borrow2At : null} />
+        <Count3 value={Math.max(0, tensNow)} i={1} label="t" changedAt={b2 ? borrow2At + trip : null} />
+        <Count3 value={Math.max(0, onesNow)} i={2} label="o" changedAt={b1 ? borrow1At + trip : null} />
+      </Stage3>
+    </AbsoluteFill>
+  );
+}
+
+function SceneAction3(props: SceneProps) {
+  return props.unit.op === "−" ? <SceneSub3 {...props} /> : <SceneAdd3 {...props} />;
+}
+
 const SCENE_BODIES: Record<string, React.FC<SceneProps>> = {
   ask: SceneAsk,
   build: SceneBuild,
   regroup: SceneAction,
   written: SceneWritten,
+};
+
+/** The written algorithm for three digits, with ONE mark per place.
+ *  The two-digit version's annotation is a single pair and produced nonsense
+ *  here ("33 12" for 342 − 158, where it should be 2 13 12). */
+function SceneWritten3({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const n = columnNumbers(unit);
+  const title = useEnter(4);
+  const markAt = Math.round(dur * 0.28);
+  const answerAt = Math.round(dur * 0.58);
+
+  const xH = n.xHundreds;
+  const xT = Math.floor((unit.x % 100) / 10);
+  const xO = unit.x % 10;
+
+  // Per-place annotations, aligned to the digit each one belongs above.
+  let marks: (string | null)[];
+  if (unit.op === "−") {
+    marks = [
+      n.tensBorrow ? String(xH - 1) : null,
+      n.tensBorrow ? String(xT - (n.borrows ? 1 : 0) + 10) : n.borrows ? String(xT - 1) : null,
+      n.borrows ? String(xO + 10) : null,
+    ];
+  } else {
+    // A carry is written above the place it lands IN.
+    marks = [n.tensCarry ? "1" : null, n.carries ? "1" : null, null];
+  }
+
+  const COLW = 150;
+  const digits = (v: number) => String(v).padStart(3, " ").split("");
+  const markOpacity = interpolate(frame, [markAt, markAt + 14], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  const Row = ({ chars, prefix }: { chars: string[]; prefix?: string }) => (
+    <div style={{ display: "flex", alignItems: "baseline" }}>
+      <div style={{ width: 90, fontSize: 120, fontWeight: 800, color: INK, textAlign: "right" }}>
+        {prefix ?? ""}
+      </div>
+      {chars.map((c, i) => (
+        <div
+          key={i}
+          style={{ width: COLW, fontSize: 130, fontWeight: 800, color: INK, textAlign: "center" }}
+        >
+          {c.trim()}
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 10 }}>
+      <div
+        style={{
+          fontSize: 92,
+          fontWeight: 700,
+          color: INK,
+          opacity: title.opacity,
+          translate: `0 ${title.translateY}px`,
+        }}
+      >
+        Writing it down
+      </div>
+      <div style={{ fontFamily: "Georgia, serif" }}>
+        {/* the regrouping marks, each above its own place */}
+        <div style={{ display: "flex", opacity: markOpacity }}>
+          <div style={{ width: 90 }} />
+          {marks.map((m, i) => (
+            <div
+              key={i}
+              style={{ width: COLW, fontSize: 52, fontWeight: 800, color: GREEN, textAlign: "center" }}
+            >
+              {m ?? ""}
+            </div>
+          ))}
+        </div>
+        <Row chars={digits(unit.x)} />
+        <Row chars={digits(unit.y)} prefix={unit.op} />
+        <div style={{ borderTop: `7px solid ${INK}`, marginTop: 6, paddingTop: 6 }}>
+          <div
+            style={{
+              opacity: interpolate(frame, [answerAt, answerAt + 16], [0, 1], {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+              }),
+            }}
+          >
+            <Row chars={digits(n.answer)} />
+          </div>
+        </div>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+const SCENE_BODIES_3: Record<string, React.FC<SceneProps>> = {
+  ask: SceneAsk,
+  build: SceneBuild3,
+  regroup: SceneAction3,
+  written: SceneWritten3,
 };
 
 export const ColumnVideo: React.FC<ColumnProps> = ({
@@ -755,6 +1244,9 @@ export const ColumnVideo: React.FC<ColumnProps> = ({
   const { width } = useVideoConfig();
   const unit = columnUnitById(unitId);
   const scenes = columnSceneTimings(unitId, voice);
+  // Three-digit units use their own scenes: two regroups and a third block
+  // shape, rather than a widened version of the two-digit ones.
+  const bodies = columnNumbers(unit).hasHundreds ? SCENE_BODIES_3 : SCENE_BODIES;
   return (
     <AbsoluteFill
       style={{
@@ -764,7 +1256,7 @@ export const ColumnVideo: React.FC<ColumnProps> = ({
       }}
     >
       {scenes.map((scene) => {
-        const Body = SCENE_BODIES[scene.id];
+        const Body = bodies[scene.id];
         return (
           <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
             {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
