@@ -9,7 +9,9 @@
 // numbers instead and read the make-ten script — so the voice said "slide 4
 // across" while nothing slid. Any unit whose declared strategy isn't true of
 // its own numbers can produce that kind of contradiction, so it fails here.
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, tenFrameNumbers, dealingNumbers } from "../src/remotion/lesson/units";
+import { readFileSync, existsSync } from "node:fs";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, ALL_VIDEO_UNITS, tenFrameNumbers, dealingNumbers } from "../src/remotion/lesson/units";
+import { DEFAULT_VOICE_KEY } from "../src/remotion/lesson/voices";
 import { lessonLines, columnLines, tenFrameLines, dealingLines, factFamilyLines, areaLines } from "../src/remotion/lesson/script";
 
 const problems: string[] = [];
@@ -102,9 +104,36 @@ for (const u of allUnits) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Labels must match the engine EXACTLY. The dashboard looks a lesson video up
+// by the sheet's skill label, so drift here silently means "this unit has no
+// video" — a failure that looks like nothing at all.
+// ---------------------------------------------------------------------------
+const engineSrc = readFileSync("src/lib/shop/arithmetic-engine.ts", "utf8");
+const engineLabels = new Map<string, string>();
+for (const m of engineSrc.matchAll(/id:"([a-z0-9-]+)", label:"([^"]+)"/g)) {
+  engineLabels.set(m[1], m[2]);
+}
+for (const u of ALL_VIDEO_UNITS) {
+  const expected = engineLabels.get(u.id);
+  if (!expected) {
+    fail(u.id, "no unit with this id exists in the engine");
+  } else if (expected !== u.label) {
+    fail(u.id, `label drift — engine "${expected}" vs video "${u.label}"`);
+  }
+}
+
+// Every indexed unit must actually have a rendered file for the default voice.
+// The dashboard trusts the index, so a missing file shows a broken player to a
+// child rather than failing anywhere a developer would notice.
+for (const u of ALL_VIDEO_UNITS) {
+  const file = `public/lesson-video/${u.id}.${DEFAULT_VOICE_KEY}.mp4`;
+  if (!existsSync(file)) fail(u.id, `indexed for the dashboard but ${file} is missing`);
+}
+
 if (problems.length) {
   console.error(`${problems.length} problem(s):`);
   for (const p of problems) console.error(`  ${p}`);
   process.exit(1);
 }
-console.log(`OK — ${allUnits.length} units coherent (${TEN_FRAME_UNITS.length + DEALING_UNITS.length} strategy-checked).`);
+console.log(`OK — ${allUnits.length} units coherent, ${ALL_VIDEO_UNITS.length} labels match the engine (${TEN_FRAME_UNITS.length + DEALING_UNITS.length} strategy-checked).`);

@@ -590,3 +590,38 @@ export function areaSides(u: AreaUnit) {
     yOnes: u.y % 10,
   };
 }
+
+// ---------------------------------------------------------------------------
+// The lesson-video index, used by the student dashboard.
+// ---------------------------------------------------------------------------
+// Client-safe: plain data, no Remotion imports, so the player UI can import it.
+//
+// Sheets identify their unit by LABEL, so that is the lookup key. The labels
+// here must match src/lib/shop/arithmetic-engine.ts exactly — a drifted label
+// silently means "no video" rather than an error, so scripts/check-lesson-units
+// asserts the match.
+export interface VideoUnitRef {
+  id: string;
+  label: string;
+  /** Remotion composition that renders it. */
+  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area";
+}
+
+export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
+  ...EQUAL_GROUP_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "EqualGroups" as const })),
+  ...COLUMN_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Column" as const })),
+  ...TEN_FRAME_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "TenFrame" as const })),
+  ...DEALING_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Dealing" as const })),
+  ...FACT_FAMILY_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "FactFamily" as const })),
+  ...AREA_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Area" as const })),
+];
+
+const BY_LABEL = new Map(ALL_VIDEO_UNITS.map((u) => [u.label, u]));
+
+/** The lesson video for a sheet's skill label, or null if that unit has none
+ *  (the mixed-review units deliberately don't — every skill they revise
+ *  already has its own video). */
+export function videoForSkillLabel(label: string | null | undefined): VideoUnitRef | null {
+  if (!label) return null;
+  return BY_LABEL.get(label) ?? null;
+}

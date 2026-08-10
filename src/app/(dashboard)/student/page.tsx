@@ -34,7 +34,7 @@ import { Card, StatCard, Progress, Modal, EmptyState } from "@/components/ui";
 import { StudentRealtime } from "@/components/realtime/StudentRealtime";
 import { ConceptTutorialModal } from "@/components/tutorial/ConceptTutorialModal";
 import LessonVideoModal from "@/components/tutorial/LessonVideoModal";
-import { PILOT } from "@/components/tutorial/pilot/pilot-script";
+import { videoForSkillLabel } from "@/remotion/lesson/units";
 import { ReportProblemButton } from "@/components/ReportProblemButton";
 import { cn, formatTime } from "@/lib/utils";
 import type { AnswerType, InteractiveSpec } from "@/types";
@@ -261,6 +261,13 @@ export default function StudentDashboardPage() {
 
   // Find the next sheet to practice (first IN_PROGRESS sheet)
   const currentSheet = data.todayPacket.sheets.find((s) => s.status === "IN_PROGRESS") ?? null;
+
+  // The rendered lesson video for whichever unit the tutorial is opening for,
+  // or null when that unit has none — the mixed-review units deliberately
+  // don't, since every skill they revise already has its own video.
+  const lessonVideo = videoForSkillLabel(
+    conceptModal?.sheet?.skillName ?? currentSheet?.skillName,
+  );
 
   // Concept for the sheet currently up next (drives the "Review tutorial" link)
   const currentConcept = currentSheet
@@ -607,19 +614,21 @@ export default function StudentDashboardPage() {
 
       {/* Concept tutorial — auto-opens before a skill's FIRST practice;
           reachable later via the "Review tutorial" link */}
-      {/* Units with a rendered lesson video serve that in BOTH modes — a child
-          who taps "Review tutorial" must see the lesson they were actually
-          taught. Only the first run is logged (see `logRun`), so review
-          replays stay out of the funnel the skip/completion rates measure.
+      {/* Any unit with a rendered lesson video serves it in BOTH modes — a
+          child who taps "Review tutorial" must see the lesson they were
+          actually taught. Only the first run is logged (see `logRun`), so
+          review replays stay out of the funnel the skip/completion rates
+          measure. Units without a video (the mixed reviews, and every
+          non-maths subject) fall through to the old concept tutorial.
           The interactive pilot tutorial is no longer routed to (kept in
           src/components/tutorial/pilot/ in case that decision reverses). */}
-      {conceptModal && (conceptModal.sheet?.skillName ?? currentSheet?.skillName) === PILOT.skillLabel ? (
+      {conceptModal && lessonVideo ? (
         <LessonVideoModal
           open={true}
           studentId={data.student.id}
-          skillId={PILOT.skillId}
-          srcBase="lesson-video/mul-tens"
-          title={PILOT.skillLabel}
+          skillId={lessonVideo.id}
+          srcBase={`lesson-video/${lessonVideo.id}`}
+          title={lessonVideo.label}
           logRun={conceptModal.mode === "first"}
           onStart={onConceptTutorialDone}
           onClose={() => setConceptModal(null)}
@@ -655,7 +664,7 @@ export default function StudentDashboardPage() {
           timerSeconds={timerElapsed}
           onSubmitted={onSheetSubmitted}
           onShowLesson={() => openTutorialReview(practiceSheet)}
-          scaffoldFirstThree={firstPracticeOnSkill && practiceSheet.skillName === PILOT.skillLabel}
+          scaffoldFirstThree={firstPracticeOnSkill && practiceSheet.skillName === "Multiplying tens (20 × 3)"}
         />
       )}
 
