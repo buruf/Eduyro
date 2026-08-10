@@ -10,7 +10,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS } from "../src/remotion/lesson/units";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS } from "../src/remotion/lesson/units";
 import { LESSON_VOICES } from "../src/remotion/lesson/voices";
 import { CLIPS_BY_UNIT } from "../src/remotion/lesson/voice-manifest";
 
@@ -22,9 +22,9 @@ const only = process.argv.slice(2);
 const ALL = [
   ...EQUAL_GROUP_UNITS.map((u) => ({ id: u.id, comp: "EqualGroups" })),
   ...COLUMN_UNITS.map((u) => ({ id: u.id, comp: "Column" })),
-  ...TEN_FRAME_UNITS.map((u) => ({ id: u.id, comp: "TenFrame" })),
+  ...[...TEN_FRAME_UNITS, ...CURRICULUM_TEN_FRAME_UNITS].map((u) => ({ id: u.id, comp: "TenFrame" })),
   ...DEALING_UNITS.map((u) => ({ id: u.id, comp: "Dealing" })),
-  ...FACT_FAMILY_UNITS.map((u) => ({ id: u.id, comp: "FactFamily" })),
+  ...[...FACT_FAMILY_UNITS, ...CURRICULUM_FACT_FAMILY_UNITS].map((u) => ({ id: u.id, comp: "FactFamily" })),
   ...AREA_UNITS.map((u) => ({ id: u.id, comp: "Area" })),
 ];
 const units = only.length ? ALL.filter((u) => only.includes(u.id)) : ALL;

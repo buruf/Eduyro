@@ -11,6 +11,8 @@ import {
   DEALING_UNITS,
   FACT_FAMILY_UNITS,
   AREA_UNITS,
+  CURRICULUM_TEN_FRAME_UNITS,
+  CURRICULUM_FACT_FAMILY_UNITS,
   unitNumbers,
   columnNumbers,
   tenFrameNumbers,
@@ -50,13 +52,13 @@ const ALL: Entry[] = [
     head: `${u.x} ${u.op} ${u.y} = ${columnNumbers(u).answer}`,
     lines: () => columnLines(u),
   })),
-  ...TEN_FRAME_UNITS.map((u) => ({
+  ...[...TEN_FRAME_UNITS, ...CURRICULUM_TEN_FRAME_UNITS].map((u) => ({
     id: u.id,
     label: u.label,
     head: `${u.x} ${u.op} ${u.y} = ${tenFrameNumbers(u).answer}  [${u.strategy}]`,
     lines: () => tenFrameLines(u),
   })),
-  ...FACT_FAMILY_UNITS.map((u) => ({
+  ...[...FACT_FAMILY_UNITS, ...CURRICULUM_FACT_FAMILY_UNITS].map((u) => ({
     id: u.id,
     label: u.label,
     head: u.kind === "additive" ? u.a + " + " + u.b + " = " + (u.a + u.b) : u.a + " x " + u.b + " = " + (u.a * u.b),

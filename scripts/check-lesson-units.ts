@@ -10,7 +10,7 @@
 // across" while nothing slid. Any unit whose declared strategy isn't true of
 // its own numbers can produce that kind of contradiction, so it fails here.
 import { readFileSync, existsSync } from "node:fs";
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, ALL_VIDEO_UNITS, tenFrameNumbers, dealingNumbers } from "../src/remotion/lesson/units";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, ALL_VIDEO_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, tenFrameNumbers, dealingNumbers } from "../src/remotion/lesson/units";
 import { DEFAULT_VOICE_KEY } from "../src/remotion/lesson/voices";
 import { lessonLines, columnLines, tenFrameLines, dealingLines, factFamilyLines, areaLines } from "../src/remotion/lesson/script";
 
@@ -89,9 +89,9 @@ for (const u of DEALING_UNITS) {
 const allUnits: { id: string; lines: () => { id: string; text: string }[] }[] = [
   ...EQUAL_GROUP_UNITS.map((u) => ({ id: u.id, lines: () => lessonLines(u) })),
   ...COLUMN_UNITS.map((u) => ({ id: u.id, lines: () => columnLines(u) })),
-  ...TEN_FRAME_UNITS.map((u) => ({ id: u.id, lines: () => tenFrameLines(u) })),
+  ...[...TEN_FRAME_UNITS, ...CURRICULUM_TEN_FRAME_UNITS].map((u) => ({ id: u.id, lines: () => tenFrameLines(u) })),
   ...DEALING_UNITS.map((u) => ({ id: u.id, lines: () => dealingLines(u) })),
-  ...FACT_FAMILY_UNITS.map((u) => ({ id: u.id, lines: () => factFamilyLines(u) })),
+  ...[...FACT_FAMILY_UNITS, ...CURRICULUM_FACT_FAMILY_UNITS].map((u) => ({ id: u.id, lines: () => factFamilyLines(u) })),
   ...AREA_UNITS.map((u) => ({ id: u.id, lines: () => areaLines(u) })),
 ];
 
@@ -115,6 +115,9 @@ for (const m of engineSrc.matchAll(/id:"([a-z0-9-]+)", label:"([^"]+)"/g)) {
   engineLabels.set(m[1], m[2]);
 }
 for (const u of ALL_VIDEO_UNITS) {
+  // "cur-" units are named after a CURRICULUM skill rather than an engine
+  // unit — they exist precisely because no engine unit carries that name.
+  if (u.id.startsWith("cur-")) continue;
   const expected = engineLabels.get(u.id);
   if (!expected) {
     fail(u.id, "no unit with this id exists in the engine");

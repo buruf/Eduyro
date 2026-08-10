@@ -943,5 +943,77 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
         "durationInSeconds": 9.288
       }
     ]
+  },
+  "cur-add-within-5": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-add-within-5/ramlah/ask.mp3",
+        "durationInSeconds": 2.322
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/cur-add-within-5/ramlah/build.mp3",
+        "durationInSeconds": 3.808
+      },
+      {
+        "id": "strategy",
+        "file": "lesson-voice/cur-add-within-5/ramlah/strategy.mp3",
+        "durationInSeconds": 3.111
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-add-within-5/ramlah/record.mp3",
+        "durationInSeconds": 3.947
+      }
+    ]
+  },
+  "cur-add-within-10": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-add-within-10/ramlah/ask.mp3",
+        "durationInSeconds": 2.368
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/cur-add-within-10/ramlah/build.mp3",
+        "durationInSeconds": 4.412
+      },
+      {
+        "id": "strategy",
+        "file": "lesson-voice/cur-add-within-10/ramlah/strategy.mp3",
+        "durationInSeconds": 3.715
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-add-within-10/ramlah/record.mp3",
+        "durationInSeconds": 4.18
+      }
+    ]
+  },
+  "cur-number-bonds": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-number-bonds/ramlah/ask.mp3",
+        "durationInSeconds": 8.777
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/cur-number-bonds/ramlah/build.mp3",
+        "durationInSeconds": 5.062
+      },
+      {
+        "id": "facts",
+        "file": "lesson-voice/cur-number-bonds/ramlah/facts.mp3",
+        "durationInSeconds": 17.786
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-number-bonds/ramlah/record.mp3",
+        "durationInSeconds": 4.737
+      }
+    ]
   }
 };

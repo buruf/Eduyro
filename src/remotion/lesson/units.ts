@@ -360,8 +360,31 @@ export const TEN_FRAME_UNITS: TenFrameUnit[] = [
   },
 ];
 
+export const CURRICULUM_TEN_FRAME_UNITS: TenFrameUnit[] = [
+  {
+    // "Addition within 5" — aliasing this to a video showing 7 + 2 would put
+    // numbers beyond the skill in front of a child practising sums to five.
+    id: "cur-add-within-5",
+    label: "Addition within 5",
+    x: 3,
+    y: 2,
+    op: "+",
+    strategy: "count-on",
+    tip: "Start at the bigger number and count on",
+  },
+  {
+    id: "cur-add-within-10",
+    label: "Addition within 10",
+    x: 6,
+    y: 3,
+    op: "+",
+    strategy: "count-on",
+    tip: "Start at the bigger number and count on",
+  },
+];
+
 export function tenFrameUnitById(id: string): TenFrameUnit {
-  const u = TEN_FRAME_UNITS.find((x) => x.id === id);
+  const u = [...TEN_FRAME_UNITS, ...CURRICULUM_TEN_FRAME_UNITS].find((x) => x.id === id);
   if (!u) throw new Error(`No ten-frame unit "${id}"`);
   return u;
 }
@@ -489,8 +512,22 @@ export const FACT_FAMILY_UNITS: FactFamilyUnit[] = [
   },
 ];
 
+export const CURRICULUM_FACT_FAMILY_UNITS: FactFamilyUnit[] = [
+  {
+    // "Number bonds" IS part-part-whole, so the fact-family bar is exactly the
+    // right picture — but bonds are to TEN, and the existing unit's 5 + 8 = 13
+    // would show a child numbers past the ten they're bonding to.
+    id: "cur-number-bonds",
+    label: "Number bonds",
+    a: 6,
+    b: 4,
+    kind: "additive",
+    tip: "Two parts that make ten — know one, know the other",
+  },
+];
+
 export function factFamilyUnitById(id: string): FactFamilyUnit {
-  const u = FACT_FAMILY_UNITS.find((x) => x.id === id);
+  const u = [...FACT_FAMILY_UNITS, ...CURRICULUM_FACT_FAMILY_UNITS].find((x) => x.id === id);
   if (!u) throw new Error(`No fact-family unit "${id}"`);
   return u;
 }
@@ -614,6 +651,9 @@ export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
   ...DEALING_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Dealing" as const })),
   ...FACT_FAMILY_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "FactFamily" as const })),
   ...AREA_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Area" as const })),
+  // Curriculum-named units: same templates, numbers inside the skill's range.
+  ...CURRICULUM_TEN_FRAME_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "TenFrame" as const })),
+  ...CURRICULUM_FACT_FAMILY_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "FactFamily" as const })),
 ];
 
 const BY_LABEL = new Map(ALL_VIDEO_UNITS.map((u) => [u.label, u]));
@@ -623,5 +663,47 @@ const BY_LABEL = new Map(ALL_VIDEO_UNITS.map((u) => [u.label, u]));
  *  already has its own video). */
 export function videoForSkillLabel(label: string | null | undefined): VideoUnitRef | null {
   if (!label) return null;
-  return BY_LABEL.get(label) ?? null;
+  return BY_LABEL.get(label) ?? aliasFor(label);
 }
+
+// ---------------------------------------------------------------------------
+// Curriculum-name aliases.
+// ---------------------------------------------------------------------------
+// M1–M6 contains two families of worksheet. Skill-map sheets are titled with
+// the arithmetic engine's fine-grained unit labels ("×6, ×7, ×8, ×9 (the hard
+// facts)"), which the video index already matches. The rest are titled with the
+// coarser curriculum skill names ("×6, ×7, ×8 tables"), which matched nothing —
+// so roughly half of real M1–M6 practice fell through to the old tutorial.
+//
+// Each alias below points a curriculum name at a video that genuinely teaches
+// that skill AND whose numbers sit inside the skill's own range. Where no
+// existing video's numbers fit (the within-5 and number-bond units), a proper
+// unit was added rather than aliasing to something that would show a child
+// numbers beyond what they're practising.
+const LABEL_ALIASES: Record<string, string> = {
+  // M4 — the base-ten and fact-family templates fit these directly.
+  "2-digit addition": "add-2d-noregroup",
+  "Subtraction within 20": "sub-bridge",
+  "Missing numbers": "add-fact-family",
+
+  // M5 — "tables" practice is exactly what the equal-groups videos teach.
+  "×2–×5 tables": "mul-skip",
+  "×6, ×7, ×8 tables": "mul-6-9",
+  "×9 tables": "mul-6-9",
+  "Mixed ×6–×9": "mul-6-9",
+
+  // M6 — the dealing video for the same divisor family.
+  "Division by 6, 7, 8": "div-6-9",
+  "Division by 9": "div-6-9",
+  "Mixed division": "div-6-9",
+};
+
+const BY_ID = new Map(ALL_VIDEO_UNITS.map((u) => [u.id, u]));
+
+/** Alias target for a curriculum skill name, or null. */
+export function aliasFor(label: string): VideoUnitRef | null {
+  const id = LABEL_ALIASES[label];
+  return id ? (BY_ID.get(id) ?? null) : null;
+}
+
+export const ALL_LABEL_ALIASES = LABEL_ALIASES;
