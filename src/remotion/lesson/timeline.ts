@@ -9,7 +9,7 @@
 // Timing is per UNIT and per VOICE: different units have different-length
 // lines, and two voices read the same script at very different speeds. Each
 // combination therefore gets its own render and its own total duration.
-import { LINE_IDS, COLUMN_LINE_IDS, TEN_FRAME_LINE_IDS, DEALING_LINE_IDS, FACT_FAMILY_LINE_IDS, AREA_LINE_IDS } from "./script";
+import { LINE_IDS, COLUMN_LINE_IDS, TEN_FRAME_LINE_IDS, DEALING_LINE_IDS, FACT_FAMILY_LINE_IDS, AREA_LINE_IDS, COUNT_LINE_IDS, COMPARE_LINE_IDS, NUMBER_LINE_LINE_IDS } from "./script";
 import { CLIPS_BY_UNIT } from "./voice-manifest";
 import { DEFAULT_VOICE_KEY } from "./voices";
 
@@ -214,4 +214,50 @@ export function areaSceneTimings(
 
 export function areaTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return areaSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the three early-number templates. */
+const COUNT_MIN_SECONDS: Record<string, number> = { ask: 4, count: 9, rows: 8, record: 5 };
+const COMPARE_MIN_SECONDS: Record<string, number> = { ask: 4, build: 6, pair: 9, record: 5 };
+const NUMBER_LINE_MIN_SECONDS: Record<string, number> = { ask: 4, line: 6, hop: 9, record: 5 };
+
+function earlyTimings(
+  ids: readonly string[],
+  mins: Record<string, number>,
+  unitId: string,
+  voiceKey: string,
+): SceneTiming[] {
+  const clips = CLIPS_BY_UNIT[unitId]?.[voiceKey] ?? [];
+  let cursor = 0;
+  return ids.map((id) => {
+    const clip = clips.find((c) => c.id === id);
+    const seconds = clip
+      ? Math.max(mins[id] ?? 6, clip.durationInSeconds + TAIL_SECONDS)
+      : (mins[id] ?? 6);
+    const dur = Math.round(seconds * FPS);
+    const timing: SceneTiming = { id, from: cursor, dur, voiceFile: clip?.file ?? null };
+    cursor += dur;
+    return timing;
+  });
+}
+
+export function countSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY) {
+  return earlyTimings(COUNT_LINE_IDS, COUNT_MIN_SECONDS, unitId, voiceKey);
+}
+export function countTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return countSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+export function compareSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY) {
+  return earlyTimings(COMPARE_LINE_IDS, COMPARE_MIN_SECONDS, unitId, voiceKey);
+}
+export function compareTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return compareSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+export function numberLineSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY) {
+  return earlyTimings(NUMBER_LINE_LINE_IDS, NUMBER_LINE_MIN_SECONDS, unitId, voiceKey);
+}
+export function numberLineTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return numberLineSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }

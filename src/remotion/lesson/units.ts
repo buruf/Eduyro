@@ -628,6 +628,19 @@ export function areaSides(u: AreaUnit) {
   };
 }
 
+export {
+  COUNT_UNITS,
+  COMPARE_UNITS,
+  NUMBER_LINE_UNITS,
+  countUnitById,
+  compareUnitById,
+  compareNumbers,
+  numberLineUnitById,
+  numberLineValues,
+} from "./units-early";
+export type { CountUnit, CompareUnit, NumberLineUnit } from "./units-early";
+import { COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS } from "./units-early";
+
 // ---------------------------------------------------------------------------
 // The lesson-video index, used by the student dashboard.
 // ---------------------------------------------------------------------------
@@ -641,7 +654,7 @@ export interface VideoUnitRef {
   id: string;
   label: string;
   /** Remotion composition that renders it. */
-  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area";
+  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine";
 }
 
 export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
@@ -654,6 +667,9 @@ export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
   // Curriculum-named units: same templates, numbers inside the skill's range.
   ...CURRICULUM_TEN_FRAME_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "TenFrame" as const })),
   ...CURRICULUM_FACT_FAMILY_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "FactFamily" as const })),
+  ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Count" as const })),
+  ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Compare" as const })),
+  ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "NumberLine" as const })),
 ];
 
 const BY_LABEL = new Map(ALL_VIDEO_UNITS.map((u) => [u.label, u]));

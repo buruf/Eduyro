@@ -13,6 +13,9 @@ import {
   AREA_UNITS,
   CURRICULUM_TEN_FRAME_UNITS,
   CURRICULUM_FACT_FAMILY_UNITS,
+  COUNT_UNITS,
+  COMPARE_UNITS,
+  NUMBER_LINE_UNITS,
   unitNumbers,
   columnNumbers,
   tenFrameNumbers,
@@ -27,6 +30,9 @@ import {
   dealingLines,
   factFamilyLines,
   areaLines,
+  countLines,
+  compareLines,
+  numberLineLines,
   sumString,
 } from "../src/remotion/lesson/script";
 
@@ -65,6 +71,9 @@ const ALL: Entry[] = [
     lines: () => factFamilyLines(u),
     extra: "facts: " + factFamilyFacts(u).map((f) => f.text).join("   "),
   })),
+  ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, head: u.mode + " to " + u.upTo, lines: () => countLines(u) })),
+  ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, head: u.a + " vs " + u.b, lines: () => compareLines(u) })),
+  ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, label: u.label, head: "start " + u.start + " step " + u.step, lines: () => numberLineLines(u) })),
   ...AREA_UNITS.map((u) => ({
     id: u.id,
     label: u.label,

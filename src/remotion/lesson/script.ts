@@ -150,7 +150,7 @@ export function tenFrameLines(u: TenFrameUnit): LessonLine[] {
       break;
     case "count-up":
       // Difference-as-distance: the dots you ADD are the answer.
-      strategy = `Instead of taking 8 away one by one, ask how far it is from ${u.y} up to ${u.x}. Add one… ${Array.from({ length: n.answer }, (_, i) => u.y + i + 1).join("… ")}. Count what you added — ${n.answer}. That's the gap between them.`;
+      strategy = `Instead of taking ${u.y} away one by one, ask how far it is from ${u.y} up to ${u.x}. Add one… ${Array.from({ length: n.answer }, (_, i) => u.y + i + 1).join("… ")}. Count what you added — ${n.answer}. That's the gap between them.`;
       break;
     case "take-all":
       strategy = `Take all ${u.y} of them off… and there's nothing left. Zero.`;
@@ -316,5 +316,108 @@ export function areaLines(u: AreaUnit): LessonLine[] {
       id: "record",
       text: `Add the pieces up. ${sum}… ${answer}. ${u.tip}.`,
     },
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Early-number templates (M1–M2): counting, comparison, number line.
+// ---------------------------------------------------------------------------
+import {
+  compareNumbers,
+  numberLineValues,
+  type CountUnit,
+  type CompareUnit,
+  type NumberLineUnit,
+} from "./units-early";
+
+export const COUNT_LINE_IDS = ["ask", "count", "rows", "record"] as const;
+
+export function countLines(u: CountUnit): LessonLine[] {
+  if (u.mode === "recognise") {
+    return [
+      { id: "ask", text: `This is ${u.upTo}. But what does ${u.upTo} actually mean?` },
+      {
+        id: "count",
+        text: `Count with me… ${Array.from({ length: u.upTo }, (_, i) => i + 1).join("… ")}.`,
+      },
+      {
+        id: "rows",
+        text: `The numeral ${u.upTo}… and ${u.upTo} things. Same idea, written two ways.`,
+      },
+      { id: "record", text: `So that's ${u.upTo}. ${u.tip}.` },
+    ];
+  }
+
+  const decades = Array.from({ length: u.upTo / 10 }, (_, i) => (i + 1) * 10);
+  if (u.upTo === 10) {
+    return [
+      { id: "ask", text: `Let's count to 10. One number for each one — no skipping, no counting anything twice.` },
+      { id: "count", text: `Ready? ${Array.from({ length: 10 }, (_, i) => i + 1).join("… ")}.` },
+      { id: "rows", text: `And look — 10 of them fill a whole row, exactly. That's why tens matter so much.` },
+      { id: "record", text: `You counted to 10. ${u.tip}.` },
+    ];
+  }
+  return [
+    { id: "ask", text: `Counting to ${u.upTo} sounds like a lot. But there's a trick — you already know it.` },
+    { id: "count", text: `The first row is just counting to 10. ${Array.from({ length: 10 }, (_, i) => i + 1).join("… ")}.` },
+    {
+      id: "rows",
+      text: `Now watch the rows. Every full row is another ten… ${decades.slice(1).join("… ")}. Each new row starts the same way — 1, 2, 3 — just with a new ten in front.`,
+    },
+    { id: "record", text: `And that's ${u.upTo}. ${u.tip}.` },
+  ];
+}
+
+export const COMPARE_LINE_IDS = ["ask", "build", "pair", "record"] as const;
+
+export function compareLines(u: CompareUnit): LessonLine[] {
+  const n = compareNumbers(u);
+  const question =
+    u.focus === "greater"
+      ? `${u.a} or ${u.b} — which is greater?`
+      : u.focus === "less"
+        ? `${u.a} or ${u.b} — which is less?`
+        : `${u.a} and ${u.b}. Which is more… and which is less?`;
+  const answer =
+    u.focus === "greater"
+      ? `So ${n.bigger} is greater than ${n.smaller}.`
+      : u.focus === "less"
+        ? `So ${n.smaller} is less than ${n.bigger}.`
+        : `So ${n.bigger} is more, and ${n.smaller} is less.`;
+  return [
+    { id: "ask", text: `${question} Don't guess — there's a way to see it.` },
+    { id: "build", text: `Here's ${u.a}… and here's ${u.b}.` },
+    {
+      id: "pair",
+      text: `Now pair them up, one against one… Every one of the ${n.smaller} has a partner. But ${n.bigger} still has ${n.extra} sticking out with no partner at all.`,
+    },
+    { id: "record", text: `${answer} ${u.tip}.` },
+  ];
+}
+
+export const NUMBER_LINE_LINE_IDS = ["ask", "line", "hop", "record"] as const;
+
+export function numberLineLines(u: NumberLineUnit): LessonLine[] {
+  const n = numberLineValues(u);
+  const shown = n.values.map((v, i) => (i === u.gapIndex ? "blank" : String(v)));
+  const hops = n.values.slice(0, -1).map((_, i) => n.values[i + 1]);
+  const crossesDecade =
+    u.step === 1 && Math.floor(n.gapValue / 10) !== Math.floor((n.gapValue - 1) / 10);
+  return [
+    {
+      id: "ask",
+      text: `${shown.join("… ")}. What goes in the blank? The number line knows.`,
+    },
+    {
+      id: "line",
+      text: `Here's the line. The sequence starts at ${u.start}${u.step === 1 ? "" : `, and each hop is ${u.step}`}.`,
+    },
+    {
+      id: "hop",
+      text: crossesDecade
+        ? `Hop along… ${hops.slice(0, -1).join("… ")}… and now the tens tick over… ${n.gapValue}!`
+        : `Hop along… ${hops.join("… ")}. Landed — right in the blank.`,
+    },
+    { id: "record", text: `${n.values.join("… ")}. ${u.tip}.` },
   ];
 }

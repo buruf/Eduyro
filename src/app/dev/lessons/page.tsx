@@ -17,6 +17,11 @@ import {
   dealingNumbers,
   factFamilyFacts,
   areaRegions,
+  COUNT_UNITS,
+  COMPARE_UNITS,
+  NUMBER_LINE_UNITS,
+  compareNumbers,
+  numberLineValues,
 } from "@/remotion/lesson/units";
 import { DEFAULT_VOICE_KEY } from "@/remotion/lesson/voices";
 
@@ -83,6 +88,35 @@ const GROUPS: { title: string; blurb: string; rows: Row[] }[] = [
       label: u.label,
       example: u.x + " × " + u.y + " = " + u.x * u.y + "  ·  " + areaRegions(u).map((r) => r.product).join(" + "),
     })),
+  },
+  {
+    title: "Counting",
+    blurb: "One number for each thing — then the rows of ten that make big counting possible.",
+    rows: COUNT_UNITS.map((u) => ({
+      id: u.id,
+      label: u.label,
+      example: u.mode === "recognise" ? `numeral ${u.upTo} = ${u.upTo} things` : `count to ${u.upTo}`,
+    })),
+  },
+  {
+    title: "Comparison",
+    blurb: "Pair them one against one — the row that sticks out is greater.",
+    rows: COMPARE_UNITS.map((u) => {
+      const n = compareNumbers(u);
+      return { id: u.id, label: u.label, example: `${u.a} vs ${u.b} — ${n.bigger} is more` };
+    }),
+  },
+  {
+    title: "Number line",
+    blurb: "A sequence with a gap, and hops that land in it.",
+    rows: NUMBER_LINE_UNITS.map((u) => {
+      const n = numberLineValues(u);
+      return {
+        id: u.id,
+        label: u.label,
+        example: n.values.map((v, i) => (i === u.gapIndex ? "__" : String(v))).join(", "),
+      };
+    }),
   },
 ];
 

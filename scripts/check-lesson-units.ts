@@ -10,9 +10,9 @@
 // across" while nothing slid. Any unit whose declared strategy isn't true of
 // its own numbers can produce that kind of contradiction, so it fails here.
 import { readFileSync, existsSync } from "node:fs";
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, ALL_VIDEO_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, tenFrameNumbers, dealingNumbers } from "../src/remotion/lesson/units";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, ALL_VIDEO_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS, tenFrameNumbers, dealingNumbers } from "../src/remotion/lesson/units";
 import { DEFAULT_VOICE_KEY } from "../src/remotion/lesson/voices";
-import { lessonLines, columnLines, tenFrameLines, dealingLines, factFamilyLines, areaLines } from "../src/remotion/lesson/script";
+import { lessonLines, columnLines, tenFrameLines, dealingLines, factFamilyLines, areaLines, countLines, compareLines, numberLineLines } from "../src/remotion/lesson/script";
 
 const problems: string[] = [];
 const fail = (id: string, msg: string) => problems.push(`${id}: ${msg}`);
@@ -84,6 +84,28 @@ for (const u of DEALING_UNITS) {
   }
 }
 
+// Early-number templates: the stages have hard drawing limits.
+for (const u of COUNT_UNITS) {
+  if (u.mode === "count" && u.upTo % 10 !== 0) {
+    fail(u.id, `count target ${u.upTo} is not a multiple of ten — the rows scene needs full rows`);
+  }
+  if (u.mode === "count" && u.upTo > 100) fail(u.id, `${u.upTo} rows off the stage`);
+  if (u.mode === "recognise" && u.upTo > 10) {
+    fail(u.id, `recognition of ${u.upTo} can't be counted dot by dot`);
+  }
+}
+for (const u of COMPARE_UNITS) {
+  if (u.a === u.b) fail(u.id, `${u.a} vs ${u.b} — nothing to compare`);
+  if (Math.max(u.a, u.b) > 10) fail(u.id, `rows of ${Math.max(u.a, u.b)} overflow the stage`);
+}
+for (const u of NUMBER_LINE_UNITS) {
+  if (u.gapIndex < 1 || u.gapIndex >= u.count) {
+    fail(u.id, `gap at ${u.gapIndex} — the hops start at the first term, so it can't be the gap`);
+  }
+  const ticks = u.count + 2; // window adds a step each side
+  if (ticks > 12) fail(u.id, `${ticks} ticks won't fit the line legibly`);
+}
+
 // Every unit must produce a full set of non-empty lines — an unhandled branch
 // silently yielding undefined would ship a video with a missing narration.
 const allUnits: { id: string; lines: () => { id: string; text: string }[] }[] = [
@@ -93,6 +115,9 @@ const allUnits: { id: string; lines: () => { id: string; text: string }[] }[] = 
   ...DEALING_UNITS.map((u) => ({ id: u.id, lines: () => dealingLines(u) })),
   ...[...FACT_FAMILY_UNITS, ...CURRICULUM_FACT_FAMILY_UNITS].map((u) => ({ id: u.id, lines: () => factFamilyLines(u) })),
   ...AREA_UNITS.map((u) => ({ id: u.id, lines: () => areaLines(u) })),
+  ...COUNT_UNITS.map((u) => ({ id: u.id, lines: () => countLines(u) })),
+  ...COMPARE_UNITS.map((u) => ({ id: u.id, lines: () => compareLines(u) })),
+  ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, lines: () => numberLineLines(u) })),
 ];
 
 for (const u of allUnits) {
