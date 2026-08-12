@@ -12,6 +12,8 @@ import {
   tenFrameNumbers,
   type LessonUnit,
   type ColumnUnit,
+  type FractionBarUnit,
+  type HundredGridUnit,
   type TenFrameUnit,
   dealingNumbers,
   type DealingUnit,
@@ -420,4 +422,186 @@ export function numberLineLines(u: NumberLineUnit): LessonLine[] {
     },
     { id: "record", text: `${n.values.join("… ")}. ${u.tip}.` },
   ];
+}
+
+// ---------------------------------------------------------------------------
+// Fraction bar (M7)
+// ---------------------------------------------------------------------------
+export const FRACTION_BAR_LINE_IDS = ["ask", "parts", "action", "record"] as const;
+
+export function fractionBarLines(u: FractionBarUnit): LessonLine[] {
+  switch (u.mode) {
+    case "identify":
+      return [
+        { id: "ask", text: `What does ${u.n}/${u.d} actually mean?` },
+        {
+          id: "parts",
+          text: `Start with one whole bar. Cut it into ${u.d} parts — and they have to be EQUAL. Same size, every one. If the parts aren't equal… it's not quarters at all.`,
+        },
+        {
+          id: "action",
+          text: `Now shade ${u.n} of them. One… two… three. ${u.n} out of ${u.d}.`,
+        },
+        {
+          id: "record",
+          text: `And that's exactly what the fraction says. The bottom number is how many equal parts. The top is how many you took. ${u.tip}.`,
+        },
+      ];
+    case "compare":
+      return [
+        { id: "ask", text: `Which is bigger… ${u.n}/${u.d}, or ${u.n2}/${u.d2}?` },
+        {
+          id: "parts",
+          text: `Two bars, exactly the same length. Cut the first into ${u.d}… and shade ${u.n}. Cut the second into ${u.d2}… and shade ${u.n2}.`,
+        },
+        {
+          id: "action",
+          text: `Now line them up… and look at where the shading ends. The top bar reaches further. ${u.n}/${u.d} is bigger.`,
+        },
+        {
+          id: "record",
+          text: `So ${u.n}/${u.d} is greater than ${u.n2}/${u.d2}. ${u.tip}.`,
+        },
+      ];
+    case "add":
+      return [
+        { id: "ask", text: `${u.n}/${u.d} plus ${u.n2}/${u.d} — how do you add fractions?` },
+        {
+          id: "parts",
+          text: `Here's a bar cut into ${u.d} equal parts, with ${u.n} shaded.`,
+        },
+        {
+          id: "action",
+          text: `Now add ${u.n2} more parts… watch them slide in. Count the shading: ${u.n! + (u.n2 ?? 0)} parts.`,
+        },
+        {
+          id: "record",
+          text: `${u.n}/${u.d} plus ${u.n2}/${u.d} is ${u.n + (u.n2 ?? 0)}/${u.d}. The bottom number didn't change — the pieces are the same size, there are just more of them. ${u.tip}.`,
+        },
+      ];
+    case "simplify":
+      return [
+        { id: "ask", text: `${u.n}/${u.d}… can we say that more simply?` },
+        {
+          id: "parts",
+          text: `Here's ${u.n}/${u.d} — a bar in ${u.d} parts, ${u.n} shaded.`,
+        },
+        {
+          id: "action",
+          text: `Now watch the shading. Don't take your eyes off it. Erase every second cut… the parts get bigger, and now it's 2 out of 4. Erase again… 1 out of 2. And the shading? It never moved.`,
+        },
+        {
+          id: "record",
+          text: `${u.n}/${u.d}, 2/4 and 1/2 are the SAME amount — just cut differently. ${u.tip}.`,
+        },
+      ];
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Hundred grid (M8)
+// ---------------------------------------------------------------------------
+export const HUNDRED_GRID_LINE_IDS = ["ask", "grid", "action", "record"] as const;
+
+export function hundredGridLines(u: HundredGridUnit): LessonLine[] {
+  switch (u.mode) {
+    case "place-value": {
+      const t = u.tenths ?? 3;
+      return [
+        { id: "ask", text: `0.${t} and 0.0${t}. Same thing… or not?` },
+        {
+          id: "grid",
+          text: `Here's a square cut into 100 little cells. One whole column is a tenth — ten cells. One little cell on its own is a hundredth.`,
+        },
+        {
+          id: "action",
+          text: `0.${t} is ${t} whole columns… ${t * 10} cells. But 0.0${t} is just ${t} little cells. Look at the difference. Not the same at all — one is ten times the other.`,
+        },
+        {
+          id: "record",
+          text: `First place after the dot counts columns. Second place counts cells. ${u.tip}.`,
+        },
+      ];
+    }
+    case "operations": {
+      const a = u.aCells ?? 40;
+      const b = u.bCells ?? 25;
+      const sum = a + b;
+      const aDec = (a / 100).toFixed(a % 10 === 0 ? 1 : 2);
+      const bDec = (b / 100).toFixed(b % 10 === 0 ? 1 : 2);
+      const sDec = (sum / 100).toFixed(sum % 10 === 0 ? 1 : 2);
+      return [
+        { id: "ask", text: `${aDec} plus ${bDec}. Decimals… but the grid makes it easy.` },
+        {
+          id: "grid",
+          text: `${aDec} is ${a} cells out of 100 — shade them gold.`,
+        },
+        {
+          id: "action",
+          text: `And ${bDec} is ${b} cells — shade them blue, right after. Now count everything shaded… ${sum} cells.`,
+        },
+        {
+          id: "record",
+          text: `${sum} cells out of 100 is ${sDec}. So ${aDec} plus ${bDec} is ${sDec}. ${u.tip}.`,
+        },
+      ];
+    }
+    case "subtract": {
+      const a = u.aCells ?? 65;
+      const b = u.bCells ?? 25;
+      const diff = a - b;
+      const aDec = (a / 100).toFixed(a % 10 === 0 ? 1 : 2);
+      const bDec = (b / 100).toFixed(b % 10 === 0 ? 1 : 2);
+      const dDec = (diff / 100).toFixed(diff % 10 === 0 ? 1 : 2);
+      return [
+        { id: "ask", text: `${aDec} take away ${bDec}. Same grid… different direction.` },
+        { id: "grid", text: `${aDec} is ${a} cells out of 100 — there they are, shaded.` },
+        {
+          id: "action",
+          text: `Now take ${bDec} away — that's ${b} cells, coming off… watch the count fall. ${diff} cells left.`,
+        },
+        {
+          id: "record",
+          text: `${diff} cells is ${dDec}. So ${aDec} take away ${bDec} is ${dDec}. ${u.tip}.`,
+        },
+      ];
+    }
+    case "multiply": {
+      const t = u.tenths ?? 3;
+      const times = u.times ?? 3;
+      const total = t * times;
+      const totalDec = (total / 10).toFixed(1);
+      const running = Array.from({ length: times }, (_, i) => (t * (i + 1)) / 10).join("… ");
+      return [
+        { id: "ask", text: `0.${t} × ${times}. Multiplying a decimal… by a whole number.` },
+        { id: "grid", text: `0.${t} is ${t} columns. That's one group.` },
+        {
+          id: "action",
+          text: `Now take ${times} groups of it… ${running}. ${total} tenths altogether.`,
+        },
+        {
+          id: "record",
+          text: `${total} tenths is ${totalDec}. So 0.${t} × ${times} is ${totalDec}. ${u.tip}.`,
+        },
+      ];
+    }
+    case "percent": {
+      const p = u.pct ?? 37;
+      return [
+        { id: "ask", text: `${p} percent. What IS a percent, really?` },
+        {
+          id: "grid",
+          text: `Per cent means per hundred. So here's a hundred — a square cut into 100 cells.`,
+        },
+        {
+          id: "action",
+          text: `Shade ${p} of them… that's ${p} percent. Nothing more to it.`,
+        },
+        {
+          id: "record",
+          text: `And the same shading has three names: ${p} out of 100… ${(p / 100).toFixed(2)}… and ${p}%. ${u.tip}.`,
+        },
+      ];
+    }
+  }
 }

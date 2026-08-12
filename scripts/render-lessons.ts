@@ -10,7 +10,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS } from "../src/remotion/lesson/units";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS } from "../src/remotion/lesson/units";
 import { LESSON_VOICES } from "../src/remotion/lesson/voices";
 import { CLIPS_BY_UNIT } from "../src/remotion/lesson/voice-manifest";
 
@@ -26,11 +26,27 @@ const ALL = [
   ...DEALING_UNITS.map((u) => ({ id: u.id, comp: "Dealing" })),
   ...[...FACT_FAMILY_UNITS, ...CURRICULUM_FACT_FAMILY_UNITS].map((u) => ({ id: u.id, comp: "FactFamily" })),
   ...AREA_UNITS.map((u) => ({ id: u.id, comp: "Area" })),
+  ...FRACTION_BAR_UNITS.map((u) => ({ id: u.id, comp: "FractionBar" })),
+  ...HUNDRED_GRID_UNITS.map((u) => ({ id: u.id, comp: "HundredGrid" })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, comp: "Count" })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, comp: "Compare" })),
   ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, comp: "NumberLine" })),
 ];
 const units = only.length ? ALL.filter((u) => only.includes(u.id)) : ALL;
+
+// A typo'd or unregistered unit id must fail loudly. This script once exited
+// silently when asked for units whose template group wasn't imported yet —
+// which read as "rendered fine" until the validator found no files.
+const known = new Set(ALL.map((u) => u.id));
+const unknown = only.filter((id) => !known.has(id));
+if (unknown.length) {
+  console.error(`Unknown unit id(s): ${unknown.join(", ")}`);
+  process.exit(1);
+}
+if (!units.length) {
+  console.error("Nothing to render.");
+  process.exit(1);
+}
 
 for (const unit of units) {
   for (const voice of LESSON_VOICES) {

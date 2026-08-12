@@ -1,11 +1,11 @@
 // scripts/check-lesson-coverage.ts
 // Measures the only coverage number that matters: of the unit labels a REAL
-// M1–M6 sheet can report as its skillName, how many resolve to a video?
+// M1–M8 sheet can report as its skillName, how many resolve to a video?
 //
 //   npx tsx scripts/check-lesson-coverage.ts
 //
 // Written after "39/39 units have videos" turned out to be the wrong metric.
-// M1–M6 holds two families of worksheet — skill-map sheets titled with the
+// M1–M8 holds two families of worksheet — skill-map sheets titled with the
 // arithmetic engine's fine-grained unit labels, and the rest titled with the
 // coarser curriculum skill names. Only the first family was matching, so about
 // half of real practice silently fell through to the old tutorial while every
@@ -14,7 +14,7 @@ import { PrismaClient } from "@prisma/client";
 import { videoForSkillLabel } from "../src/remotion/lesson/units";
 
 const db = new PrismaClient();
-const LEVELS = ["M1", "M2", "M3", "M4", "M5", "M6"];
+const LEVELS = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8"];
 
 async function main() {
   const rows = await db.worksheet.findMany({
@@ -41,7 +41,7 @@ async function main() {
 
   const covered = byLabel.size - missing.length;
   const pct = ((coveredSheets / rows.length) * 100).toFixed(0);
-  console.log(`M1–M6: ${rows.length} worksheets, ${byLabel.size} distinct unit labels`);
+  console.log(`M1–M8: ${rows.length} worksheets, ${byLabel.size} distinct unit labels`);
   console.log(`  labels with a video: ${covered}/${byLabel.size}`);
   console.log(`  sheets with a video: ${coveredSheets}/${rows.length}  (${pct}%)`);
 

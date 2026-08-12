@@ -9,7 +9,7 @@
 // Timing is per UNIT and per VOICE: different units have different-length
 // lines, and two voices read the same script at very different speeds. Each
 // combination therefore gets its own render and its own total duration.
-import { LINE_IDS, COLUMN_LINE_IDS, TEN_FRAME_LINE_IDS, DEALING_LINE_IDS, FACT_FAMILY_LINE_IDS, AREA_LINE_IDS, COUNT_LINE_IDS, COMPARE_LINE_IDS, NUMBER_LINE_LINE_IDS } from "./script";
+import { LINE_IDS, COLUMN_LINE_IDS, TEN_FRAME_LINE_IDS, DEALING_LINE_IDS, FACT_FAMILY_LINE_IDS, AREA_LINE_IDS, COUNT_LINE_IDS, COMPARE_LINE_IDS, NUMBER_LINE_LINE_IDS, FRACTION_BAR_LINE_IDS, HUNDRED_GRID_LINE_IDS } from "./script";
 import { CLIPS_BY_UNIT } from "./voice-manifest";
 import { DEFAULT_VOICE_KEY } from "./voices";
 
@@ -260,4 +260,28 @@ export function numberLineSceneTimings(unitId: string, voiceKey: string = DEFAUL
 }
 export function numberLineTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return numberLineSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the M7/M8 templates. */
+const FRACTION_BAR_MIN_SECONDS: Record<string, number> = { ask: 4, parts: 8, action: 10, record: 6 };
+const HUNDRED_GRID_MIN_SECONDS: Record<string, number> = { ask: 4, grid: 7, action: 10, record: 6 };
+
+export function fractionBarSceneTimings(
+  unitId: string,
+  voiceKey: string = DEFAULT_VOICE_KEY,
+): SceneTiming[] {
+  return earlyTimings(FRACTION_BAR_LINE_IDS, FRACTION_BAR_MIN_SECONDS, unitId, voiceKey);
+}
+export function fractionBarTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return fractionBarSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+export function hundredGridSceneTimings(
+  unitId: string,
+  voiceKey: string = DEFAULT_VOICE_KEY,
+): SceneTiming[] {
+  return earlyTimings(HUNDRED_GRID_LINE_IDS, HUNDRED_GRID_MIN_SECONDS, unitId, voiceKey);
+}
+export function hundredGridTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return hundredGridSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }

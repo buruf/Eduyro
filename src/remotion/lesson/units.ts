@@ -642,6 +642,142 @@ export type { CountUnit, CompareUnit, NumberLineUnit } from "./units-early";
 import { COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS } from "./units-early";
 
 // ---------------------------------------------------------------------------
+// FRACTION BAR template (M7).
+// ---------------------------------------------------------------------------
+// One bar, cut into equal parts. Equal parts is the load-bearing idea — the
+// identify unit crosses out an unequal cut before anything else. Equivalence
+// is a cut being added while THE SHADING NEVER MOVES, which is the whole proof
+// of 4/8 = 1/2 in one motion.
+export interface FractionBarUnit {
+  id: string;
+  label: string;
+  mode: "identify" | "compare" | "add" | "simplify";
+  /** Primary fraction num/den. */
+  n: number;
+  d: number;
+  /** compare: the second fraction. add: the addend's numerator (same d). */
+  n2?: number;
+  d2?: number;
+  tip: string;
+}
+
+export const FRACTION_BAR_UNITS: FractionBarUnit[] = [
+  {
+    id: "cur-identify-fractions",
+    label: "Identifying fractions",
+    mode: "identify",
+    n: 3,
+    d: 4,
+    tip: "Bottom = equal parts, top = shaded parts",
+  },
+  {
+    id: "cur-compare-fractions",
+    label: "Comparing fractions",
+    mode: "compare",
+    n: 3,
+    d: 4,
+    n2: 2,
+    d2: 3,
+    tip: "Same-length bars — the longer shading wins",
+  },
+  {
+    id: "cur-add-fractions",
+    label: "Adding fractions",
+    mode: "add",
+    n: 3,
+    d: 8,
+    n2: 2,
+    tip: "Same-size pieces just count up — the bottom stays",
+  },
+  {
+    id: "cur-simplify-fractions",
+    label: "Simplifying fractions",
+    mode: "simplify",
+    n: 4,
+    d: 8,
+    tip: "Fewer, bigger pieces — the shading never changed",
+  },
+];
+
+export function fractionBarUnitById(id: string): FractionBarUnit {
+  const u = FRACTION_BAR_UNITS.find((x) => x.id === id);
+  if (!u) throw new Error(`No fraction-bar unit "${id}"`);
+  return u;
+}
+
+// ---------------------------------------------------------------------------
+// HUNDRED GRID template (M8).
+// ---------------------------------------------------------------------------
+// A 10×10 grid where tenths are columns and hundredths are cells. The
+// place-value unit's move is showing 0.3 and 0.03 side by side; the percent
+// unit's move is relabelling the SAME shading three ways (37/100, 0.37, 37%).
+export interface HundredGridUnit {
+  id: string;
+  label: string;
+  mode: "place-value" | "operations" | "subtract" | "multiply" | "percent";
+  /** place-value: tenths count (and the same digit as hundredths). */
+  tenths?: number;
+  /** operations: two addends in hundredths (40 + 25 = 0.4 + 0.25). */
+  aCells?: number;
+  bCells?: number;
+  /** multiply: how many groups of `tenths` columns. */
+  times?: number;
+  /** percent: the percentage. */
+  pct?: number;
+  tip: string;
+}
+
+export const HUNDRED_GRID_UNITS: HundredGridUnit[] = [
+  {
+    id: "cur-decimal-place-value",
+    label: "Decimal place value",
+    mode: "place-value",
+    tenths: 3,
+    tip: "0.3 is 3 whole columns — 0.03 is just 3 little cells",
+  },
+  {
+    id: "cur-decimal-operations",
+    label: "Decimal operations",
+    mode: "operations",
+    aCells: 40,
+    bCells: 25,
+    tip: "Line up the decimal points and add like always",
+  },
+  {
+    // 0.65 − 0.25: starts in hundredths, lands on a clean 0.40 — one video
+    // honestly serves both the tenths and hundredths subtraction labels.
+    id: "cur-decimal-subtract",
+    label: "Decimals — subtract",
+    mode: "subtract",
+    aCells: 65,
+    bCells: 25,
+    tip: "Same grid — shading comes OFF instead of going on",
+  },
+  {
+    // 0.3 × 3 = three groups of three columns — equal groups, on the grid.
+    id: "cur-decimal-multiply",
+    label: "Decimals — multiply by a whole number",
+    mode: "multiply",
+    tenths: 3,
+    times: 3,
+    tip: "Groups of tenths, just like groups of anything",
+  },
+  {
+    id: "cur-percentages",
+    label: "Percentages",
+    mode: "percent",
+    pct: 37,
+    tip: "Per cent means per hundred — same number, three coats",
+  },
+];
+
+export function hundredGridUnitById(id: string): HundredGridUnit {
+  const u = HUNDRED_GRID_UNITS.find((x) => x.id === id);
+  if (!u) throw new Error(`No hundred-grid unit "${id}"`);
+  return u;
+}
+
+// ---------------------------------------------------------------------------
 // The lesson-video index, used by the student dashboard.
 // ---------------------------------------------------------------------------
 // Client-safe: plain data, no Remotion imports, so the player UI can import it.
@@ -654,7 +790,7 @@ export interface VideoUnitRef {
   id: string;
   label: string;
   /** Remotion composition that renders it. */
-  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine";
+  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid";
 }
 
 export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
@@ -667,6 +803,8 @@ export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
   // Curriculum-named units: same templates, numbers inside the skill's range.
   ...CURRICULUM_TEN_FRAME_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "TenFrame" as const })),
   ...CURRICULUM_FACT_FAMILY_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "FactFamily" as const })),
+  ...FRACTION_BAR_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "FractionBar" as const })),
+  ...HUNDRED_GRID_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "HundredGrid" as const })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Count" as const })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Compare" as const })),
   ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "NumberLine" as const })),
@@ -710,6 +848,21 @@ const LABEL_ALIASES: Record<string, string> = {
 
   // M6 — the dealing video for the same divisor family.
   "Division by 6, 7, 8": "div-6-9",
+
+  // M7 — skill-map sheet titles; each alias is the lesson that skill IS.
+  "Part of a whole": "cur-identify-fractions",
+  "Identify fractions": "cur-identify-fractions",
+  "Understanding the numerator": "cur-identify-fractions",
+  "Add fractions": "cur-add-fractions",
+  "Simplify fractions": "cur-simplify-fractions",
+
+  // M8 — the add video teaches the grid method the subtract/multiply videos
+  // reuse, but subtraction and multiplication get their OWN videos: aliasing
+  // 'subtract' to a lesson that says 'plus' is the caption/voice mismatch bug.
+  "Decimals — add (tenths)": "cur-decimal-operations",
+  "Decimals — subtract (tenths)": "cur-decimal-subtract",
+  "Decimals — subtract (hundredths)": "cur-decimal-subtract",
+  "Decimals — multiply by a whole number": "cur-decimal-multiply",
   "Division by 9": "div-6-9",
   "Mixed division": "div-6-9",
 };

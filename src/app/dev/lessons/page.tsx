@@ -22,6 +22,8 @@ import {
   NUMBER_LINE_UNITS,
   compareNumbers,
   numberLineValues,
+  FRACTION_BAR_UNITS,
+  HUNDRED_GRID_UNITS,
 } from "@/remotion/lesson/units";
 import { DEFAULT_VOICE_KEY } from "@/remotion/lesson/voices";
 
@@ -117,6 +119,24 @@ const GROUPS: { title: string; blurb: string; rows: Row[] }[] = [
         example: n.values.map((v, i) => (i === u.gapIndex ? "__" : String(v))).join(", "),
       };
     }),
+  },
+  {
+    title: "Fraction bar",
+    blurb: "One bar, equal parts — equivalence is a cut erased while the shading never moves.",
+    rows: FRACTION_BAR_UNITS.map((u) => ({
+      id: u.id,
+      label: u.label,
+      example: u.mode + " · " + u.n + "/" + u.d + (u.n2 ? " and " + u.n2 + "/" + (u.d2 ?? u.d) : ""),
+    })),
+  },
+  {
+    title: "Hundred grid",
+    blurb: "Tenths are columns, hundredths are cells; percent is per hundred.",
+    rows: HUNDRED_GRID_UNITS.map((u) => ({
+      id: u.id,
+      label: u.label,
+      example: u.mode === "place-value" ? "0." + u.tenths + " vs 0.0" + u.tenths : u.mode === "operations" ? (u.aCells!/100) + " + " + (u.bCells!/100) : u.pct + "%",
+    })),
   },
 ];
 

@@ -1279,5 +1279,221 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
         "durationInSeconds": 5.248
       }
     ]
+  },
+  "cur-identify-fractions": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-identify-fractions/ramlah/ask.mp3",
+        "durationInSeconds": 2.09
+      },
+      {
+        "id": "parts",
+        "file": "lesson-voice/cur-identify-fractions/ramlah/parts.mp3",
+        "durationInSeconds": 12.121
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-identify-fractions/ramlah/action.mp3",
+        "durationInSeconds": 3.715
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-identify-fractions/ramlah/record.mp3",
+        "durationInSeconds": 12.492
+      }
+    ]
+  },
+  "cur-compare-fractions": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-compare-fractions/ramlah/ask.mp3",
+        "durationInSeconds": 2.647
+      },
+      {
+        "id": "parts",
+        "file": "lesson-voice/cur-compare-fractions/ramlah/parts.mp3",
+        "durationInSeconds": 7.384
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-compare-fractions/ramlah/action.mp3",
+        "durationInSeconds": 5.898
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-compare-fractions/ramlah/record.mp3",
+        "durationInSeconds": 5.433
+      }
+    ]
+  },
+  "cur-add-fractions": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-add-fractions/ramlah/ask.mp3",
+        "durationInSeconds": 3.204
+      },
+      {
+        "id": "parts",
+        "file": "lesson-voice/cur-add-fractions/ramlah/parts.mp3",
+        "durationInSeconds": 3.855
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-add-fractions/ramlah/action.mp3",
+        "durationInSeconds": 5.201
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-add-fractions/ramlah/record.mp3",
+        "durationInSeconds": 12.399
+      }
+    ]
+  },
+  "cur-simplify-fractions": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-simplify-fractions/ramlah/ask.mp3",
+        "durationInSeconds": 2.554
+      },
+      {
+        "id": "parts",
+        "file": "lesson-voice/cur-simplify-fractions/ramlah/parts.mp3",
+        "durationInSeconds": 3.251
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-simplify-fractions/ramlah/action.mp3",
+        "durationInSeconds": 14.303
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-simplify-fractions/ramlah/record.mp3",
+        "durationInSeconds": 7.941
+      }
+    ]
+  },
+  "cur-decimal-place-value": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-decimal-place-value/ramlah/ask.mp3",
+        "durationInSeconds": 3.019
+      },
+      {
+        "id": "grid",
+        "file": "lesson-voice/cur-decimal-place-value/ramlah/grid.mp3",
+        "durationInSeconds": 9.009
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-decimal-place-value/ramlah/action.mp3",
+        "durationInSeconds": 12.307
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-decimal-place-value/ramlah/record.mp3",
+        "durationInSeconds": 9.149
+      }
+    ]
+  },
+  "cur-decimal-operations": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-decimal-operations/ramlah/ask.mp3",
+        "durationInSeconds": 4.458
+      },
+      {
+        "id": "grid",
+        "file": "lesson-voice/cur-decimal-operations/ramlah/grid.mp3",
+        "durationInSeconds": 3.529
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-decimal-operations/ramlah/action.mp3",
+        "durationInSeconds": 7.384
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-decimal-operations/ramlah/record.mp3",
+        "durationInSeconds": 10.542
+      }
+    ]
+  },
+  "cur-percentages": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-percentages/ramlah/ask.mp3",
+        "durationInSeconds": 2.694
+      },
+      {
+        "id": "grid",
+        "file": "lesson-voice/cur-percentages/ramlah/grid.mp3",
+        "durationInSeconds": 5.573
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-percentages/ramlah/action.mp3",
+        "durationInSeconds": 4.18
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-percentages/ramlah/record.mp3",
+        "durationInSeconds": 11.656
+      }
+    ]
+  },
+  "cur-decimal-subtract": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-decimal-subtract/ramlah/ask.mp3",
+        "durationInSeconds": 4.598
+      },
+      {
+        "id": "grid",
+        "file": "lesson-voice/cur-decimal-subtract/ramlah/grid.mp3",
+        "durationInSeconds": 4.458
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-decimal-subtract/ramlah/action.mp3",
+        "durationInSeconds": 6.502
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-decimal-subtract/ramlah/record.mp3",
+        "durationInSeconds": 11.238
+      }
+    ]
+  },
+  "cur-decimal-multiply": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-decimal-multiply/ramlah/ask.mp3",
+        "durationInSeconds": 3.808
+      },
+      {
+        "id": "grid",
+        "file": "lesson-voice/cur-decimal-multiply/ramlah/grid.mp3",
+        "durationInSeconds": 2.554
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-decimal-multiply/ramlah/action.mp3",
+        "durationInSeconds": 5.991
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-decimal-multiply/ramlah/record.mp3",
+        "durationInSeconds": 7.384
+      }
+    ]
   }
 };
