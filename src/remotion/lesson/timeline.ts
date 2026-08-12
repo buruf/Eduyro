@@ -9,7 +9,7 @@
 // Timing is per UNIT and per VOICE: different units have different-length
 // lines, and two voices read the same script at very different speeds. Each
 // combination therefore gets its own render and its own total duration.
-import { LINE_IDS, COLUMN_LINE_IDS, TEN_FRAME_LINE_IDS, DEALING_LINE_IDS, FACT_FAMILY_LINE_IDS, AREA_LINE_IDS, COUNT_LINE_IDS, COMPARE_LINE_IDS, NUMBER_LINE_LINE_IDS, FRACTION_BAR_LINE_IDS, HUNDRED_GRID_LINE_IDS } from "./script";
+import { LINE_IDS, COLUMN_LINE_IDS, TEN_FRAME_LINE_IDS, DEALING_LINE_IDS, FACT_FAMILY_LINE_IDS, AREA_LINE_IDS, COUNT_LINE_IDS, COMPARE_LINE_IDS, NUMBER_LINE_LINE_IDS, FRACTION_BAR_LINE_IDS, HUNDRED_GRID_LINE_IDS, RATIO_LINE_IDS, BALANCE_LINE_IDS } from "./script";
 import { CLIPS_BY_UNIT } from "./voice-manifest";
 import { DEFAULT_VOICE_KEY } from "./voices";
 
@@ -284,4 +284,22 @@ export function hundredGridSceneTimings(
 }
 export function hundredGridTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return hundredGridSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the M9/M10 templates. */
+const RATIO_MIN_SECONDS: Record<string, number> = { ask: 4, build: 7, scale: 11, record: 6 };
+const BALANCE_MIN_SECONDS: Record<string, number> = { ask: 4, build: 8, solve: 12, record: 6 };
+
+export function ratioSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
+  return earlyTimings(RATIO_LINE_IDS, RATIO_MIN_SECONDS, unitId, voiceKey);
+}
+export function ratioTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return ratioSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+export function balanceSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
+  return earlyTimings(BALANCE_LINE_IDS, BALANCE_MIN_SECONDS, unitId, voiceKey);
+}
+export function balanceTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return balanceSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }

@@ -1495,5 +1495,149 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
         "durationInSeconds": 7.384
       }
     ]
+  },
+  "cur-ratios": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-ratios/ramlah/ask.mp3",
+        "durationInSeconds": 2.601
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/cur-ratios/ramlah/build.mp3",
+        "durationInSeconds": 3.762
+      },
+      {
+        "id": "scale",
+        "file": "lesson-voice/cur-ratios/ramlah/scale.mp3",
+        "durationInSeconds": 13.328
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-ratios/ramlah/record.mp3",
+        "durationInSeconds": 5.991
+      }
+    ]
+  },
+  "cur-proportions": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-proportions/ramlah/ask.mp3",
+        "durationInSeconds": 2.229
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/cur-proportions/ramlah/build.mp3",
+        "durationInSeconds": 4.272
+      },
+      {
+        "id": "scale",
+        "file": "lesson-voice/cur-proportions/ramlah/scale.mp3",
+        "durationInSeconds": 12.91
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-proportions/ramlah/record.mp3",
+        "durationInSeconds": 6.687
+      }
+    ]
+  },
+  "cur-unit-rates": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-unit-rates/ramlah/ask.mp3",
+        "durationInSeconds": 2.694
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/cur-unit-rates/ramlah/build.mp3",
+        "durationInSeconds": 5.712
+      },
+      {
+        "id": "scale",
+        "file": "lesson-voice/cur-unit-rates/ramlah/scale.mp3",
+        "durationInSeconds": 9.799
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-unit-rates/ramlah/record.mp3",
+        "durationInSeconds": 7.663
+      }
+    ]
+  },
+  "cur-one-step": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-one-step/ramlah/ask.mp3",
+        "durationInSeconds": 2.926
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/cur-one-step/ramlah/build.mp3",
+        "durationInSeconds": 7.988
+      },
+      {
+        "id": "solve",
+        "file": "lesson-voice/cur-one-step/ramlah/solve.mp3",
+        "durationInSeconds": 10.913
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-one-step/ramlah/record.mp3",
+        "durationInSeconds": 9.195
+      }
+    ]
+  },
+  "cur-two-step": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-two-step/ramlah/ask.mp3",
+        "durationInSeconds": 2.926
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/cur-two-step/ramlah/build.mp3",
+        "durationInSeconds": 8.731
+      },
+      {
+        "id": "solve",
+        "file": "lesson-voice/cur-two-step/ramlah/solve.mp3",
+        "durationInSeconds": 11.471
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-two-step/ramlah/record.mp3",
+        "durationInSeconds": 9.056
+      }
+    ]
+  },
+  "cur-inequalities": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-inequalities/ramlah/ask.mp3",
+        "durationInSeconds": 2.972
+      },
+      {
+        "id": "build",
+        "file": "lesson-voice/cur-inequalities/ramlah/build.mp3",
+        "durationInSeconds": 9.752
+      },
+      {
+        "id": "solve",
+        "file": "lesson-voice/cur-inequalities/ramlah/solve.mp3",
+        "durationInSeconds": 14.164
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-inequalities/ramlah/record.mp3",
+        "durationInSeconds": 8.034
+      }
+    ]
   }
 };

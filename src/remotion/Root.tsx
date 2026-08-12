@@ -8,9 +8,9 @@
 // chosen combination's clips rather than fixed.
 import { Composition } from "remotion";
 import { EqualGroupsVideo, FPS } from "./lesson/EqualGroupsVideo";
-import { totalFrames, columnTotalFrames, tenFrameTotalFrames, dealingTotalFrames, factFamilyTotalFrames, areaTotalFrames, countTotalFrames, compareTotalFrames, numberLineTotalFrames, fractionBarTotalFrames, hundredGridTotalFrames } from "./lesson/timeline";
+import { totalFrames, columnTotalFrames, tenFrameTotalFrames, dealingTotalFrames, factFamilyTotalFrames, areaTotalFrames, countTotalFrames, compareTotalFrames, numberLineTotalFrames, fractionBarTotalFrames, hundredGridTotalFrames, ratioTotalFrames, balanceTotalFrames } from "./lesson/timeline";
 import { DEFAULT_VOICE_KEY } from "./lesson/voices";
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS } from "./lesson/units";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, RATIO_UNITS, BALANCE_UNITS } from "./lesson/units";
 import { ColumnVideo } from "./lesson/ColumnVideo";
 import { TenFrameVideo } from "./lesson/TenFrameVideo";
 import { DealingVideo } from "./lesson/DealingVideo";
@@ -21,6 +21,8 @@ import { CompareVideo } from "./lesson/CompareVideo";
 import { NumberLineVideo } from "./lesson/NumberLineVideo";
 import { FractionBarVideo } from "./lesson/FractionBarVideo";
 import { HundredGridVideo } from "./lesson/HundredGridVideo";
+import { RatioTableVideo } from "./lesson/RatioTableVideo";
+import { BalanceVideo } from "./lesson/BalanceVideo";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -144,6 +146,28 @@ export const RemotionRoot: React.FC = () => {
       defaultProps={{ unit: HUNDRED_GRID_UNITS[0].id, voice: DEFAULT_VOICE_KEY }}
       calculateMetadata={({ props }) => ({
         durationInFrames: hundredGridTotalFrames(props.unit, props.voice),
+      })}
+    />
+    <Composition
+      id="RatioTable"
+      component={RatioTableVideo}
+      fps={FPS}
+      width={1920}
+      height={1080}
+      defaultProps={{ unit: RATIO_UNITS[0].id, voice: DEFAULT_VOICE_KEY }}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: ratioTotalFrames(props.unit, props.voice),
+      })}
+    />
+    <Composition
+      id="Balance"
+      component={BalanceVideo}
+      fps={FPS}
+      width={1920}
+      height={1080}
+      defaultProps={{ unit: BALANCE_UNITS[0].id, voice: DEFAULT_VOICE_KEY }}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: balanceTotalFrames(props.unit, props.voice),
       })}
     />
     </>

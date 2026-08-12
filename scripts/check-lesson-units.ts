@@ -10,9 +10,9 @@
 // across" while nothing slid. Any unit whose declared strategy isn't true of
 // its own numbers can produce that kind of contradiction, so it fails here.
 import { readFileSync, existsSync } from "node:fs";
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, ALL_VIDEO_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS, tenFrameNumbers, dealingNumbers } from "../src/remotion/lesson/units";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, ALL_VIDEO_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, RATIO_UNITS, BALANCE_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS, tenFrameNumbers, dealingNumbers } from "../src/remotion/lesson/units";
 import { DEFAULT_VOICE_KEY } from "../src/remotion/lesson/voices";
-import { lessonLines, columnLines, tenFrameLines, dealingLines, factFamilyLines, areaLines, fractionBarLines, hundredGridLines, countLines, compareLines, numberLineLines } from "../src/remotion/lesson/script";
+import { lessonLines, columnLines, tenFrameLines, dealingLines, factFamilyLines, areaLines, fractionBarLines, hundredGridLines, ratioLines, balanceLines, countLines, compareLines, numberLineLines } from "../src/remotion/lesson/script";
 
 const problems: string[] = [];
 const fail = (id: string, msg: string) => problems.push(`${id}: ${msg}`);
@@ -117,6 +117,8 @@ const allUnits: { id: string; lines: () => { id: string; text: string }[] }[] = 
   ...AREA_UNITS.map((u) => ({ id: u.id, lines: () => areaLines(u) })),
   ...FRACTION_BAR_UNITS.map((u) => ({ id: u.id, lines: () => fractionBarLines(u) })),
   ...HUNDRED_GRID_UNITS.map((u) => ({ id: u.id, lines: () => hundredGridLines(u) })),
+  ...RATIO_UNITS.map((u) => ({ id: u.id, lines: () => ratioLines(u) })),
+  ...BALANCE_UNITS.map((u) => ({ id: u.id, lines: () => balanceLines(u) })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, lines: () => countLines(u) })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, lines: () => compareLines(u) })),
   ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, lines: () => numberLineLines(u) })),

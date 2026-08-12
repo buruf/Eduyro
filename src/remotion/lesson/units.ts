@@ -778,6 +778,128 @@ export function hundredGridUnitById(id: string): HundredGridUnit {
 }
 
 // ---------------------------------------------------------------------------
+// RATIO TABLE template (M9).
+// ---------------------------------------------------------------------------
+// A ratio is a pair that keeps its shape when you scale it. The table makes
+// that literal: both rows are multiplied by the SAME number, and the picture
+// grows in step. Unit rate is the same table scaled DOWN until one column
+// reads 1 — which is why "per one" is the useful form.
+export interface RatioUnit {
+  id: string;
+  label: string;
+  mode: "ratio" | "proportion" | "unit-rate";
+  /** The base pair, e.g. 3 red : 2 blue, or 12 items : 3 pounds. */
+  a: number;
+  b: number;
+  /** How far the table is scaled (ratio/proportion), e.g. ×3. */
+  scale?: number;
+  aName: string;
+  bName: string;
+  tip: string;
+}
+
+export const RATIO_UNITS: RatioUnit[] = [
+  {
+    id: "cur-ratios",
+    label: "Ratios",
+    mode: "ratio",
+    a: 3,
+    b: 2,
+    scale: 3,
+    aName: "red",
+    bName: "blue",
+    tip: "Scale both sides the same, and the ratio holds",
+  },
+  {
+    id: "cur-proportions",
+    label: "Proportions",
+    mode: "proportion",
+    a: 3,
+    b: 4,
+    scale: 3,
+    aName: "top",
+    bName: "bottom",
+    tip: "Same multiplier top and bottom — that's what equal means here",
+  },
+  {
+    id: "cur-unit-rates",
+    label: "Unit rates",
+    mode: "unit-rate",
+    a: 12,
+    b: 3,
+    aName: "apples",
+    bName: "pounds",
+    tip: "Divide down to one — then you can compare anything",
+  },
+];
+
+export function ratioUnitById(id: string): RatioUnit {
+  const u = RATIO_UNITS.find((x) => x.id === id);
+  if (!u) throw new Error(`No ratio unit "${id}"`);
+  return u;
+}
+
+// ---------------------------------------------------------------------------
+// BALANCE SCALE template (M10).
+// ---------------------------------------------------------------------------
+// An equation is a balance that is level. Solving is not a ritual of moving
+// symbols across an equals sign — it is removing the SAME weight from both
+// pans so the beam stays level. An inequality is the same scale, tipped, and
+// it stays tipped the same way for every legal move.
+export interface BalanceUnit {
+  id: string;
+  label: string;
+  /** left = coef·x + constL, right = constR. */
+  coef: number;
+  constL: number;
+  constR: number;
+  /** ">" makes it an inequality; "=" an equation. */
+  rel: "=" | ">";
+  tip: string;
+}
+
+export const BALANCE_UNITS: BalanceUnit[] = [
+  {
+    id: "cur-one-step",
+    label: "Solving one-step equations",
+    coef: 1,
+    constL: 3,
+    constR: 8,
+    rel: "=",
+    tip: "Take the same off both sides and it stays level",
+  },
+  {
+    id: "cur-two-step",
+    label: "Solving two-step equations",
+    coef: 2,
+    constL: 3,
+    constR: 11,
+    rel: "=",
+    tip: "Undo the adding first, then the grouping",
+  },
+  {
+    id: "cur-inequalities",
+    label: "Inequalities",
+    coef: 1,
+    constL: 2,
+    constR: 5,
+    rel: ">",
+    tip: "A tipped scale stays tipped — same move, both sides",
+  },
+];
+
+export function balanceUnitById(id: string): BalanceUnit {
+  const u = BALANCE_UNITS.find((x) => x.id === id);
+  if (!u) throw new Error(`No balance unit "${id}"`);
+  return u;
+}
+
+export function balanceSolution(u: BalanceUnit) {
+  const afterConst = u.constR - u.constL;
+  return { afterConst, x: afterConst / u.coef };
+}
+
+// ---------------------------------------------------------------------------
 // The lesson-video index, used by the student dashboard.
 // ---------------------------------------------------------------------------
 // Client-safe: plain data, no Remotion imports, so the player UI can import it.
@@ -790,7 +912,7 @@ export interface VideoUnitRef {
   id: string;
   label: string;
   /** Remotion composition that renders it. */
-  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid";
+  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance";
 }
 
 export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
@@ -805,6 +927,8 @@ export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
   ...CURRICULUM_FACT_FAMILY_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "FactFamily" as const })),
   ...FRACTION_BAR_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "FractionBar" as const })),
   ...HUNDRED_GRID_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "HundredGrid" as const })),
+  ...RATIO_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "RatioTable" as const })),
+  ...BALANCE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Balance" as const })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Count" as const })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Compare" as const })),
   ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "NumberLine" as const })),
@@ -863,6 +987,10 @@ const LABEL_ALIASES: Record<string, string> = {
   "Decimals — subtract (tenths)": "cur-decimal-subtract",
   "Decimals — subtract (hundredths)": "cur-decimal-subtract",
   "Decimals — multiply by a whole number": "cur-decimal-multiply",
+
+  // M10 — word problems are one-step equations dressed in a sentence; the
+  // balance lesson is exactly the move they need once the equation is written.
+  "Word problems": "cur-one-step",
   "Division by 9": "div-6-9",
   "Mixed division": "div-6-9",
 };

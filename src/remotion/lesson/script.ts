@@ -14,6 +14,9 @@ import {
   type ColumnUnit,
   type FractionBarUnit,
   type HundredGridUnit,
+  type RatioUnit,
+  type BalanceUnit,
+  balanceSolution,
   type TenFrameUnit,
   dealingNumbers,
   type DealingUnit,
@@ -604,4 +607,107 @@ export function hundredGridLines(u: HundredGridUnit): LessonLine[] {
       ];
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Ratio table (M9)
+// ---------------------------------------------------------------------------
+export const RATIO_LINE_IDS = ["ask", "build", "scale", "record"] as const;
+
+export function ratioLines(u: RatioUnit): LessonLine[] {
+  if (u.mode === "unit-rate") {
+    const per = u.a / u.b;
+    return [
+      { id: "ask", text: `${u.a} ${u.aName} for ${u.b} ${u.bName}. What's that each?` },
+      {
+        id: "build",
+        text: `Put it in a table. ${u.a} ${u.aName} on the top… ${u.b} ${u.bName} underneath. That's the pair we're given.`,
+      },
+      {
+        id: "scale",
+        text: `Now scale it DOWN, until the bottom says just 1. Divide both by ${u.b}… ${u.a} divided by ${u.b} is ${per}. And ${u.b} divided by ${u.b} is 1.`,
+      },
+      {
+        id: "record",
+        text: `So that's ${per} ${u.aName} per ${u.bName.replace(/s$/, "")}. That's the unit rate. ${u.tip}.`,
+      },
+    ];
+  }
+
+  const s = u.scale ?? 2;
+  const isProp = u.mode === "proportion";
+  return [
+    {
+      id: "ask",
+      text: isProp
+        ? `${u.a} over ${u.b}… equals what over ${u.b * s}?`
+        : `${u.a} ${u.aName} to ${u.b} ${u.bName}. What IS a ratio?`,
+    },
+    {
+      id: "build",
+      text: isProp
+        ? `Here's ${u.a} over ${u.b}, as a table. Top row ${u.a}… bottom row ${u.b}.`
+        : `Here's the pair. ${u.a} ${u.aName} on the top row, ${u.b} ${u.bName} on the bottom.`,
+    },
+    {
+      id: "scale",
+      text: `Now multiply BOTH rows by the same number. Times 2… ${u.a * 2} and ${u.b * 2}. Times ${s}… ${u.a * s} and ${u.b * s}. The numbers get bigger, but the shape of the pair never changes.`,
+    },
+    {
+      id: "record",
+      text: isProp
+        ? `So ${u.a} over ${u.b} equals ${u.a * s} over ${u.b * s}. ${u.tip}.`
+        : `${u.a} to ${u.b} is the same ratio as ${u.a * s} to ${u.b * s}. ${u.tip}.`,
+    },
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Balance scale (M10)
+// ---------------------------------------------------------------------------
+export const BALANCE_LINE_IDS = ["ask", "build", "solve", "record"] as const;
+
+export function balanceLines(u: BalanceUnit): LessonLine[] {
+  const n = balanceSolution(u);
+  const lhs = `${u.coef === 1 ? "" : u.coef}x + ${u.constL}`;
+  const relWord = u.rel === "=" ? "equals" : "is more than";
+
+  if (u.rel === ">") {
+    return [
+      { id: "ask", text: `x + ${u.constL} ${relWord} ${u.constR}. What can x be?` },
+      {
+        id: "build",
+        text: `Picture a scale — but this one isn't level. The left side is HEAVIER. On the left: a box holding x, and ${u.constL} weights. On the right: ${u.constR}.`,
+      },
+      {
+        id: "solve",
+        text: `Take ${u.constL} off both sides… and it's still tipped the same way. That's the thing about a tipped scale — take the same off each side and it stays tipped. Left is just the box now. Right is ${n.afterConst}.`,
+      },
+      {
+        id: "record",
+        text: `So x is more than ${n.afterConst}. Not one answer — a whole range of them. ${u.tip}.`,
+      },
+    ];
+  }
+
+  const twoStep = u.coef > 1;
+  return [
+    { id: "ask", text: `${lhs} ${relWord} ${u.constR}. What is x?` },
+    {
+      id: "build",
+      text: twoStep
+        ? `Picture a scale, sitting level. On the left: ${u.coef} boxes, each holding the same x… and ${u.constL} weights. On the right: ${u.constR} weights.`
+        : `Picture a scale, sitting level. On the left: a box holding x, and ${u.constL} weights. On the right: ${u.constR} weights.`,
+    },
+    {
+      id: "solve",
+      text: twoStep
+        ? `First take ${u.constL} off BOTH sides… still level. Left is ${u.coef} boxes, right is ${n.afterConst}. Now split both sides into ${u.coef}… one box on the left, ${n.x} on the right.`
+        : `Take ${u.constL} off the left… but if you only do that, it tips. So take ${u.constL} off the RIGHT as well. Still level. Now the left is just the box, and the right is ${n.afterConst}.`,
+    },
+    {
+      id: "record",
+      text: `So x is ${n.x}. And you can check it — put ${n.x} back in the box${twoStep ? "es" : ""} and the scale is level again. ${u.tip}.`,
+    },
+  ];
 }

@@ -15,8 +15,8 @@
 // drift out of agreement.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS } from "../src/remotion/lesson/units";
-import { lessonLines, columnLines, tenFrameLines, dealingLines, factFamilyLines, areaLines, fractionBarLines, hundredGridLines, countLines, compareLines, numberLineLines } from "../src/remotion/lesson/script";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, RATIO_UNITS, BALANCE_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS } from "../src/remotion/lesson/units";
+import { lessonLines, columnLines, tenFrameLines, dealingLines, factFamilyLines, areaLines, fractionBarLines, hundredGridLines, ratioLines, balanceLines, countLines, compareLines, numberLineLines } from "../src/remotion/lesson/script";
 import { LESSON_VOICES, voiceIdEnvVar } from "../src/remotion/lesson/voices";
 import { speakable } from "../src/lib/tts/speakable";
 
@@ -108,6 +108,8 @@ const ALL = [
   ...AREA_UNITS.map((u) => ({ id: u.id, lines: () => areaLines(u) })),
   ...FRACTION_BAR_UNITS.map((u) => ({ id: u.id, lines: () => fractionBarLines(u) })),
   ...HUNDRED_GRID_UNITS.map((u) => ({ id: u.id, lines: () => hundredGridLines(u) })),
+  ...RATIO_UNITS.map((u) => ({ id: u.id, lines: () => ratioLines(u) })),
+  ...BALANCE_UNITS.map((u) => ({ id: u.id, lines: () => balanceLines(u) })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, lines: () => countLines(u) })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, lines: () => compareLines(u) })),
   ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, lines: () => numberLineLines(u) })),

@@ -10,7 +10,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS } from "../src/remotion/lesson/units";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, RATIO_UNITS, BALANCE_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS } from "../src/remotion/lesson/units";
 import { LESSON_VOICES } from "../src/remotion/lesson/voices";
 import { CLIPS_BY_UNIT } from "../src/remotion/lesson/voice-manifest";
 
@@ -28,6 +28,8 @@ const ALL = [
   ...AREA_UNITS.map((u) => ({ id: u.id, comp: "Area" })),
   ...FRACTION_BAR_UNITS.map((u) => ({ id: u.id, comp: "FractionBar" })),
   ...HUNDRED_GRID_UNITS.map((u) => ({ id: u.id, comp: "HundredGrid" })),
+  ...RATIO_UNITS.map((u) => ({ id: u.id, comp: "RatioTable" })),
+  ...BALANCE_UNITS.map((u) => ({ id: u.id, comp: "Balance" })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, comp: "Count" })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, comp: "Compare" })),
   ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, comp: "NumberLine" })),
