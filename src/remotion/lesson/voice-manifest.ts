@@ -1639,5 +1639,269 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
         "durationInSeconds": 8.034
       }
     ]
+  },
+  "cur-graphing-lines": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-graphing-lines/ramlah/ask.mp3",
+        "durationInSeconds": 3.947
+      },
+      {
+        "id": "plot",
+        "file": "lesson-voice/cur-graphing-lines/ramlah/plot.mp3",
+        "durationInSeconds": 10.124
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-graphing-lines/ramlah/action.mp3",
+        "durationInSeconds": 7.245
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-graphing-lines/ramlah/record.mp3",
+        "durationInSeconds": 15.65
+      }
+    ]
+  },
+  "cur-slope-intercept": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-slope-intercept/ramlah/ask.mp3",
+        "durationInSeconds": 4.18
+      },
+      {
+        "id": "plot",
+        "file": "lesson-voice/cur-slope-intercept/ramlah/plot.mp3",
+        "durationInSeconds": 5.944
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-slope-intercept/ramlah/action.mp3",
+        "durationInSeconds": 12.817
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-slope-intercept/ramlah/record.mp3",
+        "durationInSeconds": 9.009
+      }
+    ]
+  },
+  "cur-systems": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-systems/ramlah/ask.mp3",
+        "durationInSeconds": 8.545
+      },
+      {
+        "id": "plot",
+        "file": "lesson-voice/cur-systems/ramlah/plot.mp3",
+        "durationInSeconds": 5.062
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-systems/ramlah/action.mp3",
+        "durationInSeconds": 9.056
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-systems/ramlah/record.mp3",
+        "durationInSeconds": 10.263
+      }
+    ]
+  },
+  "cur-graphing-parabolas": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-graphing-parabolas/ramlah/ask.mp3",
+        "durationInSeconds": 4.272
+      },
+      {
+        "id": "plot",
+        "file": "lesson-voice/cur-graphing-parabolas/ramlah/plot.mp3",
+        "durationInSeconds": 7.848
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-graphing-parabolas/ramlah/action.mp3",
+        "durationInSeconds": 13.885
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-graphing-parabolas/ramlah/record.mp3",
+        "durationInSeconds": 6.269
+      }
+    ]
+  },
+  "cur-quadratic-equations": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-quadratic-equations/ramlah/ask.mp3",
+        "durationInSeconds": 4.272
+      },
+      {
+        "id": "plot",
+        "file": "lesson-voice/cur-quadratic-equations/ramlah/plot.mp3",
+        "durationInSeconds": 6.13
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-quadratic-equations/ramlah/action.mp3",
+        "durationInSeconds": 13.746
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-quadratic-equations/ramlah/record.mp3",
+        "durationInSeconds": 8.452
+      }
+    ]
+  },
+  "cur-quadratic-formula": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-quadratic-formula/ramlah/ask.mp3",
+        "durationInSeconds": 3.576
+      },
+      {
+        "id": "plot",
+        "file": "lesson-voice/cur-quadratic-formula/ramlah/plot.mp3",
+        "durationInSeconds": 5.898
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-quadratic-formula/ramlah/action.mp3",
+        "durationInSeconds": 13.56
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-quadratic-formula/ramlah/record.mp3",
+        "durationInSeconds": 8.963
+      }
+    ]
+  },
+  "cur-exponential": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-exponential/ramlah/ask.mp3",
+        "durationInSeconds": 3.715
+      },
+      {
+        "id": "plot",
+        "file": "lesson-voice/cur-exponential/ramlah/plot.mp3",
+        "durationInSeconds": 4.923
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-exponential/ramlah/action.mp3",
+        "durationInSeconds": 13.328
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-exponential/ramlah/record.mp3",
+        "durationInSeconds": 12.167
+      }
+    ]
+  },
+  "cur-logarithms": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-logarithms/ramlah/ask.mp3",
+        "durationInSeconds": 3.855
+      },
+      {
+        "id": "plot",
+        "file": "lesson-voice/cur-logarithms/ramlah/plot.mp3",
+        "durationInSeconds": 5.666
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-logarithms/ramlah/action.mp3",
+        "durationInSeconds": 9.845
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-logarithms/ramlah/record.mp3",
+        "durationInSeconds": 9.985
+      }
+    ]
+  },
+  "cur-limits": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-limits/ramlah/ask.mp3",
+        "durationInSeconds": 4.737
+      },
+      {
+        "id": "plot",
+        "file": "lesson-voice/cur-limits/ramlah/plot.mp3",
+        "durationInSeconds": 15.604
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-limits/ramlah/action.mp3",
+        "durationInSeconds": 10.17
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-limits/ramlah/record.mp3",
+        "durationInSeconds": 10.031
+      }
+    ]
+  },
+  "cur-derivatives": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-derivatives/ramlah/ask.mp3",
+        "durationInSeconds": 3.994
+      },
+      {
+        "id": "plot",
+        "file": "lesson-voice/cur-derivatives/ramlah/plot.mp3",
+        "durationInSeconds": 7.755
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-derivatives/ramlah/action.mp3",
+        "durationInSeconds": 13.467
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-derivatives/ramlah/record.mp3",
+        "durationInSeconds": 8.731
+      }
+    ]
+  },
+  "cur-integrals": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-integrals/ramlah/ask.mp3",
+        "durationInSeconds": 3.529
+      },
+      {
+        "id": "plot",
+        "file": "lesson-voice/cur-integrals/ramlah/plot.mp3",
+        "durationInSeconds": 4.969
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-integrals/ramlah/action.mp3",
+        "durationInSeconds": 12.957
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-integrals/ramlah/record.mp3",
+        "durationInSeconds": 9.102
+      }
+    ]
   }
 };

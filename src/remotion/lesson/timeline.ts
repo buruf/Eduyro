@@ -10,6 +10,7 @@
 // lines, and two voices read the same script at very different speeds. Each
 // combination therefore gets its own render and its own total duration.
 import { LINE_IDS, COLUMN_LINE_IDS, TEN_FRAME_LINE_IDS, DEALING_LINE_IDS, FACT_FAMILY_LINE_IDS, AREA_LINE_IDS, COUNT_LINE_IDS, COMPARE_LINE_IDS, NUMBER_LINE_LINE_IDS, FRACTION_BAR_LINE_IDS, HUNDRED_GRID_LINE_IDS, RATIO_LINE_IDS, BALANCE_LINE_IDS } from "./script";
+import { GRAPH_LINE_IDS } from "./script-graph";
 import { CLIPS_BY_UNIT } from "./voice-manifest";
 import { DEFAULT_VOICE_KEY } from "./voices";
 
@@ -302,4 +303,14 @@ export function balanceSceneTimings(unitId: string, voiceKey: string = DEFAULT_V
 }
 export function balanceTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return balanceSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the coordinate-graph template. */
+const GRAPH_MIN_SECONDS: Record<string, number> = { ask: 4, plot: 9, action: 13, record: 6 };
+
+export function graphSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
+  return earlyTimings(GRAPH_LINE_IDS, GRAPH_MIN_SECONDS, unitId, voiceKey);
+}
+export function graphTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return graphSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }

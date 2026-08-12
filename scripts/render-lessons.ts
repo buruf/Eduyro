@@ -10,7 +10,9 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, RATIO_UNITS, BALANCE_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS } from "../src/remotion/lesson/units";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, RATIO_UNITS, BALANCE_UNITS, GRAPH_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS } from "../src/remotion/lesson/units";
+import { graphLines } from "../src/remotion/lesson/script-graph";
+import { ALL_LESSON_UNITS, selectUnits, type RegisteredUnit } from "../src/remotion/lesson/registry";
 import { LESSON_VOICES } from "../src/remotion/lesson/voices";
 import { CLIPS_BY_UNIT } from "../src/remotion/lesson/voice-manifest";
 
@@ -19,21 +21,7 @@ const OUT = join(ROOT, "public", "lesson-video");
 mkdirSync(OUT, { recursive: true });
 
 const only = process.argv.slice(2);
-const ALL = [
-  ...EQUAL_GROUP_UNITS.map((u) => ({ id: u.id, comp: "EqualGroups" })),
-  ...COLUMN_UNITS.map((u) => ({ id: u.id, comp: "Column" })),
-  ...[...TEN_FRAME_UNITS, ...CURRICULUM_TEN_FRAME_UNITS].map((u) => ({ id: u.id, comp: "TenFrame" })),
-  ...DEALING_UNITS.map((u) => ({ id: u.id, comp: "Dealing" })),
-  ...[...FACT_FAMILY_UNITS, ...CURRICULUM_FACT_FAMILY_UNITS].map((u) => ({ id: u.id, comp: "FactFamily" })),
-  ...AREA_UNITS.map((u) => ({ id: u.id, comp: "Area" })),
-  ...FRACTION_BAR_UNITS.map((u) => ({ id: u.id, comp: "FractionBar" })),
-  ...HUNDRED_GRID_UNITS.map((u) => ({ id: u.id, comp: "HundredGrid" })),
-  ...RATIO_UNITS.map((u) => ({ id: u.id, comp: "RatioTable" })),
-  ...BALANCE_UNITS.map((u) => ({ id: u.id, comp: "Balance" })),
-  ...COUNT_UNITS.map((u) => ({ id: u.id, comp: "Count" })),
-  ...COMPARE_UNITS.map((u) => ({ id: u.id, comp: "Compare" })),
-  ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, comp: "NumberLine" })),
-];
+const ALL = ALL_LESSON_UNITS;
 const units = only.length ? ALL.filter((u) => only.includes(u.id)) : ALL;
 
 // A typo'd or unregistered unit id must fail loudly. This script once exited

@@ -900,6 +900,215 @@ export function balanceSolution(u: BalanceUnit) {
 }
 
 // ---------------------------------------------------------------------------
+// COORDINATE GRAPH template (M11, M13, M16, M17, M18).
+// ---------------------------------------------------------------------------
+// The workhorse of the upper levels. One set of axes, one plotted curve, and a
+// mode-specific MOVE performed on it:
+//
+//   line        plot from a table of points — the graph IS the equation's
+//               solutions, not a decoration of it
+//   slope       the rise-over-run triangle, drawn on the line
+//   system      two lines; the crossing point is the pair that satisfies both
+//   parabola    a curve, and where it crosses zero
+//   roots       the same crossings, named as the equation's solutions
+//   exponential doubling — the shape that outruns any line
+//   log         the exponential reflected in y = x, which is what "inverse" is
+//   limit       a hole in a curve, approached from both sides
+//   derivative  secants collapsing onto a tangent — slope AT a point
+//   integral    rectangles filling the area under a curve
+//
+// Functions are declared by KIND with coefficients rather than parsed from
+// strings: a lesson must never plot something its narration didn't describe.
+export type CurveKind = "linear" | "quadratic" | "exponential" | "log" | "hole";
+
+export interface Curve {
+  kind: CurveKind;
+  /** linear: y = m·x + c. quadratic: y = a·x² + b·x + c. */
+  m?: number;
+  c?: number;
+  a?: number;
+  b?: number;
+  /** exponential/log base. */
+  base?: number;
+  /** hole: y = (x² − h²)/(x − h), i.e. x + h with a gap at x = h. */
+  h?: number;
+}
+
+export interface GraphUnit {
+  id: string;
+  label: string;
+  mode:
+    | "line"
+    | "slope"
+    | "system"
+    | "parabola"
+    | "roots"
+    | "exponential"
+    | "log"
+    | "limit"
+    | "derivative"
+    | "integral";
+  curve: Curve;
+  /** system mode: the second line. */
+  curve2?: Curve;
+  /** derivative/limit: the x the lesson happens at. */
+  at?: number;
+  /** integral: the interval being filled. */
+  from?: number;
+  to?: number;
+  xMin: number;
+  xMax: number;
+  yMin: number;
+  yMax: number;
+  tip: string;
+}
+
+export const GRAPH_UNITS: GraphUnit[] = [
+  {
+    id: "cur-graphing-lines",
+    label: "Graphing lines",
+    mode: "line",
+    curve: { kind: "linear", m: 2, c: 1 },
+    xMin: -2, xMax: 4, yMin: -4, yMax: 10,
+    tip: "Every point on the line is a pair that works",
+  },
+  {
+    id: "cur-slope-intercept",
+    label: "Slope and intercept",
+    mode: "slope",
+    curve: { kind: "linear", m: 2, c: 1 },
+    xMin: -2, xMax: 4, yMin: -4, yMax: 10,
+    tip: "m is the climb, c is where it starts",
+  },
+  {
+    id: "cur-systems",
+    label: "Systems of equations",
+    mode: "system",
+    curve: { kind: "linear", m: 2, c: 1 },
+    curve2: { kind: "linear", m: -1, c: 7 },
+    xMin: -1, xMax: 6, yMin: -2, yMax: 12,
+    tip: "One point on BOTH lines — that's the solution",
+  },
+  {
+    id: "cur-graphing-parabolas",
+    label: "Graphing parabolas",
+    mode: "parabola",
+    curve: { kind: "quadratic", a: 1, b: 0, c: -4 },
+    xMin: -3.5, xMax: 3.5, yMin: -6, yMax: 8,
+    tip: "Squaring makes it curve — and symmetric",
+  },
+  {
+    id: "cur-quadratic-equations",
+    label: "Quadratic equations",
+    mode: "roots",
+    curve: { kind: "quadratic", a: 1, b: -5, c: 6 },
+    xMin: -0.5, xMax: 5.5, yMin: -2.5, yMax: 7,
+    tip: "Solving means finding where it crosses zero",
+  },
+  {
+    id: "cur-quadratic-formula",
+    label: "Quadratic formula",
+    mode: "roots",
+    curve: { kind: "quadratic", a: 1, b: -5, c: 6 },
+    xMin: -0.5, xMax: 5.5, yMin: -2.5, yMax: 7,
+    tip: "The formula finds those crossings every time",
+  },
+  {
+    id: "cur-exponential",
+    label: "Exponential functions",
+    mode: "exponential",
+    curve: { kind: "exponential", base: 2 },
+    xMin: -1, xMax: 4, yMin: -1, yMax: 17,
+    tip: "Doubling beats any straight line, eventually",
+  },
+  {
+    id: "cur-logarithms",
+    label: "Logarithms",
+    mode: "log",
+    curve: { kind: "exponential", base: 2 },
+    curve2: { kind: "log", base: 2 },
+    xMin: -1, xMax: 9, yMin: -1, yMax: 9,
+    tip: "A log just asks the exponent question backwards",
+  },
+  {
+    id: "cur-limits",
+    label: "Limits",
+    mode: "limit",
+    // y = (x² − 4)/(x − 2): the line x + 2, with a hole exactly at x = 2.
+    curve: { kind: "hole", h: 2 },
+    at: 2,
+    xMin: -1, xMax: 5, yMin: -1, yMax: 8,
+    tip: "The value it heads for — even where it isn't defined",
+  },
+  {
+    id: "cur-derivatives",
+    label: "Derivatives",
+    mode: "derivative",
+    curve: { kind: "quadratic", a: 1, b: 0, c: 0 },
+    at: 1,
+    xMin: -0.5, xMax: 3.5, yMin: -1, yMax: 9,
+    tip: "Slope at a single point — the tangent's steepness",
+  },
+  {
+    id: "cur-integrals",
+    label: "Integrals",
+    mode: "integral",
+    curve: { kind: "linear", m: 1, c: 0 },
+    from: 0,
+    to: 4,
+    xMin: -0.5, xMax: 5, yMin: -1, yMax: 6,
+    tip: "Add up the strips — that's the area underneath",
+  },
+];
+
+export function graphUnitById(id: string): GraphUnit {
+  const u = GRAPH_UNITS.find((x) => x.id === id);
+  if (!u) throw new Error(`No graph unit "${id}"`);
+  return u;
+}
+
+/** Evaluate a declared curve. Returns null where the curve has no value. */
+export function evalCurve(c: Curve, x: number): number | null {
+  switch (c.kind) {
+    case "linear":
+      return (c.m ?? 1) * x + (c.c ?? 0);
+    case "quadratic":
+      return (c.a ?? 1) * x * x + (c.b ?? 0) * x + (c.c ?? 0);
+    case "exponential":
+      return Math.pow(c.base ?? 2, x);
+    case "log":
+      return x > 0 ? Math.log(x) / Math.log(c.base ?? 2) : null;
+    case "hole": {
+      const h = c.h ?? 2;
+      // Undefined exactly at the hole; elsewhere it simplifies to x + h.
+      return Math.abs(x - h) < 1e-9 ? null : x + h;
+    }
+  }
+}
+
+/** Real roots of a quadratic, in order. */
+export function quadraticRoots(c: Curve): number[] {
+  const a = c.a ?? 1;
+  const b = c.b ?? 0;
+  const cc = c.c ?? 0;
+  const disc = b * b - 4 * a * cc;
+  if (disc < 0) return [];
+  const r = Math.sqrt(disc);
+  return [(-b - r) / (2 * a), (-b + r) / (2 * a)].sort((p, q) => p - q);
+}
+
+/** Intersection of two lines, or null if parallel. */
+export function lineIntersection(p: Curve, q: Curve): { x: number; y: number } | null {
+  const m1 = p.m ?? 0;
+  const c1 = p.c ?? 0;
+  const m2 = q.m ?? 0;
+  const c2 = q.c ?? 0;
+  if (Math.abs(m1 - m2) < 1e-9) return null;
+  const x = (c2 - c1) / (m1 - m2);
+  return { x, y: m1 * x + c1 };
+}
+
+// ---------------------------------------------------------------------------
 // The lesson-video index, used by the student dashboard.
 // ---------------------------------------------------------------------------
 // Client-safe: plain data, no Remotion imports, so the player UI can import it.
@@ -912,7 +1121,7 @@ export interface VideoUnitRef {
   id: string;
   label: string;
   /** Remotion composition that renders it. */
-  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance";
+  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph";
 }
 
 export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
@@ -929,6 +1138,7 @@ export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
   ...HUNDRED_GRID_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "HundredGrid" as const })),
   ...RATIO_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "RatioTable" as const })),
   ...BALANCE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Balance" as const })),
+  ...GRAPH_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Graph" as const })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Count" as const })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Compare" as const })),
   ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "NumberLine" as const })),

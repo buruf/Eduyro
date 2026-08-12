@@ -10,8 +10,10 @@
 // across" while nothing slid. Any unit whose declared strategy isn't true of
 // its own numbers can produce that kind of contradiction, so it fails here.
 import { readFileSync, existsSync } from "node:fs";
-import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, ALL_VIDEO_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, RATIO_UNITS, BALANCE_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS, tenFrameNumbers, dealingNumbers } from "../src/remotion/lesson/units";
+import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, ALL_VIDEO_UNITS, CURRICULUM_TEN_FRAME_UNITS, CURRICULUM_FACT_FAMILY_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, RATIO_UNITS, BALANCE_UNITS, GRAPH_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS, tenFrameNumbers, dealingNumbers } from "../src/remotion/lesson/units";
+import { ALL_LESSON_UNITS } from "../src/remotion/lesson/registry";
 import { DEFAULT_VOICE_KEY } from "../src/remotion/lesson/voices";
+import { graphLines } from "../src/remotion/lesson/script-graph";
 import { lessonLines, columnLines, tenFrameLines, dealingLines, factFamilyLines, areaLines, fractionBarLines, hundredGridLines, ratioLines, balanceLines, countLines, compareLines, numberLineLines } from "../src/remotion/lesson/script";
 
 const problems: string[] = [];
@@ -108,26 +110,20 @@ for (const u of NUMBER_LINE_UNITS) {
 
 // Every unit must produce a full set of non-empty lines — an unhandled branch
 // silently yielding undefined would ship a video with a missing narration.
-const allUnits: { id: string; lines: () => { id: string; text: string }[] }[] = [
-  ...EQUAL_GROUP_UNITS.map((u) => ({ id: u.id, lines: () => lessonLines(u) })),
-  ...COLUMN_UNITS.map((u) => ({ id: u.id, lines: () => columnLines(u) })),
-  ...[...TEN_FRAME_UNITS, ...CURRICULUM_TEN_FRAME_UNITS].map((u) => ({ id: u.id, lines: () => tenFrameLines(u) })),
-  ...DEALING_UNITS.map((u) => ({ id: u.id, lines: () => dealingLines(u) })),
-  ...[...FACT_FAMILY_UNITS, ...CURRICULUM_FACT_FAMILY_UNITS].map((u) => ({ id: u.id, lines: () => factFamilyLines(u) })),
-  ...AREA_UNITS.map((u) => ({ id: u.id, lines: () => areaLines(u) })),
-  ...FRACTION_BAR_UNITS.map((u) => ({ id: u.id, lines: () => fractionBarLines(u) })),
-  ...HUNDRED_GRID_UNITS.map((u) => ({ id: u.id, lines: () => hundredGridLines(u) })),
-  ...RATIO_UNITS.map((u) => ({ id: u.id, lines: () => ratioLines(u) })),
-  ...BALANCE_UNITS.map((u) => ({ id: u.id, lines: () => balanceLines(u) })),
-  ...COUNT_UNITS.map((u) => ({ id: u.id, lines: () => countLines(u) })),
-  ...COMPARE_UNITS.map((u) => ({ id: u.id, lines: () => compareLines(u) })),
-  ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, lines: () => numberLineLines(u) })),
-];
+const allUnits = ALL_LESSON_UNITS;
+
+// "undefined" is normally the signature of a failed template interpolation —
+// a missing value renders as the bare word — so the guard below rejects it.
+// These lines use it as the MATHEMATICAL term, which is precisely the
+// vocabulary the limit lesson exists to teach. Listed explicitly so the guard
+// stays strict and every exception is visible rather than silently tolerated.
+const UNDEFINED_IS_INTENTIONAL = new Set(["cur-limits:ask", "cur-limits:plot"]);
 
 for (const u of allUnits) {
   for (const line of u.lines()) {
     if (!line.text || !line.text.trim()) fail(u.id, `line "${line.id}" is empty`);
-    if (line.text.includes("undefined") || line.text.includes("NaN")) {
+    const intentional = UNDEFINED_IS_INTENTIONAL.has(`${u.id}:${line.id}`);
+    if ((line.text.includes("undefined") && !intentional) || line.text.includes("NaN")) {
       fail(u.id, `line "${line.id}" contains undefined/NaN: ${line.text.slice(0, 80)}`);
     }
   }
