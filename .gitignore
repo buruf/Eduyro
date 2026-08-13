@@ -63,3 +63,9 @@ preview*.pdf
 
 # Remotion agent-skill docs (installed locally, not app code)
 agent/
+
+# Secrets pasted into the repo root by hand. Belt-and-braces: these should live
+# OUTSIDE the repo entirely, but never let one be committed by accident.
+*API keys*.txt
+*api-keys*.txt
+*.secrets.txt
