@@ -15,6 +15,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTutorialLog } from "@/hooks/useTutorialLog";
 import { LESSON_VOICES, DEFAULT_VOICE_KEY } from "@/remotion/lesson/voices";
+import { mediaUrl } from "@/lib/media";
 
 interface Props {
   open: boolean;
@@ -183,7 +184,7 @@ export default function LessonVideoModal({
             // Keyed by voice so switching swaps the file rather than leaving
             // the old one loaded at the old playhead.
             key={voice}
-            src={`/${srcBase}.${voice}.mp4`}
+            src={mediaUrl(`${srcBase}.${voice}.mp4`)}
             controls={started}
             playsInline
             preload="metadata"

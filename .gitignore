@@ -69,3 +69,7 @@ agent/
 *API keys*.txt
 *api-keys*.txt
 *.secrets.txt
+
+# Lesson videos live in Vercel Blob (scripts/upload-lesson-videos.ts); local
+# copies are render output, not source.
+public/lesson-video/

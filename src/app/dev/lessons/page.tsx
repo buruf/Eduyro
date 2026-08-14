@@ -26,6 +26,7 @@ import {
   HUNDRED_GRID_UNITS,
 } from "@/remotion/lesson/units";
 import { DEFAULT_VOICE_KEY } from "@/remotion/lesson/voices";
+import { mediaUrl } from "@/lib/media";
 
 interface Row {
   id: string;
@@ -162,7 +163,7 @@ export default function LessonReviewPage() {
             {g.rows.map((r) => (
               <figure key={r.id} className="bg-white border border-border rounded-xl overflow-hidden">
                 <video
-                  src={`/lesson-video/${r.id}.${DEFAULT_VOICE_KEY}.mp4`}
+                  src={mediaUrl(`lesson-video/${r.id}.${DEFAULT_VOICE_KEY}.mp4`)}
                   controls
                   preload="metadata"
                   className="w-full block bg-black/5"

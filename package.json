@@ -36,6 +36,7 @@
     "@types/katex": "^0.16.8",
     "@upstash/redis": "^1.38.2",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/blob": "^2.8.0",
     "aws-sdk": "^2.1585.0",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.0",
