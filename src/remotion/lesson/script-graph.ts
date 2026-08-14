@@ -153,19 +153,25 @@ export function graphLines(u: GraphUnit): LessonLine[] {
 
     case "parabola": {
       const roots = quadraticRoots(u.curve);
+      // Values computed from the declared curve, never hardcoded.
+      const a = u.curve.a ?? 1, bq = u.curve.b ?? 0, cq = u.curve.c ?? 0;
+      const f = (x: number) => a * x * x + bq * x + cq;
       return [
-        { id: "ask", text: `${eq}. What happens when you square the x?` },
+        {
+          id: "ask",
+          text: `${eq}. Here's the twist: squaring a number never comes out negative… so what shape will THAT make?`,
+        },
         {
           id: "plot",
-          text: `Work out a few. Minus 2 gives 0. Minus 1 gives minus 3. Zero gives minus 4. Then it climbs back up the other side.`,
+          text: `Work a few out. Minus 2 gives ${f(-2)}. Minus 1 gives ${f(-1)}. Zero gives ${f(0)}. Now cross to the plus side… 1 gives ${f(1)} — the same as minus 1 did. And 2 gives ${f(2)} — the same as minus 2.`,
         },
         {
           id: "action",
-          text: `Join them, and it's not a line at all — it's a curve. A parabola. And look how symmetric it is. The left half mirrors the right, because squaring a negative gives you the same as squaring the positive.`,
+          text: `Join them, and it's not a line — it curves. A parabola. Fold it down the middle… the left half lands exactly on the right. That's the squaring: minus 2 and plus 2 square to the SAME number, so the picture has to mirror.`,
         },
         {
           id: "record",
-          text: `It crosses zero twice — at ${roots[0]}, and at ${roots[1]}. ${u.tip}.`,
+          text: `And watch where it crosses zero — twice. At ${roots[0]}, and at ${roots[1]}. ${u.tip}.`,
         },
       ];
     }
@@ -176,15 +182,21 @@ export function graphLines(u: GraphUnit): LessonLine[] {
       const c = u.curve.c ?? 0;
       const lhs = `x² ${b < 0 ? "minus" : "plus"} ${Math.abs(b)}x ${c < 0 ? "minus" : "plus"} ${Math.abs(c)}`;
       return [
-        { id: "ask", text: `${lhs} equals zero. Solve it.` },
-        { id: "plot", text: `Graph it first. Here's the curve for ${eq}.` },
+        {
+          id: "ask",
+          text: `${lhs} equals zero. You could guess numbers all day… or you could draw one picture.`,
+        },
+        {
+          id: "plot",
+          text: `Graph the left side: ${eq}. Now every point's height tells you what the expression is worth at that x.`,
+        },
         {
           id: "action",
-          text: `Now think about what "equals zero" means. It means: where is y zero? And y is zero exactly along the x axis. So look where the curve crosses it. There… and there. At ${roots[0]}, and at ${roots[1]}.`,
+          text: `And "equals zero" means: the height is zero. Where is height zero? … Exactly on the x axis. So look where the curve touches it. There… and there. At ${roots[0]}, and at ${roots[1]}.`,
         },
         {
           id: "record",
-          text: `So x is ${roots[0]}, or ${roots[1]}. Two answers — because the curve crosses twice. ${u.tip}.`,
+          text: `So x is ${roots[0]}, or x is ${roots[1]}. Two crossings — two answers. ${u.tip}.`,
         },
       ];
     }
@@ -192,18 +204,21 @@ export function graphLines(u: GraphUnit): LessonLine[] {
     case "exponential": {
       const base = u.curve.base ?? 2;
       return [
-        { id: "ask", text: `y = ${base} to the power of x. What shape does that make?` },
+        {
+          id: "ask",
+          text: `y = ${base} to the power of x. That's not multiplying BY x — it's multiplying ${base} by itself, x times over. What shape does that make?`,
+        },
         {
           id: "plot",
-          text: `Work them out. At 0 it's 1. At 1, ${base}. At 2, ${base * base}. At 3, ${base ** 3}. At 4, ${base ** 4}.`,
+          text: `Work them out. At 0 it's 1. At 1, ${base}. At 2, ${base * base}. At 3, ${base ** 3}. At 4… ${base ** 4}. Look at the jumps between them — they're growing.`,
         },
         {
           id: "action",
-          text: `Plot them, and watch what happens. It barely moves at first… and then it takes off. Every step across multiplies it by ${base} — so the bigger it gets, the faster it grows.`,
+          text: `Plot them, and watch. It barely moves at first… then it takes off. Every step across multiplies by ${base} — so the bigger it is, the bigger its next jump has to be.`,
         },
         {
           id: "record",
-          text: `That's exponential growth. A straight line ADDS the same amount each step. This one multiplies. Which is why it always wins in the end. ${u.tip}.`,
+          text: `That's exponential growth. A straight line ADDS the same amount each step. This one MULTIPLIES. ${u.tip}.`,
         },
       ];
     }
@@ -212,14 +227,17 @@ export function graphLines(u: GraphUnit): LessonLine[] {
       const base = u.curve.base ?? 2;
       const cubed = base ** 3; // example is computed from the base, never hardcoded
       return [
-        { id: "ask", text: `${base} to the WHAT makes ${cubed}? That question is a logarithm.` },
+        {
+          id: "ask",
+          text: `${base} to the WHAT makes ${cubed}? … That question — find the exponent — has a name. It's a logarithm.`,
+        },
         {
           id: "plot",
-          text: `Here's ${base} to the x again — the doubling curve. Feed it an exponent, it gives you a value.`,
+          text: `Here's y equals ${base} to the x. Feed it an exponent, it hands you a value. Feed it 3… it hands you ${cubed}.`,
         },
         {
           id: "action",
-          text: `Now flip it. Swap x and y — mirror the whole thing in the diagonal. And that new curve is the log. Feed IT a value, and it hands you back the exponent.`,
+          text: `Now flip the question. Swap x and y — mirror the whole curve in the diagonal. That new curve is the log. Feed IT a value… and it hands the exponent back.`,
         },
         {
           id: "record",
@@ -232,7 +250,10 @@ export function graphLines(u: GraphUnit): LessonLine[] {
       const h = u.curve.h ?? 2;
       const target = 2 * h;
       return [
-        { id: "ask", text: `This one is undefined at x = ${h}. So what happens right next to it?` },
+        {
+          id: "ask",
+          text: `This function is undefined at x = ${h}. Nothing there at all. So… what happens right NEXT to it?`,
+        },
         {
           id: "plot",
           text: `${eq}. Everywhere except ${h}, that cancels down to x plus ${h} — a straight line. But at ${h} exactly you'd be dividing by zero. So there's a hole, right there.`,
@@ -252,10 +273,13 @@ export function graphLines(u: GraphUnit): LessonLine[] {
       const at = u.at ?? 1;
       const slope = 2 * (u.curve.a ?? 1) * at;
       return [
-        { id: "ask", text: `${eq}. How steep is it at x = ${at}?` },
+        {
+          id: "ask",
+          text: `${eq}. How steep is it… exactly at x = ${at}? Not on average — at that one single point.`,
+        },
         {
           id: "plot",
-          text: `Tricky, because a curve's steepness keeps changing. So start with two points, and join them. THAT line's slope is easy to measure.`,
+          text: `Tricky, because a curve's steepness keeps changing. So cheat a little. Pick two points, and join them. THAT line's slope is easy to measure.`,
         },
         {
           id: "action",
@@ -274,15 +298,18 @@ export function graphLines(u: GraphUnit): LessonLine[] {
       const m = u.curve.m ?? 1;
       const area = (m * (to * to - from * from)) / 2;
       return [
-        { id: "ask", text: `How much area is under this line, between ${from} and ${to}?` },
-        { id: "plot", text: `Here's ${eq}. The bit we want is between the line and the x axis.` },
+        {
+          id: "ask",
+          text: `How much area sits under this line, between ${from} and ${to}? The top is slanted… so no rectangle formula fits it. Yet.`,
+        },
+        { id: "plot", text: `Here's ${eq}. The piece we want is trapped between the line and the x axis.` },
         {
           id: "action",
           text: `Chop it into rectangles. Four fat ones — that's a rough answer, sticking out in places. Now eight thinner ones… better. Now lots of very thin ones… and the gaps basically disappear.`,
         },
         {
           id: "record",
-          text: `Add up all those strips and you get ${area}. That's the integral — the exact area underneath. ${u.tip}.`,
+          text: `Add up all those strips and you get ${area}. That's the integral. ${u.tip}.`,
         },
       ];
     }
