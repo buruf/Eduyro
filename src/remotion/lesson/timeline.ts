@@ -13,6 +13,8 @@ import { LINE_IDS, COLUMN_LINE_IDS, TEN_FRAME_LINE_IDS, DEALING_LINE_IDS, FACT_F
 import { graphLineIds } from "./script-graph";
 import { graphUnitById } from "./units";
 import { functionLineIds } from "./script-functions";
+import { trigLineIds } from "./script-trig";
+import { trigUnitById } from "./units-trig";
 import { functionUnitById } from "./units-functions";
 import { CLIPS_BY_UNIT } from "./voice-manifest";
 import { DEFAULT_VOICE_KEY } from "./voices";
@@ -346,6 +348,16 @@ export function functionSceneTimings(unitId: string, voiceKey: string = DEFAULT_
 }
 export function functionTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return functionSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the trig template (M15). Same four-beat shape. */
+const TRIG_MIN_SECONDS: Record<string, number> = { ask: 4, work: 8, twist: 6, record: 4 };
+
+export function trigSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
+  return earlyTimings(trigLineIds(trigUnitById(unitId)), TRIG_MIN_SECONDS, unitId, voiceKey);
+}
+export function trigTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return trigSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }
 export function graphTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return graphSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);

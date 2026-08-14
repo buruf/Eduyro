@@ -641,6 +641,7 @@ export {
 export type { CountUnit, CompareUnit, NumberLineUnit } from "./units-early";
 import { COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS } from "./units-early";
 import { FUNCTION_UNITS } from "./units-functions";
+import { TRIG_UNITS } from "./units-trig";
 
 // ---------------------------------------------------------------------------
 // FRACTION BAR template (M7).
@@ -1122,7 +1123,7 @@ export interface VideoUnitRef {
   id: string;
   label: string;
   /** Remotion composition that renders it. */
-  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph" | "FunctionMachine";
+  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph" | "FunctionMachine" | "Trig";
 }
 
 export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
@@ -1141,6 +1142,7 @@ export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
   ...BALANCE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Balance" as const })),
   ...GRAPH_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Graph" as const })),
   ...FUNCTION_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "FunctionMachine" as const })),
+  ...TRIG_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Trig" as const })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Count" as const })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Compare" as const })),
   ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "NumberLine" as const })),
