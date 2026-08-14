@@ -1203,6 +1203,23 @@ const LABEL_ALIASES: Record<string, string> = {
   "Word problems": "cur-one-step",
   "Division by 9": "div-6-9",
   "Mixed division": "div-6-9",
+
+  // M9 — the ratio-table video teaches equivalent ratios; simplifying is
+  // reading the same table toward the base column.
+  "Ratios — simplify": "cur-ratios",
+
+  // M11 — the rebuilt graphing-lines lesson IS plotting: table rows fire
+  // points onto the grid, then the line joins them.
+  "Plot points on the coordinate plane": "cur-graphing-lines",
+  "Graph a line": "cur-graphing-lines",
+
+  // M13/M14/M17 — the parabola lesson evaluates the function at five inputs,
+  // names the shape, and shows the symmetry; these labels are that content.
+  // NOT aliased: "Range of a quadratic" and "End behavior" — the video never
+  // says those words, and a lesson must speak the skill it is standing in for.
+  "Meet the parabola": "cur-graphing-parabolas",
+  "Evaluate a quadratic function": "cur-graphing-parabolas",
+  "Parabolas & conics": "cur-graphing-parabolas",
 };
 
 const BY_ID = new Map(ALL_VIDEO_UNITS.map((u) => [u.id, u]));
