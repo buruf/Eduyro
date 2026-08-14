@@ -23,6 +23,7 @@ import {
 } from "remotion";
 import { columnSceneTimings } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
+import { Brand } from "./Brand";
 import { columnUnitById, columnNumbers, type ColumnUnit } from "./units";
 
 export { FPS } from "./timeline";
@@ -314,21 +315,37 @@ function Stage({ children }: { children: React.ReactNode }) {
 }
 
 // ---- Scene 1: the question ------------------------------------------------
+// The problem is STACKED from the very first second — top number over bottom
+// number over a rule, exactly as the child will write it. A horizontal
+// "52 − 27" asks them to mentally rotate it into columns before the lesson
+// even starts (user-caught: 2-digit work must be vertical).
 function SceneAsk({ unit }: SceneProps) {
   const a = useEnter(6);
   const b = useEnter(38);
+  const width = Math.max(String(unit.x).length, String(unit.y).length);
+  const COLW = 120;
+  const pad = (v: number) => String(v).padStart(width, " ").split("");
+  const DigitRow = ({ chars, prefix }: { chars: string[]; prefix?: string }) => (
+    <div style={{ display: "flex", alignItems: "baseline" }}>
+      <div style={{ width: 110, fontSize: 130, fontWeight: 800, color: INK, textAlign: "right" }}>
+        {prefix ?? ""}
+      </div>
+      {chars.map((c, i) => (
+        <div
+          key={i}
+          style={{ width: COLW, fontSize: 150, fontWeight: 800, color: INK, textAlign: "center" }}
+        >
+          {c.trim()}
+        </div>
+      ))}
+    </div>
+  );
   return (
-    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 40 }}>
-      <div
-        style={{
-          fontSize: 190,
-          fontWeight: 800,
-          color: INK,
-          opacity: a.opacity,
-          translate: `0 ${a.translateY}px`,
-        }}
-      >
-        {unit.x} {unit.op} {unit.y}
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 44 }}>
+      <div style={{ opacity: a.opacity, translate: `0 ${a.translateY}px` }}>
+        <DigitRow chars={pad(unit.x)} />
+        <DigitRow chars={pad(unit.y)} prefix={unit.op} />
+        <div style={{ borderTop: `8px solid ${INK}`, marginTop: 8, marginLeft: 110, width: width * COLW }} />
       </div>
       <div
         style={{ fontSize: 56, color: MUTED, opacity: b.opacity, translate: `0 ${b.translateY}px` }}
@@ -1264,6 +1281,7 @@ export const ColumnVideo: React.FC<ColumnProps> = ({
           </Sequence>
         );
       })}
+      <Brand />
     </AbsoluteFill>
   );
 };

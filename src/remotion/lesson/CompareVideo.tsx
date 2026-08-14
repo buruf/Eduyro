@@ -18,6 +18,7 @@ import {
 } from "remotion";
 import { compareSceneTimings } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
+import { Brand } from "./Brand";
 import { compareUnitById, compareNumbers, type CompareUnit } from "./units-early";
 
 export { FPS } from "./timeline";
@@ -347,6 +348,7 @@ export const CompareVideo: React.FC<CompareProps> = ({
           </Sequence>
         );
       })}
+      <Brand />
     </AbsoluteFill>
   );
 };

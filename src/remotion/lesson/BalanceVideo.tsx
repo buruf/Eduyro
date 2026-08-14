@@ -20,6 +20,7 @@ import {
 } from "remotion";
 import { balanceSceneTimings } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
+import { Brand } from "./Brand";
 import { balanceUnitById, balanceSolution, type BalanceUnit } from "./units";
 
 export { FPS } from "./timeline";
@@ -466,6 +467,7 @@ export const BalanceVideo: React.FC<BalanceProps> = ({
           </Sequence>
         );
       })}
+      <Brand />
     </AbsoluteFill>
   );
 };

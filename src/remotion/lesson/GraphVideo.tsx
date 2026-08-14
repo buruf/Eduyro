@@ -19,6 +19,7 @@
 //
 // Curves are evaluated from declared coefficients (units.ts), never parsed
 // from strings, so a lesson cannot plot something its narration didn't say.
+import React from "react";
 import {
   AbsoluteFill,
   Audio,
@@ -31,6 +32,7 @@ import {
 } from "remotion";
 import { graphSceneTimings } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
+import { Brand } from "./Brand";
 import {
   graphUnitById,
   evalCurve,
@@ -762,12 +764,12 @@ function SceneRecord({ dur, unit }: SceneProps) {
   const inter = unit.curve2 ? lineIntersection(unit.curve, unit.curve2) : null;
   const headline: Record<GraphUnit["mode"], string> = {
     line: curveText(unit.curve),
-    slope: `slope ${unit.curve.m ?? 1} · crosses at ${unit.curve.c ?? 0}`,
+    slope: `m = ${unit.curve.m ?? 1} · b = ${unit.curve.c ?? 0}`,
     system: inter ? `x = ${inter.x},  y = ${inter.y}` : curveText(unit.curve),
     parabola: roots.length ? `crosses at ${roots[0]} and ${roots[1]}` : curveText(unit.curve),
     roots: roots.length ? `x = ${roots[0]}  or  x = ${roots[1]}` : curveText(unit.curve),
     exponential: curveText(unit.curve),
-    log: `log₂ 8 = 3`,
+    log: `log base ${unit.curve.base ?? 2} of ${(unit.curve.base ?? 2) ** 3} = 3`,
     limit: `limit = ${2 * (unit.at ?? 2)}`,
     derivative: `slope at x = ${unit.at ?? 1}  is  ${2 * (unit.curve.a ?? 1) * (unit.at ?? 1)}`,
     integral: `area = ${((unit.curve.m ?? 1) * ((unit.to ?? 4) ** 2 - (unit.from ?? 0) ** 2)) / 2}`,
@@ -794,11 +796,559 @@ function SceneRecord({ dur, unit }: SceneProps) {
   );
 }
 
+// ===========================================================================
+// Bespoke linear-family scenes (expert-council redesign). The line video
+// BUILDS y = mx + b in three moves (y = x, stretch by m, lift by c), then
+// derives the plot from an x/y table. The slope video names m and b and
+// computes m from two labelled points with the slope formula. The systems
+// video draws each line from its own table, one after the other.
+// ===========================================================================
+
+/** An x/y table whose rows light up one at a time. */
+function XYTable({
+  rows,
+  colour,
+  litRows,
+  header = true,
+}: {
+  rows: { x: number; y: number }[];
+  colour: string;
+  litRows: number; // how many rows are highlighted so far
+  header?: boolean;
+}) {
+  const cell: React.CSSProperties = {
+    width: 96,
+    padding: "10px 0",
+    textAlign: "center",
+    fontSize: 40,
+    fontWeight: 800,
+  };
+  return (
+    <div style={{ border: `4px solid ${colour}`, borderRadius: 18, overflow: "hidden", backgroundColor: CREAM }}>
+      {header && (
+        <div style={{ display: "flex", backgroundColor: colour, color: CREAM }}>
+          <div style={cell}>x</div>
+          <div style={cell}>y</div>
+        </div>
+      )}
+      {rows.map((r, i) => (
+        <div
+          key={i}
+          style={{
+            display: "flex",
+            color: INK,
+            backgroundColor: i < litRows ? `${colour}22` : "transparent",
+            opacity: i < litRows ? 1 : 0.35,
+            borderTop: `2px solid ${GRID}`,
+          }}
+        >
+          <div style={cell}>{r.x}</div>
+          <div style={cell}>{r.y}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Big equation card used across the linear scenes. */
+function EquationCard({
+  text,
+  colour = INK,
+  size = 96,
+  enter,
+  dimmed = false,
+}: {
+  text: string;
+  colour?: string;
+  size?: number;
+  enter?: { opacity: number; translateY: number };
+  dimmed?: boolean;
+}) {
+  return (
+    <div
+      style={{
+        fontSize: size,
+        fontWeight: 800,
+        color: colour,
+        opacity: (enter?.opacity ?? 1) * (dimmed ? 0.3 : 1),
+        translate: `0 ${enter?.translateY ?? 0}px`,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {text}
+    </div>
+  );
+}
+
+// ---- line: beat 1 — the simplest line, y = x ------------------------------
+function SceneLineSimple({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const title = useEnter(4);
+  const drawAt = Math.round(dur * 0.42);
+  const prog = interpolate(frame, [drawAt, drawAt + 40], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.4, 0, 0.2, 1),
+  });
+  const identity: Curve = { kind: "linear", m: 1, c: 0 };
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 10 }}>
+      <Title text="Start with the simplest line" enter={title} />
+      <EquationCard text="y = x" colour={BLUE} size={72} enter={useEnter(14)} />
+      <Stage>
+        <Axes unit={unit} />
+        <Plot unit={unit} curve={identity} colour={BLUE} progress={prog} />
+        {[0, 1, 2].map((x, i) => (
+          <Dot
+            key={x}
+            unit={unit}
+            x={x}
+            y={x}
+            colour={BLUE}
+            label={`(${x}, ${x})`}
+            opacity={interpolate(frame, [drawAt + 44 + i * 14, drawAt + 54 + i * 14], [0, 1], {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            })}
+          />
+        ))}
+      </Stage>
+    </AbsoluteFill>
+  );
+}
+
+// ---- line: beat 2 — multiply by m: heights stretch ------------------------
+function SceneLineStretch({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const title = useEnter(4);
+  const m = unit.curve.m ?? 1;
+  const identity: Curve = { kind: "linear", m: 1, c: 0 };
+  const stretched: Curve = { kind: "linear", m, c: 0 };
+  const moveAt = Math.round(dur * 0.3);
+  const lineAt = Math.round(dur * 0.62);
+  const lineProg = interpolate(frame, [lineAt, lineAt + 40], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 10 }}>
+      <Title text={`Multiply x by ${m}`} enter={title} />
+      <EquationCard text={`y = ${m}x`} colour={GREEN} size={72} enter={useEnter(14)} />
+      <Stage>
+        <Axes unit={unit} />
+        {/* ghost of where we came from */}
+        <Plot unit={unit} curve={identity} colour={GRID} width={4} />
+        {[1, 2].map((x, i) => {
+          const t = interpolate(frame, [moveAt + i * 22, moveAt + i * 22 + 20], [0, 1], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+            easing: Easing.bezier(0.4, 0, 0.2, 1),
+          });
+          const y = x + (m * x - x) * t; // rides from y=x up to y=mx
+          return (
+            <React.Fragment key={x}>
+              <Seg unit={unit} x1={x} y1={x} x2={x} y2={y} colour={GREEN} dashed width={4} opacity={t > 0 ? 1 : 0} />
+              <Dot unit={unit} x={x} y={y} colour={GREEN} label={t === 1 ? `(${x}, ${m * x})` : undefined} />
+              {t > 0.15 && t < 1 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: makeScale(unit).sx(x) + 26,
+                    top: makeScale(unit).sy(y) - 8,
+                    fontSize: 34,
+                    fontWeight: 800,
+                    color: GREEN,
+                  }}
+                >
+                  ×{m}
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
+        <Plot unit={unit} curve={stretched} colour={GREEN} progress={lineProg} />
+      </Stage>
+    </AbsoluteFill>
+  );
+}
+
+// ---- line: beat 3 — plus c lifts every point UP ---------------------------
+function SceneLineLift({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const title = useEnter(4);
+  const m = unit.curve.m ?? 1;
+  const c = unit.curve.c ?? 0;
+  const stretched: Curve = { kind: "linear", m, c: 0 };
+  const liftAt = Math.round(dur * 0.34);
+  const lineAt = Math.round(dur * 0.68);
+  const lineProg = interpolate(frame, [lineAt, lineAt + 40], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const capAt = Math.round(dur * 0.55);
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 10 }}>
+      <Title text={`Add ${c} — the line lifts UP`} enter={title} />
+      <EquationCard text={curveText(unit.curve)} colour={GOLD} size={72} enter={useEnter(14)} />
+      <Stage>
+        <Axes unit={unit} />
+        <Plot unit={unit} curve={stretched} colour={GRID} width={4} />
+        {[0, 1, 2].map((x, i) => {
+          const t = interpolate(frame, [liftAt + i * 18, liftAt + i * 18 + 18], [0, 1], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+            easing: Easing.bezier(0.4, 0, 0.2, 1),
+          });
+          const y = m * x + c * t;
+          return (
+            <React.Fragment key={x}>
+              <Seg unit={unit} x1={x} y1={m * x} x2={x} y2={y} colour={GOLD} width={5} opacity={t > 0 ? 1 : 0} />
+              <Dot unit={unit} x={x} y={y} colour={GOLD} label={t === 1 ? `(${x}, ${m * x + c})` : undefined} />
+            </React.Fragment>
+          );
+        })}
+        <Plot unit={unit} curve={unit.curve} colour={GOLD} progress={lineProg} />
+        <div
+          style={{
+            position: "absolute",
+            right: 30,
+            top: 30,
+            fontSize: 40,
+            fontWeight: 800,
+            color: GOLD,
+            opacity: interpolate(frame, [capAt, capAt + 14], [0, 1], {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            }),
+          }}
+        >
+          +{c} → up {c}
+        </div>
+      </Stage>
+    </AbsoluteFill>
+  );
+}
+
+// ---- line: beat 4 — the x/y table fires points onto the grid --------------
+function SceneLineTable({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const title = useEnter(4);
+  const m = unit.curve.m ?? 1;
+  const c = unit.curve.c ?? 0;
+  const rows = [0, 1, 2].map((x) => ({ x, y: m * x + c }));
+  const rowAt = Math.round(dur * 0.24);
+  const rowGap = Math.round(dur * 0.18);
+  const litRows = Math.max(0, Math.min(rows.length, Math.floor((frame - rowAt) / rowGap) + 1));
+  const joinAt = rowAt + rows.length * rowGap;
+  const prog = interpolate(frame, [joinAt, joinAt + 36], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 10 }}>
+      <Title text="Or build it from a table" enter={title} />
+      <div style={{ display: "flex", alignItems: "center", gap: 46 }}>
+        <XYTable rows={rows} colour={BLUE} litRows={litRows} />
+        <Stage>
+          <Axes unit={unit} />
+          {rows.map((r, i) => (
+            <Dot
+              key={r.x}
+              unit={unit}
+              x={r.x}
+              y={r.y}
+              colour={BLUE}
+              label={`(${r.x}, ${r.y})`}
+              opacity={i < litRows ? 1 : 0}
+            />
+          ))}
+          <Plot unit={unit} curve={unit.curve} colour={BLUE} progress={prog} />
+        </Stage>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+// ---- slope: beat 1 — name the parts of y = mx + b -------------------------
+function SceneSlopeName({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const title = useEnter(4);
+  const m = unit.curve.m ?? 1;
+  const c = unit.curve.c ?? 0;
+  const labelAt = Math.round(dur * 0.3);
+  const oursAt = Math.round(dur * 0.62);
+  const fade = (at: number) =>
+    interpolate(frame, [at, at + 14], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 42 }}>
+      <Title text="This form has a name" enter={title} />
+      <div style={{ fontSize: 130, fontWeight: 800, color: INK }}>
+        y = <span style={{ color: GREEN }}>m</span>x + <span style={{ color: GOLD }}>b</span>
+      </div>
+      <div style={{ display: "flex", gap: 90 }}>
+        <div style={{ fontSize: 54, fontWeight: 700, color: GREEN, opacity: fade(labelAt) }}>m = the slope</div>
+        <div style={{ fontSize: 54, fontWeight: 700, color: GOLD, opacity: fade(labelAt + 20) }}>
+          b = the y-intercept
+        </div>
+      </div>
+      <div style={{ fontSize: 66, fontWeight: 800, color: INK, opacity: fade(oursAt) }}>
+        {curveText(unit.curve)} → <span style={{ color: GREEN }}>m = {m}</span>,{" "}
+        <span style={{ color: GOLD }}>b = {c}</span>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+// ---- slope: beat 2 — find b where the line cuts the y axis ----------------
+function SceneSlopeIntercept({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const title = useEnter(4);
+  const c = unit.curve.c ?? 0;
+  const markAt = Math.round(dur * 0.45);
+  const pulse = 1 + 0.18 * Math.sin((frame - markAt) / 5);
+  const on = frame >= markAt;
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 10 }}>
+      <Title text="b: where it cuts the y axis" enter={title} />
+      <Stage>
+        <Axes unit={unit} />
+        <Plot unit={unit} curve={unit.curve} colour={BLUE} />
+        {/* the y axis glows while we hunt along it */}
+        <Seg unit={unit} x1={0} y1={unit.yMin} x2={0} y2={unit.yMax} colour={GOLD} width={3} dashed opacity={0.7} />
+        <Dot
+          unit={unit}
+          x={0}
+          y={c}
+          colour={GOLD}
+          size={on ? 26 * pulse : 0}
+          label={`(0, ${c})   b = ${c}`}
+        />
+      </Stage>
+    </AbsoluteFill>
+  );
+}
+
+// ---- slope: beat 3 — two labelled points and the rise/run triangle --------
+function SceneSlopePoints({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const title = useEnter(4);
+  const m = unit.curve.m ?? 1;
+  const c = unit.curve.c ?? 0;
+  const x1 = 1, x2 = 3;
+  const p1 = { x: x1, y: m * x1 + c };
+  const p2 = { x: x2, y: m * x2 + c };
+  const dotAt = Math.round(dur * 0.28);
+  const triAt = Math.round(dur * 0.62);
+  const fade = (at: number) =>
+    interpolate(frame, [at, at + 12], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const { sx, sy } = makeScale(unit);
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 10 }}>
+      <Title text="Pick two points on the line" enter={title} />
+      <Stage>
+        <Axes unit={unit} />
+        <Plot unit={unit} curve={unit.curve} colour={BLUE} />
+        <Dot unit={unit} x={p1.x} y={p1.y} colour={GREEN} size={26} label={`(x₁, y₁) = (${p1.x}, ${p1.y})`} opacity={fade(dotAt)} />
+        <Dot unit={unit} x={p2.x} y={p2.y} colour={GREEN} size={26} label={`(x₂, y₂) = (${p2.x}, ${p2.y})`} opacity={fade(dotAt + 24)} />
+        {/* run first, then rise — the triangle the formula will read from */}
+        <Seg unit={unit} x1={p1.x} y1={p1.y} x2={p2.x} y2={p1.y} colour={GOLD} width={5} opacity={fade(triAt)} />
+        <Seg unit={unit} x1={p2.x} y1={p1.y} x2={p2.x} y2={p2.y} colour={GOLD} width={5} dashed opacity={fade(triAt + 16)} />
+        <div style={{ position: "absolute", left: (sx(p1.x) + sx(p2.x)) / 2 - 80, top: sy(p1.y) + 12, fontSize: 32, fontWeight: 800, color: GOLD, opacity: fade(triAt) }}>
+          across {x2 - x1}
+        </div>
+        <div style={{ position: "absolute", left: sx(p2.x) + 14, top: (sy(p1.y) + sy(p2.y)) / 2 - 18, fontSize: 32, fontWeight: 800, color: GOLD, opacity: fade(triAt + 16) }}>
+          up {p2.y - p1.y}
+        </div>
+      </Stage>
+    </AbsoluteFill>
+  );
+}
+
+// ---- slope: beat 4 — the slope formula, computed step by step -------------
+function SceneSlopeFormula({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const title = useEnter(4);
+  const m = unit.curve.m ?? 1;
+  const c = unit.curve.c ?? 0;
+  const x1 = 1, x2 = 3;
+  const y1 = m * x1 + c, y2 = m * x2 + c;
+  const rise = y2 - y1, run = x2 - x1;
+  // Steps appear as spoken: formula → plug in → top → bottom → answer.
+  const stepAt = (k: number) => Math.round(dur * (0.16 + k * 0.16));
+  const fade = (k: number) =>
+    interpolate(frame, [stepAt(k), stepAt(k) + 12], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const row: React.CSSProperties = { fontSize: 72, fontWeight: 800, color: INK, whiteSpace: "nowrap" };
+  const frac = (top: string, bottom: string, colour: string) => (
+    <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", verticalAlign: "middle", margin: "0 14px" }}>
+      <span style={{ color: colour, padding: "0 10px" }}>{top}</span>
+      <span style={{ height: 5, alignSelf: "stretch", backgroundColor: INK }} />
+      <span style={{ color: colour, padding: "0 10px" }}>{bottom}</span>
+    </span>
+  );
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 34 }}>
+      <Title text="The slope formula" enter={title} />
+      <div style={{ ...row, opacity: fade(0) }}>m = {frac("y₂ − y₁", "x₂ − x₁", GREEN)}</div>
+      <div style={{ ...row, opacity: fade(1) }}>m = {frac(`${y2} − ${y1}`, `${x2} − ${x1}`, GREEN)}</div>
+      <div style={{ ...row, opacity: fade(2) }}>m = {frac(String(rise), String(run), GOLD)}</div>
+      <div style={{ ...row, fontSize: 96, color: GREEN, opacity: fade(3) }}>
+        m = {m} — up {m} for every 1 across
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+// ---- system: beat 1 — two equations, one puzzle ---------------------------
+function SceneSysAsk({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const title = useEnter(4);
+  const second = useEnter(Math.round(dur * 0.4));
+  const qOp = interpolate(frame, [Math.round(dur * 0.68), Math.round(dur * 0.68) + 14], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 44 }}>
+      <Title text="Two equations, one puzzle" enter={title} />
+      <EquationCard text={curveText(unit.curve)} colour={BLUE} size={110} enter={useEnter(16)} />
+      <EquationCard text={curveText(unit.curve2 ?? unit.curve)} colour={GOLD} size={110} enter={second} />
+      <div style={{ fontSize: 72, fontWeight: 800, color: GREEN, opacity: qOp }}>
+        one pair for BOTH?
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+/** Shared body for the two draw-a-line-from-its-table system beats. */
+function SysLineScene({
+  dur,
+  unit,
+  which,
+  titleText,
+}: SceneProps & { which: 1 | 2; titleText: string }) {
+  const frame = useCurrentFrame();
+  const title = useEnter(4);
+  const c1 = unit.curve;
+  const c2 = unit.curve2 ?? unit.curve;
+  const target = which === 1 ? c1 : c2;
+  const colour = which === 1 ? BLUE : GOLD;
+  const rows = [0, 1, 2].map((x) => ({ x, y: (target.m ?? 1) * x + (target.c ?? 0) }));
+  const rowAt = Math.round(dur * 0.2);
+  const rowGap = Math.round(dur * 0.16);
+  const litRows = Math.max(0, Math.min(rows.length, Math.floor((frame - rowAt) / rowGap) + 1));
+  const joinAt = rowAt + rows.length * rowGap;
+  const prog = interpolate(frame, [joinAt, joinAt + 36], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 10 }}>
+      <Title text={titleText} enter={title} />
+      <div style={{ display: "flex", alignItems: "center", gap: 40 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 22, alignItems: "center" }}>
+          <EquationCard text={curveText(target)} colour={colour} size={52} />
+          <XYTable rows={rows} colour={colour} litRows={litRows} />
+        </div>
+        <Stage>
+          <Axes unit={unit} />
+          {/* line one stays put while line two is drawn — never alone on screen */}
+          {which === 2 && <Plot unit={unit} curve={c1} colour={BLUE} />}
+          {rows.map((r, i) => (
+            <Dot key={r.x} unit={unit} x={r.x} y={r.y} colour={colour} label={`(${r.x}, ${r.y})`} opacity={i < litRows ? 1 : 0} />
+          ))}
+          <Plot unit={unit} curve={target} colour={colour} progress={prog} />
+        </Stage>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+function SceneSysLine1(props: SceneProps) {
+  return <SysLineScene {...props} which={1} titleText="Draw the first line — from its table" />;
+}
+function SceneSysLine2(props: SceneProps) {
+  return <SysLineScene {...props} which={2} titleText="Now the second, same grid" />;
+}
+
+// ---- system: beat 4 — the crossing ----------------------------------------
+function SceneSysCross({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const title = useEnter(4);
+  const p = lineIntersection(unit.curve, unit.curve2 ?? unit.curve);
+  const markAt = Math.round(dur * 0.3);
+  const pulse = 1 + 0.16 * Math.sin((frame - markAt) / 5);
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 10 }}>
+      <Title text="They cross exactly once" enter={title} />
+      <Stage>
+        <Axes unit={unit} />
+        <Plot unit={unit} curve={unit.curve} colour={BLUE} />
+        <Plot unit={unit} curve={unit.curve2 ?? unit.curve} colour={GOLD} />
+        {p && frame >= markAt && (
+          <Dot unit={unit} x={p.x} y={p.y} colour={GREEN} size={30 * pulse} label={`(${p.x}, ${p.y})`} />
+        )}
+      </Stage>
+    </AbsoluteFill>
+  );
+}
+
+// ---- system: beat 5 — substitute back and check ---------------------------
+function SceneSysCheck({ dur, unit }: SceneProps) {
+  const frame = useCurrentFrame();
+  const title = useEnter(4);
+  const c1 = unit.curve;
+  const c2 = unit.curve2 ?? unit.curve;
+  const p = lineIntersection(c1, c2);
+  const x = p?.x ?? 0;
+  const y = p?.y ?? 0;
+  const term = (m: number, xv: number) =>
+    m === 1 ? `${xv}` : m === -1 ? `−(${xv})` : `${m}(${xv})`;
+  const line = (c: Curve) => `${term(c.m ?? 1, x)} + ${c.c ?? 0} = ${y}`;
+  const fade = (at: number) =>
+    interpolate(frame, [at, at + 14], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const card: React.CSSProperties = {
+    fontSize: 84,
+    fontWeight: 800,
+    padding: "18px 44px",
+    borderRadius: 22,
+    backgroundColor: CREAM,
+  };
+  const tipAt = Math.round(dur * 0.66);
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 40 }}>
+      <Title text={`Check (${x}, ${y}) in both`} enter={title} />
+      <div style={{ ...card, color: BLUE, border: `5px solid ${BLUE}`, opacity: fade(Math.round(dur * 0.2)) }}>
+        {line(c1)} ✓
+      </div>
+      <div style={{ ...card, color: GOLD, border: `5px solid ${GOLD}`, opacity: fade(Math.round(dur * 0.44)) }}>
+        {line(c2)} ✓
+      </div>
+      <div style={{ fontSize: 50, color: GREEN, fontWeight: 700, opacity: fade(tipAt) }}>{unit.tip}</div>
+    </AbsoluteFill>
+  );
+}
+
 const SCENE_BODIES: Record<string, React.FC<SceneProps>> = {
   ask: SceneAsk,
   plot: ScenePlot,
   action: SceneAction,
   record: SceneRecord,
+  // linear build-up (line mode)
+  "line:simple": SceneLineSimple,
+  "line:stretch": SceneLineStretch,
+  "line:lift": SceneLineLift,
+  "line:table": SceneLineTable,
+  // slope-intercept
+  "slope:name": SceneSlopeName,
+  "slope:intercept": SceneSlopeIntercept,
+  "slope:points": SceneSlopePoints,
+  "slope:formula": SceneSlopeFormula,
+  // systems
+  "system:ask": SceneSysAsk,
+  "system:line1": SceneSysLine1,
+  "system:line2": SceneSysLine2,
+  "system:cross": SceneSysCross,
+  "system:check": SceneSysCheck,
 };
 
 export const GraphVideo: React.FC<GraphProps> = ({ unit: unitId, voice = DEFAULT_VOICE_KEY }) => {
@@ -814,7 +1364,7 @@ export const GraphVideo: React.FC<GraphProps> = ({ unit: unitId, voice = DEFAULT
       }}
     >
       {scenes.map((scene) => {
-        const Body = SCENE_BODIES[scene.id];
+        const Body = SCENE_BODIES[`${unit.mode}:${scene.id}`] ?? SCENE_BODIES[scene.id];
         return (
           <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
             {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
@@ -822,6 +1372,7 @@ export const GraphVideo: React.FC<GraphProps> = ({ unit: unitId, voice = DEFAULT
           </Sequence>
         );
       })}
+      <Brand />
     </AbsoluteFill>
   );
 };

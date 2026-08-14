@@ -17,6 +17,7 @@ import {
 } from "remotion";
 import { ratioSceneTimings } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
+import { Brand } from "./Brand";
 import { ratioUnitById, type RatioUnit } from "./units";
 
 export { FPS } from "./timeline";
@@ -410,6 +411,7 @@ export const RatioTableVideo: React.FC<RatioProps> = ({
           </Sequence>
         );
       })}
+      <Brand />
     </AbsoluteFill>
   );
 };

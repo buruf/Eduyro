@@ -22,6 +22,7 @@ import {
 } from "remotion";
 import { fractionBarSceneTimings } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
+import { Brand } from "./Brand";
 import { fractionBarUnitById, type FractionBarUnit } from "./units";
 
 export { FPS } from "./timeline";
@@ -540,6 +541,7 @@ export const FractionBarVideo: React.FC<FractionBarProps> = ({
           </Sequence>
         );
       })}
+      <Brand />
     </AbsoluteFill>
   );
 };

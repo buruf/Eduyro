@@ -21,6 +21,7 @@ import {
 } from "remotion";
 import { areaSceneTimings } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
+import { Brand } from "./Brand";
 import { areaUnitById, areaRegions, areaSides, type AreaUnit } from "./units";
 
 export { FPS } from "./timeline";
@@ -409,6 +410,7 @@ export const AreaVideo: React.FC<AreaProps> = ({ unit: unitId, voice = DEFAULT_V
           </Sequence>
         );
       })}
+      <Brand />
     </AbsoluteFill>
   );
 };

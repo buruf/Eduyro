@@ -59,5 +59,16 @@ export function speakable(raw: string): string {
     .replace(/[{}$\\]/g, "")
     .replace(/\s+/g, " ")
     .trim();
+  // Respell isolated variable letters as their letter-name homophones — a bare
+  // "y" token at 0.8 speed collapses toward "E" in ElevenLabs. Spoken text
+  // only; captions and screens never pass through here. Lowercase classes so
+  // "plus a constant C" survives, and never touch "a" (it's the article).
+  s = s
+    .replace(/\bmx\b/g, "m x") // the y = mx + b product, so both letters respell
+    .replace(/\bx\b/g, "ex")
+    .replace(/\by\b/g, "why")
+    .replace(/\bm\b/g, "em")
+    .replace(/\bb\b/g, "bee")
+    .replace(/\bc\b/g, "cee");
   return s;
 }

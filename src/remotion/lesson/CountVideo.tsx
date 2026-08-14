@@ -18,8 +18,9 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { countSceneTimings } from "./timeline";
+import { countSceneTimings, spokenNumberFrame } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
+import { Brand } from "./Brand";
 import { countUnitById, type CountUnit } from "./units-early";
 
 export { FPS } from "./timeline";
@@ -43,6 +44,7 @@ const STAGE_H = 640;
 interface SceneProps {
   dur: number;
   unit: CountUnit;
+  voice: string;
 }
 
 function useEnter(atFrame: number, durFrames = 14) {
@@ -173,20 +175,26 @@ function SceneAsk({ unit }: SceneProps) {
 }
 
 // ---- Scene 2: count the first ten, one at a time --------------------------
-function SceneCount({ dur, unit }: SceneProps) {
+function SceneCount({ dur, unit, voice }: SceneProps) {
   const frame = useCurrentFrame();
   const title = useEnter(4);
   const n = Math.min(unit.upTo, 10);
   const size = dotSize(unit.upTo);
-  // Dots land spread across the middle of the scene, matching the spoken
-  // count's pace as closely as an even spacing can.
+  // Each dot lands the moment the narrator SAYS its number — real word
+  // timestamps from the voice build. Even spacing was the old behaviour and
+  // it drifted badly (user-caught: dot 7 landing on "five"); it survives only
+  // as the fallback for clips that predate timestamp capture.
   const firstAt = Math.round(dur * 0.16);
   const lastAt = Math.round(dur * 0.86);
   const stepF = (lastAt - firstAt) / Math.max(1, n - 1);
-  const appeared = Array.from({ length: n }, (_, i) => firstAt + i * stepF).filter(
-    (t) => frame >= t,
-  ).length;
-  const lastTick = appeared > 0 ? firstAt + (appeared - 1) * stepF : null;
+  // Last occurrence: the line may SAY the target early ("counting to 10.
+  // 1… 2…"), and the counted number is always the later mention.
+  const dotAt = Array.from(
+    { length: n },
+    (_, i) => spokenNumberFrame(unit.id, voice, "count", i + 1, -1) ?? firstAt + i * stepF,
+  );
+  const appeared = dotAt.filter((t) => frame >= t).length;
+  const lastTick = appeared > 0 ? dotAt[appeared - 1] : null;
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 20 }}>
       <div
@@ -202,7 +210,7 @@ function SceneCount({ dur, unit }: SceneProps) {
       </div>
       <Stage>
         {Array.from({ length: n }, (_, i) => (
-          <Dot key={i} i={i} size={size} appearAt={firstAt + i * stepF} />
+          <Dot key={i} i={i} size={size} appearAt={dotAt[i]} />
         ))}
         <Ticker value={appeared} flashAt={lastTick} />
       </Stage>
@@ -211,7 +219,7 @@ function SceneCount({ dur, unit }: SceneProps) {
 }
 
 // ---- Scene 3: the structure ----------------------------------------------
-function SceneRows({ dur, unit }: SceneProps) {
+function SceneRows({ dur, unit, voice }: SceneProps) {
   const frame = useCurrentFrame();
   const title = useEnter(4);
   const size = dotSize(unit.upTo);
@@ -305,9 +313,13 @@ function SceneRows({ dur, unit }: SceneProps) {
     );
   }
 
-  // 50 / 100: rows sweep in whole, the decade count doing the talking.
+  // 50 / 100: rows sweep in whole, the decade count doing the talking — each
+  // row lands when its decade is SPOKEN ("20… 30… 40…"), with the old even
+  // spread as the no-timestamp fallback.
   const rows = unit.upTo / 10;
-  const rowAt = (r: number) => Math.round(dur * (0.14 + (r - 1) * (0.7 / Math.max(1, rows - 1))));
+  const rowAt = (r: number) =>
+    spokenNumberFrame(unit.id, voice, "rows", (r + 1) * 10) ??
+    Math.round(dur * (0.14 + (r - 1) * (0.7 / Math.max(1, rows - 1))));
   const litRows = 1 + Array.from({ length: rows - 1 }, (_, r) => rowAt(r + 1)).filter((t) => frame >= t).length;
   const lastTick = litRows > 1 ? rowAt(litRows - 1) : null;
   return (
@@ -398,10 +410,11 @@ export const CountVideo: React.FC<CountProps> = ({ unit: unitId, voice = DEFAULT
         return (
           <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
             {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-            <Body dur={scene.dur} unit={unit} />
+            <Body dur={scene.dur} unit={unit} voice={voice} />
           </Sequence>
         );
       })}
+      <Brand />
     </AbsoluteFill>
   );
 };

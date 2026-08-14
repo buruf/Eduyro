@@ -978,7 +978,7 @@ export const GRAPH_UNITS: GraphUnit[] = [
     mode: "slope",
     curve: { kind: "linear", m: 2, c: 1 },
     xMin: -2, xMax: 4, yMin: -4, yMax: 10,
-    tip: "m is the climb, c is where it starts",
+    tip: "m is the slope, b is the y-intercept",
   },
   {
     id: "cur-systems",

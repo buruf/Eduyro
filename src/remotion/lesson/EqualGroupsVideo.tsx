@@ -19,8 +19,9 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { sceneTimings } from "./timeline";
+import { sceneTimings, spokenNumberFrame } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
+import { Brand } from "./Brand";
 import { unitById, unitNumbers, type LessonUnit } from "./units";
 
 export { FPS } from "./timeline";
@@ -39,6 +40,7 @@ const MUTED = "#8A7A5E";
 
 interface SceneProps {
   dur: number;
+  voice: string;
   unit: LessonUnit;
 }
 
@@ -211,15 +213,24 @@ function SceneGroups({ dur, unit }: SceneProps) {
 }
 
 // ---- Scene 3: count them into an equation --------------------------------
-function SceneCount({ dur, unit }: SceneProps) {
+function SceneCount({ dur, unit, voice }: SceneProps) {
   const frame = useCurrentFrame();
   const title = useEnter(4);
   const { a, b, product, running } = unitNumbers(unit);
   // Each group stays labelled `a`, because that is what it holds. The running
   // total lives in the EQUATION, where it is a result rather than a label on a
   // group — under the groups it would read as "this group has 40".
-  const countAt = (g: number) => Math.round(dur * (0.14 + g * (0.5 / b)));
-  const multiplyAt = Math.round(dur * 0.82);
+  //
+  // A group lights exactly when its running total is SPOKEN ("5, 10, 15…") —
+  // first mention, since the same numbers recur later in the written sum. The
+  // even spread is the fallback for clips without timestamps.
+  const countAt = (g: number) =>
+    spokenNumberFrame(unit.id, voice, "count", running[g], 0) ??
+    Math.round(dur * (0.14 + g * (0.5 / b)));
+  // The × line flashes when the narrator reaches the product's LAST mention —
+  // the "= 20" that closes the written sum.
+  const multiplyAt =
+    spokenNumberFrame(unit.id, voice, "count", product, -1) ?? Math.round(dur * 0.82);
   const stage = Array.from({ length: b }, (_, g) => g).reduce(
     (n, g) => (frame >= countAt(g) ? g + 1 : n),
     0,
@@ -391,10 +402,11 @@ export const EqualGroupsVideo: React.FC<EqualGroupsProps> = ({
             {/* Voice and picture share this Sequence's clock, so the line
                 always starts exactly when its scene does. */}
             {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-            <Body dur={scene.dur} unit={unit} />
+            <Body dur={scene.dur} unit={unit} voice={voice} />
           </Sequence>
         );
       })}
+      <Brand />
     </AbsoluteFill>
   );
 };

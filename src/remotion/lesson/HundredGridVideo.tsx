@@ -19,6 +19,7 @@ import {
 } from "remotion";
 import { hundredGridSceneTimings } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
+import { Brand } from "./Brand";
 import { hundredGridUnitById, type HundredGridUnit } from "./units";
 
 export { FPS } from "./timeline";
@@ -474,6 +475,7 @@ export const HundredGridVideo: React.FC<HundredGridProps> = ({
           </Sequence>
         );
       })}
+      <Brand />
     </AbsoluteFill>
   );
 };

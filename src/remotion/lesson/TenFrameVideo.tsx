@@ -21,8 +21,9 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { tenFrameSceneTimings } from "./timeline";
+import { tenFrameSceneTimings, spokenNumberFrame } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
+import { Brand } from "./Brand";
 import { tenFrameUnitById, type TenFrameUnit } from "./units";
 
 export { FPS } from "./timeline";
@@ -79,6 +80,7 @@ const offStage = (from: { x: number; y: number }) => ({ x: from.x, y: STAGE_H + 
 
 interface SceneProps {
   dur: number;
+  voice: string;
   unit: TenFrameUnit;
 }
 
@@ -332,7 +334,7 @@ function SceneStrategy(props: SceneProps) {
  *  ones you added are the answer — subtraction as the distance between two
  *  numbers rather than as removal. The added dots stay green and get their own
  *  count, so "how far" is a thing on screen, not just a claim. */
-function SceneCountUp({ dur, unit }: SceneProps) {
+function SceneCountUp({ dur, unit, voice }: SceneProps) {
   const frame = useCurrentFrame();
   const title = useEnter(4);
   const gap = unit.x - unit.y; // the answer
@@ -341,10 +343,19 @@ function SceneCountUp({ dur, unit }: SceneProps) {
   const travel = 22;
   const stagger = 10; // slow: each added dot is one count
 
-  const added = Array.from({ length: gap }, (_, i) => addAt + i * stagger + travel * 0.8).filter(
+  // The narrator counts each added dot ("7… 8… 9"), so dot i lands on its
+  // spoken value. Last occurrence — the line names the target early ("up to
+  // 9"), and the counted 9 is the later one.
+  const addStart = Array.from({ length: gap }, (_, i) => {
+    const spoken = spokenNumberFrame(unit.id, voice, "strategy", unit.y + i + 1, -1);
+    return spoken !== null ? Math.max(4, Math.round(spoken - travel * 0.8)) : addAt + i * stagger;
+  });
+  const addLand = (i: number) => addStart[i] + travel * 0.8;
+
+  const added = Array.from({ length: gap }, (_, i) => addLand(i)).filter(
     (t) => frame >= t,
   ).length;
-  const lastTick = added > 0 ? addAt + (added - 1) * stagger + travel * 0.8 : null;
+  const lastTick = added > 0 ? addLand(added - 1) : null;
 
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 24 }}>
@@ -377,7 +388,7 @@ function SceneCountUp({ dur, unit }: SceneProps) {
               key={`g${i}`}
               from={loosePos(i)}
               to={to}
-              at={addAt + i * stagger}
+              at={addStart[i]}
               travel={travel}
               color={GREEN}
             />
@@ -485,7 +496,7 @@ function SceneTurnaround({ dur, unit }: SceneProps) {
 
 
 /** Addition: fill the ten first, then the rest — the make-ten move made literal. */
-function SceneAdd({ dur, unit }: SceneProps) {
+function SceneAdd({ dur, unit, voice }: SceneProps) {
   const frame = useCurrentFrame();
   const title = useEnter(4);
   const total = unit.x + unit.y;
@@ -501,18 +512,30 @@ function SceneAdd({ dur, unit }: SceneProps) {
   const travel = 26;
   const stagger = 9;
 
-  const filled = Array.from({ length: fillers }, (_, i) => fillAt + i * stagger + travel * 0.8).filter(
+  // On a count-on unit the narrator says each landing total ("9… 10… 11"), so
+  // every dot LANDS on its word. Other strategies keep the staged schedule.
+  const dotStart = Array.from({ length: unit.y }, (_, i) => {
+    const spoken =
+      unit.strategy === "count-on"
+        ? spokenNumberFrame(unit.id, voice, "strategy", unit.x + i + 1, -1)
+        : null;
+    if (spoken !== null) return Math.max(4, Math.round(spoken - travel * 0.8));
+    return i < fillers ? fillAt + i * stagger : restAt + (i - fillers) * stagger;
+  });
+  const landAt = (i: number) => dotStart[i] + travel * 0.8;
+
+  const filled = Array.from({ length: fillers }, (_, i) => landAt(i)).filter(
     (t) => frame >= t,
   ).length;
-  const rested = Array.from({ length: rest }, (_, i) => restAt + i * stagger + travel * 0.8).filter(
+  const rested = Array.from({ length: rest }, (_, i) => landAt(fillers + i)).filter(
     (t) => frame >= t,
   ).length;
   const value = unit.x + filled + rested;
   const lastTick =
     rested > 0
-      ? restAt + (rested - 1) * stagger + travel * 0.8
+      ? landAt(fillers + rested - 1)
       : filled > 0
-        ? fillAt + (filled - 1) * stagger + travel * 0.8
+        ? landAt(filled - 1)
         : null;
   const tenMade = fillers > 0 && filled >= fillers;
 
@@ -547,7 +570,7 @@ function SceneAdd({ dur, unit }: SceneProps) {
               key={`y${i}`}
               from={loosePos(i)}
               to={to}
-              at={isFiller ? fillAt + i * stagger : restAt + (i - fillers) * stagger}
+              at={dotStart[i]}
               travel={travel}
               color={isFiller ? GREEN : BLUE}
             />
@@ -568,7 +591,7 @@ function SceneAdd({ dur, unit }: SceneProps) {
 }
 
 /** Subtraction: take dots off, back down through the ten. */
-function SceneSubtract({ dur, unit }: SceneProps) {
+function SceneSubtract({ dur, unit, voice }: SceneProps) {
   const frame = useCurrentFrame();
   const title = useEnter(4);
   const extras = Math.max(0, unit.x - 10); // dots sitting above ten
@@ -580,18 +603,31 @@ function SceneSubtract({ dur, unit }: SceneProps) {
   const travel = 18;
   const stagger = 4;
 
-  const goneA = Array.from({ length: firstOff }, (_, i) => firstAt + i * stagger + travel * 0.4).filter(
+  // On a count-back unit the narrator says each remaining total ("8… 7… 6"),
+  // so the j-th dot leaves exactly on its word. Other strategies keep the
+  // two-batch schedule.
+  const removeStart = Array.from({ length: unit.y }, (_, j) => {
+    const spoken =
+      unit.strategy === "count-back"
+        ? spokenNumberFrame(unit.id, voice, "strategy", unit.x - j - 1, -1)
+        : null;
+    if (spoken !== null) return Math.max(4, Math.round(spoken - travel * 0.4));
+    return j < firstOff ? firstAt + j * stagger : secondAt + (j - firstOff) * stagger;
+  });
+  const goneAtF = (j: number) => removeStart[j] + travel * 0.4;
+
+  const goneA = Array.from({ length: firstOff }, (_, j) => goneAtF(j)).filter(
     (t) => frame >= t,
   ).length;
-  const goneB = Array.from({ length: thenOff }, (_, i) => secondAt + i * stagger + travel * 0.4).filter(
+  const goneB = Array.from({ length: thenOff }, (_, j) => goneAtF(firstOff + j)).filter(
     (t) => frame >= t,
   ).length;
   const value = unit.x - goneA - goneB;
   const lastTick =
     goneB > 0
-      ? secondAt + (goneB - 1) * stagger + travel * 0.4
+      ? goneAtF(firstOff + goneB - 1)
       : goneA > 0
-        ? firstAt + (goneA - 1) * stagger + travel * 0.4
+        ? goneAtF(goneA - 1)
         : null;
   const atTen = firstOff > 0 && goneA >= firstOff && goneB === 0;
 
@@ -624,7 +660,7 @@ function SceneSubtract({ dur, unit }: SceneProps) {
                 key={`d${i}`}
                 from={pos}
                 to={offStage(pos)}
-                at={firstAt + removalIdx * stagger}
+                at={removeStart[removalIdx]}
                 travel={travel + 6}
                 color={GREEN}
               />
@@ -636,7 +672,7 @@ function SceneSubtract({ dur, unit }: SceneProps) {
                 key={`d${i}`}
                 from={pos}
                 to={offStage(pos)}
-                at={secondAt + (removalIdx - firstOff) * stagger}
+                at={removeStart[removalIdx]}
                 travel={travel + 6}
                 color={BLUE}
               />
@@ -728,10 +764,11 @@ export const TenFrameVideo: React.FC<TenFrameProps> = ({
         return (
           <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
             {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-            <Body dur={scene.dur} unit={unit} />
+            <Body dur={scene.dur} unit={unit} voice={voice} />
           </Sequence>
         );
       })}
+      <Brand />
     </AbsoluteFill>
   );
 };

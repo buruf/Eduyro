@@ -12,7 +12,12 @@ import {
 } from "./units";
 import type { LessonLine } from "./script";
 
-export const GRAPH_LINE_IDS = ["ask", "plot", "action", "record"] as const;
+// Scene ids are no longer one fixed list: the linear modes carry five bespoke
+// beats (build-up, table, formula…) while the rest keep ask/plot/action/record.
+// The timeline derives each unit's ids from its own lines via graphLineIds().
+export function graphLineIds(u: GraphUnit): string[] {
+  return graphLines(u).map((l) => l.id);
+}
 
 /** Human-readable equation for a declared curve. */
 export function curveText(c: Curve): string {
@@ -20,7 +25,9 @@ export function curveText(c: Curve): string {
     case "linear": {
       const m = c.m ?? 1;
       const k = c.c ?? 0;
-      const mPart = m === 1 ? "x" : m === -1 ? "minus x" : `${m}x`;
+      // The − symbol renders correctly on screen AND speakable() reads it as
+      // "minus", so one string serves both the equation card and the voice.
+      const mPart = m === 1 ? "x" : m === -1 ? "−x" : `${m}x`;
       return k === 0 ? `y = ${mPart}` : `y = ${mPart} ${k < 0 ? "−" : "+"} ${Math.abs(k)}`;
     }
     case "quadratic": {
@@ -48,22 +55,32 @@ export function graphLines(u: GraphUnit): LessonLine[] {
 
   switch (u.mode) {
     case "line": {
+      // Build-up: y = x, stretch by m, lift by c, then the table. Every number
+      // spoken is computed from the unit so screen and voice cannot disagree.
       const m = u.curve.m ?? 1;
       const c = u.curve.c ?? 0;
-      const pts = [0, 1, 2].map((x) => `${x} gives ${m * x + c}`).join("… ");
+      const y0 = (x: number) => m * x; // before the lift
+      const y1 = (x: number) => m * x + c;
       return [
-        { id: "ask", text: `${eq}. What does that actually look like?` },
         {
-          id: "plot",
-          text: `Pick a few x values and work out y. ${pts}. Each pair is a point — so plot them.`,
+          id: "simple",
+          text: `Let's build ${eq} one piece at a time. Start with the simplest line there is: y equals x. Whatever number you pick… you get the same one back. Zero gives zero. One gives one. Two gives two.`,
         },
         {
-          id: "action",
-          text: `Now join them up… and they fall in a perfectly straight line. Every one of them. That's why it's called linear.`,
+          id: "stretch",
+          text: `Now multiply the x by ${m}. That's y equals ${m} x. Every height gets ${m} times bigger. One becomes ${y0(1)}… two becomes ${y0(2)}. Watch the line swing up — same start at zero, but steeper now.`,
+        },
+        {
+          id: "lift",
+          text: `Last piece: plus ${c}. Careful — adding ${c} doesn't push the line sideways. It lifts every point UP, by ${c}. So ${y0(0)}, ${y0(1)} and ${y0(2)} become ${y1(0)}, ${y1(1)} and ${y1(2)}. Same steepness… higher start.`,
+        },
+        {
+          id: "table",
+          text: `Here's how you'd plot it from scratch. Make a table. When x is 0, y is ${y1(0)}. When x is 1, y is ${y1(1)}. When x is 2, y is ${y1(2)}. Each row of the table is one point on the grid.`,
         },
         {
           id: "record",
-          text: `And here's the real point. Every single spot ON that line is a pair that makes the equation true. The line isn't a picture of the answer — it IS the answers, all of them at once. ${u.tip}.`,
+          text: `Join the dots — perfectly straight. And here's the big idea. Every point sitting on that line is a pair that makes the equation true. The line isn't a picture of the answer. It IS the answers — all of them at once. ${u.tip}.`,
         },
       ];
     }
@@ -71,43 +88,65 @@ export function graphLines(u: GraphUnit): LessonLine[] {
     case "slope": {
       const m = u.curve.m ?? 1;
       const c = u.curve.c ?? 0;
+      // Two labeled points for the slope formula, chosen on integer x.
+      const x1 = 1, x2 = 3;
+      const p1y = m * x1 + c, p2y = m * x2 + c;
+      const rise = p2y - p1y, run = x2 - x1;
       return [
-        { id: "ask", text: `${eq}. What do the ${m} and the ${c} actually do?` },
         {
-          id: "plot",
-          text: `Here's the line. Look where it cuts the y axis… at ${c}. That's your ${c}. It's the starting height.`,
+          id: "name",
+          text: `This shape of equation has a name: y equals m x plus b. The m is called the slope. The b is called the y-intercept. In ours — ${eq} — the slope is ${m}, and the y-intercept is ${c}.`,
         },
         {
-          id: "action",
-          text: `Now the ${m}. Step 1 across… and count how far up you had to go. ${m}. Step across again — up ${m} again. Every time, the same. That's the slope: ${m} up for every 1 across.`,
+          id: "intercept",
+          text: `The y-intercept is the easy one. It's where the line cuts through the y axis — where x is zero. Look… right there, at a height of ${c}. That's your b.`,
+        },
+        {
+          id: "points",
+          text: `Now the slope. Pick any two points on the line, and label them. Here's one at ${x1}, ${p1y}… and another at ${x2}, ${p2y}. The slope measures the climb between them.`,
+        },
+        {
+          id: "formula",
+          text: `Here's the slope formula: m equals y two minus y one… over x two minus x one. Plug in. Top: ${p2y} minus ${p1y} is ${rise}. Bottom: ${x2} minus ${x1} is ${run}. ${rise} over ${run}… the slope is ${m}. Up ${m} for every 1 across.`,
         },
         {
           id: "record",
-          text: `So in y = m x plus c, the m is the climb, and the c is where it starts. ${u.tip}.`,
+          text: `So read it at a glance. In ${eq}: the ${m} is m, the slope — the climb. The ${c} is b, the y-intercept — where the line starts. ${u.tip}.`,
         },
       ];
     }
 
     case "system": {
-      const p = lineIntersection(u.curve, u.curve2 ?? u.curve);
+      const c2 = u.curve2 ?? u.curve;
+      const p = lineIntersection(u.curve, c2);
       const x = p ? p.x : 0;
       const y = p ? p.y : 0;
+      const m1 = u.curve.m ?? 1, b1 = u.curve.c ?? 0;
+      const m2 = c2.m ?? 1, b2 = c2.c ?? 0;
+      const r1 = (xv: number) => m1 * xv + b1;
+      const r2 = (xv: number) => m2 * xv + b2;
+      const spokenCheck1 = `${m1} times ${x} plus ${b1}… ${r1(x)}`;
+      const spokenCheck2 = `${m2 < 0 ? `minus ${Math.abs(m2) === 1 ? "" : Math.abs(m2) + " times "}${x}` : `${m2} times ${x}`} plus ${b2}… ${r2(x)}`;
       return [
         {
           id: "ask",
-          text: `Two equations at once. ${eq}… and ${curveText(u.curve2 ?? u.curve)}. Can one pair of numbers satisfy both?`,
+          text: `Two equations, one puzzle. The first says ${eq}. The second says ${curveText(c2)}. Could ONE pair of numbers make both of them true… at the same time?`,
         },
         {
-          id: "plot",
-          text: `Draw the first one. Every point on this line works for the first equation.`,
+          id: "line1",
+          text: `Take the first one. Quick table: when x is 0, y is ${r1(0)}. At 1, it's ${r1(1)}. At 2, it's ${r1(2)}. Plot them, join them — the blue line is every pair the first equation allows.`,
         },
         {
-          id: "action",
-          text: `Now the second, on the same axes. Every point on THAT line works for the second equation. And look… they cross. Once. Right there.`,
+          id: "line2",
+          text: `Now the second equation, on the same grid. Its table: at 0, it's ${r2(0)}. At 1, it's ${r2(1)}. At 2… ${r2(2)}. Plot, join — the gold line is every pair the SECOND one allows. Did you spot that last row?`,
         },
         {
-          id: "record",
-          text: `That crossing sits on both lines at the same time, so it's the one pair that solves both. x is ${x}, y is ${y}. ${u.tip}.`,
+          id: "cross",
+          text: `The lines cross exactly once. That point sits on the blue line AND the gold line at the same time. x is ${x}… y is ${y}. The one pair that works for both.`,
+        },
+        {
+          id: "check",
+          text: `Always check. First equation: ${spokenCheck1}. Yes. Second: ${spokenCheck2} again. That's what solving a system means — find where the lines meet, because that pair works everywhere. ${u.tip}.`,
         },
       ];
     }
@@ -160,7 +199,7 @@ export function graphLines(u: GraphUnit): LessonLine[] {
         },
         {
           id: "action",
-          text: `Plot them, and watch what happens. It barely moves at first… and then it takes off. Every step across doubles it — so the bigger it gets, the faster it grows.`,
+          text: `Plot them, and watch what happens. It barely moves at first… and then it takes off. Every step across multiplies it by ${base} — so the bigger it gets, the faster it grows.`,
         },
         {
           id: "record",
@@ -171,8 +210,9 @@ export function graphLines(u: GraphUnit): LessonLine[] {
 
     case "log": {
       const base = u.curve.base ?? 2;
+      const cubed = base ** 3; // example is computed from the base, never hardcoded
       return [
-        { id: "ask", text: `${base} to the WHAT makes 8? That question is a logarithm.` },
+        { id: "ask", text: `${base} to the WHAT makes ${cubed}? That question is a logarithm.` },
         {
           id: "plot",
           text: `Here's ${base} to the x again — the doubling curve. Feed it an exponent, it gives you a value.`,
@@ -183,7 +223,7 @@ export function graphLines(u: GraphUnit): LessonLine[] {
         },
         {
           id: "record",
-          text: `So log base ${base} of 8 is 3… because ${base} cubed is 8. Same relationship — just asked the other way round. ${u.tip}.`,
+          text: `So log base ${base} of ${cubed} is 3… because ${base} cubed is ${cubed}. Same relationship — just asked the other way round. ${u.tip}.`,
         },
       ];
     }
@@ -212,7 +252,7 @@ export function graphLines(u: GraphUnit): LessonLine[] {
       const at = u.at ?? 1;
       const slope = 2 * (u.curve.a ?? 1) * at;
       return [
-        { id: "ask", text: `y = x². How steep is it at x = ${at}?` },
+        { id: "ask", text: `${eq}. How steep is it at x = ${at}?` },
         {
           id: "plot",
           text: `Tricky, because a curve's steepness keeps changing. So start with two points, and join them. THAT line's slope is easy to measure.`,

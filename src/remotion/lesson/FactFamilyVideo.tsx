@@ -24,6 +24,7 @@ import {
 } from "remotion";
 import { factFamilySceneTimings } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
+import { Brand } from "./Brand";
 import { factFamilyUnitById, factFamilyFacts, type FactFamilyUnit } from "./units";
 
 export { FPS } from "./timeline";
@@ -412,6 +413,7 @@ export const FactFamilyVideo: React.FC<FactFamilyProps> = ({
           </Sequence>
         );
       })}
+      <Brand />
     </AbsoluteFill>
   );
 };

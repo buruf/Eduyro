@@ -24,6 +24,7 @@ import {
 } from "remotion";
 import { dealingSceneTimings } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
+import { Brand } from "./Brand";
 import { dealingUnitById, dealingNumbers, type DealingUnit } from "./units";
 
 export { FPS } from "./timeline";
@@ -658,6 +659,7 @@ export const DealingVideo: React.FC<DealingProps> = ({
           </Sequence>
         );
       })}
+      <Brand />
     </AbsoluteFill>
   );
 };

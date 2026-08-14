@@ -58,6 +58,36 @@ interface VoiceClip {
   id: string;
   file: string;
   durationInSeconds: number;
+  /** When each NUMBER in the line is spoken — the sync points a scene can
+   *  animate against. Storing only numbers keeps the manifest small; they are
+   *  the only words a visual ever ticks with. */
+  numberTimes?: { n: number; s: number }[];
+}
+
+/** Fold ElevenLabs' per-character alignment into per-word start times, then
+ *  keep just the numeric words. "1… 2… 3" arrives as characters with times;
+ *  a word's start is its first character's start. */
+function numberTimesFrom(
+  chars: string[],
+  starts: number[],
+): { n: number; s: number }[] {
+  const out: { n: number; s: number }[] = [];
+  let word = "";
+  let wordStart = 0;
+  const flush = () => {
+    // Strip punctuation but keep an INNER dot (decimals). A sentence-ending
+    // "10." must still count — trailing/leading dots go.
+    const digits = word.replace(/[^\d.]/g, "").replace(/^\.+|\.+$/g, "");
+    if (digits && /^\d+(\.\d+)?$/.test(digits)) out.push({ n: Number(digits), s: Number(wordStart.toFixed(3)) });
+    word = "";
+  };
+  chars.forEach((c, i) => {
+    if (/\s/.test(c)) return flush();
+    if (!word) wordStart = starts[i] ?? 0;
+    word += c;
+  });
+  flush();
+  return out;
 }
 
 async function synthesize(text: string, voiceId: string) {
@@ -76,12 +106,16 @@ async function synthesize(text: string, voiceId: string) {
   if (!res.ok) throw new Error(`ElevenLabs ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const j = (await res.json()) as Record<string, any>;
   const mp3 = Buffer.from(j.audio_base64 ?? j.audio ?? "", "base64");
-  const ends: number[] =
-    j.alignment?.character_end_times_seconds ??
-    j.normalized_alignment?.character_end_times_seconds ??
-    [];
+  const align = j.alignment ?? j.normalized_alignment ?? {};
+  const chars: string[] = align.characters ?? [];
+  const starts: number[] = align.character_start_times_seconds ?? [];
+  const ends: number[] = align.character_end_times_seconds ?? [];
   if (!mp3.length) throw new Error("empty audio returned");
-  return { mp3, duration: ends.length ? ends[ends.length - 1] : 0 };
+  return {
+    mp3,
+    duration: ends.length ? ends[ends.length - 1] : 0,
+    numberTimes: numberTimesFrom(chars, starts),
+  };
 }
 
 // Merge into whatever already exists — building one unit must never drop
@@ -128,12 +162,13 @@ async function main() {
         // Normalise notation to what a teacher would SAY before synthesis — the
         // app's TTS route does this, and skipping it here made the video voice
         // read "4 × 7" as "4 ex 7".
-        const { mp3, duration } = await synthesize(speakable(line.text), voiceId);
+        const { mp3, duration, numberTimes } = await synthesize(speakable(line.text), voiceId);
         writeFileSync(join(outDir, `${line.id}.mp3`), mp3);
         clips.push({
           id: line.id,
           file: `lesson-voice/${unit.id}/${voice.key}/${line.id}.mp3`,
           durationInSeconds: Number(duration.toFixed(3)),
+          ...(numberTimes.length ? { numberTimes } : {}),
         });
         totalSeconds += duration;
         console.log(`${duration.toFixed(1)}s`);
@@ -149,6 +184,8 @@ async function main() {
     "  id: string;",
     "  file: string; // relative to public/",
     "  durationInSeconds: number;",
+    "  /** Start time of each number the narrator says — sync points for scenes. */",
+    "  numberTimes?: { n: number; s: number }[];",
     "}",
     "",
     "/** unit id → voice key → that voice's clips for the unit. */",

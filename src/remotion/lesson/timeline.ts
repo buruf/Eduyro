@@ -10,7 +10,8 @@
 // lines, and two voices read the same script at very different speeds. Each
 // combination therefore gets its own render and its own total duration.
 import { LINE_IDS, COLUMN_LINE_IDS, TEN_FRAME_LINE_IDS, DEALING_LINE_IDS, FACT_FAMILY_LINE_IDS, AREA_LINE_IDS, COUNT_LINE_IDS, COMPARE_LINE_IDS, NUMBER_LINE_LINE_IDS, FRACTION_BAR_LINE_IDS, HUNDRED_GRID_LINE_IDS, RATIO_LINE_IDS, BALANCE_LINE_IDS } from "./script";
-import { GRAPH_LINE_IDS } from "./script-graph";
+import { graphLineIds } from "./script-graph";
+import { graphUnitById } from "./units";
 import { CLIPS_BY_UNIT } from "./voice-manifest";
 import { DEFAULT_VOICE_KEY } from "./voices";
 
@@ -27,6 +28,25 @@ const MIN_SECONDS: Record<string, number> = {
 
 /** Silence after a line finishes, so scenes don't cut on the last syllable. */
 const TAIL_SECONDS = 0.8;
+
+/** Frame (scene-local) at which the narrator says number `n` in a scene's
+ *  line — the k-th time she says it, for lines that repeat a number. Null when
+ *  the clip predates timestamp capture, so callers keep an even-spacing
+ *  fallback rather than silently animating at frame 0. */
+export function spokenNumberFrame(
+  unitId: string,
+  voiceKey: string,
+  sceneId: string,
+  n: number,
+  occurrence = 0,
+): number | null {
+  const clip = CLIPS_BY_UNIT[unitId]?.[voiceKey]?.find((c) => c.id === sceneId);
+  const hits = clip?.numberTimes?.filter((t) => t.n === n) ?? [];
+  // -1 = last occurrence. The count lines mention their target up front
+  // ("counting to 10. 1… 2…"), so the COUNTED ten is the last "10", not the first.
+  const hit = occurrence < 0 ? hits[hits.length - 1] : hits[occurrence];
+  return hit ? Math.round(hit.s * FPS) : null;
+}
 
 export interface SceneTiming {
   id: string;
@@ -305,11 +325,14 @@ export function balanceTotalFrames(unitId: string, voiceKey: string = DEFAULT_VO
   return balanceSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }
 
-/** Scene timing for the coordinate-graph template. */
+/** Scene timing for the coordinate-graph template. Minimums stay BELOW every
+ *  spoken clip length so the audio, not the floor, decides scene length; the
+ *  bespoke linear-mode beats (simple/stretch/…/check) fall through to the
+ *  6-second default in earlyTimings. */
 const GRAPH_MIN_SECONDS: Record<string, number> = { ask: 4, plot: 9, action: 13, record: 6 };
 
 export function graphSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
-  return earlyTimings(GRAPH_LINE_IDS, GRAPH_MIN_SECONDS, unitId, voiceKey);
+  return earlyTimings(graphLineIds(graphUnitById(unitId)), GRAPH_MIN_SECONDS, unitId, voiceKey);
 }
 export function graphTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return graphSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);

@@ -16,8 +16,9 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { numberLineSceneTimings } from "./timeline";
+import { numberLineSceneTimings, spokenNumberFrame } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
+import { Brand } from "./Brand";
 import { numberLineUnitById, numberLineValues, type NumberLineUnit } from "./units-early";
 
 export { FPS } from "./timeline";
@@ -43,6 +44,7 @@ const LINE_X1 = STAGE_W - 90;
 
 interface SceneProps {
   dur: number;
+  voice: string;
   unit: NumberLineUnit;
 }
 
@@ -251,7 +253,7 @@ function SceneLine({ dur, unit }: SceneProps) {
 }
 
 // ---- Scene 3: hop to the gap ----------------------------------------------
-function SceneHop({ dur, unit }: SceneProps) {
+function SceneHop({ dur, unit, voice }: SceneProps) {
   const frame = useCurrentFrame();
   const n = numberLineValues(unit);
   const title = useEnter(4);
@@ -259,7 +261,14 @@ function SceneHop({ dur, unit }: SceneProps) {
   const hopFrames = 24;
   const hopGap = 16;
   const firstAt = Math.round(dur * 0.18);
-  const hopStart = (h: number) => firstAt + h * (hopFrames + hopGap);
+  // Each hop LANDS as its value is spoken ("Hop along… 7… 8…"), so the hop
+  // begins hopFrames earlier. Even spacing is the no-timestamp fallback.
+  const hopStart = (h: number) => {
+    const spoken = spokenNumberFrame(unit.id, voice, "hop", n.values[h + 1], 0);
+    return spoken !== null
+      ? Math.max(6, spoken - hopFrames)
+      : firstAt + h * (hopFrames + hopGap);
+  };
 
   // Dot position: piecewise across hops, with a small arc.
   let dotX = xOf(unit, unit.start);
@@ -399,10 +408,11 @@ export const NumberLineVideo: React.FC<NumberLineProps> = ({
         return (
           <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
             {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-            <Body dur={scene.dur} unit={unit} />
+            <Body dur={scene.dur} unit={unit} voice={voice} />
           </Sequence>
         );
       })}
+      <Brand />
     </AbsoluteFill>
   );
 };
