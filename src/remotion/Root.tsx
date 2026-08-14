@@ -8,7 +8,7 @@
 // chosen combination's clips rather than fixed.
 import { Composition } from "remotion";
 import { EqualGroupsVideo, FPS } from "./lesson/EqualGroupsVideo";
-import { totalFrames, columnTotalFrames, tenFrameTotalFrames, dealingTotalFrames, factFamilyTotalFrames, areaTotalFrames, countTotalFrames, compareTotalFrames, numberLineTotalFrames, fractionBarTotalFrames, hundredGridTotalFrames, ratioTotalFrames, balanceTotalFrames, graphTotalFrames, functionTotalFrames, trigTotalFrames } from "./lesson/timeline";
+import { totalFrames, columnTotalFrames, tenFrameTotalFrames, dealingTotalFrames, factFamilyTotalFrames, areaTotalFrames, countTotalFrames, compareTotalFrames, numberLineTotalFrames, fractionBarTotalFrames, hundredGridTotalFrames, ratioTotalFrames, balanceTotalFrames, graphTotalFrames, functionTotalFrames, trigTotalFrames, polyTotalFrames } from "./lesson/timeline";
 import { DEFAULT_VOICE_KEY } from "./lesson/voices";
 import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, RATIO_UNITS, BALANCE_UNITS, GRAPH_UNITS } from "./lesson/units";
 import { ColumnVideo } from "./lesson/ColumnVideo";
@@ -28,6 +28,8 @@ import { FunctionMachineVideo } from "./lesson/FunctionMachineVideo";
 import { FUNCTION_UNITS } from "./lesson/units-functions";
 import { TrigVideo } from "./lesson/TrigVideo";
 import { TRIG_UNITS } from "./lesson/units-trig";
+import { PolyVideo } from "./lesson/PolyVideo";
+import { POLY_UNITS } from "./lesson/units-poly";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -206,6 +208,17 @@ export const RemotionRoot: React.FC = () => {
       defaultProps={{ unit: TRIG_UNITS[0].id, voice: DEFAULT_VOICE_KEY }}
       calculateMetadata={({ props }) => ({
         durationInFrames: trigTotalFrames(props.unit, props.voice),
+      })}
+    />
+    <Composition
+      id="Poly"
+      component={PolyVideo}
+      fps={FPS}
+      width={1920}
+      height={1080}
+      defaultProps={{ unit: POLY_UNITS[0].id, voice: DEFAULT_VOICE_KEY }}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: polyTotalFrames(props.unit, props.voice),
       })}
     />
     </>

@@ -15,6 +15,8 @@ import { graphUnitById } from "./units";
 import { functionLineIds } from "./script-functions";
 import { trigLineIds } from "./script-trig";
 import { trigUnitById } from "./units-trig";
+import { polyLineIds } from "./script-poly";
+import { polyUnitById } from "./units-poly";
 import { functionUnitById } from "./units-functions";
 import { CLIPS_BY_UNIT } from "./voice-manifest";
 import { DEFAULT_VOICE_KEY } from "./voices";
@@ -358,6 +360,16 @@ export function trigSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOIC
 }
 export function trigTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return trigSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the polynomial template (M12). */
+const POLY_MIN_SECONDS: Record<string, number> = { ask: 4, work: 8, twist: 6, record: 4 };
+
+export function polySceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
+  return earlyTimings(polyLineIds(polyUnitById(unitId)), POLY_MIN_SECONDS, unitId, voiceKey);
+}
+export function polyTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return polySceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }
 export function graphTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return graphSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);

@@ -45,6 +45,8 @@ import { FUNCTION_UNITS } from "./units-functions";
 import { functionLines } from "./script-functions";
 import { TRIG_UNITS } from "./units-trig";
 import { trigLines } from "./script-trig";
+import { POLY_UNITS } from "./units-poly";
+import { polyLines } from "./script-poly";
 
 export interface RegisteredUnit {
   id: string;
@@ -72,6 +74,7 @@ export const ALL_LESSON_UNITS: RegisteredUnit[] = [
   ...GRAPH_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Graph", lines: () => graphLines(u) })),
   ...FUNCTION_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "FunctionMachine", lines: () => functionLines(u) })),
   ...TRIG_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Trig", lines: () => trigLines(u) })),
+  ...POLY_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Poly", lines: () => polyLines(u) })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Count", lines: () => countLines(u) })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Compare", lines: () => compareLines(u) })),
   ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "NumberLine", lines: () => numberLineLines(u) })),
