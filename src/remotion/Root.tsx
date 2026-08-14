@@ -8,7 +8,7 @@
 // chosen combination's clips rather than fixed.
 import { Composition } from "remotion";
 import { EqualGroupsVideo, FPS } from "./lesson/EqualGroupsVideo";
-import { totalFrames, columnTotalFrames, tenFrameTotalFrames, dealingTotalFrames, factFamilyTotalFrames, areaTotalFrames, countTotalFrames, compareTotalFrames, numberLineTotalFrames, fractionBarTotalFrames, hundredGridTotalFrames, ratioTotalFrames, balanceTotalFrames, graphTotalFrames } from "./lesson/timeline";
+import { totalFrames, columnTotalFrames, tenFrameTotalFrames, dealingTotalFrames, factFamilyTotalFrames, areaTotalFrames, countTotalFrames, compareTotalFrames, numberLineTotalFrames, fractionBarTotalFrames, hundredGridTotalFrames, ratioTotalFrames, balanceTotalFrames, graphTotalFrames, functionTotalFrames } from "./lesson/timeline";
 import { DEFAULT_VOICE_KEY } from "./lesson/voices";
 import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, RATIO_UNITS, BALANCE_UNITS, GRAPH_UNITS } from "./lesson/units";
 import { ColumnVideo } from "./lesson/ColumnVideo";
@@ -24,6 +24,8 @@ import { HundredGridVideo } from "./lesson/HundredGridVideo";
 import { RatioTableVideo } from "./lesson/RatioTableVideo";
 import { BalanceVideo } from "./lesson/BalanceVideo";
 import { GraphVideo } from "./lesson/GraphVideo";
+import { FunctionMachineVideo } from "./lesson/FunctionMachineVideo";
+import { FUNCTION_UNITS } from "./lesson/units-functions";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -180,6 +182,17 @@ export const RemotionRoot: React.FC = () => {
       defaultProps={{ unit: GRAPH_UNITS[0].id, voice: DEFAULT_VOICE_KEY }}
       calculateMetadata={({ props }) => ({
         durationInFrames: graphTotalFrames(props.unit, props.voice),
+      })}
+    />
+    <Composition
+      id="FunctionMachine"
+      component={FunctionMachineVideo}
+      fps={FPS}
+      width={1920}
+      height={1080}
+      defaultProps={{ unit: FUNCTION_UNITS[0].id, voice: DEFAULT_VOICE_KEY }}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: functionTotalFrames(props.unit, props.voice),
       })}
     />
     </>

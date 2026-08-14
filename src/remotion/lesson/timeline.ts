@@ -12,6 +12,8 @@
 import { LINE_IDS, COLUMN_LINE_IDS, TEN_FRAME_LINE_IDS, DEALING_LINE_IDS, FACT_FAMILY_LINE_IDS, AREA_LINE_IDS, COUNT_LINE_IDS, COMPARE_LINE_IDS, NUMBER_LINE_LINE_IDS, FRACTION_BAR_LINE_IDS, HUNDRED_GRID_LINE_IDS, RATIO_LINE_IDS, BALANCE_LINE_IDS } from "./script";
 import { graphLineIds } from "./script-graph";
 import { graphUnitById } from "./units";
+import { functionLineIds } from "./script-functions";
+import { functionUnitById } from "./units-functions";
 import { CLIPS_BY_UNIT } from "./voice-manifest";
 import { DEFAULT_VOICE_KEY } from "./voices";
 
@@ -333,6 +335,17 @@ const GRAPH_MIN_SECONDS: Record<string, number> = { ask: 4, plot: 9, action: 13,
 
 export function graphSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
   return earlyTimings(graphLineIds(graphUnitById(unitId)), GRAPH_MIN_SECONDS, unitId, voiceKey);
+}
+
+/** Scene timing for the function-machine template (M14). Fixed four-beat
+ *  shape (ask/work/twist/record); minimums stay below every spoken clip. */
+const FUNCTION_MIN_SECONDS: Record<string, number> = { ask: 4, work: 8, twist: 6, record: 4 };
+
+export function functionSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
+  return earlyTimings(functionLineIds(functionUnitById(unitId)), FUNCTION_MIN_SECONDS, unitId, voiceKey);
+}
+export function functionTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return functionSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }
 export function graphTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return graphSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);

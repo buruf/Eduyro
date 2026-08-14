@@ -52,6 +52,7 @@ export function speakable(raw: string): string {
     .replace(/≠/g, " is not equal to ")
     .replace(/\s*=\s*/g, " equals ")
     .replace(/×/g, " times ").replace(/÷/g, " divided by ")
+    .replace(/\s\/\s/g, " divided by ") // spaced slash: "1 / (x − 2)"
     .replace(/−/g, " minus ")
     .replace(/([0-9a-zA-Z])\s*-\s*([0-9])/g, "$1 minus $2")
     .replace(/\s*\+\s*/g, " plus ")
@@ -64,6 +65,12 @@ export function speakable(raw: string): string {
   // only; captions and screens never pass through here. Lowercase classes so
   // "plus a constant C" survives, and never touch "a" (it's the article).
   s = s
+    // Function notation reads as words: "f(x)" → "f of x", "g(f(2))" unwraps
+    // one level per pass (two passes covers composition depth).
+    .replace(/\b([fgh])\s*\(\s*([^()]+)\)/g, "$1 of $2")
+    .replace(/\b([fgh])\s*\(\s*([^()]+)\)/g, "$1 of $2")
+    .replace(/\bf\b/g, "eff")
+    .replace(/\bg\b/g, "jee")
     .replace(/\bmx\b/g, "m x") // the y = mx + b product, so both letters respell
     .replace(/\bx\b/g, "ex")
     .replace(/\by\b/g, "why")
