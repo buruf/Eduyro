@@ -54,7 +54,6 @@ export async function GET(
             where: { status: "IN_PROGRESS" },
             include: { level: { include: { subject: true, skills: { orderBy: { sortOrder: "asc" } } } } },
             orderBy: { updatedAt: "desc" },
-            take: 1,
           },
         },
       });
@@ -65,6 +64,17 @@ export async function GET(
       const isParent  = student.parentLinks.some((l) => l.parent.userId === ctx.userId);
       if (!isStudent && !isParent) return forbidden();
 
+      // The daily print is the pencil-and-paper MATH product. A multi-subject
+      // child has several IN_PROGRESS rows, and "most recently updated" made
+      // the printed subject an accident of activity order — reading practice
+      // in the evening flipped the next print to sight words. Prefer Math
+      // whenever it's active; other subjects print only when it isn't.
+      const activeProgress =
+        student.progress.find((p) => p.level.subject.slug === "MATH") ??
+        student.progress[0] ??
+        null;
+      const preferredSlug = activeProgress?.level.subject.slug ?? null;
+
       const existing = await db.dailyPacket.findUnique({
         where: { studentId_date: { studentId, date: dateUTC } },
       });
@@ -74,15 +84,17 @@ export async function GET(
         return ok({ packet: null, date: dateStr, fresh: false, reason: "skipped" });
       }
 
-      if (existing) {
+      // A cached packet in the wrong subject (created before the Math
+      // preference existed) is regenerated rather than served all day.
+      const staleSubject = existing && preferredSlug && existing.subjectSlug !== preferredSlug;
+
+      if (existing && !staleSubject) {
         await db.dailyPacket.update({
           where: { id: existing.id },
           data:  { printCount: { increment: 1 } },
         });
         return ok({ packet: existing, date: dateStr, fresh: false });
       }
-
-      const activeProgress = student.progress[0] ?? null;
       if (!activeProgress) {
         return ok({ packet: null, date: dateStr, fresh: false, reason: "no_placement" });
       }
@@ -121,22 +133,24 @@ export async function GET(
         return { sheetNumber: i + 1, worksheetId: s.worksheetId, title: s.title, problems: cleaned.problems, answerKey: cleaned.answerKey };
       });
 
-      const packet = await db.dailyPacket.create({
-        data: {
-          studentId,
-          date:             dateUTC,
-          levelId:          level.id,
-          levelCode:        level.code,
-          levelName:        level.name,
-          // Label the packet with the CURRENT lesson (matches what's printed),
-          // falling back to the level's first skill for legacy rows.
-          skillName:        toPrint[0]?.skillName ?? skill.name,
-          subjectSlug:      subject.slug,
-          sheets:           sheets as any,
-          problemsPerSheet: sheets[0]?.problems?.length ?? 30,
-          timeLimitMinutes: level.timeLimitMinutes,
-          printCount:       1,
-        },
+      const fields = {
+        levelId:          level.id,
+        levelCode:        level.code,
+        levelName:        level.name,
+        // Label the packet with the CURRENT lesson (matches what's printed),
+        // falling back to the level's first skill for legacy rows.
+        skillName:        toPrint[0]?.skillName ?? skill.name,
+        subjectSlug:      subject.slug,
+        sheets:           sheets as any,
+        problemsPerSheet: sheets[0]?.problems?.length ?? 30,
+        timeLimitMinutes: level.timeLimitMinutes,
+      };
+      // Upsert, not create: a stale wrong-subject row for today is replaced in
+      // place, keeping its printCount history.
+      const packet = await db.dailyPacket.upsert({
+        where:  { studentId_date: { studentId, date: dateUTC } },
+        create: { studentId, date: dateUTC, ...fields, printCount: 1 },
+        update: { ...fields, printCount: { increment: 1 } },
       });
 
       return ok({ packet, date: dateStr, fresh: true });
