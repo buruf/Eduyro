@@ -64,39 +64,48 @@ export async function GET(
       const isParent  = student.parentLinks.some((l) => l.parent.userId === ctx.userId);
       if (!isStudent && !isParent) return forbidden();
 
-      // The daily print is the pencil-and-paper MATH product. A multi-subject
-      // child has several IN_PROGRESS rows, and "most recently updated" made
-      // the printed subject an accident of activity order — reading practice
-      // in the evening flipped the next print to sight words. Prefer Math
-      // whenever it's active; other subjects print only when it isn't.
-      const activeProgress =
-        student.progress.find((p) => p.level.subject.slug === "MATH") ??
-        student.progress[0] ??
-        null;
-      const preferredSlug = activeProgress?.level.subject.slug ?? null;
+      // The print is per SUBJECT, chosen by the caller (?subject=READING).
+      // Without the parameter, Math is the default when active — the paper
+      // packet is primarily the pencil-and-paper math product. The old
+      // behaviour (most-recently-updated progress row) made the printed
+      // subject an accident of activity order.
+      const requestedSlug = req.nextUrl.searchParams.get("subject")?.toUpperCase() ?? null;
+      const availableSubjects = student.progress.map((p) => ({
+        slug: p.level.subject.slug,
+        name: p.level.subject.name,
+      }));
+      const activeProgress = requestedSlug
+        ? (student.progress.find((p) => p.level.subject.slug === requestedSlug) ?? null)
+        : (student.progress.find((p) => p.level.subject.slug === "MATH") ??
+           student.progress[0] ??
+           null);
+      if (!activeProgress) {
+        return ok({ packet: null, date: dateStr, fresh: false, reason: "no_placement", availableSubjects });
+      }
+      const chosenSlug = activeProgress.level.subject.slug;
 
-      const existing = await db.dailyPacket.findUnique({
-        where: { studentId_date: { studentId, date: dateUTC } },
+      // Parent excused this day — a rest day rests the whole child, so ANY
+      // skipped row for the date blocks every subject's print.
+      const skippedDay = await db.dailyPacket.findFirst({
+        where: { studentId, date: dateUTC, skipped: true },
+        select: { id: true },
       });
-
-      // Parent excused this day — serve a rest-day signal, not empty work.
-      if (existing?.skipped) {
-        return ok({ packet: null, date: dateStr, fresh: false, reason: "skipped" });
+      if (skippedDay) {
+        return ok({ packet: null, date: dateStr, fresh: false, reason: "skipped", availableSubjects });
       }
 
-      // A cached packet in the wrong subject (created before the Math
-      // preference existed) is regenerated rather than served all day.
-      const staleSubject = existing && preferredSlug && existing.subjectSlug !== preferredSlug;
+      // One cached packet per (student, date, subject) — printing Reading can
+      // never hide or replace the day's Math packet.
+      const existing = await db.dailyPacket.findUnique({
+        where: { studentId_date_subjectSlug: { studentId, date: dateUTC, subjectSlug: chosenSlug } },
+      });
 
-      if (existing && !staleSubject) {
+      if (existing) {
         await db.dailyPacket.update({
           where: { id: existing.id },
           data:  { printCount: { increment: 1 } },
         });
-        return ok({ packet: existing, date: dateStr, fresh: false });
-      }
-      if (!activeProgress) {
-        return ok({ packet: null, date: dateStr, fresh: false, reason: "no_placement" });
+        return ok({ packet: existing, date: dateStr, fresh: false, availableSubjects });
       }
 
       const level   = activeProgress.level;
@@ -145,15 +154,15 @@ export async function GET(
         problemsPerSheet: sheets[0]?.problems?.length ?? 30,
         timeLimitMinutes: level.timeLimitMinutes,
       };
-      // Upsert, not create: a stale wrong-subject row for today is replaced in
-      // place, keeping its printCount history.
+      // Upsert on the per-subject key: concurrent first prints can't collide,
+      // and a pre-migration row for the same subject is refreshed in place.
       const packet = await db.dailyPacket.upsert({
-        where:  { studentId_date: { studentId, date: dateUTC } },
+        where:  { studentId_date_subjectSlug: { studentId, date: dateUTC, subjectSlug: subject.slug } },
         create: { studentId, date: dateUTC, ...fields, printCount: 1 },
         update: { ...fields, printCount: { increment: 1 } },
       });
 
-      return ok({ packet, date: dateStr, fresh: true });
+      return ok({ packet, date: dateStr, fresh: true, availableSubjects });
     } catch (error) {
       return handleRouteError(error);
     }

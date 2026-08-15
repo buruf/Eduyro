@@ -129,9 +129,12 @@ export async function DELETE(req: NextRequest, { params }: { params: { studentId
       const dateStr = new URL(req.url).searchParams.get("date");
       if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return err("date query param (yyyy-MM-dd) required", 400);
       const d = dateUTC(new Date(`${dateStr}T00:00:00.000Z`));
-      const packet = await db.dailyPacket.findUnique({ where: { studentId_date: { studentId: params.studentId, date: d } }, select: { id: true, skipped: true } });
-      if (!packet || !packet.skipped) return notFound("Skipped session");
-      await db.dailyPacket.delete({ where: { id: packet.id } });
+      // Packets are keyed per subject now; a rest day may have marker rows for
+      // any subject, so unskip clears every skipped row on that date.
+      const removed = await db.dailyPacket.deleteMany({
+        where: { studentId: params.studentId, date: d, skipped: true },
+      });
+      if (removed.count === 0) return notFound("Skipped session");
       return ok({ unskipped: dateStr });
     } catch (error) {
       return handleRouteError(error);

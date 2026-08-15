@@ -59,17 +59,22 @@ export async function GET(
         if (!linkedTeacher) return forbidden();
       }
 
-      const tz = new URL(req.url).searchParams.get("tz") ?? "UTC";
+      const search = new URL(req.url).searchParams;
+      const tz = search.get("tz") ?? "UTC";
+      // The PDF layout only exists for math, so MATH is the only sensible
+      // default; the param keeps the contract explicit for future layouts.
+      const subjectSlug = search.get("subject")?.toUpperCase() ?? "MATH";
       const dateUTC = todayUTC(tz);
 
-      // Today's packet (created by the daily-packet GET the print page calls
-      // first); fall back to the most recent one so the link never dead-ends.
+      // Today's packet for THIS subject (created by the daily-packet GET the
+      // print page calls first); fall back to the subject's most recent one so
+      // the link never dead-ends.
       const packet =
         (await db.dailyPacket.findUnique({
-          where: { studentId_date: { studentId: params.id, date: dateUTC } },
+          where: { studentId_date_subjectSlug: { studentId: params.id, date: dateUTC, subjectSlug } },
         })) ??
         (await db.dailyPacket.findFirst({
-          where: { studentId: params.id },
+          where: { studentId: params.id, subjectSlug },
           orderBy: { date: "desc" },
         }));
 

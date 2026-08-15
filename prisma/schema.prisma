@@ -1070,7 +1070,7 @@ model DailyPacket {
 
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  @@unique([studentId, date])
+  @@unique([studentId, date, subjectSlug])
   @@index([studentId])
   @@index([date])
 }

@@ -3,7 +3,7 @@
 import { MathText } from "@/components/MathText";
 
 import { useEffect, useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BrandLogo } from "@/components/layout";
 
@@ -20,6 +20,7 @@ type Packet = {
   subjectSlug: string; sheets: Sheet[];
   problemsPerSheet: number; timeLimitMinutes: number; printCount: number;
 };
+type SubjectRef = { slug: string; name: string };
 type FetchState =
   | { status: "loading" }
   | { status: "no_placement" }
@@ -29,12 +30,21 @@ type FetchState =
 
 export default function PrintPage() {
   const { childId } = useParams<{ childId: string }>();
+  const searchParams = useSearchParams();
+  // The subject the caller chose (?subject=READING). Without it, the API
+  // defaults to Math — the print reflects the chosen subject, never activity
+  // order.
+  const subject = searchParams.get("subject")?.toUpperCase() ?? null;
   const [state, setState] = useState<FetchState>({ status: "loading" });
+  const [subjects, setSubjects] = useState<SubjectRef[]>([]);
   const printTriggered = useRef(false);
 
   useEffect(() => {
     if (!childId) return;
-    fetch(`/api/students/${childId}/daily-packet`, {
+    setState({ status: "loading" });
+    printTriggered.current = false;
+    const qs = subject ? `?subject=${encodeURIComponent(subject)}` : "";
+    fetch(`/api/students/${childId}/daily-packet${qs}`, {
         headers: {
           "X-Timezone": Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
@@ -42,6 +52,7 @@ export default function PrintPage() {
       .then((r) => r.json())
       .then((data) => {
         if (!data.success) { setState({ status: "error", message: data.error ?? "Failed" }); return; }
+        if (Array.isArray(data.data.availableSubjects)) setSubjects(data.data.availableSubjects);
         if (!data.data.packet) {
           const reason = data.data.reason;
           setState({ status: reason === "no_placement" ? "no_placement" : reason === "skipped" ? "skipped" : "error", message: "No packet" });
@@ -50,7 +61,7 @@ export default function PrintPage() {
         setState({ status: "ready", packet: data.data.packet, date: data.data.date });
       })
       .catch((e) => setState({ status: "error", message: e.message }));
-  }, [childId]);
+  }, [childId, subject]);
 
   useEffect(() => {
     // Auto-print only applies to the HTML layout (non-math). Math packets
@@ -103,9 +114,32 @@ export default function PrintPage() {
 
   // ── MATH: embed the REAL PDF (same engine + same renderer as shop packs) ──
   // so what parents print is identical to a purchased Eduyro worksheet.
+  const chips = subjects.length > 1 && (
+    <div style={{ display: "flex", gap: "6px" }} className="no-print">
+      {subjects.map((s) => (
+        <Link
+          key={s.slug}
+          href={`/print/${childId}?subject=${s.slug}`}
+          style={{
+            padding: "6px 12px",
+            borderRadius: "999px",
+            fontSize: "12px",
+            fontWeight: 600,
+            textDecoration: "none",
+            border: "1px solid #E8E0D0",
+            background: s.slug === packet.subjectSlug ? "#1A1612" : "white",
+            color: s.slug === packet.subjectSlug ? "white" : "#7A6E5F",
+          }}
+        >
+          {s.name}
+        </Link>
+      ))}
+    </div>
+  );
+
   if (packet.subjectSlug === "MATH") {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const pdfUrl = `/api/students/${packet.studentId}/daily-packet/pdf?tz=${encodeURIComponent(tz)}`;
+    const pdfUrl = `/api/students/${packet.studentId}/daily-packet/pdf?tz=${encodeURIComponent(tz)}&subject=MATH`;
     return (
       <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#e5e7eb" }}>
         <div style={{ background: "white", borderBottom: "1px solid #E8E0D0", padding: "10px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -118,6 +152,7 @@ export default function PrintPage() {
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {chips}
             <a
               href={pdfUrl}
               target="_blank"
@@ -181,6 +216,7 @@ export default function PrintPage() {
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {chips}
           <button
             onClick={() => window.print()}
             style={{ background: "#1A1612", color: "white", border: "none", padding: "8px 16px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
