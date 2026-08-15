@@ -92,10 +92,17 @@ export async function GET(
           (s.answerKey ?? []).map((e: any) => [e.id, String(e.answer)])
         );
         const sheetNo = s.sheetNumber ?? i + 1;
-        // Title each sheet by the engine's REAL unit (e.g. "Arithmetic sequences")
-        // rather than the parent skill name ("Limits") stored on the packet.
-        const em = getMathSheetMeta(packet.levelCode, sheetNo);
-        const label = em?.subSkillLabel ?? packet.skillName;
+        // The packet stores sheets RENUMBERED 1..n for the day, but their
+        // titles carry the engine's real position ("2-digit × 2-digit — Sheet
+        // 53"). Deriving the unit from the renumbered value titled a 2-digit
+        // multiplication page "×2, ×5, ×10 (skip counting)" — the stored title
+        // is the truth, so parse the real sheet number out of it and only fall
+        // back to the day-position when a legacy row has no title.
+        const stored = String(s.title ?? "");
+        const tm = stored.match(/^(.*?) — Sheet (\d+)/);
+        const engineNo = tm ? Number(tm[2]) : sheetNo;
+        const em = getMathSheetMeta(packet.levelCode, engineNo);
+        const label = tm?.[1] ?? em?.subSkillLabel ?? packet.skillName;
         return {
           problems: (s.problems ?? []).map((p: any) => ({
             id: String(p.id),
