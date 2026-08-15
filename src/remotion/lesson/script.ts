@@ -408,10 +408,14 @@ export function numberLineLines(u: NumberLineUnit): LessonLine[] {
   const hops = n.values.slice(0, -1).map((_, i) => n.values[i + 1]);
   const crossesDecade =
     u.step === 1 && Math.floor(n.gapValue / 10) !== Math.floor((n.gapValue - 1) / 10);
+  // Digit chains like "7… 8…" blur together in TTS (a child hears the 8
+  // vanish). Anchoring every number with "then" keeps each one its own word.
+  const withThen = (vals: (string | number)[]) =>
+    vals.map((v, i) => (i === 0 ? String(v) : `then ${v}`)).join("… ");
   return [
     {
       id: "ask",
-      text: `${shown.join("… ")}. What goes in the blank? The number line knows.`,
+      text: `${withThen(shown)}. What goes in the blank? The number line knows.`,
     },
     {
       id: "line",
@@ -420,10 +424,10 @@ export function numberLineLines(u: NumberLineUnit): LessonLine[] {
     {
       id: "hop",
       text: crossesDecade
-        ? `Hop along… ${hops.slice(0, -1).join("… ")}… and now the tens tick over… ${n.gapValue}!`
-        : `Hop along… ${hops.join("… ")}. Landed — right in the blank.`,
+        ? `Hop along… ${withThen(hops.slice(0, -1))}… and now the tens tick over… ${n.gapValue}!`
+        : `Hop along… ${withThen(hops)}. Landed — right in the blank.`,
     },
-    { id: "record", text: `${n.values.join("… ")}. ${u.tip}.` },
+    { id: "record", text: `${withThen(n.values)}. ${u.tip}.` },
   ];
 }
 

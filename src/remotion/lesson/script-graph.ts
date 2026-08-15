@@ -201,6 +201,49 @@ export function graphLines(u: GraphUnit): LessonLine[] {
       ];
     }
 
+    case "range": {
+      const cq = u.curve.c ?? 0; // vertex height for a·x² + c with b = 0
+      return [
+        {
+          id: "ask",
+          text: `${eq}. Here's a question about the WHOLE curve at once: which heights does it actually reach… and which does it never touch?`,
+        },
+        {
+          id: "plot",
+          text: `Watch the lowest point. The curve bottoms out right here, at a height of ${cq}. That's its minimum — it can NEVER go below this line.`,
+        },
+        {
+          id: "action",
+          text: `Now sweep upward. From ${cq}, the two arms climb… and climb… forever. Every height from ${cq} on up gets touched. Everything below ${cq}… never.`,
+        },
+        {
+          id: "record",
+          text: `So the RANGE is: y is greater than or equal to ${cq}. Find the vertex height, check which way the arms go — that's the whole method. ${u.tip}.`,
+        },
+      ];
+    }
+
+    case "endbehavior": {
+      return [
+        {
+          id: "ask",
+          text: `${eq}. Forget the middle for a moment. What happens at the far EDGES — when x gets huge, or hugely negative?`,
+        },
+        {
+          id: "plot",
+          text: `Walk right. At x equals 10, x squared is 100. At 100… ten thousand. The squared term takes over everything else — the arm climbs without limit.`,
+        },
+        {
+          id: "action",
+          text: `Now walk LEFT. x is negative… but squaring kills the sign. Minus 100, squared, is still ten thousand. So the left arm climbs too. Both ends… up.`,
+        },
+        {
+          id: "record",
+          text: `That's end behavior: as x runs off either edge, y goes UP — because the leading term is x squared with a positive front. Even power, positive lead… both arms up. ${u.tip}.`,
+        },
+      ];
+    }
+
     case "exponential": {
       const base = u.curve.base ?? 2;
       return [

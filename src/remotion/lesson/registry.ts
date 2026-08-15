@@ -47,6 +47,8 @@ import { TRIG_UNITS } from "./units-trig";
 import { trigLines } from "./script-trig";
 import { POLY_UNITS } from "./units-poly";
 import { polyLines } from "./script-poly";
+import { ADVANCED_UNITS } from "./units-advanced";
+import { advancedLines } from "./script-advanced";
 
 export interface RegisteredUnit {
   id: string;
@@ -75,6 +77,7 @@ export const ALL_LESSON_UNITS: RegisteredUnit[] = [
   ...FUNCTION_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "FunctionMachine", lines: () => functionLines(u) })),
   ...TRIG_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Trig", lines: () => trigLines(u) })),
   ...POLY_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Poly", lines: () => polyLines(u) })),
+  ...ADVANCED_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Advanced", lines: () => advancedLines(u) })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Count", lines: () => countLines(u) })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Compare", lines: () => compareLines(u) })),
   ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "NumberLine", lines: () => numberLineLines(u) })),

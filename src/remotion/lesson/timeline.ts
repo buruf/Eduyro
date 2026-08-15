@@ -17,6 +17,8 @@ import { trigLineIds } from "./script-trig";
 import { trigUnitById } from "./units-trig";
 import { polyLineIds } from "./script-poly";
 import { polyUnitById } from "./units-poly";
+import { advancedLineIds } from "./script-advanced";
+import { advancedUnitById } from "./units-advanced";
 import { functionUnitById } from "./units-functions";
 import { CLIPS_BY_UNIT } from "./voice-manifest";
 import { DEFAULT_VOICE_KEY } from "./voices";
@@ -370,6 +372,16 @@ export function polySceneTimings(unitId: string, voiceKey: string = DEFAULT_VOIC
 }
 export function polyTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return polySceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the advanced template (M10/M16/M17/M18 stragglers). */
+const ADVANCED_MIN_SECONDS: Record<string, number> = { ask: 4, work: 8, twist: 6, record: 4 };
+
+export function advancedSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
+  return earlyTimings(advancedLineIds(advancedUnitById(unitId)), ADVANCED_MIN_SECONDS, unitId, voiceKey);
+}
+export function advancedTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return advancedSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }
 export function graphTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return graphSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);

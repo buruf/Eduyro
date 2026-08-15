@@ -381,6 +381,8 @@ function SceneAsk({ unit }: SceneProps) {
     limit: "Undefined — but not unanswerable.",
     derivative: "How steep, at one exact point?",
     integral: "How much area underneath?",
+    range: "Which heights does it reach?",
+    endbehavior: "What happens at the edges?",
   };
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 40 }}>
@@ -464,6 +466,8 @@ function SceneAction({ dur, unit }: SceneProps) {
     limit: "Walk in from both sides",
     derivative: "Slide the second point in",
     integral: "Chop it into strips",
+    range: "Sweep up from the bottom",
+    endbehavior: "Both ends climb",
   };
 
   const common = (
@@ -564,6 +568,64 @@ function SceneAction({ dur, unit }: SceneProps) {
               })}
             />
           ))}
+        </Stage>
+      </AbsoluteFill>
+    );
+  }
+
+  if (unit.mode === "range" || unit.mode === "endbehavior") {
+    const cq = unit.curve.c ?? 0;
+    const sweepAt = Math.round(dur * 0.2);
+    // range: a band rises from the vertex height; endbehavior: arrows on arms.
+    const sweep = interpolate(frame, [sweepAt, sweepAt + 70], [0, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    });
+    const bandTopY = sy(cq) - (sy(cq) - sy(unit.yMax)) * sweep;
+    const armX = 0.82 * (unit.xMax - unit.xMin) * 0.5;
+    return (
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 10 }}>
+        <Title text={titles[unit.mode]} enter={title} />
+        <Stage>
+          {unit.mode === "range" && (
+            <div
+              style={{
+                position: "absolute",
+                left: PAD,
+                top: bandTopY,
+                width: STAGE_W - PAD * 2,
+                height: Math.max(0, sy(cq) - bandTopY),
+                backgroundColor: GREEN,
+                opacity: 0.12,
+              }}
+            />
+          )}
+          {common}
+          {unit.mode === "range" && (
+            <>
+              <div style={{ position: "absolute", left: PAD, top: sy(cq) - 2, width: STAGE_W - PAD * 2, height: 4, backgroundImage: `repeating-linear-gradient(90deg, ${RED} 0 14px, transparent 14px 26px)` }} />
+              <Dot unit={unit} x={0} y={cq} colour={RED} size={26} label={`lowest: ${cq}`} />
+              <div style={{ position: "absolute", left: PAD + 14, top: sy(cq) + 14, fontSize: 34, fontWeight: 800, color: RED }}>never below</div>
+            </>
+          )}
+          {unit.mode === "endbehavior" &&
+            [-armX, armX].map((x) => {
+              const y = evalCurve(unit.curve, x) ?? 0;
+              return (
+                <div
+                  key={x}
+                  style={{ position: "absolute", left: sx(x) - 24, top: sy(y) - 66, fontSize: 54, fontWeight: 800, color: GREEN, opacity: sweep }}
+                >
+                  ↑
+                </div>
+              );
+            })}
+          {unit.mode === "endbehavior" && (
+            <>
+              <div style={{ position: "absolute", left: PAD + 6, top: PAD + 6, fontSize: 32, fontWeight: 800, color: GREEN, opacity: sweep }}>x → −∞, y → +∞</div>
+              <div style={{ position: "absolute", right: PAD + 6, top: PAD + 6, fontSize: 32, fontWeight: 800, color: GREEN, opacity: sweep }}>x → +∞, y → +∞</div>
+            </>
+          )}
         </Stage>
       </AbsoluteFill>
     );
@@ -773,6 +835,8 @@ function SceneRecord({ dur, unit }: SceneProps) {
     limit: `limit = ${2 * (unit.at ?? 2)}`,
     derivative: `slope at x = ${unit.at ?? 1}  is  ${2 * (unit.curve.a ?? 1) * (unit.at ?? 1)}`,
     integral: `area = ${((unit.curve.m ?? 1) * ((unit.to ?? 4) ** 2 - (unit.from ?? 0) ** 2)) / 2}`,
+    range: `y ≥ ${unit.curve.c ?? 0}`,
+    endbehavior: "both ends → up",
   };
 
   return (

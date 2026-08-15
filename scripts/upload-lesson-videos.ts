@@ -7,6 +7,7 @@
 import { config } from "dotenv";
 config({ path: ".env.local", quiet: true });
 import { put } from "@vercel/blob";
+import { execFileSync } from "child_process";
 import { readdirSync, readFileSync, statSync } from "fs";
 import { join } from "path";
 
@@ -14,6 +15,22 @@ const token = process.env.BLOB_READ_WRITE_TOKEN;
 if (!token) {
   console.error("BLOB_READ_WRITE_TOKEN missing from .env.local");
   process.exit(1);
+}
+
+// GATE: publishing distributes to students. A video that has not passed the
+// validation engine (contracts + rendered checks) and the golden suite must
+// never reach the store — rendering successfully is not the bar, teaching
+// correctly is. --skip-validation exists only for emergency rollback pushes.
+if (!process.argv.includes("--skip-validation")) {
+  for (const gate of ["scripts/validate-videos.ts", "scripts/golden-video-tests.ts"]) {
+    try {
+      console.log(`Running ${gate}…`);
+      execFileSync("npx", ["tsx", gate], { stdio: "inherit", shell: true });
+    } catch {
+      console.error(`\nBLOCKED: ${gate} failed — fix the videos, then upload.`);
+      process.exit(1);
+    }
+  }
 }
 
 const DIR = join(process.cwd(), "public", "lesson-video");

@@ -643,6 +643,7 @@ import { COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS } from "./units-early";
 import { FUNCTION_UNITS } from "./units-functions";
 import { TRIG_UNITS } from "./units-trig";
 import { POLY_UNITS } from "./units-poly";
+import { ADVANCED_UNITS } from "./units-advanced";
 
 // ---------------------------------------------------------------------------
 // FRACTION BAR template (M7).
@@ -950,7 +951,9 @@ export interface GraphUnit {
     | "log"
     | "limit"
     | "derivative"
-    | "integral";
+    | "integral"
+    | "range"
+    | "endbehavior";
   curve: Curve;
   /** system mode: the second line. */
   curve2?: Curve;
@@ -999,6 +1002,22 @@ export const GRAPH_UNITS: GraphUnit[] = [
     curve: { kind: "quadratic", a: 1, b: 0, c: -4 },
     xMin: -3.5, xMax: 3.5, yMin: -6, yMax: 8,
     tip: "Squaring makes it curve — and symmetric",
+  },
+  {
+    id: "cur-quadratic-range",
+    label: "Range of a quadratic",
+    mode: "range",
+    curve: { kind: "quadratic", a: 1, b: 0, c: -4 },
+    xMin: -3.5, xMax: 3.5, yMin: -6, yMax: 8,
+    tip: "Range: every height the curve actually reaches",
+  },
+  {
+    id: "cur-end-behavior",
+    label: "End behavior",
+    mode: "endbehavior",
+    curve: { kind: "quadratic", a: 1, b: 0, c: -4 },
+    xMin: -3.5, xMax: 3.5, yMin: -6, yMax: 8,
+    tip: "Ends point where the leading term sends them",
   },
   {
     id: "cur-quadratic-equations",
@@ -1124,7 +1143,7 @@ export interface VideoUnitRef {
   id: string;
   label: string;
   /** Remotion composition that renders it. */
-  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph" | "FunctionMachine" | "Trig" | "Poly";
+  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph" | "FunctionMachine" | "Trig" | "Poly" | "Advanced";
 }
 
 export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
@@ -1145,6 +1164,7 @@ export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
   ...FUNCTION_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "FunctionMachine" as const })),
   ...TRIG_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Trig" as const })),
   ...POLY_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Poly" as const })),
+  ...ADVANCED_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Advanced" as const })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Count" as const })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Compare" as const })),
   ...NUMBER_LINE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "NumberLine" as const })),
