@@ -53,6 +53,10 @@ export function speakable(raw: string): string {
     .replace(/\s*=\s*/g, " equals ")
     .replace(/×/g, " times ").replace(/÷/g, " divided by ")
     .replace(/\s\/\s/g, " divided by ") // spaced slash: "1 / (x − 2)"
+    // Bare fractions ("3/4") reach the voice as one opaque token — it may say
+    // anything, and word alignment can't anchor the digits. "3 over 4" is
+    // unambiguous and every digit gets its own timestamped word.
+    .replace(/\b(\d+)\/(\d+)\b/g, "$1 over $2")
     .replace(/−/g, " minus ")
     .replace(/([0-9a-zA-Z])\s*-\s*([0-9])/g, "$1 minus $2")
     .replace(/\s*\+\s*/g, " plus ")
@@ -76,6 +80,11 @@ export function speakable(raw: string): string {
     .replace(/\by\b/g, "why")
     .replace(/\bm\b/g, "em")
     .replace(/\bb\b/g, "bee")
-    .replace(/\bc\b/g, "cee");
+    // "see", not "cee": the voice renders the invented spelling "cee"
+    // indistinctly ("c squared" came out mushy); "see" is the exact homophone.
+    .replace(/\bc\b/g, "see");
+  // Decimals: "0.6" run together gets swallowed at 0.8 speed. Say the point
+  // explicitly with room around it — "0 point 6" — so it can't blur.
+  s = s.replace(/\b(\d+)\.(\d+)\b/g, "$1 point $2");
   return s;
 }

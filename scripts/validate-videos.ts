@@ -142,8 +142,11 @@ function validateUnit(u: (typeof ALL_LESSON_UNITS)[number]): Result {
       warnings.push(`scene "${line.id}": clip predates word-alignment capture — timing unverifiable (re-synthesize to fix)`);
     } else if (clip.numberTimes) {
       for (const r of sceneRequired) {
-        const hit = clip.numberTimes.some((t) => near(t.n, Math.abs(r)) || near(t.n, r));
-        if (!hit) {
+        const heard = (v: number) => clip.numberTimes!.some((t) => near(t.n, Math.abs(v)) || near(t.n, v));
+        // Decimals are voiced as "0 point 6", so alignment hears the parts.
+        const parts = String(Math.abs(r)).split(".");
+        const asParts = parts.length === 2 && heard(Number(parts[0])) && heard(Number(parts[1]));
+        if (!heard(r) && !asParts) {
           failures.push(`RENDERED TIMING: scene "${line.id}" should speak ${r} but the audio alignment never hears it`);
         }
       }
