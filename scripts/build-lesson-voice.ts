@@ -148,14 +148,19 @@ async function main() {
   let totalSeconds = 0;
   for (const unit of units) {
     for (const voice of LESSON_VOICES) {
-      const voiceId = process.env[voiceIdEnvVar(voice.key)] ?? process.env.ELEVENLABS_VOICE_ID;
+      // NO fallback to ELEVENLABS_VOICE_ID: that silent fallback once rebuilt
+      // the entire corpus in the wrong voice (Jessica instead of Ramlah, Aug
+      // 2026). A named voice resolves to its own env var or the build refuses.
+      const voiceId = process.env[voiceIdEnvVar(voice.key)];
       if (!voiceId) {
-        console.error(`Missing ${voiceIdEnvVar(voice.key)} for voice "${voice.key}".`);
+        console.error(
+          `Missing ${voiceIdEnvVar(voice.key)} for voice "${voice.key}" — refusing to guess a voice id. Add it to .env.local.`,
+        );
         process.exit(1);
       }
       const outDir = join(ROOT, "public", "lesson-voice", unit.id, voice.key);
       mkdirSync(outDir, { recursive: true });
-      console.log(`\n${unit.id} · ${voice.key}`);
+      console.log(`\n${unit.id} · ${voice.key} (voice id ${voiceId})`);
       const clips: VoiceClip[] = [];
       for (const line of unit.lines()) {
         process.stdout.write(`  ${line.id}… `);

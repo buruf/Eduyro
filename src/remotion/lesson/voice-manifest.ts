@@ -15,116 +15,116 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/mul-skip/ramlah/ask.mp3",
-        "durationInSeconds": 4.737,
+        "durationInSeconds": 3.111,
         "numberTimes": [
           {
             "n": 5,
-            "s": 1.939
+            "s": 1.219
           },
           {
             "n": 6,
-            "s": 2.914
+            "s": 1.788
           }
         ]
       },
       {
         "id": "groups",
         "file": "lesson-voice/mul-skip/ramlah/groups.mp3",
-        "durationInSeconds": 8.824,
+        "durationInSeconds": 5.526,
         "numberTimes": [
           {
             "n": 6,
-            "s": 0.743
+            "s": 0.697
           },
           {
             "n": 5,
-            "s": 1.718
+            "s": 1.474
           },
           {
             "n": 5,
-            "s": 5.538
+            "s": 3.506
           }
         ]
       },
       {
         "id": "count",
         "file": "lesson-voice/mul-skip/ramlah/count.mp3",
-        "durationInSeconds": 19.273,
+        "durationInSeconds": 12.028,
         "numberTimes": [
           {
             "n": 5,
-            "s": 1.567
+            "s": 1.44
           },
           {
             "n": 10,
-            "s": 2.194
+            "s": 1.811
           },
           {
             "n": 15,
-            "s": 2.821
+            "s": 2.101
           },
           {
             "n": 20,
-            "s": 3.727
+            "s": 2.577
           },
           {
             "n": 25,
-            "s": 4.656
+            "s": 2.891
           },
           {
             "n": 30,
-            "s": 5.7
+            "s": 3.437
           },
           {
             "n": 5,
-            "s": 7.639
+            "s": 4.412
           },
           {
             "n": 5,
-            "s": 8.719
+            "s": 5.085
           },
           {
             "n": 5,
-            "s": 9.729
+            "s": 5.631
           },
           {
             "n": 5,
-            "s": 10.716
+            "s": 6.084
           },
           {
             "n": 5,
-            "s": 11.726
+            "s": 6.583
           },
           {
             "n": 5,
-            "s": 12.771
+            "s": 7.07
           },
           {
             "n": 30,
-            "s": 13.851
+            "s": 8.29
           },
           {
             "n": 5,
-            "s": 15.267
+            "s": 9.253
           },
           {
             "n": 6,
-            "s": 16.126
+            "s": 9.868
           }
         ]
       },
       {
         "id": "trick",
         "file": "lesson-voice/mul-skip/ramlah/trick.mp3",
-        "durationInSeconds": 8.034,
+        "durationInSeconds": 7.709,
         "numberTimes": [
           {
             "n": 5,
-            "s": 3.75
+            "s": 3.622
           },
           {
             "n": 6,
-            "s": 5.132
+            "s": 5.039
           }
         ]
       }
@@ -135,112 +135,112 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/mul-3-4/ramlah/ask.mp3",
-        "durationInSeconds": 5.201,
+        "durationInSeconds": 3.019,
         "numberTimes": [
           {
             "n": 4,
-            "s": 2.218
+            "s": 1.3
           },
           {
             "n": 7,
-            "s": 3.239
+            "s": 1.765
           }
         ]
       },
       {
         "id": "groups",
         "file": "lesson-voice/mul-3-4/ramlah/groups.mp3",
-        "durationInSeconds": 8.173,
+        "durationInSeconds": 5.805,
         "numberTimes": [
           {
             "n": 7,
-            "s": 0.673
+            "s": 0.871
           },
           {
             "n": 4,
-            "s": 1.741
+            "s": 1.834
           },
           {
             "n": 4,
-            "s": 5.062
+            "s": 3.785
           }
         ]
       },
       {
         "id": "count",
         "file": "lesson-voice/mul-3-4/ramlah/count.mp3",
-        "durationInSeconds": 17.276,
+        "durationInSeconds": 12.585,
         "numberTimes": [
           {
             "n": 4,
-            "s": 1.602
+            "s": 1.463
           },
           {
             "n": 8,
-            "s": 2.218
+            "s": 2.09
           },
           {
             "n": 12,
-            "s": 2.786
+            "s": 2.415
           },
           {
             "n": 16,
-            "s": 3.541
+            "s": 2.821
           },
           {
             "n": 20,
-            "s": 4.609
+            "s": 3.587
           },
           {
             "n": 24,
-            "s": 5.468
+            "s": 4.168
           },
           {
             "n": 28,
-            "s": 6.513
+            "s": 4.969
           },
           {
             "n": 4,
-            "s": 8.766
+            "s": 6.118
           },
           {
             "n": 7,
-            "s": 9.973
+            "s": 7.291
           },
           {
             "n": 28,
-            "s": 11.947
+            "s": 8.417
           },
           {
             "n": 4,
-            "s": 13.642
+            "s": 9.694
           },
           {
             "n": 7,
-            "s": 14.501
+            "s": 10.321
           }
         ]
       },
       {
         "id": "trick",
         "file": "lesson-voice/mul-3-4/ramlah/trick.mp3",
-        "durationInSeconds": 10.124,
+        "durationInSeconds": 6.641,
         "numberTimes": [
           {
             "n": 7,
-            "s": 4.493
+            "s": 3.204
           },
           {
             "n": 14,
-            "s": 5.654
+            "s": 3.982
           },
           {
             "n": 14,
-            "s": 6.954
+            "s": 4.76
           },
           {
             "n": 28,
-            "s": 8.847
+            "s": 5.77
           }
         ]
       }
@@ -251,100 +251,100 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/mul-tens/ramlah/ask.mp3",
-        "durationInSeconds": 4.598,
+        "durationInSeconds": 3.019,
         "numberTimes": [
           {
             "n": 20,
-            "s": 1.672
+            "s": 1.254
           },
           {
             "n": 3,
-            "s": 2.647
+            "s": 1.869
           }
         ]
       },
       {
         "id": "groups",
         "file": "lesson-voice/mul-tens/ramlah/groups.mp3",
-        "durationInSeconds": 10.542,
+        "durationInSeconds": 5.666,
         "numberTimes": [
           {
             "n": 3,
-            "s": 0.65
+            "s": 0.685
           },
           {
             "n": 20,
-            "s": 1.649
+            "s": 1.405
           },
           {
             "n": 20,
-            "s": 6.06
+            "s": 3.46
           }
         ]
       },
       {
         "id": "count",
         "file": "lesson-voice/mul-tens/ramlah/count.mp3",
-        "durationInSeconds": 13.793,
+        "durationInSeconds": 7.663,
         "numberTimes": [
           {
             "n": 20,
-            "s": 2.45
+            "s": 1.196
           },
           {
             "n": 40,
-            "s": 3.193
+            "s": 1.521
           },
           {
             "n": 60,
-            "s": 3.831
+            "s": 1.858
           },
           {
             "n": 20,
-            "s": 5.7
+            "s": 2.752
           },
           {
             "n": 20,
-            "s": 6.757
+            "s": 3.262
           },
           {
             "n": 20,
-            "s": 7.79
+            "s": 3.715
           },
           {
             "n": 60,
-            "s": 9.009
+            "s": 4.389
           },
           {
             "n": 20,
-            "s": 10.275
+            "s": 5.155
           },
           {
             "n": 3,
-            "s": 11.215
+            "s": 5.759
           }
         ]
       },
       {
         "id": "trick",
         "file": "lesson-voice/mul-tens/ramlah/trick.mp3",
-        "durationInSeconds": 13.142,
+        "durationInSeconds": 8.777,
         "numberTimes": [
           {
             "n": 2,
-            "s": 4.412
+            "s": 2.949
           },
           {
             "n": 3,
-            "s": 5.05
+            "s": 3.529
           },
           {
             "n": 6,
-            "s": 5.747
+            "s": 3.901
           },
           {
             "n": 60,
-            "s": 10.008
+            "s": 6.002
           }
         ]
       }
@@ -355,7 +355,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/add-2d-noregroup/ramlah/ask.mp3",
-        "durationInSeconds": 5.387,
+        "durationInSeconds": 3.019,
         "numberTimes": [
           {
             "n": 34,
@@ -363,14 +363,14 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 25,
-            "s": 1.591
+            "s": 0.882
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/add-2d-noregroup/ramlah/build.mp3",
-        "durationInSeconds": 7.709,
+        "durationInSeconds": 4.505,
         "numberTimes": [
           {
             "n": 34,
@@ -378,73 +378,73 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 3,
-            "s": 1.265
+            "s": 0.859
           },
           {
             "n": 4,
-            "s": 2.45
+            "s": 1.567
           },
           {
             "n": 25,
-            "s": 4.075
+            "s": 2.31
           },
           {
             "n": 2,
-            "s": 5.352
+            "s": 2.937
           },
           {
             "n": 5,
-            "s": 6.409
+            "s": 3.564
           }
         ]
       },
       {
         "id": "regroup",
         "file": "lesson-voice/add-2d-noregroup/ramlah/regroup.mp3",
-        "durationInSeconds": 13.282,
+        "durationInSeconds": 8.87,
         "numberTimes": [
           {
             "n": 4,
-            "s": 3.135
+            "s": 1.974
           },
           {
             "n": 5,
-            "s": 3.646
+            "s": 2.438
           },
           {
             "n": 9,
-            "s": 4.505
+            "s": 2.961
           },
           {
             "n": 3,
-            "s": 10.855
+            "s": 6.943
           },
           {
             "n": 2,
-            "s": 11.656
+            "s": 7.349
           },
           {
             "n": 5,
-            "s": 12.33
+            "s": 7.93
           }
         ]
       },
       {
         "id": "written",
         "file": "lesson-voice/add-2d-noregroup/ramlah/written.mp3",
-        "durationInSeconds": 8.916,
+        "durationInSeconds": 6.13,
         "numberTimes": [
           {
             "n": 34,
-            "s": 5.062
+            "s": 3.402
           },
           {
             "n": 25,
-            "s": 6.397
+            "s": 4.214
           },
           {
             "n": 59,
-            "s": 7.744
+            "s": 5.027
           }
         ]
       }
@@ -455,7 +455,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/add-2d-regroup/ramlah/ask.mp3",
-        "durationInSeconds": 5.294,
+        "durationInSeconds": 3.158,
         "numberTimes": [
           {
             "n": 37,
@@ -463,14 +463,14 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 45,
-            "s": 1.486
+            "s": 1.022
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/add-2d-regroup/ramlah/build.mp3",
-        "durationInSeconds": 8.22,
+        "durationInSeconds": 4.923,
         "numberTimes": [
           {
             "n": 37,
@@ -478,77 +478,77 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 3,
-            "s": 1.312
+            "s": 1.08
           },
           {
             "n": 7,
-            "s": 2.589
+            "s": 1.73
           },
           {
             "n": 45,
-            "s": 4.319
+            "s": 2.635
           },
           {
             "n": 4,
-            "s": 5.492
+            "s": 3.286
           },
           {
             "n": 5,
-            "s": 6.954
+            "s": 3.866
           }
         ]
       },
       {
         "id": "regroup",
         "file": "lesson-voice/add-2d-regroup/ramlah/regroup.mp3",
-        "durationInSeconds": 26.1,
+        "durationInSeconds": 20.155,
         "numberTimes": [
           {
             "n": 7,
-            "s": 2.821
+            "s": 2.299
           },
           {
             "n": 5,
-            "s": 3.46
+            "s": 2.798
           },
           {
             "n": 12,
-            "s": 4.296
+            "s": 3.32
           },
           {
             "n": 12,
-            "s": 6.687
+            "s": 5.074
           },
           {
             "n": 1,
-            "s": 16.614
+            "s": 13.165
           },
           {
             "n": 2,
-            "s": 24.3
+            "s": 18.448
           }
         ]
       },
       {
         "id": "written",
         "file": "lesson-voice/add-2d-regroup/ramlah/written.mp3",
-        "durationInSeconds": 8.963,
+        "durationInSeconds": 7.477,
         "numberTimes": [
           {
             "n": 1,
-            "s": 1.869
+            "s": 1.939
           },
           {
             "n": 37,
-            "s": 4.946
+            "s": 4.574
           },
           {
             "n": 45,
-            "s": 6.327
+            "s": 5.712
           },
           {
             "n": 82,
-            "s": 7.767
+            "s": 6.548
           }
         ]
       }
@@ -559,7 +559,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/sub-2d-noborrow/ramlah/ask.mp3",
-        "durationInSeconds": 4.783,
+        "durationInSeconds": 3.529,
         "numberTimes": [
           {
             "n": 58,
@@ -567,14 +567,14 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 23,
-            "s": 1.637
+            "s": 1.207
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/sub-2d-noborrow/ramlah/build.mp3",
-        "durationInSeconds": 5.898,
+        "durationInSeconds": 3.994,
         "numberTimes": [
           {
             "n": 58,
@@ -582,49 +582,49 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 5,
-            "s": 1.265
+            "s": 1.022
           },
           {
             "n": 8,
-            "s": 2.624
+            "s": 1.823
           }
         ]
       },
       {
         "id": "regroup",
         "file": "lesson-voice/sub-2d-noborrow/ramlah/regroup.mp3",
-        "durationInSeconds": 9.242,
+        "durationInSeconds": 7.245,
         "numberTimes": [
           {
             "n": 3,
-            "s": 1.126
+            "s": 0.94
           },
           {
             "n": 8,
-            "s": 2.891
+            "s": 2.148
           },
           {
             "n": 5,
-            "s": 5.55
+            "s": 4.528
           }
         ]
       },
       {
         "id": "written",
         "file": "lesson-voice/sub-2d-noborrow/ramlah/written.mp3",
-        "durationInSeconds": 10.217,
+        "durationInSeconds": 6.362,
         "numberTimes": [
           {
             "n": 58,
-            "s": 5.805
+            "s": 3.611
           },
           {
             "n": 23,
-            "s": 7.721
+            "s": 4.667
           },
           {
             "n": 35,
-            "s": 8.963
+            "s": 5.352
           }
         ]
       }
@@ -635,7 +635,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/sub-2d-borrow/ramlah/ask.mp3",
-        "durationInSeconds": 4.783,
+        "durationInSeconds": 3.669,
         "numberTimes": [
           {
             "n": 52,
@@ -643,14 +643,14 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 27,
-            "s": 1.625
+            "s": 1.324
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/sub-2d-borrow/ramlah/build.mp3",
-        "durationInSeconds": 5.666,
+        "durationInSeconds": 3.762,
         "numberTimes": [
           {
             "n": 52,
@@ -658,57 +658,57 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 5,
-            "s": 1.184
+            "s": 0.824
           },
           {
             "n": 2,
-            "s": 2.45
+            "s": 1.602
           }
         ]
       },
       {
         "id": "regroup",
         "file": "lesson-voice/sub-2d-borrow/ramlah/regroup.mp3",
-        "durationInSeconds": 19.504,
+        "durationInSeconds": 14.211,
         "numberTimes": [
           {
             "n": 7,
-            "s": 1.103
+            "s": 1.057
           },
           {
             "n": 2,
-            "s": 4.423
+            "s": 3.471
           },
           {
             "n": 12,
-            "s": 14.93
+            "s": 11.262
           },
           {
             "n": 7,
-            "s": 16.857
+            "s": 12.62
           },
           {
             "n": 5,
-            "s": 17.867
+            "s": 13.061
           }
         ]
       },
       {
         "id": "written",
         "file": "lesson-voice/sub-2d-borrow/ramlah/written.mp3",
-        "durationInSeconds": 10.31,
+        "durationInSeconds": 6.455,
         "numberTimes": [
           {
             "n": 52,
-            "s": 5.944
+            "s": 3.68
           },
           {
             "n": 27,
-            "s": 7.767
+            "s": 4.714
           },
           {
             "n": 25,
-            "s": 9.021
+            "s": 5.468
           }
         ]
       }
@@ -719,7 +719,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/add-doubles/ramlah/ask.mp3",
-        "durationInSeconds": 4.876,
+        "durationInSeconds": 2.415,
         "numberTimes": [
           {
             "n": 6,
@@ -727,72 +727,72 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 6,
-            "s": 1.091
+            "s": 0.72
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/add-doubles/ramlah/build.mp3",
-        "durationInSeconds": 5.016,
+        "durationInSeconds": 3.855,
         "numberTimes": [
           {
             "n": 6,
-            "s": 0.43
+            "s": 0.511
           },
           {
             "n": 6,
-            "s": 2.984
+            "s": 2.241
           }
         ]
       },
       {
         "id": "strategy",
         "file": "lesson-voice/add-doubles/ramlah/strategy.mp3",
-        "durationInSeconds": 10.263,
+        "durationInSeconds": 8.824,
         "numberTimes": [
           {
             "n": 4,
-            "s": 0.975
+            "s": 0.882
           },
           {
             "n": 4,
-            "s": 3.936
+            "s": 2.984
           },
           {
             "n": 2,
-            "s": 7.407
+            "s": 6.258
           },
           {
             "n": 10,
-            "s": 8.278
+            "s": 7.291
           },
           {
             "n": 2,
-            "s": 8.905
+            "s": 7.709
           },
           {
             "n": 12,
-            "s": 9.334
+            "s": 8.034
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/add-doubles/ramlah/record.mp3",
-        "durationInSeconds": 5.108,
+        "durationInSeconds": 3.762,
         "numberTimes": [
           {
             "n": 6,
-            "s": 0.372
+            "s": 0.453
           },
           {
             "n": 6,
-            "s": 1.161
+            "s": 1.045
           },
           {
             "n": 12,
-            "s": 1.997
+            "s": 1.533
           }
         ]
       }
@@ -803,7 +803,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/add-make-ten/ramlah/ask.mp3",
-        "durationInSeconds": 3.669,
+        "durationInSeconds": 2.601,
         "numberTimes": [
           {
             "n": 8,
@@ -811,72 +811,72 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 5,
-            "s": 0.975
+            "s": 0.708
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/add-make-ten/ramlah/build.mp3",
-        "durationInSeconds": 5.341,
+        "durationInSeconds": 4.04,
         "numberTimes": [
           {
             "n": 8,
-            "s": 0.627
+            "s": 0.522
           },
           {
             "n": 5,
-            "s": 3.17
+            "s": 2.322
           }
         ]
       },
       {
         "id": "strategy",
         "file": "lesson-voice/add-make-ten/ramlah/strategy.mp3",
-        "durationInSeconds": 10.542,
+        "durationInSeconds": 9.149,
         "numberTimes": [
           {
             "n": 2,
-            "s": 1.01
+            "s": 0.871
           },
           {
             "n": 2,
-            "s": 3.773
+            "s": 2.635
           },
           {
             "n": 3,
-            "s": 7.384
+            "s": 6.339
           },
           {
             "n": 10,
-            "s": 8.266
+            "s": 7.117
           },
           {
             "n": 3,
-            "s": 8.87
+            "s": 7.639
           },
           {
             "n": 13,
-            "s": 9.555
+            "s": 8.115
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/add-make-ten/ramlah/record.mp3",
-        "durationInSeconds": 5.851,
+        "durationInSeconds": 3.715,
         "numberTimes": [
           {
             "n": 8,
-            "s": 0.383
+            "s": 0.36
           },
           {
             "n": 5,
-            "s": 1.068
+            "s": 0.72
           },
           {
             "n": 13,
-            "s": 1.869
+            "s": 1.103
           }
         ]
       }
@@ -887,7 +887,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/sub-bridge/ramlah/ask.mp3",
-        "durationInSeconds": 4.04,
+        "durationInSeconds": 2.926,
         "numberTimes": [
           {
             "n": 15,
@@ -895,29 +895,29 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 7,
-            "s": 1.451
+            "s": 1.126
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/sub-bridge/ramlah/build.mp3",
-        "durationInSeconds": 4.505,
+        "durationInSeconds": 2.74,
         "numberTimes": [
           {
             "n": 15,
-            "s": 0.511
+            "s": 0.476
           },
           {
             "n": 5,
-            "s": 3.32
+            "s": 1.904
           }
         ]
       },
       {
         "id": "strategy",
         "file": "lesson-voice/sub-bridge/ramlah/strategy.mp3",
-        "durationInSeconds": 11.053,
+        "durationInSeconds": 7.523,
         "numberTimes": [
           {
             "n": 15,
@@ -925,46 +925,46 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 5,
-            "s": 1.707
+            "s": 1.509
           },
           {
             "n": 5,
-            "s": 3.495
+            "s": 2.74
           },
           {
             "n": 10,
-            "s": 6.792
+            "s": 4.876
           },
           {
             "n": 2,
-            "s": 8.069
+            "s": 5.747
           },
           {
             "n": 8,
-            "s": 10.136
+            "s": 6.885
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/sub-bridge/ramlah/record.mp3",
-        "durationInSeconds": 6.966,
+        "durationInSeconds": 4.644,
         "numberTimes": [
           {
             "n": 15,
-            "s": 0.372
+            "s": 0.441
           },
           {
             "n": 7,
-            "s": 1.788
+            "s": 1.486
           },
           {
             "n": 8,
-            "s": 2.45
+            "s": 1.997
           },
           {
             "n": 10,
-            "s": 4.075
+            "s": 2.81
           }
         ]
       }
@@ -975,7 +975,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/add-count-on/ramlah/ask.mp3",
-        "durationInSeconds": 3.715,
+        "durationInSeconds": 2.322,
         "numberTimes": [
           {
             "n": 7,
@@ -983,60 +983,60 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 2,
-            "s": 1.138
+            "s": 0.836
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/add-count-on/ramlah/build.mp3",
-        "durationInSeconds": 6.223,
+        "durationInSeconds": 4.18,
         "numberTimes": [
           {
             "n": 7,
-            "s": 0.627
+            "s": 0.511
           },
           {
             "n": 2,
-            "s": 4.087
+            "s": 2.566
           }
         ]
       },
       {
         "id": "strategy",
         "file": "lesson-voice/add-count-on/ramlah/strategy.mp3",
-        "durationInSeconds": 7.059,
+        "durationInSeconds": 3.065,
         "numberTimes": [
           {
             "n": 7,
-            "s": 1.022
+            "s": 0.65
           },
           {
             "n": 8,
-            "s": 4.737
+            "s": 1.881
           },
           {
             "n": 9,
-            "s": 6.293
+            "s": 2.392
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/add-count-on/ramlah/record.mp3",
-        "durationInSeconds": 6.455,
+        "durationInSeconds": 3.994,
         "numberTimes": [
           {
             "n": 7,
-            "s": 0.441
+            "s": 0.395
           },
           {
             "n": 2,
-            "s": 1.498
+            "s": 0.964
           },
           {
             "n": 9,
-            "s": 2.299
+            "s": 1.335
           }
         ]
       }
@@ -1047,7 +1047,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/add-zero-comm/ramlah/ask.mp3",
-        "durationInSeconds": 3.576,
+        "durationInSeconds": 2.554,
         "numberTimes": [
           {
             "n": 3,
@@ -1055,29 +1055,29 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 8,
-            "s": 0.998
+            "s": 0.894
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/add-zero-comm/ramlah/build.mp3",
-        "durationInSeconds": 5.48,
+        "durationInSeconds": 4.458,
         "numberTimes": [
           {
             "n": 3,
-            "s": 0.604
+            "s": 0.522
           },
           {
             "n": 8,
-            "s": 3.402
+            "s": 2.589
           }
         ]
       },
       {
         "id": "strategy",
         "file": "lesson-voice/add-zero-comm/ramlah/strategy.mp3",
-        "durationInSeconds": 13.746,
+        "durationInSeconds": 9.613,
         "numberTimes": [
           {
             "n": 3,
@@ -1085,54 +1085,54 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 8,
-            "s": 0.708
+            "s": 0.731
           },
           {
             "n": 8,
-            "s": 4.423
+            "s": 3.262
           },
           {
             "n": 3,
-            "s": 5.074
+            "s": 3.634
           },
           {
             "n": 11,
-            "s": 10.252
+            "s": 6.896
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/add-zero-comm/ramlah/record.mp3",
-        "durationInSeconds": 9.381,
+        "durationInSeconds": 5.944,
         "numberTimes": [
           {
             "n": 3,
-            "s": 0.395
+            "s": 0.43
           },
           {
             "n": 8,
-            "s": 1.324
+            "s": 0.917
           },
           {
             "n": 11,
-            "s": 2.078
+            "s": 1.312
           },
           {
             "n": 3,
-            "s": 5.039
+            "s": 3.355
           },
           {
             "n": 8,
-            "s": 5.991
+            "s": 3.843
           },
           {
             "n": 8,
-            "s": 7.651
+            "s": 4.807
           },
           {
             "n": 3,
-            "s": 8.58
+            "s": 5.306
           }
         ]
       }
@@ -1143,7 +1143,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/add-near-doubles/ramlah/ask.mp3",
-        "durationInSeconds": 3.622,
+        "durationInSeconds": 2.601,
         "numberTimes": [
           {
             "n": 6,
@@ -1151,88 +1151,88 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 7,
-            "s": 1.068
+            "s": 0.836
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/add-near-doubles/ramlah/build.mp3",
-        "durationInSeconds": 5.016,
+        "durationInSeconds": 4.04,
         "numberTimes": [
           {
             "n": 6,
-            "s": 0.476
+            "s": 0.534
           },
           {
             "n": 7,
-            "s": 2.972
+            "s": 2.38
           }
         ]
       },
       {
         "id": "strategy",
         "file": "lesson-voice/add-near-doubles/ramlah/strategy.mp3",
-        "durationInSeconds": 11.889,
+        "durationInSeconds": 8.731,
         "numberTimes": [
           {
             "n": 4,
-            "s": 1.057
+            "s": 0.824
           },
           {
             "n": 4,
-            "s": 3.704
+            "s": 2.519
           },
           {
             "n": 3,
-            "s": 8.557
+            "s": 6.177
           },
           {
             "n": 10,
-            "s": 9.485
+            "s": 6.966
           },
           {
             "n": 3,
-            "s": 10.043
+            "s": 7.442
           },
           {
             "n": 13,
-            "s": 10.739
+            "s": 7.848
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/add-near-doubles/ramlah/record.mp3",
-        "durationInSeconds": 7.941,
+        "durationInSeconds": 4.365,
         "numberTimes": [
           {
             "n": 6,
-            "s": 0.383
+            "s": 0.43
           },
           {
             "n": 7,
-            "s": 1.382
+            "s": 0.824
           },
           {
             "n": 13,
-            "s": 2.067
+            "s": 1.184
           },
           {
             "n": 6,
-            "s": 3.367
+            "s": 1.73
           },
           {
             "n": 6,
-            "s": 3.982
+            "s": 2.125
           },
           {
             "n": 12,
-            "s": 4.69
+            "s": 2.485
           },
           {
             "n": 13,
-            "s": 6.803
+            "s": 3.587
           }
         ]
       }
@@ -1243,7 +1243,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/sub-count-back/ramlah/ask.mp3",
-        "durationInSeconds": 3.808,
+        "durationInSeconds": 2.508,
         "numberTimes": [
           {
             "n": 9,
@@ -1251,56 +1251,56 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 2,
-            "s": 1.335
+            "s": 0.906
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/sub-count-back/ramlah/build.mp3",
-        "durationInSeconds": 2.833,
+        "durationInSeconds": 2.322,
         "numberTimes": [
           {
             "n": 9,
-            "s": 0.569
+            "s": 0.453
           }
         ]
       },
       {
         "id": "strategy",
         "file": "lesson-voice/sub-count-back/ramlah/strategy.mp3",
-        "durationInSeconds": 6.734,
+        "durationInSeconds": 2.786,
         "numberTimes": [
           {
             "n": 9,
-            "s": 0.975
+            "s": 0.58
           },
           {
             "n": 8,
-            "s": 4.098
+            "s": 1.788
           },
           {
             "n": 7,
-            "s": 5.77
+            "s": 2.171
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/sub-count-back/ramlah/record.mp3",
-        "durationInSeconds": 5.944,
+        "durationInSeconds": 3.947,
         "numberTimes": [
           {
             "n": 9,
-            "s": 0.395
+            "s": 0.476
           },
           {
             "n": 2,
-            "s": 1.416
+            "s": 1.335
           },
           {
             "n": 7,
-            "s": 1.927
+            "s": 1.672
           }
         ]
       }
@@ -1311,7 +1311,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/sub-zero/ramlah/ask.mp3",
-        "durationInSeconds": 4.04,
+        "durationInSeconds": 2.786,
         "numberTimes": [
           {
             "n": 7,
@@ -1319,48 +1319,48 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 7,
-            "s": 1.347
+            "s": 0.929
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/sub-zero/ramlah/build.mp3",
-        "durationInSeconds": 3.808,
+        "durationInSeconds": 2.322,
         "numberTimes": [
           {
             "n": 7,
-            "s": 0.65
+            "s": 0.511
           }
         ]
       },
       {
         "id": "strategy",
         "file": "lesson-voice/sub-zero/ramlah/strategy.mp3",
-        "durationInSeconds": 5.48,
+        "durationInSeconds": 3.947,
         "numberTimes": [
           {
             "n": 7,
-            "s": 0.871
+            "s": 0.662
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/sub-zero/ramlah/record.mp3",
-        "durationInSeconds": 6.037,
+        "durationInSeconds": 4.272,
         "numberTimes": [
           {
             "n": 7,
-            "s": 0.395
+            "s": 0.36
           },
           {
             "n": 7,
-            "s": 1.498
+            "s": 1.161
           },
           {
             "n": 0,
-            "s": 2.229
+            "s": 1.591
           }
         ]
       }
@@ -1371,7 +1371,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/sub-halves/ramlah/ask.mp3",
-        "durationInSeconds": 3.901,
+        "durationInSeconds": 2.647,
         "numberTimes": [
           {
             "n": 12,
@@ -1379,29 +1379,29 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 6,
-            "s": 1.37
+            "s": 0.964
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/sub-halves/ramlah/build.mp3",
-        "durationInSeconds": 3.762,
+        "durationInSeconds": 2.786,
         "numberTimes": [
           {
             "n": 12,
-            "s": 0.476
+            "s": 0.569
           },
           {
             "n": 2,
-            "s": 2.81
+            "s": 1.985
           }
         ]
       },
       {
         "id": "strategy",
         "file": "lesson-voice/sub-halves/ramlah/strategy.mp3",
-        "durationInSeconds": 10.635,
+        "durationInSeconds": 7.105,
         "numberTimes": [
           {
             "n": 12,
@@ -1409,66 +1409,66 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 2,
-            "s": 1.741
+            "s": 1.231
           },
           {
             "n": 2,
-            "s": 3.506
+            "s": 2.345
           },
           {
             "n": 10,
-            "s": 6.664
+            "s": 4.365
           },
           {
             "n": 4,
-            "s": 7.651
+            "s": 5.108
           },
           {
             "n": 6,
-            "s": 9.834
+            "s": 6.258
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/sub-halves/ramlah/record.mp3",
-        "durationInSeconds": 9.381,
+        "durationInSeconds": 5.851,
         "numberTimes": [
           {
             "n": 12,
-            "s": 0.348
+            "s": 0.372
           },
           {
             "n": 6,
-            "s": 1.556
+            "s": 1.231
           },
           {
             "n": 6,
-            "s": 2.264
+            "s": 1.683
           },
           {
             "n": 6,
-            "s": 3.297
+            "s": 2.415
           },
           {
             "n": 6,
-            "s": 4.191
+            "s": 2.972
           },
           {
             "n": 12,
-            "s": 4.911
+            "s": 3.367
           },
           {
             "n": 12,
-            "s": 6.072
+            "s": 3.924
           },
           {
             "n": 6,
-            "s": 7.581
+            "s": 4.644
           },
           {
             "n": 6,
-            "s": 8.359
+            "s": 5.05
           }
         ]
       }
@@ -1479,108 +1479,108 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/mul-identity/ramlah/ask.mp3",
-        "durationInSeconds": 4.365,
+        "durationInSeconds": 2.972,
         "numberTimes": [
           {
             "n": 1,
-            "s": 1.614
+            "s": 1.126
           },
           {
             "n": 7,
-            "s": 2.496
+            "s": 1.625
           }
         ]
       },
       {
         "id": "groups",
         "file": "lesson-voice/mul-identity/ramlah/groups.mp3",
-        "durationInSeconds": 9.66,
+        "durationInSeconds": 5.712,
         "numberTimes": [
           {
             "n": 7,
-            "s": 0.813
+            "s": 0.836
           },
           {
             "n": 1,
-            "s": 1.974
+            "s": 1.707
           },
           {
             "n": 1,
-            "s": 5.619
+            "s": 3.855
           }
         ]
       },
       {
         "id": "count",
         "file": "lesson-voice/mul-identity/ramlah/count.mp3",
-        "durationInSeconds": 14.814,
+        "durationInSeconds": 9.334,
         "numberTimes": [
           {
             "n": 1,
-            "s": 2.368
+            "s": 1.3
           },
           {
             "n": 2,
-            "s": 2.775
+            "s": 1.637
           },
           {
             "n": 3,
-            "s": 3.309
+            "s": 1.95
           },
           {
             "n": 4,
-            "s": 3.866
+            "s": 2.287
           },
           {
             "n": 5,
-            "s": 4.377
+            "s": 2.589
           },
           {
             "n": 6,
-            "s": 4.946
+            "s": 2.902
           },
           {
             "n": 7,
-            "s": 5.468
+            "s": 3.228
           },
           {
             "n": 1,
-            "s": 7.477
+            "s": 4.377
           },
           {
             "n": 7,
-            "s": 8.522
+            "s": 5.004
           },
           {
             "n": 7,
-            "s": 10.449
+            "s": 6.002
           },
           {
             "n": 1,
-            "s": 11.645
+            "s": 6.699
           },
           {
             "n": 7,
-            "s": 12.295
+            "s": 7.233
           }
         ]
       },
       {
         "id": "trick",
         "file": "lesson-voice/mul-identity/ramlah/trick.mp3",
-        "durationInSeconds": 14.489,
+        "durationInSeconds": 12.028,
         "numberTimes": [
           {
             "n": 1,
-            "s": 1.428
+            "s": 1.649
           },
           {
             "n": 1,
-            "s": 7.512
+            "s": 6.722
           },
           {
             "n": 0,
-            "s": 13.642
+            "s": 11.215
           }
         ]
       }
@@ -1591,120 +1591,120 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/mul-squares/ramlah/ask.mp3",
-        "durationInSeconds": 4.133,
+        "durationInSeconds": 2.972,
         "numberTimes": [
           {
             "n": 6,
-            "s": 1.405
+            "s": 1.126
           },
           {
             "n": 6,
-            "s": 2.229
+            "s": 1.672
           }
         ]
       },
       {
         "id": "groups",
         "file": "lesson-voice/mul-squares/ramlah/groups.mp3",
-        "durationInSeconds": 9.149,
+        "durationInSeconds": 6.037,
         "numberTimes": [
           {
             "n": 6,
-            "s": 0.743
+            "s": 0.778
           },
           {
             "n": 6,
-            "s": 1.881
+            "s": 1.521
           },
           {
             "n": 6,
-            "s": 5.805
+            "s": 3.913
           }
         ]
       },
       {
         "id": "count",
         "file": "lesson-voice/mul-squares/ramlah/count.mp3",
-        "durationInSeconds": 18.901,
+        "durationInSeconds": 12.585,
         "numberTimes": [
           {
             "n": 6,
-            "s": 1.602
+            "s": 1.3
           },
           {
             "n": 12,
-            "s": 2.252
+            "s": 1.649
           },
           {
             "n": 18,
-            "s": 2.984
+            "s": 2.043
           },
           {
             "n": 24,
-            "s": 3.889
+            "s": 2.659
           },
           {
             "n": 30,
-            "s": 4.83
+            "s": 3.32
           },
           {
             "n": 36,
-            "s": 5.538
+            "s": 3.773
           },
           {
             "n": 6,
-            "s": 7.883
+            "s": 4.876
           },
           {
             "n": 6,
-            "s": 8.986
+            "s": 5.48
           },
           {
             "n": 6,
-            "s": 10.019
+            "s": 6.06
           },
           {
             "n": 6,
-            "s": 10.96
+            "s": 6.571
           },
           {
             "n": 6,
-            "s": 11.854
+            "s": 7.07
           },
           {
             "n": 6,
-            "s": 12.736
+            "s": 7.512
           },
           {
             "n": 36,
-            "s": 13.816
+            "s": 8.092
           },
           {
             "n": 6,
-            "s": 15.523
+            "s": 9.613
           },
           {
             "n": 6,
-            "s": 16.382
+            "s": 10.286
           }
         ]
       },
       {
         "id": "trick",
         "file": "lesson-voice/mul-squares/ramlah/trick.mp3",
-        "durationInSeconds": 8.081,
+        "durationInSeconds": 6.455,
         "numberTimes": [
           {
             "n": 6,
-            "s": 4.795
+            "s": 3.889
           },
           {
             "n": 6,
-            "s": 5.538
+            "s": 4.458
           },
           {
             "n": 6,
-            "s": 6.641
+            "s": 5.271
           }
         ]
       }
@@ -1715,116 +1715,116 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/mul-6-9/ramlah/ask.mp3",
-        "durationInSeconds": 4.783,
+        "durationInSeconds": 2.926,
         "numberTimes": [
           {
             "n": 6,
-            "s": 1.962
+            "s": 1.196
           },
           {
             "n": 7,
-            "s": 2.879
+            "s": 1.66
           }
         ]
       },
       {
         "id": "groups",
         "file": "lesson-voice/mul-6-9/ramlah/groups.mp3",
-        "durationInSeconds": 9.938,
+        "durationInSeconds": 5.759,
         "numberTimes": [
           {
             "n": 7,
-            "s": 0.813
+            "s": 0.731
           },
           {
             "n": 6,
-            "s": 1.939
+            "s": 1.474
           },
           {
             "n": 6,
-            "s": 5.991
+            "s": 3.704
           }
         ]
       },
       {
         "id": "count",
         "file": "lesson-voice/mul-6-9/ramlah/count.mp3",
-        "durationInSeconds": 18.112,
+        "durationInSeconds": 10.403,
         "numberTimes": [
           {
             "n": 6,
-            "s": 2.426
+            "s": 1.416
           },
           {
             "n": 12,
-            "s": 3.077
+            "s": 1.788
           },
           {
             "n": 18,
-            "s": 3.808
+            "s": 2.125
           },
           {
             "n": 24,
-            "s": 4.841
+            "s": 2.705
           },
           {
             "n": 30,
-            "s": 5.851
+            "s": 3.251
           },
           {
             "n": 36,
-            "s": 6.56
+            "s": 3.634
           },
           {
             "n": 42,
-            "s": 7.651
+            "s": 4.145
           },
           {
             "n": 6,
-            "s": 9.404
+            "s": 5.19
           },
           {
             "n": 7,
-            "s": 10.484
+            "s": 5.991
           },
           {
             "n": 42,
-            "s": 12.562
+            "s": 7.036
           },
           {
             "n": 6,
-            "s": 14.141
+            "s": 7.895
           },
           {
             "n": 7,
-            "s": 14.965
+            "s": 8.348
           }
         ]
       },
       {
         "id": "trick",
         "file": "lesson-voice/mul-6-9/ramlah/trick.mp3",
-        "durationInSeconds": 11.796,
+        "durationInSeconds": 9.056,
         "numberTimes": [
           {
             "n": 7,
-            "s": 2.577
+            "s": 2.113
           },
           {
             "n": 5,
-            "s": 3.495
+            "s": 2.868
           },
           {
             "n": 35,
-            "s": 4.342
+            "s": 3.402
           },
           {
             "n": 7,
-            "s": 5.782
+            "s": 4.261
           },
           {
             "n": 42,
-            "s": 7.024
+            "s": 5.19
           }
         ]
       }
@@ -1835,124 +1835,124 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/mul-10-12/ramlah/ask.mp3",
-        "durationInSeconds": 4.133,
+        "durationInSeconds": 2.926,
         "numberTimes": [
           {
             "n": 12,
-            "s": 1.254
+            "s": 1.149
           },
           {
             "n": 4,
-            "s": 2.276
+            "s": 1.707
           }
         ]
       },
       {
         "id": "groups",
         "file": "lesson-voice/mul-10-12/ramlah/groups.mp3",
-        "durationInSeconds": 8.313,
+        "durationInSeconds": 5.805,
         "numberTimes": [
           {
             "n": 4,
-            "s": 0.662
+            "s": 0.72
           },
           {
             "n": 12,
-            "s": 1.533
+            "s": 1.382
           },
           {
             "n": 12,
-            "s": 4.621
+            "s": 3.495
           }
         ]
       },
       {
         "id": "count",
         "file": "lesson-voice/mul-10-12/ramlah/count.mp3",
-        "durationInSeconds": 17.276,
+        "durationInSeconds": 9.102,
         "numberTimes": [
           {
             "n": 12,
-            "s": 1.556
+            "s": 1.289
           },
           {
             "n": 24,
-            "s": 2.299
+            "s": 1.672
           },
           {
             "n": 36,
-            "s": 3.274
+            "s": 2.136
           },
           {
             "n": 48,
-            "s": 4.272
+            "s": 2.647
           },
           {
             "n": 12,
-            "s": 6.536
+            "s": 3.576
           },
           {
             "n": 12,
-            "s": 7.79
+            "s": 4.145
           },
           {
             "n": 12,
-            "s": 9.067
+            "s": 4.737
           },
           {
             "n": 12,
-            "s": 10.182
+            "s": 5.248
           },
           {
             "n": 48,
-            "s": 11.505
+            "s": 5.84
           },
           {
             "n": 12,
-            "s": 13.27
+            "s": 6.467
           },
           {
             "n": 4,
-            "s": 14.338
+            "s": 7.07
           }
         ]
       },
       {
         "id": "trick",
         "file": "lesson-voice/mul-10-12/ramlah/trick.mp3",
-        "durationInSeconds": 10.263,
+        "durationInSeconds": 6.037,
         "numberTimes": [
           {
             "n": 12,
-            "s": 0.708
+            "s": 0.58
           },
           {
             "n": 4,
-            "s": 1.881
+            "s": 1.149
           },
           {
             "n": 10,
-            "s": 2.833
+            "s": 1.683
           },
           {
             "n": 40,
-            "s": 3.46
+            "s": 2.113
           },
           {
             "n": 4,
-            "s": 4.505
+            "s": 2.821
           },
           {
             "n": 2,
-            "s": 5.433
+            "s": 3.355
           },
           {
             "n": 8,
-            "s": 5.968
+            "s": 3.657
           },
           {
             "n": 48,
-            "s": 9.079
+            "s": 5.12
           }
         ]
       }
@@ -1963,7 +1963,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/div-skip/ramlah/ask.mp3",
-        "durationInSeconds": 7.384,
+        "durationInSeconds": 5.851,
         "numberTimes": [
           {
             "n": 30,
@@ -1971,88 +1971,88 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 5,
-            "s": 1.393
+            "s": 1.3
           }
         ]
       },
       {
         "id": "deal",
         "file": "lesson-voice/div-skip/ramlah/deal.mp3",
-        "durationInSeconds": 11.842,
+        "durationInSeconds": 9.009,
         "numberTimes": [
           {
             "n": 5,
-            "s": 6.664
+            "s": 5.074
           },
           {
             "n": 6,
-            "s": 11.064
+            "s": 8.22
           }
         ]
       },
       {
         "id": "group",
         "file": "lesson-voice/div-skip/ramlah/group.mp3",
-        "durationInSeconds": 15.604,
+        "durationInSeconds": 12.585,
         "numberTimes": [
           {
             "n": 5,
-            "s": 4.214
+            "s": 3.286
           },
           {
             "n": 30,
-            "s": 6.722
+            "s": 5.248
           },
           {
             "n": 5,
-            "s": 8.835
+            "s": 6.931
           },
           {
             "n": 6,
-            "s": 13.595
+            "s": 10.809
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/div-skip/ramlah/record.mp3",
-        "durationInSeconds": 10.403,
+        "durationInSeconds": 6.548,
         "numberTimes": [
           {
             "n": 30,
-            "s": 0.372
+            "s": 0.453
           },
           {
             "n": 5,
-            "s": 1.683
+            "s": 1.428
           },
           {
             "n": 6,
-            "s": 2.531
+            "s": 1.846
           },
           {
             "n": 5,
-            "s": 3.564
+            "s": 2.322
           },
           {
             "n": 6,
-            "s": 4.598
+            "s": 2.972
           },
           {
             "n": 30,
-            "s": 5.793
+            "s": 3.646
           },
           {
             "n": 30,
-            "s": 6.85
+            "s": 4.226
           },
           {
             "n": 5,
-            "s": 8.382
+            "s": 5.085
           },
           {
             "n": 6,
-            "s": 9.555
+            "s": 5.77
           }
         ]
       }
@@ -2063,7 +2063,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/div-identity/ramlah/ask.mp3",
-        "durationInSeconds": 7.338,
+        "durationInSeconds": 5.526,
         "numberTimes": [
           {
             "n": 7,
@@ -2071,64 +2071,64 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 1,
-            "s": 1.416
+            "s": 1.115
           }
         ]
       },
       {
         "id": "deal",
         "file": "lesson-voice/div-identity/ramlah/deal.mp3",
-        "durationInSeconds": 14.721,
+        "durationInSeconds": 9.288,
         "numberTimes": [
           {
             "n": 7,
-            "s": 13.862
+            "s": 8.58
           }
         ]
       },
       {
         "id": "group",
         "file": "lesson-voice/div-identity/ramlah/group.mp3",
-        "durationInSeconds": 14.35,
+        "durationInSeconds": 11.842,
         "numberTimes": [
           {
             "n": 1,
-            "s": 4.029
+            "s": 3.32
           },
           {
             "n": 7,
-            "s": 5.991
+            "s": 5.074
           },
           {
             "n": 1,
-            "s": 7.999
+            "s": 6.769
           },
           {
             "n": 7,
-            "s": 12.481
+            "s": 10.043
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/div-identity/ramlah/record.mp3",
-        "durationInSeconds": 6.177,
+        "durationInSeconds": 4.272,
         "numberTimes": [
           {
             "n": 7,
-            "s": 0.441
+            "s": 0.534
           },
           {
             "n": 1,
-            "s": 1.672
+            "s": 1.393
           },
           {
             "n": 7,
-            "s": 2.415
+            "s": 1.753
           },
           {
             "n": 1,
-            "s": 4.168
+            "s": 2.81
           }
         ]
       }
@@ -2139,7 +2139,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/div-squares/ramlah/ask.mp3",
-        "durationInSeconds": 7.663,
+        "durationInSeconds": 5.712,
         "numberTimes": [
           {
             "n": 36,
@@ -2147,88 +2147,88 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 6,
-            "s": 1.811
+            "s": 1.498
           }
         ]
       },
       {
         "id": "deal",
         "file": "lesson-voice/div-squares/ramlah/deal.mp3",
-        "durationInSeconds": 11.656,
+        "durationInSeconds": 8.498,
         "numberTimes": [
           {
             "n": 6,
-            "s": 6.177
+            "s": 5.039
           },
           {
             "n": 6,
-            "s": 10.832
+            "s": 7.651
           }
         ]
       },
       {
         "id": "group",
         "file": "lesson-voice/div-squares/ramlah/group.mp3",
-        "durationInSeconds": 15.464,
+        "durationInSeconds": 12.167,
         "numberTimes": [
           {
             "n": 6,
-            "s": 3.971
+            "s": 3.344
           },
           {
             "n": 36,
-            "s": 6.374
+            "s": 4.795
           },
           {
             "n": 6,
-            "s": 8.812
+            "s": 6.931
           },
           {
             "n": 6,
-            "s": 13.491
+            "s": 10.426
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/div-squares/ramlah/record.mp3",
-        "durationInSeconds": 11.424,
+        "durationInSeconds": 7.059,
         "numberTimes": [
           {
             "n": 36,
-            "s": 0.383
+            "s": 0.395
           },
           {
             "n": 6,
-            "s": 1.962
+            "s": 1.474
           },
           {
             "n": 6,
-            "s": 2.775
+            "s": 2.009
           },
           {
             "n": 6,
-            "s": 3.727
+            "s": 2.752
           },
           {
             "n": 6,
-            "s": 4.609
+            "s": 3.286
           },
           {
             "n": 36,
-            "s": 5.77
+            "s": 3.855
           },
           {
             "n": 36,
-            "s": 7.349
+            "s": 4.621
           },
           {
             "n": 6,
-            "s": 9.323
+            "s": 5.654
           },
           {
             "n": 6,
-            "s": 10.495
+            "s": 6.293
           }
         ]
       }
@@ -2239,7 +2239,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/div-3-4/ramlah/ask.mp3",
-        "durationInSeconds": 7.663,
+        "durationInSeconds": 5.944,
         "numberTimes": [
           {
             "n": 24,
@@ -2247,88 +2247,88 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 1.823
+            "s": 1.486
           }
         ]
       },
       {
         "id": "deal",
         "file": "lesson-voice/div-3-4/ramlah/deal.mp3",
-        "durationInSeconds": 12.632,
+        "durationInSeconds": 8.127,
         "numberTimes": [
           {
             "n": 4,
-            "s": 7.279
+            "s": 4.447
           },
           {
             "n": 6,
-            "s": 11.749
+            "s": 7.279
           }
         ]
       },
       {
         "id": "group",
         "file": "lesson-voice/div-3-4/ramlah/group.mp3",
-        "durationInSeconds": 14.954,
+        "durationInSeconds": 11.61,
         "numberTimes": [
           {
             "n": 4,
-            "s": 4.04
+            "s": 3.042
           },
           {
             "n": 24,
-            "s": 6.142
+            "s": 4.656
           },
           {
             "n": 4,
-            "s": 8.452
+            "s": 6.281
           },
           {
             "n": 6,
-            "s": 13.038
+            "s": 9.567
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/div-3-4/ramlah/record.mp3",
-        "durationInSeconds": 11.796,
+        "durationInSeconds": 7.616,
         "numberTimes": [
           {
             "n": 24,
-            "s": 0.383
+            "s": 0.372
           },
           {
             "n": 4,
-            "s": 2.136
+            "s": 1.567
           },
           {
             "n": 6,
-            "s": 3.007
+            "s": 2.09
           },
           {
             "n": 4,
-            "s": 4.029
+            "s": 3.193
           },
           {
             "n": 6,
-            "s": 5.108
+            "s": 3.785
           },
           {
             "n": 24,
-            "s": 6.339
+            "s": 4.47
           },
           {
             "n": 24,
-            "s": 7.779
+            "s": 5.433
           },
           {
             "n": 4,
-            "s": 9.694
+            "s": 6.362
           },
           {
             "n": 6,
-            "s": 10.89
+            "s": 6.873
           }
         ]
       }
@@ -2339,7 +2339,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/div-6-9/ramlah/ask.mp3",
-        "durationInSeconds": 7.012,
+        "durationInSeconds": 5.991,
         "numberTimes": [
           {
             "n": 42,
@@ -2347,88 +2347,88 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 7,
-            "s": 1.707
+            "s": 1.614
           }
         ]
       },
       {
         "id": "deal",
         "file": "lesson-voice/div-6-9/ramlah/deal.mp3",
-        "durationInSeconds": 13.793,
+        "durationInSeconds": 9.102,
         "numberTimes": [
           {
             "n": 7,
-            "s": 8.057
+            "s": 5.166
           },
           {
             "n": 6,
-            "s": 12.968
+            "s": 8.371
           }
         ]
       },
       {
         "id": "group",
         "file": "lesson-voice/div-6-9/ramlah/group.mp3",
-        "durationInSeconds": 14.489,
+        "durationInSeconds": 12.121,
         "numberTimes": [
           {
             "n": 7,
-            "s": 4.423
+            "s": 3.123
           },
           {
             "n": 42,
-            "s": 6.699
+            "s": 4.83
           },
           {
             "n": 7,
-            "s": 9.102
+            "s": 6.769
           },
           {
             "n": 6,
-            "s": 12.899
+            "s": 10.391
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/div-6-9/ramlah/record.mp3",
-        "durationInSeconds": 10.681,
+        "durationInSeconds": 7.43,
         "numberTimes": [
           {
             "n": 42,
-            "s": 0.383
+            "s": 0.464
           },
           {
             "n": 7,
-            "s": 1.834
+            "s": 1.486
           },
           {
             "n": 6,
-            "s": 2.624
+            "s": 2.009
           },
           {
             "n": 7,
-            "s": 3.727
+            "s": 2.601
           },
           {
             "n": 6,
-            "s": 4.69
+            "s": 3.274
           },
           {
             "n": 42,
-            "s": 5.851
+            "s": 3.994
           },
           {
             "n": 42,
-            "s": 7.21
+            "s": 4.981
           },
           {
             "n": 7,
-            "s": 8.777
+            "s": 6.002
           },
           {
             "n": 6,
-            "s": 9.892
+            "s": 6.699
           }
         ]
       }
@@ -2439,7 +2439,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/div-10-12/ramlah/ask.mp3",
-        "durationInSeconds": 7.616,
+        "durationInSeconds": 5.48,
         "numberTimes": [
           {
             "n": 48,
@@ -2447,88 +2447,88 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 12,
-            "s": 1.602
+            "s": 1.324
           }
         ]
       },
       {
         "id": "deal",
         "file": "lesson-voice/div-10-12/ramlah/deal.mp3",
-        "durationInSeconds": 13.235,
+        "durationInSeconds": 8.916,
         "numberTimes": [
           {
             "n": 12,
-            "s": 7.326
+            "s": 5.19
           },
           {
             "n": 4,
-            "s": 12.458
+            "s": 8.29
           }
         ]
       },
       {
         "id": "group",
         "file": "lesson-voice/div-10-12/ramlah/group.mp3",
-        "durationInSeconds": 16.161,
+        "durationInSeconds": 11.517,
         "numberTimes": [
           {
             "n": 12,
-            "s": 3.831
+            "s": 2.728
           },
           {
             "n": 48,
-            "s": 6.211
+            "s": 4.574
           },
           {
             "n": 12,
-            "s": 8.359
+            "s": 6.223
           },
           {
             "n": 4,
-            "s": 13.526
+            "s": 9.636
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/div-10-12/ramlah/record.mp3",
-        "durationInSeconds": 11.006,
+        "durationInSeconds": 7.012,
         "numberTimes": [
           {
             "n": 48,
-            "s": 0.383
+            "s": 0.406
           },
           {
             "n": 12,
-            "s": 1.892
+            "s": 1.312
           },
           {
             "n": 4,
-            "s": 2.81
+            "s": 1.881
           },
           {
             "n": 12,
-            "s": 3.646
+            "s": 2.519
           },
           {
             "n": 4,
-            "s": 4.876
+            "s": 3.135
           },
           {
             "n": 48,
-            "s": 5.968
+            "s": 3.762
           },
           {
             "n": 48,
-            "s": 7.349
+            "s": 4.505
           },
           {
             "n": 12,
-            "s": 8.893
+            "s": 5.422
           },
           {
             "n": 4,
-            "s": 10.205
+            "s": 6.351
           }
         ]
       }
@@ -2539,7 +2539,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/div-remainder/ramlah/ask.mp3",
-        "durationInSeconds": 7.291,
+        "durationInSeconds": 5.48,
         "numberTimes": [
           {
             "n": 29,
@@ -2547,92 +2547,92 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 1.858
+            "s": 1.707
           }
         ]
       },
       {
         "id": "deal",
         "file": "lesson-voice/div-remainder/ramlah/deal.mp3",
-        "durationInSeconds": 18.019,
+        "durationInSeconds": 14.025,
         "numberTimes": [
           {
             "n": 4,
-            "s": 6.211
+            "s": 4.783
           },
           {
             "n": 7,
-            "s": 10.693
+            "s": 8.545
           },
           {
             "n": 1,
-            "s": 11.575
+            "s": 9.346
           }
         ]
       },
       {
         "id": "group",
         "file": "lesson-voice/div-remainder/ramlah/group.mp3",
-        "durationInSeconds": 18.25,
+        "durationInSeconds": 15.372,
         "numberTimes": [
           {
             "n": 4,
-            "s": 4.238
+            "s": 3.297
           },
           {
             "n": 29,
-            "s": 6.246
+            "s": 4.946
           },
           {
             "n": 4,
-            "s": 8.673
+            "s": 6.629
           },
           {
             "n": 7,
-            "s": 12.144
+            "s": 10.704
           },
           {
             "n": 1,
-            "s": 14.048
+            "s": 11.947
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/div-remainder/ramlah/record.mp3",
-        "durationInSeconds": 10.495,
+        "durationInSeconds": 6.269,
         "numberTimes": [
           {
             "n": 29,
-            "s": 0.395
+            "s": 0.372
           },
           {
             "n": 4,
-            "s": 2.125
+            "s": 1.451
           },
           {
             "n": 7,
-            "s": 2.949
+            "s": 1.892
           },
           {
             "n": 1,
-            "s": 4.493
+            "s": 2.786
           },
           {
             "n": 4,
-            "s": 5.445
+            "s": 3.135
           },
           {
             "n": 7,
-            "s": 6.42
+            "s": 3.68
           },
           {
             "n": 28,
-            "s": 7.396
+            "s": 4.307
           },
           {
             "n": 1,
-            "s": 8.719
+            "s": 5.016
           }
         ]
       }
@@ -2643,7 +2643,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/sub-count-up/ramlah/ask.mp3",
-        "durationInSeconds": 4.365,
+        "durationInSeconds": 2.786,
         "numberTimes": [
           {
             "n": 13,
@@ -2651,80 +2651,80 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 8,
-            "s": 1.672
+            "s": 1.196
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/sub-count-up/ramlah/build.mp3",
-        "durationInSeconds": 5.062,
+        "durationInSeconds": 3.669,
         "numberTimes": [
           {
             "n": 8,
-            "s": 3.634
+            "s": 2.612
           }
         ]
       },
       {
         "id": "strategy",
         "file": "lesson-voice/sub-count-up/ramlah/strategy.mp3",
-        "durationInSeconds": 16.765,
+        "durationInSeconds": 13.7,
         "numberTimes": [
           {
             "n": 8,
-            "s": 1.149
+            "s": 1.01
           },
           {
             "n": 8,
-            "s": 5.143
+            "s": 3.855
           },
           {
             "n": 13,
-            "s": 5.956
+            "s": 4.458
           },
           {
             "n": 9,
-            "s": 7.906
+            "s": 6.478
           },
           {
             "n": 10,
-            "s": 8.661
+            "s": 7.546
           },
           {
             "n": 11,
-            "s": 9.474
+            "s": 8.417
           },
           {
             "n": 12,
-            "s": 10.612
+            "s": 8.963
           },
           {
             "n": 13,
-            "s": 11.517
+            "s": 9.52
           },
           {
             "n": 5,
-            "s": 14.129
+            "s": 11.297
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/sub-count-up/ramlah/record.mp3",
-        "durationInSeconds": 6.455,
+        "durationInSeconds": 4.923,
         "numberTimes": [
           {
             "n": 13,
-            "s": 0.348
+            "s": 0.418
           },
           {
             "n": 8,
-            "s": 1.8
+            "s": 1.509
           },
           {
             "n": 5,
-            "s": 2.543
+            "s": 1.939
           }
         ]
       }
@@ -2735,7 +2735,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/add-fact-family/ramlah/ask.mp3",
-        "durationInSeconds": 9.845,
+        "durationInSeconds": 7.755,
         "numberTimes": [
           {
             "n": 5,
@@ -2743,92 +2743,92 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 8,
-            "s": 0.836
+            "s": 0.731
           },
           {
             "n": 13,
-            "s": 1.451
+            "s": 1.126
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/add-fact-family/ramlah/build.mp3",
-        "durationInSeconds": 8.266,
+        "durationInSeconds": 5.062,
         "numberTimes": [
           {
             "n": 13,
-            "s": 2.426
+            "s": 1.556
           },
           {
             "n": 5,
-            "s": 6.304
+            "s": 3.82
           },
           {
             "n": 8,
-            "s": 7.465
+            "s": 4.47
           }
         ]
       },
       {
         "id": "facts",
         "file": "lesson-voice/add-fact-family/ramlah/facts.mp3",
-        "durationInSeconds": 26.47,
+        "durationInSeconds": 18.436,
         "numberTimes": [
           {
             "n": 5,
-            "s": 4.923
+            "s": 4.621
           },
           {
             "n": 8,
-            "s": 5.991
+            "s": 5.213
           },
           {
             "n": 13,
-            "s": 6.769
+            "s": 5.55
           },
           {
             "n": 8,
-            "s": 10.17
+            "s": 7.848
           },
           {
             "n": 5,
-            "s": 11.262
+            "s": 8.417
           },
           {
             "n": 13,
-            "s": 12.074
+            "s": 8.858
           },
           {
             "n": 13,
-            "s": 17.589
+            "s": 12.748
           },
           {
             "n": 8,
-            "s": 19.087
+            "s": 13.885
           },
           {
             "n": 5,
-            "s": 19.632
+            "s": 14.257
           },
           {
             "n": 13,
-            "s": 20.979
+            "s": 14.907
           },
           {
             "n": 5,
-            "s": 22.337
+            "s": 15.905
           },
           {
             "n": 8,
-            "s": 23.22
+            "s": 16.358
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/add-fact-family/ramlah/record.mp3",
-        "durationInSeconds": 4.319
+        "durationInSeconds": 3.483
       }
     ]
   },
@@ -2837,7 +2837,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/sub-fact-family/ramlah/ask.mp3",
-        "durationInSeconds": 10.031,
+        "durationInSeconds": 7.988,
         "numberTimes": [
           {
             "n": 6,
@@ -2845,92 +2845,92 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 9,
-            "s": 0.789
+            "s": 0.662
           },
           {
             "n": 15,
-            "s": 1.474
+            "s": 1.103
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/sub-fact-family/ramlah/build.mp3",
-        "durationInSeconds": 9.334,
+        "durationInSeconds": 5.108,
         "numberTimes": [
           {
             "n": 15,
-            "s": 2.287
+            "s": 1.115
           },
           {
             "n": 6,
-            "s": 6.664
+            "s": 3.193
           },
           {
             "n": 9,
-            "s": 8.51
+            "s": 4.272
           }
         ]
       },
       {
         "id": "facts",
         "file": "lesson-voice/sub-fact-family/ramlah/facts.mp3",
-        "durationInSeconds": 25.914,
+        "durationInSeconds": 17.972,
         "numberTimes": [
           {
             "n": 6,
-            "s": 5.84
+            "s": 4.563
           },
           {
             "n": 9,
-            "s": 6.571
+            "s": 5.19
           },
           {
             "n": 15,
-            "s": 7.314
+            "s": 5.631
           },
           {
             "n": 9,
-            "s": 10.449
+            "s": 7.964
           },
           {
             "n": 6,
-            "s": 11.285
+            "s": 8.498
           },
           {
             "n": 15,
-            "s": 12.005
+            "s": 8.951
           },
           {
             "n": 15,
-            "s": 17.601
+            "s": 12.341
           },
           {
             "n": 9,
-            "s": 18.901
+            "s": 13.421
           },
           {
             "n": 6,
-            "s": 19.633
+            "s": 13.816
           },
           {
             "n": 15,
-            "s": 20.98
+            "s": 14.547
           },
           {
             "n": 6,
-            "s": 22.292
+            "s": 15.58
           },
           {
             "n": 9,
-            "s": 23.035
+            "s": 16.068
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/sub-fact-family/ramlah/record.mp3",
-        "durationInSeconds": 4.505
+        "durationInSeconds": 3.808
       }
     ]
   },
@@ -2939,7 +2939,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/mul-fact-family/ramlah/ask.mp3",
-        "durationInSeconds": 8.87,
+        "durationInSeconds": 6.037,
         "numberTimes": [
           {
             "n": 3,
@@ -2947,96 +2947,96 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 0.697
+            "s": 0.592
           },
           {
             "n": 12,
-            "s": 1.335
+            "s": 0.987
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/mul-fact-family/ramlah/build.mp3",
-        "durationInSeconds": 8.777,
+        "durationInSeconds": 6.084,
         "numberTimes": [
           {
             "n": 3,
-            "s": 3.088
+            "s": 1.927
           },
           {
             "n": 4,
-            "s": 4.876
+            "s": 3.367
           },
           {
             "n": 12,
-            "s": 7.001
+            "s": 4.702
           }
         ]
       },
       {
         "id": "facts",
         "file": "lesson-voice/mul-fact-family/ramlah/facts.mp3",
-        "durationInSeconds": 29.954,
+        "durationInSeconds": 18.297,
         "numberTimes": [
           {
             "n": 3,
-            "s": 4.47
+            "s": 3.576
           },
           {
             "n": 4,
-            "s": 5.468
+            "s": 4.249
           },
           {
             "n": 12,
-            "s": 6.177
+            "s": 4.679
           },
           {
             "n": 4,
-            "s": 10.728
+            "s": 7.384
           },
           {
             "n": 3,
-            "s": 11.714
+            "s": 8.046
           },
           {
             "n": 12,
-            "s": 12.423
+            "s": 8.44
           },
           {
             "n": 12,
-            "s": 14.814
+            "s": 10.008
           },
           {
             "n": 12,
-            "s": 19.075
+            "s": 12.689
           },
           {
             "n": 3,
-            "s": 20.642
+            "s": 13.885
           },
           {
             "n": 4,
-            "s": 21.536
+            "s": 14.338
           },
           {
             "n": 12,
-            "s": 23.243
+            "s": 14.849
           },
           {
             "n": 4,
-            "s": 25.031
+            "s": 15.824
           },
           {
             "n": 3,
-            "s": 25.855
+            "s": 16.242
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/mul-fact-family/ramlah/record.mp3",
-        "durationInSeconds": 5.016
+        "durationInSeconds": 4.272
       }
     ]
   },
@@ -3045,7 +3045,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/div-fact-family/ramlah/ask.mp3",
-        "durationInSeconds": 8.498,
+        "durationInSeconds": 6.223,
         "numberTimes": [
           {
             "n": 4,
@@ -3053,96 +3053,96 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 6,
-            "s": 0.766
+            "s": 0.592
           },
           {
             "n": 24,
-            "s": 1.416
+            "s": 1.08
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/div-fact-family/ramlah/build.mp3",
-        "durationInSeconds": 9.009,
+        "durationInSeconds": 6.223,
         "numberTimes": [
           {
             "n": 4,
-            "s": 3.146
+            "s": 1.95
           },
           {
             "n": 6,
-            "s": 4.702
+            "s": 3.286
           },
           {
             "n": 24,
-            "s": 6.908
+            "s": 4.702
           }
         ]
       },
       {
         "id": "facts",
         "file": "lesson-voice/div-fact-family/ramlah/facts.mp3",
-        "durationInSeconds": 29.675,
+        "durationInSeconds": 19.226,
         "numberTimes": [
           {
             "n": 4,
-            "s": 4.435
+            "s": 3.704
           },
           {
             "n": 6,
-            "s": 5.364
+            "s": 4.319
           },
           {
             "n": 24,
-            "s": 6.188
+            "s": 4.772
           },
           {
             "n": 6,
-            "s": 10.774
+            "s": 7.825
           },
           {
             "n": 4,
-            "s": 11.761
+            "s": 8.394
           },
           {
             "n": 24,
-            "s": 12.562
+            "s": 8.777
           },
           {
             "n": 24,
-            "s": 15.058
+            "s": 10.681
           },
           {
             "n": 24,
-            "s": 19.273
+            "s": 13.189
           },
           {
             "n": 4,
-            "s": 21.328
+            "s": 14.408
           },
           {
             "n": 6,
-            "s": 22.152
+            "s": 14.884
           },
           {
             "n": 24,
-            "s": 23.464
+            "s": 15.592
           },
           {
             "n": 6,
-            "s": 25.229
+            "s": 16.788
           },
           {
             "n": 4,
-            "s": 26.076
+            "s": 17.287
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/div-fact-family/ramlah/record.mp3",
-        "durationInSeconds": 4.783
+        "durationInSeconds": 3.715
       }
     ]
   },
@@ -3151,7 +3151,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/mul-break-apart/ramlah/ask.mp3",
-        "durationInSeconds": 7.384,
+        "durationInSeconds": 4.505,
         "numberTimes": [
           {
             "n": 23,
@@ -3159,84 +3159,84 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 1.393
+            "s": 0.894
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/mul-break-apart/ramlah/build.mp3",
-        "durationInSeconds": 8.916,
+        "durationInSeconds": 6.92,
         "numberTimes": [
           {
             "n": 23,
-            "s": 2.009
+            "s": 1.254
           },
           {
             "n": 4,
-            "s": 3.913
+            "s": 3.17
           }
         ]
       },
       {
         "id": "split",
         "file": "lesson-voice/mul-break-apart/ramlah/split.mp3",
-        "durationInSeconds": 13.328,
+        "durationInSeconds": 9.288,
         "numberTimes": [
           {
             "n": 23,
-            "s": 2.241
+            "s": 1.939
           },
           {
             "n": 20,
-            "s": 3.367
+            "s": 2.589
           },
           {
             "n": 3,
-            "s": 4.331
+            "s": 3.019
           },
           {
             "n": 20,
-            "s": 7.918
+            "s": 6.084
           },
           {
             "n": 4,
-            "s": 8.882
+            "s": 6.734
           },
           {
             "n": 80,
-            "s": 9.752
+            "s": 7.117
           },
           {
             "n": 3,
-            "s": 10.809
+            "s": 7.57
           },
           {
             "n": 4,
-            "s": 11.61
+            "s": 8.173
           },
           {
             "n": 12,
-            "s": 12.365
+            "s": 8.545
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/mul-break-apart/ramlah/record.mp3",
-        "durationInSeconds": 9.706,
+        "durationInSeconds": 6.037,
         "numberTimes": [
           {
             "n": 80,
-            "s": 1.858
+            "s": 1.08
           },
           {
             "n": 12,
-            "s": 2.728
+            "s": 1.614
           },
           {
             "n": 92,
-            "s": 4.377
+            "s": 2.38
           }
         ]
       }
@@ -3247,7 +3247,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/mul-carry/ramlah/ask.mp3",
-        "durationInSeconds": 7.105,
+        "durationInSeconds": 4.83,
         "numberTimes": [
           {
             "n": 27,
@@ -3255,84 +3255,84 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 1.498
+            "s": 1.103
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/mul-carry/ramlah/build.mp3",
-        "durationInSeconds": 9.242,
+        "durationInSeconds": 6.084,
         "numberTimes": [
           {
             "n": 27,
-            "s": 1.869
+            "s": 1.207
           },
           {
             "n": 4,
-            "s": 4.075
+            "s": 2.589
           }
         ]
       },
       {
         "id": "split",
         "file": "lesson-voice/mul-carry/ramlah/split.mp3",
-        "durationInSeconds": 14.303,
+        "durationInSeconds": 9.659,
         "numberTimes": [
           {
             "n": 27,
-            "s": 2.31
+            "s": 1.533
           },
           {
             "n": 20,
-            "s": 3.448
+            "s": 2.519
           },
           {
             "n": 7,
-            "s": 4.261
+            "s": 3.135
           },
           {
             "n": 20,
-            "s": 7.825
+            "s": 6.002
           },
           {
             "n": 4,
-            "s": 9.334
+            "s": 6.676
           },
           {
             "n": 80,
-            "s": 10.124
+            "s": 7.152
           },
           {
             "n": 7,
-            "s": 11.204
+            "s": 7.651
           },
           {
             "n": 4,
-            "s": 12.295
+            "s": 8.336
           },
           {
             "n": 28,
-            "s": 13.142
+            "s": 8.742
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/mul-carry/ramlah/record.mp3",
-        "durationInSeconds": 10.077,
+        "durationInSeconds": 6.873,
         "numberTimes": [
           {
             "n": 80,
-            "s": 1.846
+            "s": 1.579
           },
           {
             "n": 28,
-            "s": 2.961
+            "s": 2.241
           },
           {
             "n": 108,
-            "s": 4.644
+            "s": 3.088
           }
         ]
       }
@@ -3343,7 +3343,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/mul-2d1d/ramlah/ask.mp3",
-        "durationInSeconds": 8.266,
+        "durationInSeconds": 4.737,
         "numberTimes": [
           {
             "n": 34,
@@ -3351,84 +3351,84 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 6,
-            "s": 1.556
+            "s": 0.998
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/mul-2d1d/ramlah/build.mp3",
-        "durationInSeconds": 9.752,
+        "durationInSeconds": 6.641,
         "numberTimes": [
           {
             "n": 34,
-            "s": 2.438
+            "s": 1.347
           },
           {
             "n": 6,
-            "s": 4.516
+            "s": 3.042
           }
         ]
       },
       {
         "id": "split",
         "file": "lesson-voice/mul-2d1d/ramlah/split.mp3",
-        "durationInSeconds": 14.164,
+        "durationInSeconds": 9.799,
         "numberTimes": [
           {
             "n": 34,
-            "s": 2.334
+            "s": 1.892
           },
           {
             "n": 30,
-            "s": 3.332
+            "s": 2.624
           },
           {
             "n": 4,
-            "s": 4.098
+            "s": 3.17
           },
           {
             "n": 30,
+            "s": 5.642
+          },
+          {
+            "n": 6,
+            "s": 6.327
+          },
+          {
+            "n": 180,
+            "s": 6.827
+          },
+          {
+            "n": 4,
             "s": 7.86
           },
           {
             "n": 6,
-            "s": 8.893
-          },
-          {
-            "n": 180,
-            "s": 9.776
-          },
-          {
-            "n": 4,
-            "s": 11.32
-          },
-          {
-            "n": 6,
-            "s": 12.202
+            "s": 8.487
           },
           {
             "n": 24,
-            "s": 12.922
+            "s": 8.951
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/mul-2d1d/ramlah/record.mp3",
-        "durationInSeconds": 10.077,
+        "durationInSeconds": 5.573,
         "numberTimes": [
           {
             "n": 180,
-            "s": 1.776
+            "s": 1.231
           },
           {
             "n": 24,
-            "s": 3.262
+            "s": 2.113
           },
           {
             "n": 204,
-            "s": 5.341
+            "s": 2.868
           }
         ]
       }
@@ -3439,7 +3439,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/mul-2d2d/ramlah/ask.mp3",
-        "durationInSeconds": 8.499,
+        "durationInSeconds": 4.458,
         "numberTimes": [
           {
             "n": 23,
@@ -3447,104 +3447,104 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 14,
-            "s": 1.486
+            "s": 0.894
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/mul-2d2d/ramlah/build.mp3",
-        "durationInSeconds": 8.916,
+        "durationInSeconds": 6.362,
         "numberTimes": [
           {
             "n": 23,
-            "s": 1.869
+            "s": 1.474
           },
           {
             "n": 14,
-            "s": 3.622
+            "s": 2.775
           }
         ]
       },
       {
         "id": "split",
         "file": "lesson-voice/mul-2d2d/ramlah/split.mp3",
-        "durationInSeconds": 22.895,
+        "durationInSeconds": 17.461,
         "numberTimes": [
           {
             "n": 20,
-            "s": 11.517
+            "s": 10.263
           },
           {
             "n": 10,
-            "s": 12.364
+            "s": 11.006
           },
           {
             "n": 200,
-            "s": 13.026
+            "s": 11.435
           },
           {
             "n": 3,
-            "s": 14.28
+            "s": 12.364
           },
           {
             "n": 10,
-            "s": 15.069
+            "s": 12.933
           },
           {
             "n": 30,
-            "s": 15.685
+            "s": 13.386
           },
           {
             "n": 20,
-            "s": 16.939
+            "s": 14.059
           },
           {
             "n": 4,
-            "s": 18.1
+            "s": 14.814
           },
           {
             "n": 80,
-            "s": 18.912
+            "s": 15.29
           },
           {
             "n": 3,
-            "s": 20.073
+            "s": 15.801
           },
           {
             "n": 4,
-            "s": 21.049
+            "s": 16.463
           },
           {
             "n": 12,
-            "s": 21.873
+            "s": 16.892
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/mul-2d2d/ramlah/record.mp3",
-        "durationInSeconds": 13.189,
+        "durationInSeconds": 9.659,
         "numberTimes": [
           {
             "n": 200,
-            "s": 1.916
+            "s": 1.405
           },
           {
             "n": 30,
-            "s": 3.228
+            "s": 2.334
           },
           {
             "n": 80,
-            "s": 4.331
+            "s": 2.984
           },
           {
             "n": 12,
-            "s": 5.422
+            "s": 3.727
           },
           {
             "n": 322,
-            "s": 6.931
+            "s": 4.528
           }
         ]
       }
@@ -3555,7 +3555,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/div-larger/ramlah/ask.mp3",
-        "durationInSeconds": 8.591,
+        "durationInSeconds": 6.409,
         "numberTimes": [
           {
             "n": 84,
@@ -3563,14 +3563,14 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 1.765
+            "s": 1.509
           }
         ]
       },
       {
         "id": "deal",
         "file": "lesson-voice/div-larger/ramlah/deal.mp3",
-        "durationInSeconds": 16.3,
+        "durationInSeconds": 9.009,
         "numberTimes": [
           {
             "n": 84,
@@ -3578,89 +3578,89 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 8,
-            "s": 1.196
+            "s": 1.01
           },
           {
             "n": 4,
-            "s": 2.368
+            "s": 1.683
           },
           {
             "n": 8,
-            "s": 6.211
+            "s": 3.379
           },
           {
             "n": 4,
-            "s": 7.837
+            "s": 4.238
           },
           {
             "n": 2,
-            "s": 9.218
+            "s": 4.992
           },
           {
             "n": 4,
-            "s": 12.98
+            "s": 6.966
           },
           {
             "n": 4,
-            "s": 14.106
+            "s": 7.674
           },
           {
             "n": 1,
-            "s": 14.826
+            "s": 8.104
           }
         ]
       },
       {
         "id": "group",
         "file": "lesson-voice/div-larger/ramlah/group.mp3",
-        "durationInSeconds": 13.932,
+        "durationInSeconds": 9.52,
         "numberTimes": [
           {
             "n": 8,
-            "s": 3.228
+            "s": 2.287
           },
           {
             "n": 4,
-            "s": 5.004
+            "s": 3.599
           },
           {
             "n": 2,
-            "s": 5.77
+            "s": 4.075
           },
           {
             "n": 4,
-            "s": 7.245
+            "s": 5.236
           },
           {
             "n": 4,
-            "s": 8.928
+            "s": 6.409
           },
           {
             "n": 1,
-            "s": 9.694
+            "s": 6.861
           },
           {
             "n": 21,
-            "s": 12.829
+            "s": 8.673
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/div-larger/ramlah/record.mp3",
-        "durationInSeconds": 8.034,
+        "durationInSeconds": 4.319,
         "numberTimes": [
           {
             "n": 84,
-            "s": 0.395
+            "s": 0.418
           },
           {
             "n": 4,
-            "s": 2.218
+            "s": 1.428
           },
           {
             "n": 21,
-            "s": 2.995
+            "s": 1.846
           }
         ]
       }
@@ -3671,7 +3671,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/add-3d-three/ramlah/ask.mp3",
-        "durationInSeconds": 5.294,
+        "durationInSeconds": 3.437,
         "numberTimes": [
           {
             "n": 248,
@@ -3679,14 +3679,14 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 167,
-            "s": 1.486
+            "s": 0.998
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/add-3d-three/ramlah/build.mp3",
-        "durationInSeconds": 9.242,
+        "durationInSeconds": 5.062,
         "numberTimes": [
           {
             "n": 248,
@@ -3694,77 +3694,77 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 24,
-            "s": 1.37
+            "s": 0.848
           },
           {
             "n": 8,
-            "s": 3.077
+            "s": 1.683
           },
           {
             "n": 167,
-            "s": 4.853
+            "s": 2.45
           },
           {
             "n": 16,
-            "s": 6.327
+            "s": 3.344
           },
           {
             "n": 7,
-            "s": 7.93
+            "s": 4.203
           }
         ]
       },
       {
         "id": "regroup",
         "file": "lesson-voice/add-3d-three/ramlah/regroup.mp3",
-        "durationInSeconds": 25.496,
+        "durationInSeconds": 18.948,
         "numberTimes": [
           {
             "n": 8,
-            "s": 2.45
+            "s": 2.403
           },
           {
             "n": 7,
-            "s": 3.007
+            "s": 2.937
           },
           {
             "n": 15,
-            "s": 3.808
+            "s": 3.529
           },
           {
             "n": 15,
-            "s": 6.2
+            "s": 5.561
           },
           {
             "n": 1,
-            "s": 16.208
+            "s": 12.307
           },
           {
             "n": 5,
-            "s": 23.441
+            "s": 17.369
           }
         ]
       },
       {
         "id": "written",
         "file": "lesson-voice/add-3d-three/ramlah/written.mp3",
-        "durationInSeconds": 10.403,
+        "durationInSeconds": 8.406,
         "numberTimes": [
           {
             "n": 1,
-            "s": 1.95
+            "s": 1.846
           },
           {
             "n": 248,
-            "s": 5.503
+            "s": 4.714
           },
           {
             "n": 167,
-            "s": 7.047
+            "s": 5.944
           },
           {
             "n": 415,
-            "s": 8.789
+            "s": 7.175
           }
         ]
       }
@@ -3775,7 +3775,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/sub-3d/ramlah/ask.mp3",
-        "durationInSeconds": 5.341,
+        "durationInSeconds": 3.808,
         "numberTimes": [
           {
             "n": 342,
@@ -3783,14 +3783,14 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 158,
-            "s": 1.985
+            "s": 1.254
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/sub-3d/ramlah/build.mp3",
-        "durationInSeconds": 6.92,
+        "durationInSeconds": 4.087,
         "numberTimes": [
           {
             "n": 342,
@@ -3798,57 +3798,57 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 34,
-            "s": 1.509
+            "s": 1.091
           },
           {
             "n": 2,
-            "s": 3.228
+            "s": 1.927
           }
         ]
       },
       {
         "id": "regroup",
         "file": "lesson-voice/sub-3d/ramlah/regroup.mp3",
-        "durationInSeconds": 19.551,
+        "durationInSeconds": 14.535,
         "numberTimes": [
           {
             "n": 8,
-            "s": 1.173
+            "s": 1.068
           },
           {
             "n": 2,
-            "s": 4.493
+            "s": 3.843
           },
           {
             "n": 12,
-            "s": 15.081
+            "s": 11.772
           },
           {
             "n": 8,
-            "s": 17.032
+            "s": 13.061
           },
           {
             "n": 4,
-            "s": 17.937
+            "s": 13.583
           }
         ]
       },
       {
         "id": "written",
         "file": "lesson-voice/sub-3d/ramlah/written.mp3",
-        "durationInSeconds": 10.17,
+        "durationInSeconds": 7.616,
         "numberTimes": [
           {
             "n": 342,
-            "s": 5.306
+            "s": 3.831
           },
           {
             "n": 158,
-            "s": 7.036
+            "s": 5.259
           },
           {
             "n": 184,
-            "s": 8.649
+            "s": 6.444
           }
         ]
       }
@@ -3859,7 +3859,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-add-within-5/ramlah/ask.mp3",
-        "durationInSeconds": 3.529,
+        "durationInSeconds": 2.368,
         "numberTimes": [
           {
             "n": 3,
@@ -3867,60 +3867,60 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 2,
-            "s": 1.022
+            "s": 0.697
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/cur-add-within-5/ramlah/build.mp3",
-        "durationInSeconds": 5.248,
+        "durationInSeconds": 4.133,
         "numberTimes": [
           {
             "n": 3,
-            "s": 0.569
+            "s": 0.499
           },
           {
             "n": 2,
-            "s": 3.17
+            "s": 2.635
           }
         ]
       },
       {
         "id": "strategy",
         "file": "lesson-voice/cur-add-within-5/ramlah/strategy.mp3",
-        "durationInSeconds": 7.755,
+        "durationInSeconds": 2.879,
         "numberTimes": [
           {
             "n": 3,
-            "s": 0.917
+            "s": 0.72
           },
           {
             "n": 4,
-            "s": 5.004
+            "s": 1.846
           },
           {
             "n": 5,
-            "s": 6.722
+            "s": 2.206
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-add-within-5/ramlah/record.mp3",
-        "durationInSeconds": 5.898,
+        "durationInSeconds": 3.855,
         "numberTimes": [
           {
             "n": 3,
-            "s": 0.383
+            "s": 0.395
           },
           {
             "n": 2,
-            "s": 1.184
+            "s": 0.871
           },
           {
             "n": 5,
-            "s": 1.741
+            "s": 1.254
           }
         ]
       }
@@ -3931,7 +3931,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-add-within-10/ramlah/ask.mp3",
-        "durationInSeconds": 3.39,
+        "durationInSeconds": 2.276,
         "numberTimes": [
           {
             "n": 6,
@@ -3939,64 +3939,64 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 3,
-            "s": 0.952
+            "s": 0.755
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/cur-add-within-10/ramlah/build.mp3",
-        "durationInSeconds": 5.155,
+        "durationInSeconds": 3.947,
         "numberTimes": [
           {
             "n": 6,
-            "s": 0.522
+            "s": 0.488
           },
           {
             "n": 3,
-            "s": 3.123
+            "s": 2.345
           }
         ]
       },
       {
         "id": "strategy",
         "file": "lesson-voice/cur-add-within-10/ramlah/strategy.mp3",
-        "durationInSeconds": 8.499,
+        "durationInSeconds": 3.158,
         "numberTimes": [
           {
             "n": 6,
-            "s": 0.998
+            "s": 0.627
           },
           {
             "n": 7,
-            "s": 5.108
+            "s": 1.718
           },
           {
             "n": 8,
-            "s": 5.898
+            "s": 2.125
           },
           {
             "n": 9,
-            "s": 7.442
+            "s": 2.577
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-add-within-10/ramlah/record.mp3",
-        "durationInSeconds": 6.037,
+        "durationInSeconds": 3.994,
         "numberTimes": [
           {
             "n": 6,
-            "s": 0.395
+            "s": 0.418
           },
           {
             "n": 3,
-            "s": 1.149
+            "s": 0.987
           },
           {
             "n": 9,
-            "s": 1.997
+            "s": 1.405
           }
         ]
       }
@@ -4007,7 +4007,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-number-bonds/ramlah/ask.mp3",
-        "durationInSeconds": 9.799,
+        "durationInSeconds": 7.802,
         "numberTimes": [
           {
             "n": 6,
@@ -4015,92 +4015,92 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 0.72
+            "s": 0.697
           },
           {
             "n": 10,
-            "s": 1.405
+            "s": 1.091
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/cur-number-bonds/ramlah/build.mp3",
-        "durationInSeconds": 8.313,
+        "durationInSeconds": 5.016,
         "numberTimes": [
           {
             "n": 10,
-            "s": 2.519
+            "s": 1.184
           },
           {
             "n": 6,
-            "s": 6.362
+            "s": 3.123
           },
           {
             "n": 4,
-            "s": 7.488
+            "s": 4.191
           }
         ]
       },
       {
         "id": "facts",
         "file": "lesson-voice/cur-number-bonds/ramlah/facts.mp3",
-        "durationInSeconds": 27.074,
+        "durationInSeconds": 16.904,
         "numberTimes": [
           {
             "n": 6,
-            "s": 5.433
+            "s": 4.551
           },
           {
             "n": 4,
-            "s": 6.49
+            "s": 5.178
           },
           {
             "n": 10,
-            "s": 7.326
+            "s": 5.561
           },
           {
             "n": 4,
-            "s": 10.937
+            "s": 7.291
           },
           {
             "n": 6,
-            "s": 12.005
+            "s": 7.837
           },
           {
             "n": 10,
-            "s": 12.829
+            "s": 8.336
           },
           {
             "n": 10,
-            "s": 18.437
+            "s": 11.97
           },
           {
             "n": 4,
-            "s": 19.598
+            "s": 12.759
           },
           {
             "n": 6,
-            "s": 20.364
+            "s": 13.119
           },
           {
             "n": 10,
-            "s": 22.14
+            "s": 13.665
           },
           {
             "n": 6,
-            "s": 23.313
+            "s": 14.326
           },
           {
             "n": 4,
-            "s": 24.079
+            "s": 14.791
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-number-bonds/ramlah/record.mp3",
-        "durationInSeconds": 5.712
+        "durationInSeconds": 4.319
       }
     ]
   },
@@ -4109,80 +4109,80 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-counting-1-10/ramlah/ask.mp3",
-        "durationInSeconds": 7.152,
+        "durationInSeconds": 5.898,
         "numberTimes": [
           {
             "n": 10,
-            "s": 1.057
+            "s": 0.882
           }
         ]
       },
       {
         "id": "count",
         "file": "lesson-voice/cur-counting-1-10/ramlah/count.mp3",
-        "durationInSeconds": 8.777,
+        "durationInSeconds": 4.644,
         "numberTimes": [
           {
             "n": 1,
-            "s": 0.836
+            "s": 0.824
           },
           {
             "n": 2,
-            "s": 2.438
+            "s": 1.463
           },
           {
             "n": 3,
-            "s": 3.03
+            "s": 1.8
           },
           {
             "n": 4,
-            "s": 3.727
+            "s": 2.159
           },
           {
             "n": 5,
-            "s": 4.423
+            "s": 2.461
           },
           {
             "n": 6,
-            "s": 5.201
+            "s": 2.786
           },
           {
             "n": 7,
-            "s": 5.875
+            "s": 3.135
           },
           {
             "n": 8,
-            "s": 6.548
+            "s": 3.448
           },
           {
             "n": 9,
-            "s": 7.175
+            "s": 3.82
           },
           {
             "n": 10,
-            "s": 7.837
+            "s": 4.122
           }
         ]
       },
       {
         "id": "rows",
         "file": "lesson-voice/cur-counting-1-10/ramlah/rows.mp3",
-        "durationInSeconds": 6.92,
+        "durationInSeconds": 5.48,
         "numberTimes": [
           {
             "n": 10,
-            "s": 1.126
+            "s": 0.882
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-counting-1-10/ramlah/record.mp3",
-        "durationInSeconds": 4.783,
+        "durationInSeconds": 3.39,
         "numberTimes": [
           {
             "n": 10,
-            "s": 0.94
+            "s": 0.824
           }
         ]
       }
@@ -4193,128 +4193,128 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-counting-1-50/ramlah/ask.mp3",
-        "durationInSeconds": 6.037,
+        "durationInSeconds": 5.016,
         "numberTimes": [
           {
             "n": 50,
-            "s": 0.836
+            "s": 0.708
           }
         ]
       },
       {
         "id": "count",
         "file": "lesson-voice/cur-counting-1-50/ramlah/count.mp3",
-        "durationInSeconds": 10.96,
+        "durationInSeconds": 7.57,
         "numberTimes": [
           {
             "n": 10,
-            "s": 1.916
+            "s": 1.544
           },
           {
             "n": 1,
-            "s": 3.239
+            "s": 2.032
           },
           {
             "n": 2,
-            "s": 4.005
+            "s": 2.752
           },
           {
             "n": 3,
-            "s": 4.725
+            "s": 3.309
           },
           {
             "n": 4,
-            "s": 5.503
+            "s": 3.808
           },
           {
             "n": 5,
-            "s": 6.258
+            "s": 4.4
           },
           {
             "n": 6,
-            "s": 7.059
+            "s": 4.946
           },
           {
             "n": 7,
-            "s": 7.802
+            "s": 5.596
           },
           {
             "n": 8,
-            "s": 8.568
+            "s": 6.084
           },
           {
             "n": 9,
-            "s": 9.276
+            "s": 6.618
           },
           {
             "n": 10,
-            "s": 10.031
+            "s": 6.954
           }
         ]
       },
       {
         "id": "rows",
         "file": "lesson-voice/cur-counting-1-50/ramlah/rows.mp3",
-        "durationInSeconds": 15.882,
+        "durationInSeconds": 13.05,
         "numberTimes": [
           {
             "n": 20,
-            "s": 4.458
+            "s": 3.831
           },
           {
             "n": 30,
-            "s": 5.375
+            "s": 4.342
           },
           {
             "n": 40,
-            "s": 6.362
+            "s": 4.923
           },
           {
             "n": 50,
-            "s": 7.256
+            "s": 5.48
           },
           {
             "n": 1,
-            "s": 11.366
+            "s": 8.986
           },
           {
             "n": 2,
-            "s": 11.877
+            "s": 9.59
           },
           {
             "n": 3,
-            "s": 12.458
+            "s": 10.17
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-counting-1-50/ramlah/record.mp3",
-        "durationInSeconds": 7.709,
+        "durationInSeconds": 4.737,
         "numberTimes": [
           {
             "n": 50,
-            "s": 0.685
+            "s": 0.743
           },
           {
             "n": 10,
-            "s": 4.319
+            "s": 2.276
           },
           {
             "n": 20,
-            "s": 4.83
+            "s": 2.624
           },
           {
             "n": 30,
-            "s": 5.48
+            "s": 3.053
           },
           {
             "n": 40,
-            "s": 6.118
+            "s": 3.495
           },
           {
             "n": 50,
-            "s": 6.745
+            "s": 3.959
           }
         ]
       }
@@ -4325,136 +4325,136 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-counting-100/ramlah/ask.mp3",
-        "durationInSeconds": 6.177,
+        "durationInSeconds": 4.272,
         "numberTimes": [
           {
             "n": 100,
-            "s": 0.789
+            "s": 0.662
           }
         ]
       },
       {
         "id": "count",
         "file": "lesson-voice/cur-counting-100/ramlah/count.mp3",
-        "durationInSeconds": 10.31,
+        "durationInSeconds": 6.316,
         "numberTimes": [
           {
             "n": 10,
-            "s": 1.834
+            "s": 1.95
           },
           {
             "n": 1,
-            "s": 2.879
+            "s": 2.392
           },
           {
             "n": 2,
-            "s": 3.506
+            "s": 2.914
           },
           {
             "n": 3,
-            "s": 4.214
+            "s": 3.216
           },
           {
             "n": 4,
-            "s": 4.957
+            "s": 3.576
           },
           {
             "n": 5,
-            "s": 5.712
+            "s": 3.913
           },
           {
             "n": 6,
-            "s": 6.502
+            "s": 4.214
           },
           {
             "n": 7,
-            "s": 7.314
+            "s": 4.563
           },
           {
             "n": 8,
-            "s": 7.999
+            "s": 4.899
           },
           {
             "n": 9,
-            "s": 8.673
+            "s": 5.283
           },
           {
             "n": 10,
-            "s": 9.358
+            "s": 5.654
           }
         ]
       },
       {
         "id": "rows",
         "file": "lesson-voice/cur-counting-100/ramlah/rows.mp3",
-        "durationInSeconds": 22.105,
+        "durationInSeconds": 14.721,
         "numberTimes": [
           {
             "n": 20,
-            "s": 4.458
+            "s": 3.68
           },
           {
             "n": 30,
-            "s": 5.306
+            "s": 4.377
           },
           {
             "n": 40,
-            "s": 6.258
+            "s": 5.004
           },
           {
             "n": 50,
-            "s": 7.187
+            "s": 5.654
           },
           {
             "n": 60,
-            "s": 8.255
+            "s": 6.223
           },
           {
             "n": 70,
-            "s": 9.334
+            "s": 6.827
           },
           {
             "n": 80,
-            "s": 10.53
+            "s": 7.419
           },
           {
             "n": 90,
-            "s": 11.645
+            "s": 8.011
           },
           {
             "n": 100,
-            "s": 12.922
+            "s": 8.533
           },
           {
             "n": 1,
-            "s": 17.705
+            "s": 11.796
           },
           {
             "n": 2,
-            "s": 18.309
+            "s": 12.144
           },
           {
             "n": 3,
-            "s": 18.878
+            "s": 12.399
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-counting-100/ramlah/record.mp3",
-        "durationInSeconds": 4.969,
+        "durationInSeconds": 2.833,
         "numberTimes": [
           {
             "n": 100,
-            "s": 0.604
+            "s": 0.615
           },
           {
             "n": 100,
-            "s": 1.567
+            "s": 1.022
           },
           {
             "n": 10,
-            "s": 2.902
+            "s": 1.649
           }
         ]
       }
@@ -4465,76 +4465,76 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-number-recognition/ramlah/ask.mp3",
-        "durationInSeconds": 3.762,
+        "durationInSeconds": 2.694,
         "numberTimes": [
           {
             "n": 7,
-            "s": 0.592
+            "s": 0.615
           },
           {
             "n": 7,
-            "s": 2.136
+            "s": 1.416
           }
         ]
       },
       {
         "id": "count",
         "file": "lesson-voice/cur-number-recognition/ramlah/count.mp3",
-        "durationInSeconds": 7.988,
+        "durationInSeconds": 3.437,
         "numberTimes": [
           {
             "n": 1,
-            "s": 1.161
+            "s": 0.882
           },
           {
             "n": 2,
-            "s": 2.183
+            "s": 1.277
           },
           {
             "n": 3,
-            "s": 2.798
+            "s": 1.602
           },
           {
             "n": 4,
-            "s": 4.214
+            "s": 1.892
           },
           {
             "n": 5,
-            "s": 4.876
+            "s": 2.171
           },
           {
             "n": 6,
-            "s": 6.49
+            "s": 2.485
           },
           {
             "n": 7,
-            "s": 7.198
+            "s": 2.914
           }
         ]
       },
       {
         "id": "rows",
         "file": "lesson-voice/cur-number-recognition/ramlah/rows.mp3",
-        "durationInSeconds": 7.291,
+        "durationInSeconds": 4.365,
         "numberTimes": [
           {
             "n": 7,
-            "s": 0.871
+            "s": 0.964
           },
           {
             "n": 7,
-            "s": 2.485
+            "s": 1.869
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-number-recognition/ramlah/record.mp3",
-        "durationInSeconds": 5.155,
+        "durationInSeconds": 3.715,
         "numberTimes": [
           {
             "n": 7,
-            "s": 0.72
+            "s": 0.627
           }
         ]
       }
@@ -4545,7 +4545,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-which-greater/ramlah/ask.mp3",
-        "durationInSeconds": 5.712,
+        "durationInSeconds": 4.133,
         "numberTimes": [
           {
             "n": 8,
@@ -4553,56 +4553,56 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 5,
-            "s": 0.499
+            "s": 0.546
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/cur-which-greater/ramlah/build.mp3",
-        "durationInSeconds": 2.972,
+        "durationInSeconds": 2.136,
         "numberTimes": [
           {
             "n": 8,
-            "s": 0.569
+            "s": 0.546
           },
           {
             "n": 5,
-            "s": 2.043
+            "s": 1.486
           }
         ]
       },
       {
         "id": "pair",
         "file": "lesson-voice/cur-which-greater/ramlah/pair.mp3",
-        "durationInSeconds": 12.399,
+        "durationInSeconds": 8.87,
         "numberTimes": [
           {
             "n": 5,
-            "s": 4.841
+            "s": 4.133
           },
           {
             "n": 8,
-            "s": 7.094
+            "s": 5.492
           },
           {
             "n": 3,
-            "s": 8.707
+            "s": 6.281
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-which-greater/ramlah/record.mp3",
-        "durationInSeconds": 6.177,
+        "durationInSeconds": 4.969,
         "numberTimes": [
           {
             "n": 8,
-            "s": 0.383
+            "s": 0.58
           },
           {
             "n": 5,
-            "s": 1.683
+            "s": 1.567
           }
         ]
       }
@@ -4613,7 +4613,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-which-less/ramlah/ask.mp3",
-        "durationInSeconds": 5.805,
+        "durationInSeconds": 4.133,
         "numberTimes": [
           {
             "n": 7,
@@ -4621,56 +4621,56 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 0.778
+            "s": 0.72
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/cur-which-less/ramlah/build.mp3",
-        "durationInSeconds": 2.833,
+        "durationInSeconds": 1.95,
         "numberTimes": [
           {
             "n": 7,
-            "s": 0.569
+            "s": 0.499
           },
           {
             "n": 4,
-            "s": 1.985
+            "s": 1.393
           }
         ]
       },
       {
         "id": "pair",
         "file": "lesson-voice/cur-which-less/ramlah/pair.mp3",
-        "durationInSeconds": 11.238,
+        "durationInSeconds": 8.173,
         "numberTimes": [
           {
             "n": 4,
-            "s": 4.969
+            "s": 3.146
           },
           {
             "n": 7,
-            "s": 7.14
+            "s": 4.818
           },
           {
             "n": 3,
-            "s": 8.255
+            "s": 5.759
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-which-less/ramlah/record.mp3",
-        "durationInSeconds": 5.573,
+        "durationInSeconds": 4.087,
         "numberTimes": [
           {
             "n": 4,
-            "s": 0.441
+            "s": 0.395
           },
           {
             "n": 7,
-            "s": 1.8
+            "s": 1.393
           }
         ]
       }
@@ -4681,7 +4681,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-more-less/ramlah/ask.mp3",
-        "durationInSeconds": 7.477,
+        "durationInSeconds": 5.759,
         "numberTimes": [
           {
             "n": 9,
@@ -4689,14 +4689,14 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 6,
-            "s": 0.766
+            "s": 0.72
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/cur-more-less/ramlah/build.mp3",
-        "durationInSeconds": 2.926,
+        "durationInSeconds": 2.322,
         "numberTimes": [
           {
             "n": 9,
@@ -4704,41 +4704,41 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 6,
-            "s": 2.078
+            "s": 1.602
           }
         ]
       },
       {
         "id": "pair",
         "file": "lesson-voice/cur-more-less/ramlah/pair.mp3",
-        "durationInSeconds": 11.61,
+        "durationInSeconds": 8.406,
         "numberTimes": [
           {
             "n": 6,
-            "s": 4.644
+            "s": 3.193
           },
           {
             "n": 9,
-            "s": 6.838
+            "s": 4.981
           },
           {
             "n": 3,
-            "s": 8.382
+            "s": 5.886
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-more-less/ramlah/record.mp3",
-        "durationInSeconds": 7.523,
+        "durationInSeconds": 5.387,
         "numberTimes": [
           {
             "n": 9,
-            "s": 0.418
+            "s": 0.499
           },
           {
             "n": 6,
-            "s": 1.811
+            "s": 1.486
           }
         ]
       }
@@ -4749,7 +4749,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-counting-on-next/ramlah/ask.mp3",
-        "durationInSeconds": 10.96,
+        "durationInSeconds": 5.944,
         "numberTimes": [
           {
             "n": 6,
@@ -4757,48 +4757,48 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 7,
-            "s": 1.741
+            "s": 1.521
           },
           {
             "n": 8,
-            "s": 3.193
+            "s": 2.345
           }
         ]
       },
       {
         "id": "line",
         "file": "lesson-voice/cur-counting-on-next/ramlah/line.mp3",
-        "durationInSeconds": 4.83,
+        "durationInSeconds": 3.065,
         "numberTimes": [
           {
             "n": 6,
-            "s": 3.947
+            "s": 2.287
           }
         ]
       },
       {
         "id": "hop",
         "file": "lesson-voice/cur-counting-on-next/ramlah/hop.mp3",
-        "durationInSeconds": 8.406,
+        "durationInSeconds": 4.365,
         "numberTimes": [
           {
             "n": 7,
-            "s": 2.055
+            "s": 0.998
           },
           {
             "n": 8,
-            "s": 3.216
+            "s": 1.66
           },
           {
             "n": 9,
-            "s": 4.354
+            "s": 2.322
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-counting-on-next/ramlah/record.mp3",
-        "durationInSeconds": 8.359,
+        "durationInSeconds": 4.644,
         "numberTimes": [
           {
             "n": 6,
@@ -4806,15 +4806,15 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 7,
-            "s": 1.486
+            "s": 1.184
           },
           {
             "n": 8,
-            "s": 2.902
+            "s": 1.8
           },
           {
             "n": 9,
-            "s": 4.214
+            "s": 2.264
           }
         ]
       }
@@ -4825,7 +4825,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-numbers-after-100/ramlah/ask.mp3",
-        "durationInSeconds": 12.771,
+        "durationInSeconds": 6.641,
         "numberTimes": [
           {
             "n": 57,
@@ -4833,48 +4833,48 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 58,
-            "s": 2.426
+            "s": 1.544
           },
           {
             "n": 59,
-            "s": 4.551
+            "s": 2.786
           }
         ]
       },
       {
         "id": "line",
         "file": "lesson-voice/cur-numbers-after-100/ramlah/line.mp3",
-        "durationInSeconds": 4.226,
+        "durationInSeconds": 3.065,
         "numberTimes": [
           {
             "n": 57,
-            "s": 2.961
+            "s": 2.032
           }
         ]
       },
       {
         "id": "hop",
         "file": "lesson-voice/cur-numbers-after-100/ramlah/hop.mp3",
-        "durationInSeconds": 10.588,
+        "durationInSeconds": 4.505,
         "numberTimes": [
           {
             "n": 58,
-            "s": 2.101
+            "s": 0.998
           },
           {
             "n": 59,
-            "s": 4.029
+            "s": 1.881
           },
           {
             "n": 60,
-            "s": 9.404
+            "s": 3.704
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-numbers-after-100/ramlah/record.mp3",
-        "durationInSeconds": 14.025,
+        "durationInSeconds": 6.223,
         "numberTimes": [
           {
             "n": 57,
@@ -4882,23 +4882,23 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 58,
-            "s": 2.241
+            "s": 1.219
           },
           {
             "n": 59,
-            "s": 4.4
+            "s": 1.985
           },
           {
             "n": 60,
-            "s": 6.757
+            "s": 2.926
           },
           {
             "n": 59,
-            "s": 8.626
+            "s": 3.622
           },
           {
             "n": 60,
-            "s": 12.759
+            "s": 5.468
           }
         ]
       }
@@ -4909,7 +4909,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-missing-number/ramlah/ask.mp3",
-        "durationInSeconds": 13.235,
+        "durationInSeconds": 5.341,
         "numberTimes": [
           {
             "n": 4,
@@ -4917,48 +4917,48 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 5,
-            "s": 2.276
+            "s": 1.161
           },
           {
             "n": 7,
-            "s": 6.745
+            "s": 2.577
           }
         ]
       },
       {
         "id": "line",
         "file": "lesson-voice/cur-missing-number/ramlah/line.mp3",
-        "durationInSeconds": 4.923,
+        "durationInSeconds": 2.647,
         "numberTimes": [
           {
             "n": 4,
-            "s": 4.098
+            "s": 2.055
           }
         ]
       },
       {
         "id": "hop",
         "file": "lesson-voice/cur-missing-number/ramlah/hop.mp3",
-        "durationInSeconds": 10.588,
+        "durationInSeconds": 3.947,
         "numberTimes": [
           {
             "n": 5,
-            "s": 1.741
+            "s": 0.766
           },
           {
             "n": 6,
-            "s": 3.518
+            "s": 1.521
           },
           {
             "n": 7,
-            "s": 5.538
+            "s": 2.183
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-missing-number/ramlah/record.mp3",
-        "durationInSeconds": 10.31,
+        "durationInSeconds": 4.923,
         "numberTimes": [
           {
             "n": 4,
@@ -4966,15 +4966,15 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 5,
-            "s": 2.009
+            "s": 0.871
           },
           {
             "n": 6,
-            "s": 3.727
+            "s": 1.416
           },
           {
             "n": 7,
-            "s": 5.863
+            "s": 1.974
           }
         ]
       }
@@ -4985,7 +4985,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-number-patterns/ramlah/ask.mp3",
-        "durationInSeconds": 12.678,
+        "durationInSeconds": 5.805,
         "numberTimes": [
           {
             "n": 5,
@@ -4993,52 +4993,52 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 10,
-            "s": 2.136
+            "s": 1.138
           },
           {
             "n": 15,
-            "s": 4.005
+            "s": 2.148
           }
         ]
       },
       {
         "id": "line",
         "file": "lesson-voice/cur-number-patterns/ramlah/line.mp3",
-        "durationInSeconds": 5.48,
+        "durationInSeconds": 4.04,
         "numberTimes": [
           {
             "n": 5,
-            "s": 2.705
+            "s": 2.009
           },
           {
             "n": 5,
-            "s": 4.563
+            "s": 3.135
           }
         ]
       },
       {
         "id": "hop",
         "file": "lesson-voice/cur-number-patterns/ramlah/hop.mp3",
-        "durationInSeconds": 10.542,
+        "durationInSeconds": 5.062,
         "numberTimes": [
           {
             "n": 10,
-            "s": 2.078
+            "s": 0.906
           },
           {
             "n": 15,
-            "s": 3.611
+            "s": 1.741
           },
           {
             "n": 20,
-            "s": 5.909
+            "s": 2.694
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-number-patterns/ramlah/record.mp3",
-        "durationInSeconds": 11.564,
+        "durationInSeconds": 6.177,
         "numberTimes": [
           {
             "n": 5,
@@ -5046,15 +5046,15 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 10,
-            "s": 1.765
+            "s": 1.149
           },
           {
             "n": 15,
-            "s": 3.332
+            "s": 1.73
           },
           {
             "n": 20,
-            "s": 5.422
+            "s": 2.566
           }
         ]
       }
@@ -5065,52 +5065,52 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-identify-fractions/ramlah/ask.mp3",
-        "durationInSeconds": 3.111,
+        "durationInSeconds": 2.09,
         "numberTimes": [
           {
             "n": 3,
-            "s": 0.569
+            "s": 0.488
           },
           {
             "n": 4,
-            "s": 1.3
+            "s": 0.917
           }
         ]
       },
       {
         "id": "parts",
         "file": "lesson-voice/cur-identify-fractions/ramlah/parts.mp3",
-        "durationInSeconds": 14.396,
+        "durationInSeconds": 12.399,
         "numberTimes": [
           {
             "n": 4,
-            "s": 2.798
+            "s": 2.496
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-identify-fractions/ramlah/action.mp3",
-        "durationInSeconds": 7.152,
+        "durationInSeconds": 3.529,
         "numberTimes": [
           {
             "n": 3,
-            "s": 1.068
+            "s": 0.813
           },
           {
             "n": 3,
-            "s": 5.422
+            "s": 2.508
           },
           {
             "n": 4,
-            "s": 6.409
+            "s": 2.879
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-identify-fractions/ramlah/record.mp3",
-        "durationInSeconds": 12.492
+        "durationInSeconds": 12.725
       }
     ]
   },
@@ -5119,84 +5119,84 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-compare-fractions/ramlah/ask.mp3",
-        "durationInSeconds": 5.155,
+        "durationInSeconds": 2.926,
         "numberTimes": [
           {
             "n": 3,
-            "s": 2.148
+            "s": 0.975
           },
           {
             "n": 4,
-            "s": 2.74
+            "s": 1.463
           },
           {
             "n": 2,
-            "s": 3.611
+            "s": 1.881
           },
           {
             "n": 3,
-            "s": 4.226
+            "s": 2.31
           }
         ]
       },
       {
         "id": "parts",
         "file": "lesson-voice/cur-compare-fractions/ramlah/parts.mp3",
-        "durationInSeconds": 9.892,
+        "durationInSeconds": 8.684,
         "numberTimes": [
           {
             "n": 4,
-            "s": 4.261
+            "s": 3.634
           },
           {
             "n": 3,
-            "s": 5.654
+            "s": 5.074
           },
           {
             "n": 3,
-            "s": 7.535
+            "s": 6.745
           },
           {
             "n": 2,
-            "s": 9.137
+            "s": 7.953
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-compare-fractions/ramlah/action.mp3",
-        "durationInSeconds": 9.845,
+        "durationInSeconds": 7.245,
         "numberTimes": [
           {
             "n": 3,
-            "s": 7.593
+            "s": 5.41
           },
           {
             "n": 4,
-            "s": 8.301
+            "s": 6.037
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-compare-fractions/ramlah/record.mp3",
-        "durationInSeconds": 7.941,
+        "durationInSeconds": 6.223,
         "numberTimes": [
           {
             "n": 3,
-            "s": 0.395
+            "s": 0.488
           },
           {
             "n": 4,
-            "s": 1.138
+            "s": 1.057
           },
           {
             "n": 2,
-            "s": 2.612
+            "s": 1.997
           },
           {
             "n": 3,
-            "s": 3.355
+            "s": 2.519
           }
         ]
       }
@@ -5207,7 +5207,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-add-fractions/ramlah/ask.mp3",
-        "durationInSeconds": 5.341,
+        "durationInSeconds": 3.437,
         "numberTimes": [
           {
             "n": 3,
@@ -5215,52 +5215,52 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 8,
-            "s": 0.94
+            "s": 0.801
           },
           {
             "n": 2,
-            "s": 1.8
+            "s": 1.289
           },
           {
             "n": 8,
-            "s": 2.45
+            "s": 1.788
           }
         ]
       },
       {
         "id": "parts",
         "file": "lesson-voice/cur-add-fractions/ramlah/parts.mp3",
-        "durationInSeconds": 5.016,
+        "durationInSeconds": 3.622,
         "numberTimes": [
           {
             "n": 8,
-            "s": 1.649
+            "s": 1.242
           },
           {
             "n": 3,
-            "s": 3.599
+            "s": 2.554
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-add-fractions/ramlah/action.mp3",
-        "durationInSeconds": 9.242,
+        "durationInSeconds": 5.48,
         "numberTimes": [
           {
             "n": 2,
-            "s": 1.01
+            "s": 0.708
           },
           {
             "n": 5,
-            "s": 7.802
+            "s": 4.377
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-add-fractions/ramlah/record.mp3",
-        "durationInSeconds": 14.814,
+        "durationInSeconds": 13.05,
         "numberTimes": [
           {
             "n": 3,
@@ -5268,23 +5268,23 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 8,
-            "s": 0.917
+            "s": 0.882
           },
           {
             "n": 2,
-            "s": 1.707
+            "s": 1.509
           },
           {
             "n": 8,
-            "s": 2.38
+            "s": 1.997
           },
           {
             "n": 5,
-            "s": 2.937
+            "s": 2.496
           },
           {
             "n": 8,
-            "s": 3.889
+            "s": 3.193
           }
         ]
       }
@@ -5295,7 +5295,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-simplify-fractions/ramlah/ask.mp3",
-        "durationInSeconds": 3.855,
+        "durationInSeconds": 2.879,
         "numberTimes": [
           {
             "n": 4,
@@ -5303,60 +5303,60 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 8,
-            "s": 0.975
+            "s": 0.789
           }
         ]
       },
       {
         "id": "parts",
         "file": "lesson-voice/cur-simplify-fractions/ramlah/parts.mp3",
-        "durationInSeconds": 5.759,
+        "durationInSeconds": 3.669,
         "numberTimes": [
           {
             "n": 4,
-            "s": 0.65
+            "s": 0.569
           },
           {
             "n": 8,
-            "s": 1.579
+            "s": 1.231
           },
           {
             "n": 8,
-            "s": 3.297
+            "s": 2.159
           },
           {
             "n": 4,
-            "s": 4.354
+            "s": 2.74
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-simplify-fractions/ramlah/action.mp3",
-        "durationInSeconds": 17.229,
+        "durationInSeconds": 13.839,
         "numberTimes": [
           {
             "n": 2,
-            "s": 8.231
+            "s": 7.384
           },
           {
             "n": 4,
-            "s": 8.882
+            "s": 7.906
           },
           {
             "n": 1,
-            "s": 11.912
+            "s": 9.938
           },
           {
             "n": 2,
-            "s": 12.62
+            "s": 10.507
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-simplify-fractions/ramlah/record.mp3",
-        "durationInSeconds": 12.167,
+        "durationInSeconds": 9.195,
         "numberTimes": [
           {
             "n": 4,
@@ -5364,23 +5364,23 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 8,
-            "s": 1.08
+            "s": 0.766
           },
           {
             "n": 2,
-            "s": 1.637
+            "s": 1.335
           },
           {
             "n": 4,
-            "s": 2.473
+            "s": 1.892
           },
           {
             "n": 1,
-            "s": 3.216
+            "s": 2.31
           },
           {
             "n": 2,
-            "s": 3.82
+            "s": 2.786
           }
         ]
       }
@@ -5391,7 +5391,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-decimal-place-value/ramlah/ask.mp3",
-        "durationInSeconds": 5.201,
+        "durationInSeconds": 3.065,
         "numberTimes": [
           {
             "n": 0,
@@ -5399,22 +5399,22 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 3,
-            "s": 0.882
+            "s": 0.662
           },
           {
             "n": 0,
-            "s": 1.347
+            "s": 1.033
           },
           {
             "n": 3,
-            "s": 2.206
+            "s": 1.416
           }
         ]
       },
       {
         "id": "grid",
         "file": "lesson-voice/cur-decimal-place-value/ramlah/grid.mp3",
-        "durationInSeconds": 10.635,
+        "durationInSeconds": 8.081,
         "numberTimes": [
           {
             "n": 100,
@@ -5425,7 +5425,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "action",
         "file": "lesson-voice/cur-decimal-place-value/ramlah/action.mp3",
-        "durationInSeconds": 15.79,
+        "durationInSeconds": 11.424,
         "numberTimes": [
           {
             "n": 0,
@@ -5433,58 +5433,58 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 3,
-            "s": 0.836
+            "s": 0.859
           },
           {
             "n": 3,
-            "s": 1.3
+            "s": 1.265
           },
           {
             "n": 30,
-            "s": 3.796
+            "s": 2.566
           },
           {
             "n": 0,
-            "s": 5.561
+            "s": 4.226
           },
           {
             "n": 3,
-            "s": 6.397
+            "s": 4.969
           },
           {
             "n": 3,
-            "s": 7.988
+            "s": 5.863
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-decimal-place-value/ramlah/record.mp3",
-        "durationInSeconds": 14.954,
+        "durationInSeconds": 10.635,
         "numberTimes": [
           {
             "n": 0,
-            "s": 6.142
+            "s": 4.423
           },
           {
             "n": 3,
-            "s": 6.931
+            "s": 5.132
           },
           {
             "n": 3,
-            "s": 7.732
+            "s": 5.898
           },
           {
             "n": 0,
-            "s": 10.53
+            "s": 7.291
           },
           {
             "n": 3,
-            "s": 11.413
+            "s": 7.999
           },
           {
             "n": 3,
-            "s": 13.084
+            "s": 9.044
           }
         ]
       }
@@ -5495,7 +5495,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-decimal-operations/ramlah/ask.mp3",
-        "durationInSeconds": 7.848,
+        "durationInSeconds": 5.155,
         "numberTimes": [
           {
             "n": 0,
@@ -5503,22 +5503,22 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 0.848
+            "s": 0.801
           },
           {
             "n": 0,
-            "s": 1.869
+            "s": 1.428
           },
           {
             "n": 25,
-            "s": 2.833
+            "s": 1.927
           }
         ]
       },
       {
         "id": "grid",
         "file": "lesson-voice/cur-decimal-operations/ramlah/grid.mp3",
-        "durationInSeconds": 6.78,
+        "durationInSeconds": 3.947,
         "numberTimes": [
           {
             "n": 0,
@@ -5526,45 +5526,45 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 1.126
+            "s": 0.824
           },
           {
             "n": 40,
-            "s": 1.974
+            "s": 1.242
           },
           {
             "n": 100,
-            "s": 3.878
+            "s": 2.159
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-decimal-operations/ramlah/action.mp3",
-        "durationInSeconds": 13.235,
+        "durationInSeconds": 7.477,
         "numberTimes": [
           {
             "n": 0,
-            "s": 0.395
+            "s": 0.337
           },
           {
             "n": 25,
-            "s": 1.37
+            "s": 0.859
           },
           {
             "n": 25,
-            "s": 2.612
+            "s": 1.591
           },
           {
             "n": 65,
-            "s": 11.099
+            "s": 6.153
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-decimal-operations/ramlah/record.mp3",
-        "durationInSeconds": 16.254,
+        "durationInSeconds": 9.892,
         "numberTimes": [
           {
             "n": 65,
@@ -5572,39 +5572,39 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 100,
-            "s": 2.055
+            "s": 1.428
           },
           {
             "n": 0,
-            "s": 3.123
+            "s": 2.09
           },
           {
             "n": 65,
-            "s": 4.087
+            "s": 2.519
           },
           {
             "n": 0,
-            "s": 5.909
+            "s": 3.239
           },
           {
             "n": 4,
-            "s": 6.92
+            "s": 3.762
           },
           {
             "n": 0,
-            "s": 8.011
+            "s": 4.249
           },
           {
             "n": 25,
-            "s": 8.975
+            "s": 4.702
           },
           {
             "n": 0,
-            "s": 10.159
+            "s": 5.399
           },
           {
             "n": 65,
-            "s": 11.099
+            "s": 5.805
           }
         ]
       }
@@ -5615,7 +5615,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-percentages/ramlah/ask.mp3",
-        "durationInSeconds": 4.18,
+        "durationInSeconds": 2.786,
         "numberTimes": [
           {
             "n": 37,
@@ -5626,53 +5626,53 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "grid",
         "file": "lesson-voice/cur-percentages/ramlah/grid.mp3",
-        "durationInSeconds": 7.523,
+        "durationInSeconds": 5.201,
         "numberTimes": [
           {
             "n": 100,
-            "s": 5.909
+            "s": 4.075
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-percentages/ramlah/action.mp3",
-        "durationInSeconds": 7.988,
+        "durationInSeconds": 3.947,
         "numberTimes": [
           {
             "n": 37,
-            "s": 1.695
+            "s": 0.522
           },
           {
             "n": 37,
-            "s": 4.331
+            "s": 1.753
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-percentages/ramlah/record.mp3",
-        "durationInSeconds": 15.511,
+        "durationInSeconds": 11.935,
         "numberTimes": [
           {
             "n": 37,
-            "s": 2.868
+            "s": 2.531
           },
           {
             "n": 100,
-            "s": 4.249
+            "s": 3.425
           },
           {
             "n": 0,
-            "s": 5.41
+            "s": 4.621
           },
           {
             "n": 37,
-            "s": 6.664
+            "s": 5.224
           },
           {
             "n": 37,
-            "s": 8.928
+            "s": 6.536
           }
         ]
       }
@@ -5683,7 +5683,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-decimal-subtract/ramlah/ask.mp3",
-        "durationInSeconds": 7.059,
+        "durationInSeconds": 4.598,
         "numberTimes": [
           {
             "n": 0,
@@ -5691,22 +5691,22 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 65,
-            "s": 0.801
+            "s": 0.731
           },
           {
             "n": 0,
-            "s": 2.276
+            "s": 1.625
           },
           {
             "n": 25,
-            "s": 2.937
+            "s": 2.101
           }
         ]
       },
       {
         "id": "grid",
         "file": "lesson-voice/cur-decimal-subtract/ramlah/grid.mp3",
-        "durationInSeconds": 7.895,
+        "durationInSeconds": 4.412,
         "numberTimes": [
           {
             "n": 0,
@@ -5714,45 +5714,45 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 65,
-            "s": 1.08
+            "s": 0.848
           },
           {
             "n": 65,
-            "s": 2.392
+            "s": 1.451
           },
           {
             "n": 100,
-            "s": 4.412
+            "s": 2.612
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-decimal-subtract/ramlah/action.mp3",
-        "durationInSeconds": 13.096,
+        "durationInSeconds": 6.594,
         "numberTimes": [
           {
             "n": 0,
-            "s": 1.138
+            "s": 0.731
           },
           {
             "n": 25,
-            "s": 2.252
+            "s": 1.254
           },
           {
             "n": 25,
-            "s": 4.981
+            "s": 2.38
           },
           {
             "n": 40,
-            "s": 11.355
+            "s": 5.143
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-decimal-subtract/ramlah/record.mp3",
-        "durationInSeconds": 15.372,
+        "durationInSeconds": 9.985,
         "numberTimes": [
           {
             "n": 40,
@@ -5760,35 +5760,35 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 0,
-            "s": 1.463
+            "s": 0.871
           },
           {
             "n": 4,
-            "s": 2.415
+            "s": 1.451
           },
           {
             "n": 0,
-            "s": 3.541
+            "s": 2.218
           },
           {
             "n": 65,
-            "s": 4.481
+            "s": 2.694
           },
           {
             "n": 0,
-            "s": 6.293
+            "s": 3.715
           },
           {
             "n": 25,
-            "s": 7.221
+            "s": 4.296
           },
           {
             "n": 0,
-            "s": 8.487
+            "s": 5.062
           },
           {
             "n": 4,
-            "s": 9.462
+            "s": 5.55
           }
         ]
       }
@@ -5799,7 +5799,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-decimal-multiply/ramlah/ask.mp3",
-        "durationInSeconds": 6.409,
+        "durationInSeconds": 4.272,
         "numberTimes": [
           {
             "n": 0,
@@ -5807,18 +5807,18 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 3,
-            "s": 1.057
+            "s": 0.848
           },
           {
             "n": 3,
-            "s": 2.043
+            "s": 1.382
           }
         ]
       },
       {
         "id": "grid",
         "file": "lesson-voice/cur-decimal-multiply/ramlah/grid.mp3",
-        "durationInSeconds": 4.087,
+        "durationInSeconds": 2.74,
         "numberTimes": [
           {
             "n": 0,
@@ -5826,57 +5826,57 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 3,
-            "s": 0.882
+            "s": 0.801
           },
           {
             "n": 3,
-            "s": 1.509
+            "s": 1.138
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-decimal-multiply/ramlah/action.mp3",
-        "durationInSeconds": 11.471,
+        "durationInSeconds": 6.037,
         "numberTimes": [
           {
             "n": 3,
-            "s": 0.836
+            "s": 0.72
           },
           {
             "n": 0,
-            "s": 2.775
+            "s": 1.834
           },
           {
             "n": 3,
-            "s": 3.68
+            "s": 2.31
           },
           {
             "n": 0,
-            "s": 4.888
+            "s": 2.728
           },
           {
             "n": 6,
-            "s": 5.782
+            "s": 3.216
           },
           {
             "n": 0,
-            "s": 7.082
+            "s": 3.727
           },
           {
             "n": 9,
-            "s": 8.092
+            "s": 4.249
           },
           {
             "n": 9,
-            "s": 9.044
+            "s": 4.563
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-decimal-multiply/ramlah/record.mp3",
-        "durationInSeconds": 12.678,
+        "durationInSeconds": 7.988,
         "numberTimes": [
           {
             "n": 9,
@@ -5884,31 +5884,31 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 0,
-            "s": 1.463
+            "s": 1.138
           },
           {
             "n": 9,
-            "s": 2.461
+            "s": 1.788
           },
           {
             "n": 0,
-            "s": 3.518
+            "s": 2.728
           },
           {
             "n": 3,
-            "s": 4.365
+            "s": 3.402
           },
           {
             "n": 3,
-            "s": 5.341
+            "s": 4.063
           },
           {
             "n": 0,
-            "s": 6.2
+            "s": 4.481
           },
           {
             "n": 9,
-            "s": 7.21
+            "s": 5.12
           }
         ]
       }
@@ -5919,7 +5919,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-ratios/ramlah/ask.mp3",
-        "durationInSeconds": 5.062,
+        "durationInSeconds": 2.647,
         "numberTimes": [
           {
             "n": 3,
@@ -5927,60 +5927,60 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 2,
-            "s": 1.207
+            "s": 0.755
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/cur-ratios/ramlah/build.mp3",
-        "durationInSeconds": 5.48,
+        "durationInSeconds": 3.901,
         "numberTimes": [
           {
             "n": 3,
-            "s": 1.544
+            "s": 1.126
           },
           {
             "n": 2,
-            "s": 3.611
+            "s": 2.415
           }
         ]
       },
       {
         "id": "scale",
         "file": "lesson-voice/cur-ratios/ramlah/scale.mp3",
-        "durationInSeconds": 13.375,
+        "durationInSeconds": 11.796,
         "numberTimes": [
           {
             "n": 2,
-            "s": 3.959
+            "s": 3.704
           },
           {
             "n": 6,
-            "s": 4.656
+            "s": 4.516
           },
           {
             "n": 4,
-            "s": 5.375
+            "s": 5.074
           },
           {
             "n": 3,
-            "s": 6.536
+            "s": 6.316
           },
           {
             "n": 9,
-            "s": 7.198
+            "s": 6.792
           },
           {
             "n": 6,
-            "s": 7.918
+            "s": 7.338
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-ratios/ramlah/record.mp3",
-        "durationInSeconds": 9.009,
+        "durationInSeconds": 5.991,
         "numberTimes": [
           {
             "n": 3,
@@ -5988,15 +5988,15 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 2,
-            "s": 0.708
+            "s": 0.534
           },
           {
             "n": 9,
-            "s": 2.821
+            "s": 1.927
           },
           {
             "n": 6,
-            "s": 3.518
+            "s": 2.276
           }
         ]
       }
@@ -6007,7 +6007,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-proportions/ramlah/ask.mp3",
-        "durationInSeconds": 3.901,
+        "durationInSeconds": 2.554,
         "numberTimes": [
           {
             "n": 3,
@@ -6015,72 +6015,72 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 0.906
+            "s": 0.731
           },
           {
             "n": 12,
-            "s": 2.891
+            "s": 1.962
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/cur-proportions/ramlah/build.mp3",
-        "durationInSeconds": 7.663,
+        "durationInSeconds": 4.087,
         "numberTimes": [
           {
             "n": 3,
-            "s": 0.569
+            "s": 0.43
           },
           {
             "n": 4,
-            "s": 1.474
+            "s": 0.848
           },
           {
             "n": 3,
-            "s": 5.213
+            "s": 2.334
           },
           {
             "n": 4,
-            "s": 6.861
+            "s": 3.483
           }
         ]
       },
       {
         "id": "scale",
         "file": "lesson-voice/cur-proportions/ramlah/scale.mp3",
-        "durationInSeconds": 13.607,
+        "durationInSeconds": 12.539,
         "numberTimes": [
           {
             "n": 2,
-            "s": 3.738
+            "s": 3.878
           },
           {
             "n": 6,
-            "s": 4.377
+            "s": 4.632
           },
           {
             "n": 8,
-            "s": 5.097
+            "s": 5.201
           },
           {
             "n": 3,
-            "s": 6.293
+            "s": 6.258
           },
           {
             "n": 9,
-            "s": 6.989
+            "s": 6.815
           },
           {
             "n": 12,
-            "s": 7.605
+            "s": 7.454
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-proportions/ramlah/record.mp3",
-        "durationInSeconds": 8.963,
+        "durationInSeconds": 6.455,
         "numberTimes": [
           {
             "n": 3,
@@ -6088,15 +6088,15 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 1.242
+            "s": 0.894
           },
           {
             "n": 9,
-            "s": 2.403
+            "s": 1.625
           },
           {
             "n": 12,
-            "s": 3.379
+            "s": 2.148
           }
         ]
       }
@@ -6107,7 +6107,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-unit-rates/ramlah/ask.mp3",
-        "durationInSeconds": 4.226,
+        "durationInSeconds": 2.786,
         "numberTimes": [
           {
             "n": 12,
@@ -6115,72 +6115,72 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 3,
-            "s": 1.521
+            "s": 1.068
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/cur-unit-rates/ramlah/build.mp3",
-        "durationInSeconds": 8.266,
+        "durationInSeconds": 5.619,
         "numberTimes": [
           {
             "n": 12,
-            "s": 1.811
+            "s": 1.416
           },
           {
             "n": 3,
-            "s": 4.122
+            "s": 2.891
           }
         ]
       },
       {
         "id": "scale",
         "file": "lesson-voice/cur-unit-rates/ramlah/scale.mp3",
-        "durationInSeconds": 13.839,
+        "durationInSeconds": 9.195,
         "numberTimes": [
           {
             "n": 1,
-            "s": 3.379
+            "s": 2.752
           },
           {
             "n": 3,
-            "s": 5.55
+            "s": 4.365
           },
           {
             "n": 12,
-            "s": 7.163
+            "s": 4.992
           },
           {
             "n": 3,
-            "s": 8.661
+            "s": 5.968
           },
           {
             "n": 4,
-            "s": 9.392
+            "s": 6.455
           },
           {
             "n": 3,
-            "s": 10.635
+            "s": 7.268
           },
           {
             "n": 3,
-            "s": 12.04
+            "s": 8.115
           },
           {
             "n": 1,
-            "s": 12.899
+            "s": 8.557
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-unit-rates/ramlah/record.mp3",
-        "durationInSeconds": 8.266,
+        "durationInSeconds": 7.616,
         "numberTimes": [
           {
             "n": 4,
-            "s": 0.708
+            "s": 0.755
           }
         ]
       }
@@ -6191,64 +6191,64 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-one-step/ramlah/ask.mp3",
-        "durationInSeconds": 4.04,
+        "durationInSeconds": 2.554,
         "numberTimes": [
           {
             "n": 3,
-            "s": 0.917
+            "s": 0.569
           },
           {
             "n": 8,
-            "s": 2.032
+            "s": 1.184
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/cur-one-step/ramlah/build.mp3",
-        "durationInSeconds": 8.591,
+        "durationInSeconds": 7.384,
         "numberTimes": [
           {
             "n": 3,
-            "s": 5.062
+            "s": 4.47
           },
           {
             "n": 8,
-            "s": 7.279
+            "s": 6.2
           }
         ]
       },
       {
         "id": "solve",
         "file": "lesson-voice/cur-one-step/ramlah/solve.mp3",
-        "durationInSeconds": 14.536,
+        "durationInSeconds": 11.378,
         "numberTimes": [
           {
             "n": 3,
-            "s": 0.441
+            "s": 0.476
           },
           {
             "n": 3,
-            "s": 6.002
+            "s": 4.865
           },
           {
             "n": 5,
-            "s": 13.619
+            "s": 10.53
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-one-step/ramlah/record.mp3",
-        "durationInSeconds": 11.471,
+        "durationInSeconds": 8.452,
         "numberTimes": [
           {
             "n": 5,
-            "s": 0.952
+            "s": 0.778
           },
           {
             "n": 5,
-            "s": 3.471
+            "s": 2.972
           }
         ]
       }
@@ -6259,7 +6259,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-two-step/ramlah/ask.mp3",
-        "durationInSeconds": 5.016,
+        "durationInSeconds": 2.694,
         "numberTimes": [
           {
             "n": 2,
@@ -6267,72 +6267,72 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 3,
-            "s": 1.324
+            "s": 0.766
           },
           {
             "n": 11,
-            "s": 2.694
+            "s": 1.289
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/cur-two-step/ramlah/build.mp3",
-        "durationInSeconds": 11.238,
+        "durationInSeconds": 9.381,
         "numberTimes": [
           {
             "n": 2,
-            "s": 3.413
+            "s": 3.088
           },
           {
             "n": 3,
-            "s": 7.349
+            "s": 6.142
           },
           {
             "n": 11,
-            "s": 9.718
+            "s": 8.057
           }
         ]
       },
       {
         "id": "solve",
         "file": "lesson-voice/cur-two-step/ramlah/solve.mp3",
-        "durationInSeconds": 13.607,
+        "durationInSeconds": 10.31,
         "numberTimes": [
           {
             "n": 3,
-            "s": 0.801
+            "s": 0.708
           },
           {
             "n": 2,
-            "s": 5.642
+            "s": 4.04
           },
           {
             "n": 8,
-            "s": 7.198
+            "s": 5.375
           },
           {
             "n": 2,
-            "s": 9.927
+            "s": 7.523
           },
           {
             "n": 4,
-            "s": 12.063
+            "s": 9.416
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-two-step/ramlah/record.mp3",
-        "durationInSeconds": 10.495,
+        "durationInSeconds": 9.195,
         "numberTimes": [
           {
             "n": 4,
-            "s": 0.998
+            "s": 1.091
           },
           {
             "n": 4,
-            "s": 3.286
+            "s": 3.634
           }
         ]
       }
@@ -6343,37 +6343,37 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-inequalities/ramlah/ask.mp3",
-        "durationInSeconds": 4.598,
+        "durationInSeconds": 3.111,
         "numberTimes": [
           {
             "n": 2,
-            "s": 0.929
+            "s": 0.72
           },
           {
             "n": 5,
-            "s": 2.218
+            "s": 1.44
           }
         ]
       },
       {
         "id": "build",
         "file": "lesson-voice/cur-inequalities/ramlah/build.mp3",
-        "durationInSeconds": 10.681,
+        "durationInSeconds": 9.938,
         "numberTimes": [
           {
             "n": 2,
-            "s": 7.755
+            "s": 7.036
           },
           {
             "n": 5,
-            "s": 9.81
+            "s": 9.021
           }
         ]
       },
       {
         "id": "solve",
         "file": "lesson-voice/cur-inequalities/ramlah/solve.mp3",
-        "durationInSeconds": 13.932,
+        "durationInSeconds": 13.096,
         "numberTimes": [
           {
             "n": 2,
@@ -6381,18 +6381,18 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 3,
-            "s": 13.177
+            "s": 12.249
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-inequalities/ramlah/record.mp3",
-        "durationInSeconds": 11.146,
+        "durationInSeconds": 8.545,
         "numberTimes": [
           {
             "n": 3,
-            "s": 1.44
+            "s": 1.405
           }
         ]
       }
@@ -6403,123 +6403,123 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "simple",
         "file": "lesson-voice/cur-graphing-lines/ramlah/simple.mp3",
-        "durationInSeconds": 19.505,
+        "durationInSeconds": 15.279,
         "numberTimes": [
           {
             "n": 2,
-            "s": 2.02
+            "s": 1.869
           },
           {
             "n": 1,
-            "s": 3.274
+            "s": 3.17
           }
         ]
       },
       {
         "id": "stretch",
         "file": "lesson-voice/cur-graphing-lines/ramlah/stretch.mp3",
-        "durationInSeconds": 17.09,
+        "durationInSeconds": 13.142,
         "numberTimes": [
           {
             "n": 2,
-            "s": 1.823
+            "s": 1.741
           },
           {
             "n": 2,
-            "s": 3.727
+            "s": 3.135
           },
           {
             "n": 2,
-            "s": 6.316
+            "s": 4.946
           },
           {
             "n": 2,
-            "s": 8.986
+            "s": 7.21
           },
           {
             "n": 4,
-            "s": 10.623
+            "s": 8.417
           }
         ]
       },
       {
         "id": "lift",
         "file": "lesson-voice/cur-graphing-lines/ramlah/lift.mp3",
-        "durationInSeconds": 18.715,
+        "durationInSeconds": 11.749,
         "numberTimes": [
           {
             "n": 1,
-            "s": 1.486
+            "s": 1.184
           },
           {
             "n": 1,
-            "s": 4.632
+            "s": 2.566
           },
           {
             "n": 1,
-            "s": 9.636
+            "s": 6.142
           },
           {
             "n": 0,
-            "s": 11.029
+            "s": 6.861
           },
           {
             "n": 2,
-            "s": 11.865
+            "s": 7.221
           },
           {
             "n": 4,
-            "s": 12.295
+            "s": 7.57
           },
           {
             "n": 1,
-            "s": 13.212
+            "s": 8.243
           },
           {
             "n": 3,
-            "s": 13.758
+            "s": 8.638
           },
           {
             "n": 5,
-            "s": 14.501
+            "s": 9.044
           }
         ]
       },
       {
         "id": "table",
         "file": "lesson-voice/cur-graphing-lines/ramlah/table.mp3",
-        "durationInSeconds": 15.697,
+        "durationInSeconds": 14.025,
         "numberTimes": [
           {
             "n": 0,
-            "s": 4.54
+            "s": 4.319
           },
           {
             "n": 1,
-            "s": 5.84
+            "s": 5.503
           },
           {
             "n": 1,
-            "s": 7.384
+            "s": 6.815
           },
           {
             "n": 3,
-            "s": 8.51
+            "s": 7.825
           },
           {
             "n": 2,
-            "s": 10.089
+            "s": 9.067
           },
           {
             "n": 5,
-            "s": 11.297
+            "s": 10.031
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-graphing-lines/ramlah/record.mp3",
-        "durationInSeconds": 20.944
+        "durationInSeconds": 18.715
       }
     ]
   },
@@ -6528,131 +6528,131 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "name",
         "file": "lesson-voice/cur-slope-intercept/ramlah/name.mp3",
-        "durationInSeconds": 21.827,
+        "durationInSeconds": 17.229,
         "numberTimes": [
           {
             "n": 2,
-            "s": 15.07
+            "s": 12.643
           },
           {
             "n": 1,
-            "s": 16.185
+            "s": 13.549
           },
           {
             "n": 2,
-            "s": 18.263
+            "s": 14.826
           },
           {
             "n": 1,
-            "s": 20.956
+            "s": 16.568
           }
         ]
       },
       {
         "id": "intercept",
         "file": "lesson-voice/cur-slope-intercept/ramlah/intercept.mp3",
-        "durationInSeconds": 14.257,
+        "durationInSeconds": 12.678,
         "numberTimes": [
           {
             "n": 1,
-            "s": 12.434
+            "s": 10.82
           }
         ]
       },
       {
         "id": "points",
         "file": "lesson-voice/cur-slope-intercept/ramlah/points.mp3",
-        "durationInSeconds": 13.468,
+        "durationInSeconds": 9.52,
         "numberTimes": [
           {
             "n": 1,
-            "s": 6.548
+            "s": 4.621
           },
           {
             "n": 3,
-            "s": 7.07
+            "s": 4.899
           },
           {
             "n": 3,
-            "s": 8.963
+            "s": 5.933
           },
           {
             "n": 7,
-            "s": 9.474
+            "s": 6.223
           }
         ]
       },
       {
         "id": "formula",
         "file": "lesson-voice/cur-slope-intercept/ramlah/formula.mp3",
-        "durationInSeconds": 26.285,
+        "durationInSeconds": 17.647,
         "numberTimes": [
           {
             "n": 7,
-            "s": 12.237
+            "s": 8.475
           },
           {
             "n": 3,
-            "s": 13.142
+            "s": 9.288
           },
           {
             "n": 4,
-            "s": 13.897
+            "s": 9.683
           },
           {
             "n": 3,
-            "s": 15.941
+            "s": 11.146
           },
           {
             "n": 1,
-            "s": 16.997
+            "s": 11.796
           },
           {
             "n": 2,
-            "s": 17.74
+            "s": 12.132
           },
           {
             "n": 4,
-            "s": 19.098
+            "s": 12.643
           },
           {
             "n": 2,
-            "s": 20.016
+            "s": 13.27
           },
           {
             "n": 2,
-            "s": 22.303
+            "s": 14.571
           },
           {
             "n": 2,
-            "s": 23.8
+            "s": 15.43
           },
           {
             "n": 1,
-            "s": 24.88
+            "s": 16.417
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-slope-intercept/ramlah/record.mp3",
-        "durationInSeconds": 20.991,
+        "durationInSeconds": 13.839,
         "numberTimes": [
           {
             "n": 2,
-            "s": 4.075
+            "s": 2.589
           },
           {
             "n": 1,
-            "s": 5.259
+            "s": 3.39
           },
           {
             "n": 2,
-            "s": 6.165
+            "s": 4.133
           },
           {
             "n": 1,
-            "s": 10.17
+            "s": 7.036
           }
         ]
       }
@@ -6663,131 +6663,131 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-systems/ramlah/ask.mp3",
-        "durationInSeconds": 18.483,
+        "durationInSeconds": 15.047,
         "numberTimes": [
           {
             "n": 2,
-            "s": 5.608
+            "s": 4.458
           },
           {
             "n": 1,
-            "s": 6.711
+            "s": 5.515
           },
           {
             "n": 7,
-            "s": 11.494
+            "s": 9.358
           }
         ]
       },
       {
         "id": "line1",
         "file": "lesson-voice/cur-systems/ramlah/line1.mp3",
-        "durationInSeconds": 17.833,
+        "durationInSeconds": 14.489,
         "numberTimes": [
           {
             "n": 0,
-            "s": 4.354
+            "s": 3.68
           },
           {
             "n": 1,
-            "s": 5.84
+            "s": 4.714
           },
           {
             "n": 1,
-            "s": 6.757
+            "s": 5.642
           },
           {
             "n": 3,
-            "s": 7.651
+            "s": 6.478
           },
           {
             "n": 2,
-            "s": 8.615
+            "s": 7.465
           },
           {
             "n": 5,
-            "s": 9.509
+            "s": 8.162
           }
         ]
       },
       {
         "id": "line2",
         "file": "lesson-voice/cur-systems/ramlah/line2.mp3",
-        "durationInSeconds": 18.947,
+        "durationInSeconds": 14.35,
         "numberTimes": [
           {
             "n": 0,
-            "s": 5.178
+            "s": 3.855
           },
           {
             "n": 7,
-            "s": 6.281
+            "s": 4.667
           },
           {
             "n": 1,
-            "s": 7.303
+            "s": 5.364
           },
           {
             "n": 6,
-            "s": 8.243
+            "s": 6.095
           },
           {
             "n": 2,
-            "s": 9.16
+            "s": 6.873
           },
           {
             "n": 5,
-            "s": 10.612
+            "s": 7.454
           }
         ]
       },
       {
         "id": "cross",
         "file": "lesson-voice/cur-systems/ramlah/cross.mp3",
-        "durationInSeconds": 15.093,
+        "durationInSeconds": 11.656,
         "numberTimes": [
           {
             "n": 2,
-            "s": 9.242
+            "s": 7.581
           },
           {
             "n": 5,
-            "s": 11.331
+            "s": 8.94
           }
         ]
       },
       {
         "id": "check",
         "file": "lesson-voice/cur-systems/ramlah/check.mp3",
-        "durationInSeconds": 23.452,
+        "durationInSeconds": 18.994,
         "numberTimes": [
           {
             "n": 2,
-            "s": 3.274
+            "s": 2.763
           },
           {
             "n": 2,
-            "s": 4.017
+            "s": 3.379
           },
           {
             "n": 1,
-            "s": 4.748
+            "s": 3.901
           },
           {
             "n": 5,
-            "s": 6.316
+            "s": 4.586
           },
           {
             "n": 2,
-            "s": 9.532
+            "s": 7.616
           },
           {
             "n": 7,
-            "s": 10.194
+            "s": 8.208
           },
           {
             "n": 5,
-            "s": 10.82
+            "s": 8.928
           }
         ]
       }
@@ -6798,92 +6798,92 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-graphing-parabolas/ramlah/ask.mp3",
-        "durationInSeconds": 10.82,
+        "durationInSeconds": 8.591,
         "numberTimes": [
           {
             "n": 4,
-            "s": 2.752
+            "s": 1.892
           }
         ]
       },
       {
         "id": "plot",
         "file": "lesson-voice/cur-graphing-parabolas/ramlah/plot.mp3",
-        "durationInSeconds": 21.177,
+        "durationInSeconds": 13.886,
         "numberTimes": [
           {
             "n": 2,
-            "s": 2.09
+            "s": 1.73
           },
           {
             "n": 0,
-            "s": 2.879
+            "s": 2.183
           },
           {
             "n": 1,
-            "s": 4.342
+            "s": 3.216
           },
           {
             "n": 3,
-            "s": 5.7
+            "s": 4.214
           },
           {
             "n": 4,
-            "s": 8.324
+            "s": 5.933
           },
           {
             "n": 1,
-            "s": 12.202
+            "s": 8.127
           },
           {
             "n": 3,
-            "s": 13.537
+            "s": 9.044
           },
           {
             "n": 1,
-            "s": 15.778
+            "s": 10.391
           },
           {
             "n": 2,
-            "s": 17.322
+            "s": 11.343
           },
           {
             "n": 0,
-            "s": 18.007
+            "s": 11.831
           },
           {
             "n": 2,
-            "s": 20.387
+            "s": 13.259
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-graphing-parabolas/ramlah/action.mp3",
-        "durationInSeconds": 19.087,
+        "durationInSeconds": 14.118,
         "numberTimes": [
           {
             "n": 2,
-            "s": 12.795
+            "s": 9.764
           },
           {
             "n": 2,
-            "s": 13.921
+            "s": 10.449
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-graphing-parabolas/ramlah/record.mp3",
-        "durationInSeconds": 9.938,
+        "durationInSeconds": 8.452,
         "numberTimes": [
           {
             "n": 2,
-            "s": 4.737
+            "s": 3.947
           },
           {
             "n": 2,
-            "s": 5.7
+            "s": 4.76
           }
         ]
       }
@@ -6894,60 +6894,60 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-quadratic-equations/ramlah/ask.mp3",
-        "durationInSeconds": 10.124,
+        "durationInSeconds": 7.152,
         "numberTimes": [
           {
             "n": 5,
-            "s": 1.649
+            "s": 1.254
           },
           {
             "n": 6,
-            "s": 2.984
+            "s": 2.183
           }
         ]
       },
       {
         "id": "plot",
         "file": "lesson-voice/cur-quadratic-equations/ramlah/plot.mp3",
-        "durationInSeconds": 12.446,
+        "durationInSeconds": 11.564,
         "numberTimes": [
           {
             "n": 5,
-            "s": 4.598
+            "s": 4.528
           },
           {
             "n": 6,
-            "s": 6.014
+            "s": 6.002
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-quadratic-equations/ramlah/action.mp3",
-        "durationInSeconds": 17.415,
+        "durationInSeconds": 12.446,
         "numberTimes": [
           {
             "n": 2,
-            "s": 15.557
+            "s": 11.076
           },
           {
             "n": 3,
-            "s": 16.707
+            "s": 11.9
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-quadratic-equations/ramlah/record.mp3",
-        "durationInSeconds": 9.52,
+        "durationInSeconds": 7.57,
         "numberTimes": [
           {
             "n": 2,
-            "s": 0.952
+            "s": 0.94
           },
           {
             "n": 3,
-            "s": 2.426
+            "s": 1.985
           }
         ]
       }
@@ -6958,60 +6958,60 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-quadratic-formula/ramlah/ask.mp3",
-        "durationInSeconds": 10.124,
+        "durationInSeconds": 6.873,
         "numberTimes": [
           {
             "n": 5,
-            "s": 1.974
+            "s": 1.265
           },
           {
             "n": 6,
-            "s": 3.367
+            "s": 2.101
           }
         ]
       },
       {
         "id": "plot",
         "file": "lesson-voice/cur-quadratic-formula/ramlah/plot.mp3",
-        "durationInSeconds": 11.981,
+        "durationInSeconds": 9.752,
         "numberTimes": [
           {
             "n": 5,
-            "s": 4.516
+            "s": 3.448
           },
           {
             "n": 6,
-            "s": 5.886
+            "s": 4.493
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-quadratic-formula/ramlah/action.mp3",
-        "durationInSeconds": 16.765,
+        "durationInSeconds": 12.121,
         "numberTimes": [
           {
             "n": 2,
-            "s": 14.756
+            "s": 10.762
           },
           {
             "n": 3,
-            "s": 15.987
+            "s": 11.459
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-quadratic-formula/ramlah/record.mp3",
-        "durationInSeconds": 10.263,
+        "durationInSeconds": 6.78,
         "numberTimes": [
           {
             "n": 2,
-            "s": 0.929
+            "s": 0.987
           },
           {
             "n": 3,
-            "s": 2.368
+            "s": 1.892
           }
         ]
       }
@@ -7022,80 +7022,80 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-exponential/ramlah/ask.mp3",
-        "durationInSeconds": 12.632,
+        "durationInSeconds": 10.449,
         "numberTimes": [
           {
             "n": 2,
-            "s": 0.94
+            "s": 1.149
           },
           {
             "n": 2,
-            "s": 7.279
+            "s": 6.246
           }
         ]
       },
       {
         "id": "plot",
         "file": "lesson-voice/cur-exponential/ramlah/plot.mp3",
-        "durationInSeconds": 13.189,
+        "durationInSeconds": 8.684,
         "numberTimes": [
           {
             "n": 0,
-            "s": 1.73
+            "s": 1.254
           },
           {
             "n": 1,
-            "s": 2.589
+            "s": 1.683
           },
           {
             "n": 1,
-            "s": 3.471
+            "s": 2.485
           },
           {
             "n": 2,
-            "s": 3.959
+            "s": 2.763
           },
           {
             "n": 2,
-            "s": 4.818
+            "s": 3.297
           },
           {
             "n": 4,
-            "s": 5.364
+            "s": 3.564
           },
           {
             "n": 3,
-            "s": 6.269
+            "s": 4.005
           },
           {
             "n": 8,
-            "s": 6.85
+            "s": 4.319
           },
           {
             "n": 4,
-            "s": 7.767
+            "s": 4.783
           },
           {
             "n": 16,
-            "s": 9.207
+            "s": 5.526
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-exponential/ramlah/action.mp3",
-        "durationInSeconds": 12.26,
+        "durationInSeconds": 13.05,
         "numberTimes": [
           {
             "n": 2,
-            "s": 7.628
+            "s": 8.371
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-exponential/ramlah/record.mp3",
-        "durationInSeconds": 11.749
+        "durationInSeconds": 9.149
       }
     ]
   },
@@ -7104,7 +7104,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-logarithms/ramlah/ask.mp3",
-        "durationInSeconds": 8.777,
+        "durationInSeconds": 6.594,
         "numberTimes": [
           {
             "n": 2,
@@ -7112,58 +7112,58 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 8,
-            "s": 1.591
+            "s": 1.265
           }
         ]
       },
       {
         "id": "plot",
         "file": "lesson-voice/cur-logarithms/ramlah/plot.mp3",
-        "durationInSeconds": 10.867,
+        "durationInSeconds": 7.152,
         "numberTimes": [
           {
             "n": 2,
-            "s": 1.289
+            "s": 1.138
           },
           {
             "n": 3,
-            "s": 7.43
+            "s": 5.341
           },
           {
             "n": 8,
-            "s": 10.031
+            "s": 6.583
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-logarithms/ramlah/action.mp3",
-        "durationInSeconds": 14.489
+        "durationInSeconds": 12.307
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-logarithms/ramlah/record.mp3",
-        "durationInSeconds": 14.35,
+        "durationInSeconds": 11.099,
         "numberTimes": [
           {
             "n": 2,
-            "s": 1.358
+            "s": 1.091
           },
           {
             "n": 8,
-            "s": 1.823
+            "s": 1.451
           },
           {
             "n": 3,
-            "s": 2.554
+            "s": 2.055
           },
           {
             "n": 2,
-            "s": 4.47
+            "s": 3.251
           },
           {
             "n": 8,
-            "s": 5.561
+            "s": 3.947
           }
         ]
       }
@@ -7174,92 +7174,92 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-limits/ramlah/ask.mp3",
-        "durationInSeconds": 10.356,
+        "durationInSeconds": 7.198,
         "numberTimes": [
           {
             "n": 2,
-            "s": 2.798
+            "s": 2.566
           }
         ]
       },
       {
         "id": "plot",
         "file": "lesson-voice/cur-limits/ramlah/plot.mp3",
-        "durationInSeconds": 18.622,
+        "durationInSeconds": 15.325,
         "numberTimes": [
           {
             "n": 4,
-            "s": 2.368
+            "s": 2.02
           },
           {
             "n": 2,
-            "s": 4.621
+            "s": 3.971
           },
           {
             "n": 2,
-            "s": 6.618
+            "s": 6.107
           },
           {
             "n": 2,
-            "s": 9.404
+            "s": 8.29
           },
           {
             "n": 2,
-            "s": 12.632
+            "s": 10.414
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-limits/ramlah/action.mp3",
-        "durationInSeconds": 14.164,
+        "durationInSeconds": 11.471,
         "numberTimes": [
           {
             "n": 1,
-            "s": 2.125
+            "s": 1.892
           },
           {
             "n": 3,
-            "s": 2.902
+            "s": 2.508
           },
           {
             "n": 1,
-            "s": 3.843
+            "s": 3.529
           },
           {
             "n": 5,
-            "s": 4.563
+            "s": 4.087
           },
           {
             "n": 3,
-            "s": 5.19
+            "s": 4.76
           },
           {
             "n": 5,
-            "s": 6.049
+            "s": 5.317
           },
           {
             "n": 4,
-            "s": 9.485
+            "s": 7.581
           },
           {
             "n": 4,
-            "s": 13.34
+            "s": 10.762
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-limits/ramlah/record.mp3",
-        "durationInSeconds": 10.356,
+        "durationInSeconds": 11.053,
         "numberTimes": [
           {
             "n": 4,
-            "s": 1.3
+            "s": 1.463
           },
           {
             "n": 4,
-            "s": 2.74
+            "s": 3.042
           }
         ]
       }
@@ -7270,36 +7270,36 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-derivatives/ramlah/ask.mp3",
-        "durationInSeconds": 10.913,
+        "durationInSeconds": 9.149,
         "numberTimes": [
           {
             "n": 1,
-            "s": 6.351
+            "s": 5.584
           }
         ]
       },
       {
         "id": "plot",
         "file": "lesson-voice/cur-derivatives/ramlah/plot.mp3",
-        "durationInSeconds": 10.17
+        "durationInSeconds": 8.591
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-derivatives/ramlah/action.mp3",
-        "durationInSeconds": 15.14
+        "durationInSeconds": 13.096
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-derivatives/ramlah/record.mp3",
-        "durationInSeconds": 9.567,
+        "durationInSeconds": 8.777,
         "numberTimes": [
           {
             "n": 2,
-            "s": 1.37
+            "s": 1.265
           },
           {
             "n": 1,
-            "s": 4.586
+            "s": 4.075
           }
         ]
       }
@@ -7310,36 +7310,36 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-integrals/ramlah/ask.mp3",
-        "durationInSeconds": 9.845,
+        "durationInSeconds": 9.799,
         "numberTimes": [
           {
             "n": 0,
-            "s": 2.786
+            "s": 2.694
           },
           {
             "n": 4,
-            "s": 3.692
+            "s": 3.228
           }
         ]
       },
       {
         "id": "plot",
         "file": "lesson-voice/cur-integrals/ramlah/plot.mp3",
-        "durationInSeconds": 6.223
+        "durationInSeconds": 5.991
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-integrals/ramlah/action.mp3",
-        "durationInSeconds": 15.139
+        "durationInSeconds": 13.003
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-integrals/ramlah/record.mp3",
-        "durationInSeconds": 8.452,
+        "durationInSeconds": 7.245,
         "numberTimes": [
           {
             "n": 8,
-            "s": 2.125
+            "s": 2.067
           }
         ]
       }
@@ -7350,88 +7350,88 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-function-notation/ramlah/ask.mp3",
-        "durationInSeconds": 17.786,
+        "durationInSeconds": 15.464,
         "numberTimes": [
           {
             "n": 2,
-            "s": 12.179
+            "s": 11.052
           },
           {
             "n": 3,
-            "s": 13.433
+            "s": 11.946
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-function-notation/ramlah/work.mp3",
-        "durationInSeconds": 23.081,
+        "durationInSeconds": 17.647,
         "numberTimes": [
           {
             "n": 4,
-            "s": 8.719
+            "s": 7.767
           },
           {
             "n": 4,
-            "s": 10.751
+            "s": 9.125
           },
           {
             "n": 4,
-            "s": 14.338
+            "s": 12.086
           },
           {
             "n": 2,
-            "s": 17.589
+            "s": 14.408
           },
           {
             "n": 4,
-            "s": 18.657
+            "s": 14.977
           },
           {
             "n": 3,
-            "s": 19.888
+            "s": 15.685
           },
           {
             "n": 11,
-            "s": 21.897
+            "s": 16.799
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-function-notation/ramlah/twist.mp3",
-        "durationInSeconds": 15.743,
+        "durationInSeconds": 12.539,
         "numberTimes": [
           {
             "n": 4,
-            "s": 2.136
+            "s": 1.509
           },
           {
             "n": 11,
-            "s": 3.135
+            "s": 2.159
           },
           {
             "n": 4,
-            "s": 9.218
+            "s": 6.978
           },
           {
             "n": 11,
-            "s": 10.054
+            "s": 7.523
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-function-notation/ramlah/record.mp3",
-        "durationInSeconds": 16.347,
+        "durationInSeconds": 12.307,
         "numberTimes": [
           {
             "n": 4,
-            "s": 11.157
+            "s": 8.278
           },
           {
             "n": 4,
-            "s": 13.282
+            "s": 9.706
           }
         ]
       }
@@ -7442,116 +7442,116 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-evaluate-linear/ramlah/ask.mp3",
-        "durationInSeconds": 13.886,
+        "durationInSeconds": 9.102,
         "numberTimes": [
           {
             "n": 3,
-            "s": 1.858
+            "s": 1.544
           },
           {
             "n": 2,
-            "s": 3.181
+            "s": 2.438
           },
           {
             "n": 0,
-            "s": 5.271
+            "s": 3.727
           },
           {
             "n": 1,
-            "s": 6.455
+            "s": 4.621
           },
           {
             "n": 2,
-            "s": 7.79
+            "s": 5.329
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-evaluate-linear/ramlah/work.mp3",
-        "durationInSeconds": 15.232,
+        "durationInSeconds": 9.427,
         "numberTimes": [
           {
             "n": 0,
-            "s": 5.236
+            "s": 3.704
           },
           {
             "n": 3,
-            "s": 6.78
+            "s": 4.47
           },
           {
             "n": 0,
-            "s": 7.442
+            "s": 4.992
           },
           {
             "n": 0,
-            "s": 8.29
+            "s": 5.399
           },
           {
             "n": 2,
-            "s": 9.485
+            "s": 6.06
           },
           {
             "n": 2,
-            "s": 10.17
+            "s": 6.536
           },
           {
             "n": 1,
-            "s": 11.401
+            "s": 7.221
           },
           {
             "n": 5,
-            "s": 12.701
+            "s": 7.872
           },
           {
             "n": 2,
-            "s": 13.781
+            "s": 8.498
           },
           {
             "n": 8,
-            "s": 14.501
+            "s": 8.824
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-evaluate-linear/ramlah/twist.mp3",
-        "durationInSeconds": 18.483,
+        "durationInSeconds": 12.91,
         "numberTimes": [
           {
             "n": 0,
-            "s": 2.995
+            "s": 2.345
           },
           {
             "n": 1,
+            "s": 3.077
+          },
+          {
+            "n": 2,
             "s": 3.657
           },
           {
             "n": 2,
-            "s": 4.156
-          },
-          {
-            "n": 2,
-            "s": 5.19
+            "s": 4.493
           },
           {
             "n": 5,
-            "s": 5.7
+            "s": 4.795
           },
           {
             "n": 8,
-            "s": 6.293
+            "s": 5.201
           },
           {
             "n": 3,
-            "s": 9.799
+            "s": 7.372
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-evaluate-linear/ramlah/record.mp3",
-        "durationInSeconds": 15.325
+        "durationInSeconds": 13.607
       }
     ]
   },
@@ -7560,84 +7560,84 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-composition/ramlah/ask.mp3",
-        "durationInSeconds": 15.65,
+        "durationInSeconds": 13.375,
         "numberTimes": [
           {
             "n": 2,
-            "s": 3.959
+            "s": 3.111
           },
           {
             "n": 3,
-            "s": 7.198
+            "s": 5.84
           },
           {
             "n": 2,
-            "s": 14.965
+            "s": 12.783
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-composition/ramlah/work.mp3",
-        "durationInSeconds": 20.619,
+        "durationInSeconds": 13.653,
         "numberTimes": [
           {
             "n": 2,
-            "s": 1.73
+            "s": 1.474
           },
           {
             "n": 4,
-            "s": 4.574
+            "s": 3.506
           },
           {
             "n": 4,
-            "s": 5.712
+            "s": 4.18
           },
           {
             "n": 3,
-            "s": 9.276
+            "s": 6.165
           },
           {
             "n": 12,
-            "s": 11.041
+            "s": 6.896
           },
           {
             "n": 2,
-            "s": 15.035
+            "s": 9.903
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-composition/ramlah/twist.mp3",
-        "durationInSeconds": 18.53,
+        "durationInSeconds": 11.656,
         "numberTimes": [
           {
             "n": 2,
-            "s": 2.902
+            "s": 1.788
           },
           {
             "n": 6,
-            "s": 5.724
+            "s": 3.181
           },
           {
             "n": 8,
-            "s": 8.847
+            "s": 5.329
           },
           {
             "n": 12,
-            "s": 12.016
+            "s": 7.21
           },
           {
             "n": 8,
-            "s": 14.164
+            "s": 8.394
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-composition/ramlah/record.mp3",
-        "durationInSeconds": 12.399
+        "durationInSeconds": 11.517
       }
     ]
   },
@@ -7646,102 +7646,102 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-inverse-functions/ramlah/ask.mp3",
-        "durationInSeconds": 17.926,
+        "durationInSeconds": 13.7,
         "numberTimes": [
           {
             "n": 2,
-            "s": 1.695
+            "s": 1.649
           },
           {
             "n": 1,
-            "s": 2.949
+            "s": 2.659
           },
           {
             "n": 3,
-            "s": 5.143
+            "s": 3.808
           },
           {
             "n": 2,
-            "s": 6.78
+            "s": 4.818
           },
           {
             "n": 6,
-            "s": 7.326
+            "s": 5.224
           },
           {
             "n": 1,
-            "s": 8.406
+            "s": 6.118
           },
           {
             "n": 7,
-            "s": 9.973
+            "s": 7.187
           },
           {
             "n": 7,
-            "s": 15.047
+            "s": 11.041
           },
           {
             "n": 3,
-            "s": 17.183
+            "s": 12.957
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-inverse-functions/ramlah/work.mp3",
-        "durationInSeconds": 17.879,
+        "durationInSeconds": 14.489,
         "numberTimes": [
           {
             "n": 2,
-            "s": 4.191
+            "s": 3.541
           },
           {
             "n": 1,
-            "s": 5.55
+            "s": 5.039
           },
           {
             "n": 1,
-            "s": 11.029
+            "s": 9.172
           },
           {
             "n": 6,
-            "s": 12.283
+            "s": 10.159
           },
           {
             "n": 2,
-            "s": 13.932
+            "s": 11.564
           },
           {
             "n": 3,
-            "s": 15.406
+            "s": 12.539
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-inverse-functions/ramlah/twist.mp3",
-        "durationInSeconds": 18.204
+        "durationInSeconds": 13.514
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-inverse-functions/ramlah/record.mp3",
-        "durationInSeconds": 17.136,
+        "durationInSeconds": 11.285,
         "numberTimes": [
           {
             "n": 2,
-            "s": 2.635
+            "s": 1.474
           },
           {
             "n": 1,
-            "s": 3.715
+            "s": 2.322
           },
           {
             "n": 1,
-            "s": 7.221
+            "s": 4.145
           },
           {
             "n": 2,
-            "s": 9.358
+            "s": 4.934
           }
         ]
       }
@@ -7752,62 +7752,62 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-domain-range/ramlah/ask.mp3",
-        "durationInSeconds": 14.303
+        "durationInSeconds": 11.796
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-domain-range/ramlah/work.mp3",
-        "durationInSeconds": 21.641,
+        "durationInSeconds": 16.44,
         "numberTimes": [
           {
             "n": 3,
-            "s": 1.533
+            "s": 1.486
           },
           {
             "n": 9,
-            "s": 4.934
+            "s": 3.564
           },
           {
             "n": 0,
-            "s": 5.573
+            "s": 4.354
           },
           {
             "n": 0,
-            "s": 7.152
+            "s": 5.433
           },
           {
             "n": 3,
-            "s": 8.406
+            "s": 6.316
           },
           {
             "n": 9,
-            "s": 10.553
+            "s": 7.558
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-domain-range/ramlah/twist.mp3",
-        "durationInSeconds": 21.688,
+        "durationInSeconds": 18.53,
         "numberTimes": [
           {
             "n": 9,
-            "s": 2.368
+            "s": 1.672
           },
           {
             "n": 0,
-            "s": 3.077
+            "s": 2.38
           },
           {
             "n": 9,
-            "s": 3.913
+            "s": 3.297
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-domain-range/ramlah/record.mp3",
-        "durationInSeconds": 21.037
+        "durationInSeconds": 12.864
       }
     ]
   },
@@ -7816,100 +7816,100 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-domain-rational/ramlah/ask.mp3",
-        "durationInSeconds": 17.369,
+        "durationInSeconds": 16.3,
         "numberTimes": [
           {
             "n": 1,
-            "s": 1.753
+            "s": 1.985
           },
           {
             "n": 2,
-            "s": 4.238
+            "s": 4.11
           },
           {
             "n": 1,
-            "s": 7.14
+            "s": 6.42
           },
           {
             "n": 2,
-            "s": 9.334
+            "s": 8.707
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-domain-rational/ramlah/work.mp3",
-        "durationInSeconds": 14.675,
+        "durationInSeconds": 9.706,
         "numberTimes": [
           {
             "n": 3,
-            "s": 0.743
+            "s": 0.975
           },
           {
             "n": 3,
-            "s": 2.728
+            "s": 2.043
           },
           {
             "n": 2,
-            "s": 3.634
+            "s": 2.659
           },
           {
             "n": 1,
-            "s": 4.528
+            "s": 3.332
           },
           {
             "n": 1,
-            "s": 5.851
+            "s": 4.284
           },
           {
             "n": 4,
-            "s": 7.349
+            "s": 5.259
           },
           {
             "n": 2,
-            "s": 9.439
+            "s": 6.235
           },
           {
             "n": 0,
-            "s": 10.902
+            "s": 7.233
           },
           {
             "n": 5,
-            "s": 11.958
+            "s": 7.895
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-domain-rational/ramlah/twist.mp3",
-        "durationInSeconds": 19.365,
+        "durationInSeconds": 12.167,
         "numberTimes": [
           {
             "n": 2,
-            "s": 1.033
+            "s": 0.859
           },
           {
             "n": 2,
-            "s": 3.495
+            "s": 2.183
           },
           {
             "n": 2,
-            "s": 4.296
+            "s": 2.786
           },
           {
             "n": 1,
-            "s": 7.755
+            "s": 4.063
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-domain-rational/ramlah/record.mp3",
-        "durationInSeconds": 13.978,
+        "durationInSeconds": 12.957,
         "numberTimes": [
           {
             "n": 2,
-            "s": 2.752
+            "s": 2.287
           }
         ]
       }
@@ -7920,76 +7920,76 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-pythagorean/ramlah/ask.mp3",
-        "durationInSeconds": 8.034,
+        "durationInSeconds": 7.198,
         "numberTimes": [
           {
             "n": 3,
-            "s": 2.264
+            "s": 2.31
           },
           {
             "n": 4,
-            "s": 3.634
+            "s": 3.332
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-pythagorean/ramlah/work.mp3",
-        "durationInSeconds": 14.396,
+        "durationInSeconds": 11.238,
         "numberTimes": [
           {
             "n": 3,
-            "s": 2.682
+            "s": 1.962
           },
           {
             "n": 9,
-            "s": 4.725
+            "s": 3.599
           },
           {
             "n": 4,
-            "s": 5.642
+            "s": 4.528
           },
           {
             "n": 16,
-            "s": 7.57
+            "s": 5.573
           },
           {
             "n": 9,
-            "s": 11.215
+            "s": 8.591
           },
           {
             "n": 16,
-            "s": 12.016
+            "s": 9.288
           },
           {
             "n": 25,
-            "s": 13.166
+            "s": 10.159
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-pythagorean/ramlah/twist.mp3",
-        "durationInSeconds": 22.524,
+        "durationInSeconds": 15.418,
         "numberTimes": [
           {
             "n": 25,
-            "s": 6.467
+            "s": 4.748
           },
           {
             "n": 25,
-            "s": 10.739
+            "s": 7.5
           },
           {
             "n": 5,
-            "s": 12.864
+            "s": 9.253
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-pythagorean/ramlah/record.mp3",
-        "durationInSeconds": 17.694,
+        "durationInSeconds": 10.17,
         "numberTimes": [
           {
             "n": 3,
@@ -7997,11 +7997,11 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 0.743
+            "s": 0.534
           },
           {
             "n": 5,
-            "s": 1.37
+            "s": 0.824
           }
         ]
       }
@@ -8012,56 +8012,56 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-triangle-sides/ramlah/ask.mp3",
-        "durationInSeconds": 13.096,
+        "durationInSeconds": 10.495,
         "numberTimes": [
           {
             "n": 3,
-            "s": 1.405
+            "s": 1.37
           },
           {
             "n": 4,
-            "s": 1.974
+            "s": 1.927
           },
           {
             "n": 5,
-            "s": 2.519
+            "s": 2.38
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-triangle-sides/ramlah/work.mp3",
-        "durationInSeconds": 16.858,
+        "durationInSeconds": 15.232,
         "numberTimes": [
           {
             "n": 3,
-            "s": 5.178
+            "s": 5.573
           },
           {
             "n": 4,
-            "s": 10.925
+            "s": 10.565
           },
           {
             "n": 5,
-            "s": 15.906
+            "s": 14.362
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-triangle-sides/ramlah/twist.mp3",
-        "durationInSeconds": 12.678,
+        "durationInSeconds": 11.331,
         "numberTimes": [
           {
             "n": 4,
-            "s": 6.873
+            "s": 6.327
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-triangle-sides/ramlah/record.mp3",
-        "durationInSeconds": 14.396
+        "durationInSeconds": 13.793
       }
     ]
   },
@@ -8070,7 +8070,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-right-triangle-trig/ramlah/ask.mp3",
-        "durationInSeconds": 13.189,
+        "durationInSeconds": 8.452,
         "numberTimes": [
           {
             "n": 3,
@@ -8078,96 +8078,96 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 0.662
+            "s": 0.58
           },
           {
             "n": 5,
-            "s": 1.219
+            "s": 0.917
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-right-triangle-trig/ramlah/work.mp3",
-        "durationInSeconds": 24.195,
+        "durationInSeconds": 17.369,
         "numberTimes": [
           {
             "n": 3,
-            "s": 3.727
+            "s": 2.914
           },
           {
             "n": 5,
-            "s": 4.481
+            "s": 3.495
           },
           {
             "n": 0,
-            "s": 5.677
+            "s": 4.272
           },
           {
             "n": 6,
-            "s": 6.444
+            "s": 5.039
           },
           {
             "n": 4,
-            "s": 11.622
+            "s": 8.905
           },
           {
             "n": 5,
-            "s": 12.492
+            "s": 9.729
           },
           {
             "n": 0,
-            "s": 14.036
+            "s": 10.635
           },
           {
             "n": 8,
-            "s": 15.047
+            "s": 11.355
           },
           {
             "n": 3,
-            "s": 19.586
+            "s": 14.396
           },
           {
             "n": 4,
-            "s": 20.364
+            "s": 15.116
           },
           {
             "n": 0,
-            "s": 21.908
+            "s": 15.662
           },
           {
             "n": 75,
-            "s": 22.918
+            "s": 16.266
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-right-triangle-trig/ramlah/twist.mp3",
-        "durationInSeconds": 17.043,
+        "durationInSeconds": 14.629,
         "numberTimes": [
           {
             "n": 30,
-            "s": 7.268
+            "s": 6.734
           },
           {
             "n": 50,
-            "s": 8.115
+            "s": 7.535
           },
           {
             "n": 0,
-            "s": 10.414
+            "s": 8.87
           },
           {
             "n": 6,
-            "s": 11.25
+            "s": 9.578
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-right-triangle-trig/ramlah/record.mp3",
-        "durationInSeconds": 21.873
+        "durationInSeconds": 16.022
       }
     ]
   },
@@ -8176,30 +8176,30 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-pyth-identity/ramlah/ask.mp3",
-        "durationInSeconds": 11.006,
+        "durationInSeconds": 8.731,
         "numberTimes": [
           {
             "n": 0,
-            "s": 3.123
+            "s": 2.426
           },
           {
             "n": 6,
-            "s": 4.075
+            "s": 3.053
           },
           {
             "n": 0,
-            "s": 5.84
+            "s": 4.447
           },
           {
             "n": 8,
-            "s": 6.792
+            "s": 4.957
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-pyth-identity/ramlah/work.mp3",
-        "durationInSeconds": 24.799,
+        "durationInSeconds": 15.975,
         "numberTimes": [
           {
             "n": 0,
@@ -8207,125 +8207,125 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 6,
-            "s": 0.813
+            "s": 1.138
           },
           {
             "n": 0,
-            "s": 2.67
+            "s": 2.009
           },
           {
             "n": 36,
-            "s": 3.587
+            "s": 2.612
           },
           {
             "n": 0,
-            "s": 4.748
+            "s": 3.529
           },
           {
             "n": 8,
-            "s": 5.631
+            "s": 4.145
           },
           {
             "n": 0,
-            "s": 7.512
+            "s": 5.108
           },
           {
             "n": 64,
-            "s": 8.545
+            "s": 5.666
           },
           {
             "n": 0,
-            "s": 11.482
+            "s": 6.896
           },
           {
             "n": 36,
-            "s": 12.492
+            "s": 7.488
           },
           {
             "n": 0,
-            "s": 14.315
+            "s": 8.475
           },
           {
             "n": 64,
-            "s": 15.441
+            "s": 8.986
           },
           {
             "n": 1,
-            "s": 18.03
+            "s": 10.774
           },
           {
             "n": 1,
-            "s": 24.021
+            "s": 15.279
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-pyth-identity/ramlah/twist.mp3",
-        "durationInSeconds": 25.124,
+        "durationInSeconds": 14.536,
         "numberTimes": [
           {
             "n": 3,
-            "s": 2.45
+            "s": 1.347
           },
           {
             "n": 5,
-            "s": 3.239
+            "s": 1.776
           },
           {
             "n": 4,
-            "s": 5.909
+            "s": 2.821
           },
           {
             "n": 5,
-            "s": 6.885
+            "s": 3.286
           },
           {
             "n": 9,
-            "s": 9.358
+            "s": 4.865
           },
           {
             "n": 16,
-            "s": 10.275
+            "s": 5.48
           },
           {
             "n": 25,
-            "s": 12.028
+            "s": 6.711
           },
           {
             "n": 9,
-            "s": 13.99
+            "s": 7.697
           },
           {
             "n": 16,
-            "s": 14.861
+            "s": 8.266
           },
           {
             "n": 25,
-            "s": 16.033
+            "s": 9.044
           },
           {
             "n": 25,
-            "s": 21.072
+            "s": 12.388
           },
           {
             "n": 25,
-            "s": 22.523
+            "s": 13.177
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-pyth-identity/ramlah/record.mp3",
-        "durationInSeconds": 16.858,
+        "durationInSeconds": 14.35,
         "numberTimes": [
           {
             "n": 1,
-            "s": 3.437
+            "s": 2.763
           },
           {
             "n": 1,
-            "s": 14.025
+            "s": 11.726
           }
         ]
       }
@@ -8336,66 +8336,66 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-unit-circle/ramlah/ask.mp3",
-        "durationInSeconds": 13.839,
+        "durationInSeconds": 12.446,
         "numberTimes": [
           {
             "n": 1,
-            "s": 2.206
+            "s": 2.078
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-unit-circle/ramlah/work.mp3",
-        "durationInSeconds": 16.625
+        "durationInSeconds": 14.861
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-unit-circle/ramlah/twist.mp3",
-        "durationInSeconds": 20.573,
+        "durationInSeconds": 14.489,
         "numberTimes": [
           {
             "n": 90,
-            "s": 4.969
+            "s": 4.133
           },
           {
             "n": 0,
-            "s": 7.581
+            "s": 5.631
           },
           {
             "n": 1,
-            "s": 8.882
+            "s": 6.304
           },
           {
             "n": 180,
-            "s": 11.146
+            "s": 7.93
           },
           {
             "n": 1,
-            "s": 14.338
+            "s": 9.915
           },
           {
             "n": 0,
-            "s": 15.569
+            "s": 10.67
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-unit-circle/ramlah/record.mp3",
-        "durationInSeconds": 12.492,
+        "durationInSeconds": 10.913,
         "numberTimes": [
           {
             "n": 1,
-            "s": 0.72
+            "s": 0.755
           },
           {
             "n": 1,
-            "s": 3.889
+            "s": 3.367
           },
           {
             "n": 1,
-            "s": 7.976
+            "s": 7.198
           }
         ]
       }
@@ -8406,132 +8406,132 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-unit-circle-values/ramlah/ask.mp3",
-        "durationInSeconds": 13.886,
+        "durationInSeconds": 10.913,
         "numberTimes": [
           {
             "n": 0,
-            "s": 3.065
+            "s": 2.717
           },
           {
             "n": 90,
-            "s": 3.866
+            "s": 3.228
           },
           {
             "n": 180,
-            "s": 4.632
+            "s": 3.971
           },
           {
             "n": 270,
-            "s": 6.362
+            "s": 5.248
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-unit-circle-values/ramlah/work.mp3",
-        "durationInSeconds": 19.876,
+        "durationInSeconds": 15.604,
         "numberTimes": [
           {
             "n": 0,
-            "s": 0.348
+            "s": 0.464
           },
           {
             "n": 1,
-            "s": 2.403
+            "s": 2.148
           },
           {
             "n": 0,
-            "s": 2.949
+            "s": 2.624
           },
           {
             "n": 1,
-            "s": 5.7
+            "s": 4.191
           },
           {
             "n": 0,
-            "s": 7.361
+            "s": 5.224
           },
           {
             "n": 90,
-            "s": 8.94
+            "s": 6.327
           },
           {
             "n": 0,
-            "s": 10.565
+            "s": 7.651
           },
           {
             "n": 1,
-            "s": 11.18
+            "s": 8.231
           },
           {
             "n": 180,
-            "s": 12.156
+            "s": 9.311
           },
           {
             "n": 1,
-            "s": 14.222
+            "s": 10.879
           },
           {
             "n": 0,
-            "s": 14.756
+            "s": 11.32
           },
           {
             "n": 270,
-            "s": 16.486
+            "s": 12.411
           },
           {
             "n": 0,
-            "s": 17.821
+            "s": 13.804
           },
           {
             "n": 1,
-            "s": 19.087
+            "s": 14.954
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-unit-circle-values/ramlah/twist.mp3",
-        "durationInSeconds": 18.437,
+        "durationInSeconds": 14.118,
         "numberTimes": [
           {
             "n": 1,
-            "s": 5.979
+            "s": 3.622
           },
           {
             "n": 0,
-            "s": 6.629
+            "s": 4.296
           },
           {
             "n": 1,
-            "s": 7.941
+            "s": 5.515
           },
           {
             "n": 0,
-            "s": 8.487
+            "s": 6.107
           },
           {
             "n": 0,
-            "s": 11.877
+            "s": 8.382
           },
           {
             "n": 1,
-            "s": 12.492
+            "s": 9.102
           },
           {
             "n": 0,
-            "s": 13.003
+            "s": 9.752
           },
           {
             "n": 1,
-            "s": 14.176
+            "s": 10.925
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-unit-circle-values/ramlah/record.mp3",
-        "durationInSeconds": 10.449
+        "durationInSeconds": 7.941
       }
     ]
   },
@@ -8540,80 +8540,80 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-deg-radians/ramlah/ask.mp3",
-        "durationInSeconds": 12.957,
+        "durationInSeconds": 12.632,
         "numberTimes": [
           {
             "n": 1,
-            "s": 11.575
+            "s": 11.494
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-deg-radians/ramlah/work.mp3",
-        "durationInSeconds": 16.579,
+        "durationInSeconds": 13.56,
         "numberTimes": [
           {
             "n": 3,
-            "s": 5.41
+            "s": 4.911
           },
           {
             "n": 180,
-            "s": 8.522
+            "s": 7.976
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-deg-radians/ramlah/twist.mp3",
-        "durationInSeconds": 19.319,
+        "durationInSeconds": 12.678,
         "numberTimes": [
           {
             "n": 90,
-            "s": 2.659
+            "s": 2.601
           },
           {
             "n": 180,
-            "s": 4.609
+            "s": 4.122
           },
           {
             "n": 2,
-            "s": 7.628
+            "s": 5.84
           },
           {
             "n": 60,
-            "s": 8.661
+            "s": 6.374
           },
           {
             "n": 3,
-            "s": 12.98
+            "s": 9.056
           },
           {
             "n": 360,
-            "s": 15.592
+            "s": 10.588
           },
           {
             "n": 2,
-            "s": 18.03
+            "s": 11.587
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-deg-radians/ramlah/record.mp3",
-        "durationInSeconds": 18.251,
+        "durationInSeconds": 13.328,
         "numberTimes": [
           {
             "n": 180,
-            "s": 4.04
+            "s": 3.297
           },
           {
             "n": 180,
-            "s": 10.077
+            "s": 7.779
           },
           {
             "n": 180,
-            "s": 15.221
+            "s": 10.902
           }
         ]
       }
@@ -8624,52 +8624,52 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-trig-identities/ramlah/ask.mp3",
-        "durationInSeconds": 17.229,
+        "durationInSeconds": 14.071,
         "numberTimes": [
           {
             "n": 1,
-            "s": 7.361
+            "s": 6.525
           },
           {
             "n": 1,
-            "s": 13.955
+            "s": 11.157
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-trig-identities/ramlah/work.mp3",
-        "durationInSeconds": 14.164,
+        "durationInSeconds": 12.121,
         "numberTimes": [
           {
             "n": 1,
-            "s": 5.735
+            "s": 4.133
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-trig-identities/ramlah/twist.mp3",
-        "durationInSeconds": 15.975,
+        "durationInSeconds": 13.05,
         "numberTimes": [
           {
             "n": 1,
-            "s": 6.618
+            "s": 5.422
           },
           {
             "n": 1,
-            "s": 9.416
+            "s": 7.523
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-trig-identities/ramlah/record.mp3",
-        "durationInSeconds": 14.907,
+        "durationInSeconds": 12.725,
         "numberTimes": [
           {
             "n": 1,
-            "s": 8.022
+            "s": 7.198
           }
         ]
       }
@@ -8680,7 +8680,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-classify-poly/ramlah/ask.mp3",
-        "durationInSeconds": 16.347,
+        "durationInSeconds": 9.892,
         "numberTimes": [
           {
             "n": 3,
@@ -8688,76 +8688,76 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 2,
-            "s": 2.531
+            "s": 1.416
           },
           {
             "n": 5,
-            "s": 4.249
+            "s": 2.206
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-classify-poly/ramlah/work.mp3",
-        "durationInSeconds": 26.099,
+        "durationInSeconds": 14.907,
         "numberTimes": [
           {
             "n": 3,
-            "s": 6.56
+            "s": 4.632
           },
           {
             "n": 2,
-            "s": 9.845
+            "s": 6.49
           },
           {
             "n": 5,
-            "s": 12.91
+            "s": 8.104
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-classify-poly/ramlah/twist.mp3",
-        "durationInSeconds": 19.04,
+        "durationInSeconds": 15.604,
         "numberTimes": [
           {
             "n": 2,
-            "s": 4.435
+            "s": 3.994
           },
           {
             "n": 1,
-            "s": 5.538
+            "s": 4.818
           },
           {
             "n": 0,
-            "s": 6.664
+            "s": 5.7
           },
           {
             "n": 2,
-            "s": 11.993
+            "s": 9.636
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-classify-poly/ramlah/record.mp3",
-        "durationInSeconds": 17.275,
+        "durationInSeconds": 14.861,
         "numberTimes": [
           {
             "n": 3,
-            "s": 5.503
+            "s": 4.621
           },
           {
             "n": 2,
-            "s": 7.384
+            "s": 6.339
           },
           {
             "n": 5,
-            "s": 8.673
+            "s": 7.512
           },
           {
             "n": 2,
-            "s": 11.32
+            "s": 9.648
           }
         ]
       }
@@ -8768,104 +8768,104 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-add-poly/ramlah/ask.mp3",
-        "durationInSeconds": 14.954,
+        "durationInSeconds": 10.124,
         "numberTimes": [
           {
             "n": 3,
-            "s": 2.577
+            "s": 1.858
           },
           {
             "n": 2,
-            "s": 4.969
+            "s": 3.065
           },
           {
             "n": 1,
-            "s": 6.409
+            "s": 3.878
           },
           {
             "n": 4,
-            "s": 9.369
+            "s": 5.933
           },
           {
             "n": 2,
-            "s": 10.774
+            "s": 6.827
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-add-poly/ramlah/work.mp3",
-        "durationInSeconds": 27.446,
+        "durationInSeconds": 17.833,
         "numberTimes": [
           {
             "n": 3,
-            "s": 16.754
+            "s": 12.527
           },
           {
             "n": 1,
-            "s": 17.381
+            "s": 12.922
           },
           {
             "n": 4,
-            "s": 18.251
+            "s": 13.421
           },
           {
             "n": 2,
-            "s": 20.318
+            "s": 14.593
           },
           {
             "n": 4,
-            "s": 21.247
+            "s": 14.942
           },
           {
             "n": 6,
-            "s": 22.257
+            "s": 15.406
           },
           {
             "n": 1,
-            "s": 24.973
+            "s": 16.381
           },
           {
             "n": 2,
-            "s": 25.844
+            "s": 16.695
           },
           {
             "n": 3,
-            "s": 26.877
+            "s": 17.171
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-add-poly/ramlah/twist.mp3",
-        "durationInSeconds": 18.622,
+        "durationInSeconds": 15.604,
         "numberTimes": [
           {
             "n": 4,
-            "s": 12.062
+            "s": 11.425
           },
           {
             "n": 6,
-            "s": 13.769
+            "s": 12.737
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-add-poly/ramlah/record.mp3",
-        "durationInSeconds": 18.204,
+        "durationInSeconds": 11.703,
         "numberTimes": [
           {
             "n": 4,
-            "s": 1.3
+            "s": 0.975
           },
           {
             "n": 6,
-            "s": 3.785
+            "s": 2.218
           },
           {
             "n": 3,
-            "s": 5.399
+            "s": 3.17
           }
         ]
       }
@@ -8876,96 +8876,96 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-multiply-poly/ramlah/ask.mp3",
-        "durationInSeconds": 10.96,
+        "durationInSeconds": 8.127,
         "numberTimes": [
           {
             "n": 2,
-            "s": 1.753
+            "s": 1.347
           },
           {
             "n": 3,
-            "s": 3.587
+            "s": 2.682
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-multiply-poly/ramlah/work.mp3",
-        "durationInSeconds": 27.678,
+        "durationInSeconds": 18.251,
         "numberTimes": [
           {
             "n": 2,
-            "s": 4.261
+            "s": 2.984
           },
           {
             "n": 3,
-            "s": 7.941
+            "s": 5.12
           },
           {
             "n": 3,
-            "s": 17.833
+            "s": 11.889
           },
           {
             "n": 3,
-            "s": 19.505
+            "s": 12.748
           },
           {
             "n": 2,
-            "s": 21.211
+            "s": 13.595
           },
           {
             "n": 2,
-            "s": 23.708
+            "s": 14.884
           },
           {
             "n": 2,
-            "s": 25.449
+            "s": 16.033
           },
           {
             "n": 3,
-            "s": 26.204
+            "s": 16.718
           },
           {
             "n": 6,
-            "s": 26.912
+            "s": 17.427
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-multiply-poly/ramlah/twist.mp3",
-        "durationInSeconds": 23.499,
+        "durationInSeconds": 16.161,
         "numberTimes": [
           {
             "n": 3,
-            "s": 3.622
+            "s": 2.984
           },
           {
             "n": 2,
-            "s": 4.725
+            "s": 3.82
           },
           {
             "n": 5,
-            "s": 8.046
+            "s": 6.049
           },
           {
             "n": 6,
-            "s": 10.019
+            "s": 7.059
           },
           {
             "n": 5,
-            "s": 14.141
+            "s": 9.903
           },
           {
             "n": 6,
-            "s": 15.604
+            "s": 10.89
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-multiply-poly/ramlah/record.mp3",
-        "durationInSeconds": 11.517
+        "durationInSeconds": 7.709
       }
     ]
   },
@@ -8974,100 +8974,100 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-factoring/ramlah/ask.mp3",
-        "durationInSeconds": 12.817,
+        "durationInSeconds": 10.217,
         "numberTimes": [
           {
             "n": 5,
-            "s": 1.567
+            "s": 1.393
           },
           {
             "n": 6,
-            "s": 3.135
+            "s": 2.276
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-factoring/ramlah/work.mp3",
-        "durationInSeconds": 15,
+        "durationInSeconds": 11.889,
         "numberTimes": [
           {
             "n": 6,
-            "s": 2.543
+            "s": 2.589
           },
           {
             "n": 5,
-            "s": 4.156
+            "s": 3.738
           },
           {
             "n": 6,
-            "s": 6.455
+            "s": 5.724
           },
           {
             "n": 1,
-            "s": 7.303
+            "s": 6.13
           },
           {
             "n": 6,
-            "s": 7.767
+            "s": 6.525
           },
           {
             "n": 7,
-            "s": 9.172
+            "s": 7.628
           },
           {
             "n": 2,
-            "s": 11.68
+            "s": 9.253
           },
           {
             "n": 3,
-            "s": 12.121
+            "s": 9.671
           },
           {
             "n": 5,
-            "s": 13.421
+            "s": 10.519
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-factoring/ramlah/twist.mp3",
-        "durationInSeconds": 21.223,
+        "durationInSeconds": 19.18,
         "numberTimes": [
           {
             "n": 2,
-            "s": 2.067
+            "s": 1.776
           },
           {
             "n": 3,
-            "s": 4.087
+            "s": 3.344
           },
           {
             "n": 3,
-            "s": 10.101
+            "s": 9.218
           },
           {
             "n": 2,
-            "s": 11.32
+            "s": 10.658
           },
           {
             "n": 6,
-            "s": 12.516
+            "s": 12.283
           },
           {
             "n": 5,
-            "s": 16.486
+            "s": 15.383
           },
           {
             "n": 6,
-            "s": 17.856
+            "s": 16.498
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-factoring/ramlah/record.mp3",
-        "durationInSeconds": 11.656
+        "durationInSeconds": 9.567
       }
     ]
   },
@@ -9076,52 +9076,52 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-quadratic-range/ramlah/ask.mp3",
-        "durationInSeconds": 12.446,
+        "durationInSeconds": 10.681,
         "numberTimes": [
           {
             "n": 4,
-            "s": 2.81
+            "s": 2.879
           }
         ]
       },
       {
         "id": "plot",
         "file": "lesson-voice/cur-quadratic-range/ramlah/plot.mp3",
-        "durationInSeconds": 10.17,
+        "durationInSeconds": 9.474,
         "numberTimes": [
           {
             "n": 4,
-            "s": 5.41
+            "s": 5.306
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-quadratic-range/ramlah/action.mp3",
-        "durationInSeconds": 14.489,
+        "durationInSeconds": 11.656,
         "numberTimes": [
           {
             "n": 4,
-            "s": 2.659
+            "s": 2.554
           },
           {
             "n": 4,
-            "s": 8.766
+            "s": 7.187
           },
           {
             "n": 4,
-            "s": 13.015
+            "s": 10.414
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-quadratic-range/ramlah/record.mp3",
-        "durationInSeconds": 15.697,
+        "durationInSeconds": 14.257,
         "numberTimes": [
           {
             "n": 4,
-            "s": 4.934
+            "s": 4.505
           }
         ]
       }
@@ -9132,48 +9132,48 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-end-behavior/ramlah/ask.mp3",
-        "durationInSeconds": 11.424,
+        "durationInSeconds": 9.381,
         "numberTimes": [
           {
             "n": 4,
-            "s": 2.682
+            "s": 1.765
           }
         ]
       },
       {
         "id": "plot",
         "file": "lesson-voice/cur-end-behavior/ramlah/plot.mp3",
-        "durationInSeconds": 15,
+        "durationInSeconds": 15.139,
         "numberTimes": [
           {
             "n": 10,
-            "s": 2.682
+            "s": 2.902
           },
           {
             "n": 100,
-            "s": 4.644
+            "s": 4.934
           },
           {
             "n": 100,
-            "s": 6.258
+            "s": 6.664
           }
         ]
       },
       {
         "id": "action",
         "file": "lesson-voice/cur-end-behavior/ramlah/action.mp3",
-        "durationInSeconds": 15.604,
+        "durationInSeconds": 12.353,
         "numberTimes": [
           {
             "n": 100,
-            "s": 7.21
+            "s": 5.654
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-end-behavior/ramlah/record.mp3",
-        "durationInSeconds": 18.158
+        "durationInSeconds": 15.279
       }
     ]
   },
@@ -9182,88 +9182,88 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-order-integers/ramlah/ask.mp3",
-        "durationInSeconds": 13.607,
+        "durationInSeconds": 10.217,
         "numberTimes": [
           {
             "n": 3,
-            "s": 2.183
+            "s": 1.939
           },
           {
             "n": 5,
-            "s": 3.344
+            "s": 3.262
           },
           {
             "n": 1,
-            "s": 5.201
+            "s": 4.493
           },
           {
             "n": 2,
-            "s": 6.954
+            "s": 5.283
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-order-integers/ramlah/work.mp3",
-        "durationInSeconds": 15.325,
+        "durationInSeconds": 13.235,
         "numberTimes": [
           {
             "n": 3,
-            "s": 3.344
+            "s": 3.611
           },
           {
             "n": 1,
-            "s": 7.21
+            "s": 6.792
           },
           {
             "n": 2,
-            "s": 10.112
+            "s": 9.23
           },
           {
             "n": 5,
-            "s": 10.716
+            "s": 9.752
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-order-integers/ramlah/twist.mp3",
-        "durationInSeconds": 13.793,
+        "durationInSeconds": 11.889,
         "numberTimes": [
           {
             "n": 3,
-            "s": 5.991
+            "s": 5.341
           },
           {
             "n": 3,
-            "s": 8.417
+            "s": 7.163
           },
           {
             "n": 1,
-            "s": 9.927
+            "s": 8.336
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-order-integers/ramlah/record.mp3",
-        "durationInSeconds": 14.118,
+        "durationInSeconds": 8.127,
         "numberTimes": [
           {
             "n": 3,
-            "s": 1.869
+            "s": 1.149
           },
           {
             "n": 1,
-            "s": 3.587
+            "s": 2.252
           },
           {
             "n": 2,
-            "s": 5.016
+            "s": 2.949
           },
           {
             "n": 5,
-            "s": 6.734
+            "s": 3.541
           }
         ]
       }
@@ -9274,7 +9274,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-order-ops/ramlah/ask.mp3",
-        "durationInSeconds": 12.817,
+        "durationInSeconds": 7.709,
         "numberTimes": [
           {
             "n": 3,
@@ -9282,73 +9282,73 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 4,
-            "s": 1.324
+            "s": 0.72
           },
           {
             "n": 2,
-            "s": 2.38
+            "s": 1.335
           },
           {
             "n": 14,
-            "s": 6.014
+            "s": 3.518
           },
           {
             "n": 11,
-            "s": 8.115
+            "s": 4.783
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-order-ops/ramlah/work.mp3",
-        "durationInSeconds": 16.625,
+        "durationInSeconds": 12.585,
         "numberTimes": [
           {
             "n": 3,
-            "s": 2.334
+            "s": 1.521
           },
           {
             "n": 4,
-            "s": 2.926
+            "s": 2.055
           },
           {
             "n": 7,
-            "s": 3.692
+            "s": 2.461
           },
           {
             "n": 2,
-            "s": 4.725
+            "s": 3.158
           },
           {
             "n": 14,
-            "s": 5.84
+            "s": 4.191
           },
           {
             "n": 4,
-            "s": 11.389
+            "s": 8.8
           },
           {
             "n": 2,
-            "s": 12.156
+            "s": 9.358
           },
           {
             "n": 8,
-            "s": 12.922
+            "s": 9.764
           },
           {
             "n": 3,
-            "s": 14.838
+            "s": 11.053
           },
           {
             "n": 11,
-            "s": 15.569
+            "s": 11.691
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-order-ops/ramlah/twist.mp3",
-        "durationInSeconds": 19.319,
+        "durationInSeconds": 17.694,
         "numberTimes": [
           {
             "n": 11,
@@ -9356,26 +9356,26 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 3,
-            "s": 13.641
+            "s": 13.677
           },
           {
             "n": 4,
-            "s": 14.326
+            "s": 14.304
           },
           {
             "n": 2,
-            "s": 16.393
+            "s": 15.708
           },
           {
             "n": 14,
-            "s": 18.343
+            "s": 16.695
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-order-ops/ramlah/record.mp3",
-        "durationInSeconds": 13.607
+        "durationInSeconds": 13.468
       }
     ]
   },
@@ -9384,7 +9384,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-complex/ramlah/ask.mp3",
-        "durationInSeconds": 11.285,
+        "durationInSeconds": 8.406,
         "numberTimes": [
           {
             "n": 3,
@@ -9392,92 +9392,92 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 2,
-            "s": 0.801
+            "s": 0.859
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-complex/ramlah/work.mp3",
-        "durationInSeconds": 19.133,
+        "durationInSeconds": 14.396,
         "numberTimes": [
           {
             "n": 3,
-            "s": 3.402
+            "s": 2.67
           },
           {
             "n": 2,
-            "s": 7.245
+            "s": 6.037
           },
           {
             "n": 3,
-            "s": 9.718
+            "s": 7.663
           },
           {
             "n": 2,
-            "s": 10.635
+            "s": 8.255
           },
           {
             "n": 3,
-            "s": 12.539
+            "s": 9.671
           },
           {
             "n": 2,
-            "s": 13.735
+            "s": 10.588
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-complex/ramlah/twist.mp3",
-        "durationInSeconds": 20.991,
+        "durationInSeconds": 15.418,
         "numberTimes": [
           {
             "n": 1,
-            "s": 2.438
+            "s": 1.846
           },
           {
             "n": 1,
-            "s": 3.088
+            "s": 2.299
           },
           {
             "n": 3,
-            "s": 6.293
+            "s": 4.551
           },
           {
             "n": 1,
-            "s": 6.978
+            "s": 5.108
           },
           {
             "n": 4,
-            "s": 7.732
+            "s": 5.654
           },
           {
             "n": 2,
-            "s": 10.484
+            "s": 7.755
           },
           {
             "n": 1,
-            "s": 11.146
+            "s": 8.231
           },
           {
             "n": 3,
-            "s": 11.889
+            "s": 8.707
           },
           {
             "n": 4,
-            "s": 14.292
+            "s": 10.542
           },
           {
             "n": 3,
-            "s": 14.942
+            "s": 11.088
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-complex/ramlah/record.mp3",
-        "durationInSeconds": 11.378
+        "durationInSeconds": 8.173
       }
     ]
   },
@@ -9486,7 +9486,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-sequences/ramlah/ask.mp3",
-        "durationInSeconds": 11.285,
+        "durationInSeconds": 5.851,
         "numberTimes": [
           {
             "n": 3,
@@ -9494,88 +9494,88 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 7,
-            "s": 1.741
+            "s": 0.906
           },
           {
             "n": 11,
-            "s": 3.413
+            "s": 1.521
           },
           {
             "n": 15,
-            "s": 5.201
+            "s": 2.241
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-sequences/ramlah/work.mp3",
-        "durationInSeconds": 18.622,
+        "durationInSeconds": 12.585,
         "numberTimes": [
           {
             "n": 3,
-            "s": 1.776
+            "s": 1.451
           },
           {
             "n": 7,
-            "s": 2.276
+            "s": 1.788
           },
           {
             "n": 4,
-            "s": 3.32
+            "s": 2.601
           },
           {
             "n": 7,
-            "s": 4.238
+            "s": 3.111
           },
           {
             "n": 11,
-            "s": 4.876
+            "s": 3.564
           },
           {
             "n": 4,
-            "s": 6.211
+            "s": 4.4
           },
           {
             "n": 15,
-            "s": 13.978
+            "s": 10.263
           },
           {
             "n": 4,
-            "s": 15.743
+            "s": 11.076
           },
           {
             "n": 19,
-            "s": 17.299
+            "s": 11.505
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-sequences/ramlah/twist.mp3",
-        "durationInSeconds": 16.718,
+        "durationInSeconds": 13.468,
         "numberTimes": [
           {
             "n": 3,
-            "s": 5.747
+            "s": 3.785
           },
           {
             "n": 10,
-            "s": 6.699
+            "s": 5.004
           },
           {
             "n": 21,
-            "s": 7.802
+            "s": 6.049
           },
           {
             "n": 36,
-            "s": 9.381
+            "s": 7.198
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-sequences/ramlah/record.mp3",
-        "durationInSeconds": 12.074
+        "durationInSeconds": 12.492
       }
     ]
   },
@@ -9584,84 +9584,84 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-vectors/ramlah/ask.mp3",
-        "durationInSeconds": 13.142,
+        "durationInSeconds": 11.935,
         "numberTimes": [
           {
             "n": 3,
-            "s": 5.666
+            "s": 5.259
           },
           {
             "n": 2,
-            "s": 6.885
+            "s": 6.281
           },
           {
             "n": 3,
-            "s": 9.009
+            "s": 8.046
           },
           {
             "n": 2,
-            "s": 9.59
+            "s": 8.742
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-vectors/ramlah/work.mp3",
-        "durationInSeconds": 15.929,
+        "durationInSeconds": 12.678,
         "numberTimes": [
           {
             "n": 1,
-            "s": 1.08
+            "s": 1.103
           },
           {
             "n": 3,
-            "s": 1.556
+            "s": 1.846
           },
           {
             "n": 4,
-            "s": 14.443
+            "s": 11.424
           },
           {
             "n": 5,
-            "s": 15.07
+            "s": 11.865
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-vectors/ramlah/twist.mp3",
-        "durationInSeconds": 17.694,
+        "durationInSeconds": 12.864,
         "numberTimes": [
           {
             "n": 3,
-            "s": 2.45
+            "s": 2.148
           },
           {
             "n": 1,
-            "s": 3.413
+            "s": 2.717
           },
           {
             "n": 4,
-            "s": 4.168
+            "s": 3.17
           },
           {
             "n": 2,
-            "s": 5.759
+            "s": 4.272
           },
           {
             "n": 3,
-            "s": 6.757
+            "s": 4.783
           },
           {
             "n": 5,
-            "s": 7.477
+            "s": 5.213
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-vectors/ramlah/record.mp3",
-        "durationInSeconds": 10.728
+        "durationInSeconds": 9.334
       }
     ]
   },
@@ -9670,58 +9670,58 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-power-rule/ramlah/ask.mp3",
-        "durationInSeconds": 11.006
+        "durationInSeconds": 9.195
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-power-rule/ramlah/work.mp3",
-        "durationInSeconds": 18.158,
+        "durationInSeconds": 12.771,
         "numberTimes": [
           {
             "n": 3,
-            "s": 1.591
+            "s": 1.579
           },
           {
             "n": 3,
-            "s": 14.489
+            "s": 10.356
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-power-rule/ramlah/twist.mp3",
-        "durationInSeconds": 17.09,
+        "durationInSeconds": 10.867,
         "numberTimes": [
           {
             "n": 5,
-            "s": 3.785
+            "s": 2.635
           },
           {
             "n": 5,
-            "s": 5.724
+            "s": 3.692
           },
           {
             "n": 4,
-            "s": 8.092
+            "s": 5.178
           },
           {
             "n": 5,
-            "s": 11.204
+            "s": 6.722
           },
           {
             "n": 4,
-            "s": 12.968
+            "s": 7.825
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-power-rule/ramlah/record.mp3",
-        "durationInSeconds": 13.607,
+        "durationInSeconds": 12.632,
         "numberTimes": [
           {
             "n": 1,
-            "s": 6.258
+            "s": 5.7
           }
         ]
       }
@@ -9732,7 +9732,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-diff-monomials/ramlah/ask.mp3",
-        "durationInSeconds": 7.663,
+        "durationInSeconds": 7.012,
         "numberTimes": [
           {
             "n": 5,
@@ -9740,64 +9740,64 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 5,
-            "s": 6.803
+            "s": 6.316
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-diff-monomials/ramlah/work.mp3",
-        "durationInSeconds": 16.997,
+        "durationInSeconds": 11.099,
         "numberTimes": [
           {
             "n": 5,
-            "s": 0.313
+            "s": 0.372
           },
           {
             "n": 3,
-            "s": 5.596
+            "s": 4.377
           },
           {
             "n": 2,
-            "s": 6.873
+            "s": 5.457
           },
           {
             "n": 3,
-            "s": 8.615
+            "s": 6.327
           },
           {
             "n": 5,
-            "s": 13.967
+            "s": 9.311
           },
           {
             "n": 3,
-            "s": 14.872
+            "s": 9.927
           },
           {
             "n": 15,
-            "s": 15.72
+            "s": 10.286
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-diff-monomials/ramlah/twist.mp3",
-        "durationInSeconds": 18.158,
+        "durationInSeconds": 14.954,
         "numberTimes": [
           {
             "n": 5,
-            "s": 1.567
+            "s": 1.347
           },
           {
             "n": 15,
-            "s": 3.541
+            "s": 3.181
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-diff-monomials/ramlah/record.mp3",
-        "durationInSeconds": 10.031
+        "durationInSeconds": 8.081
       }
     ]
   },
@@ -9806,60 +9806,60 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-calc-applications/ramlah/ask.mp3",
-        "durationInSeconds": 12.585,
+        "durationInSeconds": 12.399,
         "numberTimes": [
           {
             "n": 3,
-            "s": 11.238
+            "s": 11.076
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-calc-applications/ramlah/work.mp3",
-        "durationInSeconds": 15.279,
+        "durationInSeconds": 10.867,
         "numberTimes": [
           {
             "n": 2,
-            "s": 9.462
+            "s": 7.546
           },
           {
             "n": 1,
-            "s": 10.983
+            "s": 8.615
           },
           {
             "n": 2,
-            "s": 13.026
+            "s": 10.054
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-calc-applications/ramlah/twist.mp3",
-        "durationInSeconds": 14.396,
+        "durationInSeconds": 12.446,
         "numberTimes": [
           {
             "n": 3,
-            "s": 1.974
+            "s": 1.718
           },
           {
             "n": 2,
-            "s": 3.692
+            "s": 3.46
           },
           {
             "n": 3,
-            "s": 4.4
+            "s": 4.284
           },
           {
             "n": 6,
-            "s": 5.236
+            "s": 5.19
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-calc-applications/ramlah/record.mp3",
-        "durationInSeconds": 14.629
+        "durationInSeconds": 8.127
       }
     ]
   }
