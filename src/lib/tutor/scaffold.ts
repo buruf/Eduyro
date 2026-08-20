@@ -409,8 +409,38 @@ export function buildScaffold(
   let m = q.match(/^(\d+)\s*×\s*(\d+)\s*=?\s*$/);
   if (m) {
     const a = +m[1], b = +m[2];
+    // Two multi-digit factors → partial products (the method the mul-2d2d
+    // video teaches). "Count the dots" on 35 × 92 would be 3,220 dots — the
+    // group-counting model stops being a model long before numbers this size.
+    if (a >= 10 && b >= 10) {
+      const bT = Math.floor(b / 10) * 10;
+      const bO = b % 10;
+      return {
+        explanation: `${a} × ${b} is too big to count — split the ${b} into ${bT} + ${bO}, multiply each piece, then add.`,
+        hints: [
+          `${a} × ${bT}: do ${a} × ${bT / 10} = ${a * (bT / 10)}, then put the zero back → ${a * bT}.`,
+          bO === 0 ? `There's nothing left to add — ${b} is exactly ${bT}.` : `${a} × ${bO} = ${a * bO}.`,
+          `Add the pieces: ${a * bT}${bO === 0 ? "" : ` + ${a * bO}`} = ${A}.`,
+        ],
+        answer: A,
+      };
+    }
     // Multi-digit by a single digit → teach the column method; otherwise it's a
     // times-table fact, so skip-counting is the better mental model.
+    if (b >= 10 && a < 10) {
+      // Commutative flip so "4 × 27" coaches the same way as "27 × 4".
+      const [lo, hi] = [a, b];
+      const ones = hi % 10, tens = Math.floor(hi / 10);
+      return {
+        explanation: `Multiply ${hi} by ${lo} one digit at a time, right to left.`,
+        hints: [
+          `Multiply the ones: ${ones} × ${lo} = ${ones * lo}. Write the ones digit, carry the rest.`,
+          `Multiply the tens: ${tens} × ${lo} = ${tens * lo} (then add any carry).`,
+          `Put the digits together. ${a} × ${b} = ${A}.`,
+        ],
+        answer: A,
+      };
+    }
     if (a >= 10 && b < 10) {
       const ones = a % 10, tens = Math.floor(a / 10);
       return {
