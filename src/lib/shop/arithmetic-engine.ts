@@ -565,7 +565,15 @@ const ALGORITHM_UNIT_LABELS = new Set([
   "2-digit subtraction (regrouping)",
   "Division with remainders",
   "2-digit & 3-digit ÷ 1-digit",
+  "3-digit addition & three addends",
+  "3-digit subtraction (regrouping)",
 ]);
+
+/** Sheet size for algorithm units. A 2-digit × 2-digit problem is four
+ *  multiplications and an addition — 30 of them × 3 sheets was 90 long
+ *  computations a day. Ten per sheet keeps a day at ~30, which is practice,
+ *  not a grind (field report: a capable child taking 11+ minutes per sheet). */
+export const ALGORITHM_SHEET_SIZE = 10;
 export function isAlgorithmUnit(label: string | null | undefined): boolean {
   return !!label && ALGORITHM_UNIT_LABELS.has(label);
 }
@@ -582,6 +590,9 @@ export function generateArithmeticSheet(
   const unit = CURRICULA[skill][ui];
   const span = unit.range[1] - unit.range[0];
   const t = span === 0 ? 0.5 : (sheetNumber - unit.range[0]) / span;
+  // Long-computation units get short sheets — the cap lives here, not in the
+  // callers, so every path (daily packet, print, vacation pack) agrees.
+  if (isAlgorithmUnit(unit.label)) problemCount = Math.min(problemCount, ALGORITHM_SHEET_SIZE);
 
   const selected = selectProblems(buildScoredPool(skill, ui), t, problemCount, hashStr(`${skill}:${sheetNumber}`));
   const problems = selected.map((p, i) => ({
