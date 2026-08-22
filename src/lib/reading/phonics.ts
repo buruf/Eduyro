@@ -193,3 +193,29 @@ export function stageForUnit(unitLabel: string): StageId | null {
   for (const [re, id] of UNIT_STAGE_RULES) if (re.test(unitLabel)) return id;
   return null;
 }
+
+/**
+ * Stage for a Track A LEVEL (R1–R10), independent of unit wording.
+ *
+ * stageForUnit resolves a unit from its label, which fails for units named for
+ * a comprehension behaviour rather than a phonics pattern ("Phrase Reading").
+ * Those are still Grade 1–2 units and must still get decodable text, so the
+ * level's own position in the phonics sequence picks the stage.
+ */
+/** A stage and every EASIER stage, hardest first — for falling back to the
+ *  nearest stage that actually has decodable texts written. */
+export function stagesAtOrBelow(stage: StageId | null): StageId[] {
+  const ordered = [...STAGES].sort((a, b) => b.order - a.order); // hardest first
+  if (!stage) return ordered.map((s) => s.id);
+  const from = ordered.findIndex((s) => s.id === stage);
+  return (from === -1 ? ordered : ordered.slice(from)).map((s) => s.id);
+}
+
+export function stageForCode(levelCode: string): StageId | null {
+  const m = /^R(\d+)$/i.exec(levelCode.trim());
+  if (!m) return null;
+  const n = Number(m[1]);
+  if (n < 1 || n > 10) return null; // Track B (Grade 3+) owns everything above
+  const ordered = [...STAGES].sort((a, b) => a.order - b.order);
+  return ordered[Math.min(n - 1, ordered.length - 1)].id;
+}

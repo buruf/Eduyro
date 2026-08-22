@@ -1,11 +1,10 @@
 // src/lib/email/coppa-emails.ts
 // COPPA-specific transactional emails.
 
-import { Resend } from "resend";
+import { resend, EMAIL_FROM, handleMissingMailer } from "./client";
 import { format } from "date-fns";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const FROM = process.env.EMAIL_FROM ?? "BrightSteps <noreply@eduyro.com>";
+const FROM = EMAIL_FROM;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://eduyro.com";
 
 type EmailParams =
@@ -41,7 +40,9 @@ export async function sendEmail(params: EmailParams): Promise<void> {
   }
 
   if (!resend) {
-    console.log(`[EMAIL DEV] To: ${params.to} | Subject: ${subject}`);
+    // Throws in production: a consent request that is never delivered blocks
+    // a child's account silently and leaves us without lawful basis.
+    handleMissingMailer(params.to, subject);
     return;
   }
   await resend.emails.send({ from: FROM, to: params.to, subject, html });

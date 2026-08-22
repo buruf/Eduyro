@@ -1,11 +1,10 @@
 // src/lib/shop/emails.ts
 // Shop purchase email — sent after payment when emailDelivery=true.
 
-import { Resend } from "resend";
+import { resend, EMAIL_FROM, handleMissingMailer } from "@/lib/email/client";
 import { format } from "date-fns";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const FROM = process.env.EMAIL_FROM ?? "BrightSteps <noreply@eduyro.com>";
+const FROM = EMAIL_FROM;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://eduyro.com";
 
 interface ShopPurchaseEmailParams {
@@ -30,7 +29,9 @@ export async function sendShopPurchaseEmail(params: ShopPurchaseEmailParams): Pr
   const html = buildHtml(params);
 
   if (!resend) {
-    console.log(`[EMAIL DEV] To: ${params.to} | Subject: ${subject}`);
+    // Throws in production — a purchase whose download link never arrives is
+    // a support ticket, not a log line.
+    handleMissingMailer(params.to, subject);
     console.log(`  Download page: ${params.accessPageUrl}`);
     return;
   }

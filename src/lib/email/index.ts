@@ -1,13 +1,9 @@
 // src/lib/email/index.ts
 // Email service — Resend with HTML templates
 
-import { Resend } from "resend";
+import { resend, EMAIL_FROM, handleMissingMailer } from "./client";
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
-
-const FROM = process.env.EMAIL_FROM ?? "Eduyro <noreply@eduyro.com>";
+const FROM = EMAIL_FROM;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://eduyro.com";
 
 // ─────────────────────────────────────────────
@@ -38,7 +34,9 @@ ${preheader ? `<div style="display:none;font-size:0;line-height:0;max-height:0;o
 
 async function send(to: string, subject: string, html: string) {
   if (!resend) {
-    console.log(`[EMAIL DEV] To: ${to} | Subject: ${subject}`);
+    // Throws in production: verification and password-reset mail that never
+    // arrives locks people out of their own accounts.
+    handleMissingMailer(to, subject);
     return;
   }
   try {
@@ -59,7 +57,13 @@ export async function sendContactNotification(params: {
 }): Promise<{ delivered: boolean }> {
   const to = process.env.CONTACT_EMAIL ?? "support@eduyro.com";
   if (!resend) {
-    console.log(`[CONTACT DEV] To: ${to} | Subject: ${params.subject}\n${params.html}`);
+    // Already returns an honest delivered:false for the caller to surface, so
+    // this one logs rather than throws — but it must still be visible in prod.
+    if (process.env.NODE_ENV === "production") {
+      console.error(`[EMAIL FAILED] no RESEND_API_KEY — contact message to ${to} NOT sent`);
+    } else {
+      console.log(`[CONTACT DEV] To: ${to} | Subject: ${params.subject}\n${params.html}`);
+    }
     return { delivered: false };
   }
   try {

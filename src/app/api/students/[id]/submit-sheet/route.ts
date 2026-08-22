@@ -54,9 +54,17 @@ export async function POST(
 
       // ── Grade the submission (pure — done before the transaction) ──
       const answerKey = worksheet.answerKey as any[];
+      // Options come from the PROBLEM, not the key: grading a capitalization
+      // item ("july" vs "July") case-insensitively marks every option correct.
+      const problems = (worksheet.problems as any[]) ?? [];
       const gradedAnswers: GradedAnswer[] = answers.map((submission) => {
         const correct = answerKey.find((k) => k.id === submission.problemId);
-        const isCorrect = correct ? answersMatch(submission.answer, correct.answer) : false;
+        const options = problems.find((p) => p?.id === submission.problemId)?.options as
+          | string[]
+          | undefined;
+        const isCorrect = correct
+          ? answersMatch(submission.answer, correct.answer, options)
+          : false;
         return {
           problemId: submission.problemId,
           answer: submission.answer,
@@ -262,7 +270,10 @@ async function updateProgressAndMastery(
       correctProblems: accuracyPct >= level.masteryThresholdPct ? 1 : 0,
     },
     update: {
-      sheetsCompleted: { increment: 1 },
+      // A retake replaces its sheet's row rather than adding one, so counting
+      // it here would drift this record away from the real sheet count. The
+      // true count and average are written below, once today's sheets are read.
+      ...(isRetake ? {} : { sheetsCompleted: { increment: 1 } }),
     },
   });
 
@@ -272,7 +283,13 @@ async function updateProgressAndMastery(
   // threshold, the NEXT skill unlocks for tomorrow. Clearing the LAST skill
   // masters the level → the next level activates.
   const isMath = level.subject?.slug === "MATH";
-  const sheetsPerDay = level.sheetsPerDay ?? 3;
+  // MUST match buildTodayPacket's formula exactly. When an admin raises a
+  // child's daily load, the packet serves the higher count — if the gate kept
+  // using the level default it would clear the day early (or, with the count
+  // check, never clear at all).
+  const levelPerDay = level.sheetsPerDay ?? 3;
+  const override = (progress as any).dailySheetsOverride as number | null;
+  const sheetsPerDay = override ? Math.max(override, levelPerDay) : levelPerDay;
   // Quota window: from midnight, OR from an admin skill-unlock today
   // (set-skill stamps skillUnlockedAt). This keeps pre-unlock sheets from a
   // DIFFERENT lesson counting toward clearing the just-unlocked one — without
@@ -314,8 +331,29 @@ async function updateProgressAndMastery(
     });
     learningDay = !earlier;
   }
-  // Trigger exactly once — on the sheet that COMPLETES the day's quota at ≥ threshold AND on pace.
-  const dayCleared = todayCount === sheetsPerDay && (learningDay || (todayAvg >= level.masteryThresholdPct && allFluent));
+  // The day's record must reflect the day as it actually stands: a retake
+  // replaces a sheet's score, so the average has to be recomputed rather than
+  // left at whatever the first sheet scored. The streak below reads this.
+  await tx.dailyAccuracy.update({
+    where: { id: dailyRecord.id },
+    data: { accuracyPct: todayAvg, sheetsCompleted: todayCount },
+  });
+
+  // Trigger exactly once — on the sheet that COMPLETES the day's quota at ≥
+  // threshold AND on pace. `clearedAt` makes it once per DAY, not once per
+  // qualifying submission: retakes keep the sheet count at quota, so without
+  // this every further retake would advance the skill map again.
+  const alreadyCleared = dailyRecord.clearedAt !== null;
+  const dayCleared =
+    !alreadyCleared &&
+    todayCount === sheetsPerDay &&
+    (learningDay || (todayAvg >= level.masteryThresholdPct && allFluent));
+  if (dayCleared) {
+    await tx.dailyAccuracy.update({
+      where: { id: dailyRecord.id },
+      data: { clearedAt: new Date() },
+    });
+  }
 
   // Streak display: days-in-a-row at ≥ threshold.
   const recentDays = await tx.dailyAccuracy.findMany({

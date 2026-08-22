@@ -2,7 +2,7 @@
 // Core worksheet generation engine — produces Problem[] for any subject/skill
 // Covers all 50+ skills across Math M1-M18, Reading R1-R9, Writing W1-W8, Science S1-S7
 
-import { stageForUnit } from "@/lib/reading/phonics";
+import { stageForUnit, stageForCode, stagesAtOrBelow, type StageId } from "@/lib/reading/phonics";
 import { passagesForUnit } from "@/lib/reading/passages";
 import { sightWordsForUnit, sightWordItems, STUDY_CHUNK } from "@/lib/reading/sight-words";
 import { READING_CURRICULUM } from "@/lib/reading/curriculum";
@@ -1177,6 +1177,13 @@ function generateComparativeTextProblems(count: number): Problem[] {
 function withDecodableText(skillName: string, base: Problem[], count: number): Problem[] {
   const stage = stageForUnit(skillName);
   if (!stage) return base;
+  return decodableForStage(stage, base);
+}
+
+/** Decodable word work + texts for an explicit stage. Split out of
+ *  withDecodableText so a Grade 1–2 unit whose LABEL names no phonics focus
+ *  can still be served by its LEVEL. */
+function decodableForStage(stage: StageId, base: Problem[]): Problem[] {
   const texts = textsForStage(stage);
   if (!texts.length) return base;
 
@@ -1336,6 +1343,23 @@ function generateReadingProblems(skillName: string, count: number): Problem[] {
   // a passage about coral bleaching). Serve stage-appropriate decodable text.
   const trackA = withDecodableText(skillName, [], count);
   if (trackA.length) return trackA;
+
+  // LEVEL FLOOR. The name-based guard above only fires when a unit's LABEL
+  // names its phonics focus. Grade 1–2 units whose labels don't ("Phrase
+  // Reading", "Who & What Questions", "Everyday Naming Words") were reaching
+  // the Grade 5+ bank below — a six-year-old was being asked about coral
+  // bleaching and climate change. The curriculum knows every unit's grade, so
+  // decide by LEVEL, which no label wording can slip past.
+  const mod = READING_CURRICULUM.find((m) => m.units.includes(skillName));
+  if (mod && mod.grade <= 2) {
+    // Not every stage has decodable texts written yet, so walk DOWN the
+    // sequence to the nearest one that does. Slightly easier decodable text is
+    // the right failure mode for a beginning reader; Grade 5 text is not.
+    for (const stage of stagesAtOrBelow(stageForCode(mod.code))) {
+      const floor = decodableForStage(stage, []);
+      if (floor.length) return floor;
+    }
+  }
 
   // Passage-based comprehension fallback (Context Clues, Making Inferences,
   // Paragraph Mechanics, Theme & Moral, and legacy passage skills).
@@ -2354,7 +2378,7 @@ function generatePronounProblems(count: number): Problem[] {
     { q: "Fill in: ___ and I went to the park. (Me / Him / She / He)", a: "He", opts: ["Me","Him","She","He"] },
     { q: "What is a reflexive pronoun? Give an example.", a: "A pronoun that refers back to the subject (e.g., himself, herself, themselves)" },
     { q: "Choose the correct pronoun: Each student must bring ___ own pencil. (their / they / them)", a: "their", opts: ["their","they","them"] },
-    { q: "What type of pronoun is 'who'?", a: "Relative pronoun", opts: ["Personal","Reflexive","Relative","Indefinite"] },
+    { q: "What type of pronoun is 'who'?", a: "Relative", opts: ["Personal","Reflexive","Relative","Indefinite"] },
     { q: "Replace: 'The dog wagged the dog's tail.'", a: "The dog wagged its tail." },
     { q: "What is an indefinite pronoun? Give an example.", a: "A pronoun that does not refer to a specific person or thing (e.g., everyone, nobody, someone)" },
   ];

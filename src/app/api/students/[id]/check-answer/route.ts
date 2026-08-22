@@ -37,16 +37,21 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
       const worksheet = await db.worksheet.findUnique({
         where: { id: parsed.data.worksheetId },
-        select: { answerKey: true },
+        select: { answerKey: true, problems: true },
       });
       if (!worksheet) return notFound("Worksheet");
 
       const entry = (worksheet.answerKey as any[])?.find((k) => k.id === parsed.data.problemId);
       if (!entry) return notFound("Problem");
 
+      // Must grade identically to submit-sheet, options included — otherwise a
+      // capitalization item says "correct" here and "wrong" on submission.
+      const options = (worksheet.problems as any[])?.find(
+        (p) => p?.id === parsed.data.problemId,
+      )?.options as string[] | undefined;
       const correctAnswer = String(entry.answer ?? "");
       return ok({
-        isCorrect: answersMatch(parsed.data.answer, correctAnswer),
+        isCorrect: answersMatch(parsed.data.answer, correctAnswer, options),
         correctAnswer,
       });
     } catch (e) {

@@ -319,11 +319,13 @@ function enumMulCarry(): AProblem[] {
         out.push({ q: `${ones} × ${b} = ${pO} and ${tens * 10} × ${b} = ${pT}. So ${a} × ${b} =`, a: String(prod), diff: a + 2, key: `mc1c-${a}x${b}`, strat: "mul-carry" });
         // Stage 2 — the same pairs bare (regroup in the ones, 2-digit answer).
         out.push({ q: `${a} × ${b}`, a: String(prod), diff: 500 + a, key: `mc2-${a}x${b}`, strat: "mul-carry" });
-      } else if (prod >= 100 && (a + b) % 3 !== 0 && a % 2 === 1) {
-        // Stage 3: full regroup, 3-digit answers — strided to ~1/3, because
+      } else if (prod >= 100 && (a + b) % 3 !== 0 && a % 2 === 1 && b % 2 === 0) {
+        // Stage 3: full regroup, 3-digit answers — strided to ~1/6, because
         // unthinned this set dwarfs the gentle stages and the selector's wide
         // window makes even the FIRST carrying sheet hard-dominant (caught by
-        // test-break-apart's carry-mix check).
+        // test-break-apart's carry-mix check). The stride tightened when sheets
+        // shrank to 10 problems: fewer picks per sheet meant the same ratio put
+        // 3-digit answers on the very first day of carrying.
         out.push({ q: `${a} × ${b}`, a: String(prod), diff: 900 + a, key: `mc3-${a}x${b}`, strat: "mul-carry" });
       }
     }

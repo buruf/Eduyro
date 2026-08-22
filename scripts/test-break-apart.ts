@@ -73,20 +73,26 @@ for (let sheet = 53; sheet <= 58; sheet++) {
 // ones-carry-only problems must dominate the first sheet, and the share of
 // 3-digit-answer problems must grow substantially by the last sheet.
 const carryOf = (a: number, b: number) => Math.floor(((a % 10) * b) / 10);
-const carryMix = (sheet: number) => {
+// Sampled over a WINDOW of sheets, not one: long-multiplication sheets are
+// capped at 10 problems (most of them scaffolded step formats), so a single
+// sheet yields only a couple of bare NN × N items — too few to say anything
+// about the ramp. Three sheets restores a meaningful sample.
+const carryMix = (from: number, sheets = 3) => {
   let gentle = 0, hard = 0;
-  for (const p of generateArithmeticSheet("MULTIPLICATION" as any, sheet, 100, 30).problems) {
-    const m = /^(\d{2}) × (\d)(?: =)?$/.exec(String(p.question));
-    if (!m) continue;
-    const a = Number(m[1]), b = Number(m[2]);
-    if (a * b !== Number(p.answer)) bad(`carry: ${p.question} = ${p.answer}`);
-    if (Math.floor(a / 10) * b + carryOf(a, b) <= 9) gentle++; else hard++;
+  for (let sheet = from; sheet < from + sheets; sheet++) {
+    for (const p of generateArithmeticSheet("MULTIPLICATION" as any, sheet, 100, 30).problems) {
+      const m = /^(\d{2}) × (\d)(?: =)?$/.exec(String(p.question));
+      if (!m) continue;
+      const a = Number(m[1]), b = Number(m[2]);
+      if (a * b !== Number(p.answer)) bad(`carry: ${p.question} = ${p.answer}`);
+      if (Math.floor(a / 10) * b + carryOf(a, b) <= 9) gentle++; else hard++;
+    }
   }
   return { gentle, hard };
 };
-const c1 = carryMix(69), c2 = carryMix(78);
-console.log(`  carry sheet 69: gentle=${c1.gentle} hard=${c1.hard}   sheet 78: gentle=${c2.gentle} hard=${c2.hard}`);
-if (c1.gentle <= c1.hard) bad(`carry sheet 69 should be gentle-dominant (${c1.gentle} vs ${c1.hard})`);
+const c1 = carryMix(69), c2 = carryMix(76);
+console.log(`  carry sheets 69-71: gentle=${c1.gentle} hard=${c1.hard}   sheets 76-78: gentle=${c2.gentle} hard=${c2.hard}`);
+if (c1.gentle <= c1.hard) bad(`carry sheets 69-71 should be gentle-dominant (${c1.gentle} vs ${c1.hard})`);
 if (c2.hard <= c1.hard) bad("hard problems should increase across the carrying unit");
 
 console.log(`  bare answers checked: ${n}, wrong: ${wrong}, regroup leaks: ${regroup}`);

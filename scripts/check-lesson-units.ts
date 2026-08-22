@@ -117,7 +117,12 @@ const allUnits = ALL_LESSON_UNITS;
 // These lines use it as the MATHEMATICAL term, which is precisely the
 // vocabulary the limit lesson exists to teach. Listed explicitly so the guard
 // stays strict and every exception is visible rather than silently tolerated.
-const UNDEFINED_IS_INTENTIONAL = new Set(["cur-limits:ask", "cur-limits:plot"]);
+const UNDEFINED_IS_INTENTIONAL = new Set([
+  "cur-limits:ask",
+  "cur-limits:plot",
+  // "Division by zero … it's undefined" — the word IS the lesson here.
+  "cur-domain-rational:twist",
+]);
 
 for (const u of allUnits) {
   for (const line of u.lines()) {

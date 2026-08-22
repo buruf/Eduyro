@@ -24,8 +24,9 @@
     "test:e2e": "playwright test",
     "audit:lessons": "tsx scripts/audit-lesson-coherence.ts && tsx scripts/audit-nonmath-coherence.ts && tsx scripts/audit-tutorial-visuals.ts && tsx scripts/audit-example-depth.ts && tsx scripts/audit-shop-lesson-depth.ts && tsx scripts/audit-lesson-coverage.ts && tsx scripts/test-decodability.ts && tsx scripts/audit-decodable-texts.ts && tsx scripts/audit-word-items.ts && tsx scripts/test-passage-qa.ts && tsx scripts/audit-passages.ts && tsx scripts/audit-sheet-self-containment.ts && tsx scripts/test-item-mastery.ts && tsx scripts/test-break-apart.ts && tsx scripts/audit-progress-loop.ts",
     "audit:reading": "tsx scripts/test-decodability.ts && tsx scripts/audit-decodable-texts.ts && tsx scripts/audit-word-items.ts && tsx scripts/test-passage-qa.ts && tsx scripts/audit-passages.ts && tsx scripts/audit-sheet-self-containment.ts",
+    "audit:grading": "tsx scripts/test-grading.ts && tsx scripts/audit-mc-answerability.ts && tsx scripts/audit-reading-grade-fit.ts",
     "audit:videos": "tsx scripts/validate-videos.ts && tsx scripts/golden-video-tests.ts",
-    "audit:release": "tsx scripts/check-regrouping-promise.ts && tsx scripts/check-lesson-units.ts && tsx scripts/check-video-audio.ts && npm run audit:videos && npm run audit:lessons"
+    "audit:release": "tsx scripts/check-regrouping-promise.ts && tsx scripts/check-lesson-units.ts && tsx scripts/check-video-audio.ts && npm run audit:videos && npm run audit:grading && npm run audit:lessons"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^1.5.0",

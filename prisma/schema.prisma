@@ -509,6 +509,11 @@ model DailyAccuracy {
   sheetsCompleted   Int
   totalProblems     Int
   correctProblems   Int
+  /// Stamped the first time this day's quota clears, so advancement happens at
+  /// most once per day. Without it, each retake of a failed sheet re-evaluates
+  /// the gate (retakes update in place, so the sheet COUNT stays at quota) and
+  /// advances the skill map again — skipping lessons the child never saw.
+  clearedAt         DateTime?
 
   progress StudentProgress @relation(fields: [studentProgressId], references: [id], onDelete: Cascade)
 
