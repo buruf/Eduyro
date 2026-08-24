@@ -30,11 +30,20 @@ describe("Higher-math engine (M13–M18)", () => {
       expect(new Set(qs).size).toBe(qs.length);
     });
 
-    it.each(SHEETS)("sheet %i MC options are collision-free and contain the answer", (s) => {
+    it.each(SHEETS)("sheet %i MC options are collision-free and answerable", (s) => {
       for (const p of generateHigherMathSheet("M13", s, 100, 36).problems as any[]) {
         if (!p.options) continue;
         expect(new Set(p.options).size).toBe(p.options.length); // no duplicate options
-        expect(p.options).toContain(p.answer);                  // answer is selectable
+        const answer = String(p.answer);
+        // Normal MC: the answer IS one option - even when that option itself
+        // contains a comma, like the root pair "2, 3".
+        if (p.options.includes(answer)) continue;
+        // Otherwise it must be a select-all item, whose answer is a
+        // comma-joined SUBSET of the options (the serving route detects this
+        // and renders checkboxes). Every part has to be selectable.
+        const parts = answer.split(",").map((x: string) => x.trim());
+        expect(parts.length).toBeGreaterThan(1);
+        for (const part of parts) expect(p.options).toContain(part);
       }
     });
 

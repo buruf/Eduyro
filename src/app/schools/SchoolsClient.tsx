@@ -64,11 +64,14 @@ function HeroSection() {
             <a href="#contact">
               <Button variant="gold" size="lg" rightIcon={<span>→</span>}>Get a free school demo</Button>
             </a>
-            <Link href="/admin">
+            {/* Was a link to /admin, which every logged-out prospect hit as a
+                sign-in wall - a broken promise on the page meant to sell them.
+                Point at what we can actually show a visitor. */}
+            <a href="#features">
               <Button size="lg" className="bg-white/10 text-cream border-[1.5px] border-white/20 hover:bg-white/15">
-                Preview admin panel
+                See what the admin panel does
               </Button>
-            </Link>
+            </a>
           </div>
           <div className="grid grid-cols-3 gap-3 mt-10">
             {[

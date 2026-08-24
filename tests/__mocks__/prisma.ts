@@ -19,6 +19,9 @@ interface MockTables {
   auditLog: Row[];
   notification: Row[];
   coppaConsentRequest: Row[];
+  // Webhook idempotency: the Stripe route records every event it has seen so a
+  // redelivery is skipped rather than fulfilled twice.
+  webhookEvent: Row[];
 }
 
 const initialState = (): MockTables => ({
@@ -42,6 +45,7 @@ const initialState = (): MockTables => ({
   auditLog: [],
   notification: [],
   coppaConsentRequest: [],
+  webhookEvent: [],
 });
 
 let state: MockTables = initialState();
@@ -238,6 +242,7 @@ export const mockDb: any = {
   auditLog: makeModel("auditLog"),
   notification: makeModel("notification"),
   coppaConsentRequest: makeModel("coppaConsentRequest"),
+  webhookEvent: makeModel("webhookEvent"),
   $transaction: jest.fn(async (operations: any) => {
     if (Array.isArray(operations)) {
       const results = [];

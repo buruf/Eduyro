@@ -41,7 +41,19 @@ export async function recordConsent(params: RecordConsentParams): Promise<Consen
       where: { type: { in: params.types as any }, isCurrent: true },
       select: { id: true, type: true },
     });
-    if (currentDocs.length === 0) return recorded;
+    if (currentDocs.length === 0) {
+      // Nothing published means NOBODY is consenting to anything - a
+      // compliance hole, not a quiet no-op. Signup still proceeds (blocking
+      // it helps no one), but this must be visible in production logs.
+      if (process.env.NODE_ENV === "production") {
+        console.error(
+          "[consent] no current legal documents published - acceptance NOT recorded for",
+          params.userId,
+          params.types,
+        );
+      }
+      return recorded;
+    }
 
     for (const doc of currentDocs) {
       await db.legalAcceptance.upsert({
@@ -60,7 +72,26 @@ export async function recordConsent(params: RecordConsentParams): Promise<Consen
       recorded.push(doc.type as ConsentDocType);
     }
   } catch (e) {
+    // Consent evidence is the thing a regulator asks for. A console line is
+    // not evidence, so leave a durable trace that reconciliation can find -
+    // best-effort, because this path must never break signup.
     console.error("[consent] failed to record acceptance for", params.userId, e);
+    try {
+      await db.auditLog.create({
+        data: {
+          action: "CONSENT_RECORD_FAILED",
+          entityType: "User",
+          entityId: params.userId,
+          metadata: {
+            types: params.types,
+            country: params.country ?? null,
+            error: e instanceof Error ? e.message : String(e),
+          } as never,
+        },
+      });
+    } catch {
+      /* the audit table is unreachable too - the console line is all we have */
+    }
   }
   return recorded;
 }

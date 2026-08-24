@@ -1,12 +1,14 @@
 // src/app/terms/page.tsx
 import Link from "next/link";
+import { currentLegalDate } from "@/lib/compliance/current-version";
 
 export const metadata = {
-  title: "Terms of Service | Eduyro",
+  title: "Terms of Service",
   description: "Terms of Service for Eduyro mastery learning platform.",
 };
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const lastUpdated = await currentLegalDate("TERMS");
   return (
     <main className="max-w-3xl mx-auto px-6 py-16">
       <div className="mb-8">
@@ -16,7 +18,9 @@ export default function TermsPage() {
       </div>
 
       <h1 className="font-serif text-4xl font-bold mb-2">Terms of Service</h1>
-      <p className="text-sm text-muted mb-10">Last updated: May 27, 2026</p>
+      {lastUpdated && (
+        <p className="text-sm text-muted mb-10">Last updated: {lastUpdated}</p>
+      )}
 
       <div className="prose prose-sm max-w-none space-y-8 text-ink">
 
