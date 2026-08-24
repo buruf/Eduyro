@@ -345,6 +345,42 @@ function parseInlineChoices(question: string, ans: string): { question: string; 
   return null;
 }
 
+/** "True"/"False"/"Yes"/"No" borrowed from a true-false sibling is noise as a
+ *  distractor to an open question. */
+function isBinaryWord(s: string): boolean {
+  return /^(true|false|yes|no)$/i.test(s.trim());
+}
+
+/** Rejects a distractor a reasonable child could defend: identical text, one
+ *  containing the other, or a shared content-word stem ("Sunlight" vs "The
+ *  Sun"). A shorter option list beats a rigged one. */
+function tooSimilar(a: string, b: string): boolean {
+  const STOP = new Set(["the", "a", "an", "of", "to", "and", "is", "it", "in", "for", "on"]);
+  const norm = (x: string) =>
+    x.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/s+/).filter((w) => w && !STOP.has(w));
+  const ta = norm(a);
+  const tb = norm(b);
+  if (!ta.length || !tb.length) return true;
+  if (ta.join(" ") === tb.join(" ")) return true;
+  for (const x of ta) for (const y of tb) {
+    if (x === y) return true;
+    if (x.length >= 3 && y.length >= 3 && (x.startsWith(y) || y.startsWith(x))) return true;
+  }
+  return false;
+}
+
+/** Distractors must differ from EACH OTHER, or an item shows the same wrong
+ *  answer twice. */
+function pickDistinct(candidates: string[], n: number): string[] {
+  const out: string[] = [];
+  for (const c of shuffleArray(candidates)) {
+    if (out.some((o) => tooSimilar(o, c))) continue;
+    out.push(c);
+    if (out.length >= n) break;
+  }
+  return out;
+}
+
 function ensureMultipleChoice(problems: Problem[]): Problem[] {
   const pool = Array.from(new Set(
     problems
@@ -381,15 +417,26 @@ function ensureMultipleChoice(problems: Problem[]): Problem[] {
     const openEnded =
       !ans || ans.startsWith("(") || ans.length > 120 ||
       p.type === "written_response" ||
-      /^(write|rewrite|give|list|identify all|name |describe|explain|spell|combine|fix|add an|change to)\b/i.test(p.question);
+      // The verb test runs over the WHOLE question, not just its first word:
+      // "In your own words, describe how bees communicate" is exactly as
+      // open-ended as "Describe...", and auto-converting it produced an item
+      // with two defensible answers.
+      /(in your own words|describe|explain|why do you think|give an example|summari[sz]e|retell)/i.test(p.question) ||
+      /^(write|rewrite|give|list|identify all|name |spell|combine|fix|add an|change to)/i.test(p.question);
 
     // 2) Fallback — synthesise distractors of comparable shape from sibling
     //    answers (short answers get short distractors, sentences get sentences).
     const isShort = ans.length <= 18;
     const candidates = pool.filter((a) =>
-      a !== ans && (isShort ? a.length <= 24 : a.length > 12 && a.length <= 120)
+      a !== ans &&
+      (isShort ? a.length <= 24 : a.length > 12 && a.length <= 120) &&
+      // A borrowed sibling answer must be a WRONG answer to THIS question.
+      // Unfiltered, this pulled "True" from a true/false sibling, and "The
+      // Sun" against a key of "Sunlight" - one nonsense, one arguably right.
+      !isBinaryWord(a) &&
+      !tooSimilar(a, ans)
     );
-    const distractors = shuffleArray(candidates).slice(0, 3);
+    const distractors = pickDistinct(candidates, 3);
 
     if (openEnded || distractors.length < 3) continue; // can't make a fair MC → drop
     out.push({ ...p, type: "multiple_choice", options: shuffleArray([ans, ...distractors]) });

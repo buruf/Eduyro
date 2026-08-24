@@ -1147,7 +1147,12 @@ function selectProblems(pool: XP[], t: number, count: number): XP[] {
     // the ascending set in round-robin order so identical questions are spaced N
     // apart rather than clustered together. (Do NOT re-sort — that clusters dups.)
     const out: XP[] = [];
-    for (let i = 0; i < count; i++) out.push(sorted[i % N]);
+    // At most TWICE, and a SHORTER sheet rather than a third pass: seeing the
+    // same question a third time reads as a bug, not as practice. Small pools
+    // (M16 synthetic division, M17 graph-match) were serving 30-problem sheets
+    // built from 10 questions asked three times each.
+    const MAX_REPEATS = 2;
+    for (let i = 0; i < Math.min(count, N * MAX_REPEATS); i++) out.push(sorted[i % N]);
     return out;
   }
   const W = Math.min(N, Math.max(count, Math.round(N * 0.6)));
@@ -1182,7 +1187,13 @@ function selectMultiFormat(pool: XP[], t: number, count: number, seed: number): 
     // (the "power rule looks the same every sheet" report).
     const bag = [...sorted];
     for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
-    const out: XP[] = []; for (let i = 0; i < count; i++) out.push(bag[i % N]); return out;
+    // Cap at TWO passes and return a SHORTER sheet rather than a third: the
+    // windowed path below already forbids a repeated stem, and a small pool
+    // is a reason for fewer questions, not for asking one three times.
+    const MAX_REPEATS = 2;
+    const out: XP[] = [];
+    for (let i = 0; i < Math.min(count, N * MAX_REPEATS); i++) out.push(bag[i % N]);
+    return out;
   }
   // Keep the window only modestly larger than a sheet so it SLIDES a long way as
   // t grows → consecutive sheets in the same micro-skill draw largely different

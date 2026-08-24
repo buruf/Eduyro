@@ -82,6 +82,16 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Anything that is neither public NOR a known protected area is simply not
+  // a page. Falling through to the auth redirect made every typo and dead
+  // link answer "sign in to continue" - which reads as a broken site to a
+  // visitor and hides real 404s from crawlers. Let Next render not-found.
+  const PROTECTED_PREFIXES = [...STUDENT_ROUTES, ...PARENT_ROUTES, ...ADMIN_ROUTES, "/teacher", "/print", "/dev"];
+  const isProtectedArea = PROTECTED_PREFIXES.some(
+    (r) => pathname === r || pathname.startsWith(r + "/"),
+  );
+  if (!isProtectedArea) return NextResponse.next();
+
   // Protected routes — require auth
   if (!token) {
     const signInUrl = new URL("/signin", req.url);
