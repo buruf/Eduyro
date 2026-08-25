@@ -21,6 +21,7 @@ import {
   trigTotalFrames,
   polyTotalFrames,
   advancedTotalFrames,
+  fracOpsTotalFrames,
 } from "../src/remotion/lesson/timeline";
 import { ALL_LESSON_UNITS } from "../src/remotion/lesson/registry";
 
@@ -43,6 +44,7 @@ const BY_COMP: Record<string, (unitId: string, voice: string) => number> = {
   Trig: trigTotalFrames,
   Poly: polyTotalFrames,
   Advanced: advancedTotalFrames,
+  FractionOps: fracOpsTotalFrames,
 };
 
 export function timingsFor(unitId: string, voice: string): number {

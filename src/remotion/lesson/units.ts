@@ -643,6 +643,7 @@ import { COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS } from "./units-early";
 import { FUNCTION_UNITS } from "./units-functions";
 import { TRIG_UNITS } from "./units-trig";
 import { POLY_UNITS } from "./units-poly";
+import { FRAC_OPS_UNITS } from "./units-fracops";
 import { ADVANCED_UNITS } from "./units-advanced";
 
 // ---------------------------------------------------------------------------
@@ -1143,7 +1144,7 @@ export interface VideoUnitRef {
   id: string;
   label: string;
   /** Remotion composition that renders it. */
-  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph" | "FunctionMachine" | "Trig" | "Poly" | "Advanced";
+  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph" | "FunctionMachine" | "Trig" | "Poly" | "FractionOps" | "Advanced";
 }
 
 export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
@@ -1164,6 +1165,7 @@ export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
   ...FUNCTION_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "FunctionMachine" as const })),
   ...TRIG_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Trig" as const })),
   ...POLY_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Poly" as const })),
+  ...FRAC_OPS_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "FractionOps" as const })),
   ...ADVANCED_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Advanced" as const })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Count" as const })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Compare" as const })),

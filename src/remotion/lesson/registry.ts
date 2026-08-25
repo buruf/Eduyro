@@ -47,6 +47,8 @@ import { TRIG_UNITS } from "./units-trig";
 import { trigLines } from "./script-trig";
 import { POLY_UNITS } from "./units-poly";
 import { polyLines } from "./script-poly";
+import { FRAC_OPS_UNITS } from "./units-fracops";
+import { fracOpsLines } from "./script-fracops";
 import { ADVANCED_UNITS } from "./units-advanced";
 import { advancedLines } from "./script-advanced";
 
@@ -77,6 +79,7 @@ export const ALL_LESSON_UNITS: RegisteredUnit[] = [
   ...FUNCTION_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "FunctionMachine", lines: () => functionLines(u) })),
   ...TRIG_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Trig", lines: () => trigLines(u) })),
   ...POLY_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Poly", lines: () => polyLines(u) })),
+  ...FRAC_OPS_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "FractionOps", lines: () => fracOpsLines(u) })),
   ...ADVANCED_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Advanced", lines: () => advancedLines(u) })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Count", lines: () => countLines(u) })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Compare", lines: () => compareLines(u) })),

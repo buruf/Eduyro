@@ -20,6 +20,7 @@ import { functionUnitById, applyRule } from "./units-functions";
 import { trigUnitById, triNumbers } from "./units-trig";
 import { polyUnitById } from "./units-poly";
 import { advancedUnitById, ADV } from "./units-advanced";
+import { fracOpsUnitById, fracOpsNumbers } from "./units-fracops";
 import { lineIntersection, quadraticRoots } from "./units";
 
 export interface TeachingContract {
@@ -288,6 +289,44 @@ export function contractFor(comp: string, unitId: string): TeachingContract {
     case "Advanced": {
       const u = advancedUnitById(unitId);
       return advancedContract(u.mode);
+    }
+
+    case "FractionOps": {
+      const u = fracOpsUnitById(unitId);
+      const x = fracOpsNumbers(u);
+      switch (u.mode) {
+        case "subtract":
+          return {
+            requiredSpoken: uniq([u.n, u.d, x.n2, x.diff]),
+            allowedNumbers: uniq([...SCAFFOLD, u.n, u.d, x.n2, x.diff]),
+          };
+        case "multiply":
+          return {
+            requiredSpoken: uniq([u.n, u.d, x.n2, x.d2, x.prodN, x.prodD]),
+            allowedNumbers: uniq([...SCAFFOLD, u.n, u.d, x.n2, x.d2, x.prodN, x.prodD]),
+          };
+        case "divide":
+          return {
+            requiredSpoken: uniq([u.n, u.d, x.n2, x.d2, x.quot]),
+            allowedNumbers: uniq([...SCAFFOLD, u.n, u.d, x.n2, x.d2, x.quot]),
+          };
+        case "mixed":
+          return {
+            requiredSpoken: uniq([1, u.n, u.d, x.improperN]),
+            allowedNumbers: uniq([...SCAFFOLD, u.n, u.d, x.improperN]),
+          };
+        case "improper":
+          return {
+            requiredSpoken: uniq([u.n, u.d, x.wholes, x.rem]),
+            allowedNumbers: uniq([...SCAFFOLD, u.n, u.d, x.wholes, x.rem]),
+          };
+        case "order":
+          return {
+            requiredSpoken: uniq([u.n, u.d, x.n2, x.d2, x.n3, x.d3]),
+            allowedNumbers: uniq([...SCAFFOLD, u.n, u.d, x.n2, x.d2, x.n3, x.d3]),
+          };
+      }
+      break;
     }
   }
   throw new Error(`No contract for composition "${comp}" (unit ${unitId})`);

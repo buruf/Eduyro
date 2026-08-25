@@ -8,7 +8,7 @@
 // chosen combination's clips rather than fixed.
 import { Composition } from "remotion";
 import { EqualGroupsVideo, FPS } from "./lesson/EqualGroupsVideo";
-import { totalFrames, columnTotalFrames, tenFrameTotalFrames, dealingTotalFrames, factFamilyTotalFrames, areaTotalFrames, countTotalFrames, compareTotalFrames, numberLineTotalFrames, fractionBarTotalFrames, hundredGridTotalFrames, ratioTotalFrames, balanceTotalFrames, graphTotalFrames, functionTotalFrames, trigTotalFrames, polyTotalFrames, advancedTotalFrames } from "./lesson/timeline";
+import { totalFrames, columnTotalFrames, tenFrameTotalFrames, dealingTotalFrames, factFamilyTotalFrames, areaTotalFrames, countTotalFrames, compareTotalFrames, numberLineTotalFrames, fractionBarTotalFrames, hundredGridTotalFrames, ratioTotalFrames, balanceTotalFrames, graphTotalFrames, functionTotalFrames, trigTotalFrames, polyTotalFrames, advancedTotalFrames, fracOpsTotalFrames } from "./lesson/timeline";
 import { DEFAULT_VOICE_KEY } from "./lesson/voices";
 import { EQUAL_GROUP_UNITS, COLUMN_UNITS, TEN_FRAME_UNITS, DEALING_UNITS, FACT_FAMILY_UNITS, AREA_UNITS, COUNT_UNITS, COMPARE_UNITS, NUMBER_LINE_UNITS, FRACTION_BAR_UNITS, HUNDRED_GRID_UNITS, RATIO_UNITS, BALANCE_UNITS, GRAPH_UNITS } from "./lesson/units";
 import { ColumnVideo } from "./lesson/ColumnVideo";
@@ -30,6 +30,8 @@ import { TrigVideo } from "./lesson/TrigVideo";
 import { TRIG_UNITS } from "./lesson/units-trig";
 import { PolyVideo } from "./lesson/PolyVideo";
 import { POLY_UNITS } from "./lesson/units-poly";
+import { FractionOpsVideo } from "./lesson/FractionOpsVideo";
+import { FRAC_OPS_UNITS } from "./lesson/units-fracops";
 import { AdvancedVideo } from "./lesson/AdvancedVideo";
 import { ADVANCED_UNITS } from "./lesson/units-advanced";
 
@@ -232,6 +234,17 @@ export const RemotionRoot: React.FC = () => {
       defaultProps={{ unit: ADVANCED_UNITS[0].id, voice: DEFAULT_VOICE_KEY }}
       calculateMetadata={({ props }) => ({
         durationInFrames: advancedTotalFrames(props.unit, props.voice),
+      })}
+    />
+    <Composition
+      id="FractionOps"
+      component={FractionOpsVideo}
+      fps={FPS}
+      width={1920}
+      height={1080}
+      defaultProps={{ unit: FRAC_OPS_UNITS[0].id, voice: DEFAULT_VOICE_KEY }}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: fracOpsTotalFrames(props.unit, props.voice),
       })}
     />
     </>

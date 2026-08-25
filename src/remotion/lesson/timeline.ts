@@ -16,6 +16,7 @@ import { functionLineIds } from "./script-functions";
 import { trigLineIds } from "./script-trig";
 import { trigUnitById } from "./units-trig";
 import { polyLineIds } from "./script-poly";
+import { FRAC_OPS_LINE_IDS } from "./script-fracops";
 import { polyUnitById } from "./units-poly";
 import { advancedLineIds } from "./script-advanced";
 import { advancedUnitById } from "./units-advanced";
@@ -382,6 +383,16 @@ export function advancedSceneTimings(unitId: string, voiceKey: string = DEFAULT_
 }
 export function advancedTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return advancedSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the fraction-operations template (M7 second half). */
+const FRAC_OPS_MIN_SECONDS: Record<string, number> = { ask: 4, parts: 6, action: 8, record: 5 };
+
+export function fracOpsSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
+  return earlyTimings(FRAC_OPS_LINE_IDS, FRAC_OPS_MIN_SECONDS, unitId, voiceKey);
+}
+export function fracOpsTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return fracOpsSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }
 export function graphTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return graphSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);

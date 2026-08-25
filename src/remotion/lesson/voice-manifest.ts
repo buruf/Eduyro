@@ -9862,5 +9862,643 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
         "durationInSeconds": 8.127
       }
     ]
+  },
+  "cur-subtract-fractions": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-subtract-fractions/ramlah/ask.mp3",
+        "durationInSeconds": 6.037,
+        "numberTimes": [
+          {
+            "n": 5,
+            "s": 0
+          },
+          {
+            "n": 8,
+            "s": 0.766
+          },
+          {
+            "n": 2,
+            "s": 1.486
+          },
+          {
+            "n": 8,
+            "s": 2.009
+          }
+        ]
+      },
+      {
+        "id": "parts",
+        "file": "lesson-voice/cur-subtract-fractions/ramlah/parts.mp3",
+        "durationInSeconds": 5.155,
+        "numberTimes": [
+          {
+            "n": 5,
+            "s": 0.499
+          },
+          {
+            "n": 8,
+            "s": 1.091
+          },
+          {
+            "n": 8,
+            "s": 2.577
+          },
+          {
+            "n": 5,
+            "s": 3.843
+          }
+        ]
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-subtract-fractions/ramlah/action.mp3",
+        "durationInSeconds": 12.957,
+        "numberTimes": [
+          {
+            "n": 2,
+            "s": 0.778
+          },
+          {
+            "n": 3,
+            "s": 6.258
+          },
+          {
+            "n": 8,
+            "s": 8.51
+          }
+        ]
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-subtract-fractions/ramlah/record.mp3",
+        "durationInSeconds": 10.774,
+        "numberTimes": [
+          {
+            "n": 5,
+            "s": 0
+          },
+          {
+            "n": 8,
+            "s": 0.731
+          },
+          {
+            "n": 2,
+            "s": 1.347
+          },
+          {
+            "n": 8,
+            "s": 1.834
+          },
+          {
+            "n": 3,
+            "s": 2.345
+          },
+          {
+            "n": 8,
+            "s": 2.972
+          }
+        ]
+      }
+    ]
+  },
+  "cur-multiply-fractions": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-multiply-fractions/ramlah/ask.mp3",
+        "durationInSeconds": 8.081,
+        "numberTimes": [
+          {
+            "n": 1,
+            "s": 0
+          },
+          {
+            "n": 2,
+            "s": 0.72
+          },
+          {
+            "n": 3,
+            "s": 1.265
+          },
+          {
+            "n": 4,
+            "s": 1.753
+          }
+        ]
+      },
+      {
+        "id": "parts",
+        "file": "lesson-voice/cur-multiply-fractions/ramlah/parts.mp3",
+        "durationInSeconds": 5.526,
+        "numberTimes": [
+          {
+            "n": 3,
+            "s": 0.743
+          },
+          {
+            "n": 4,
+            "s": 1.382
+          },
+          {
+            "n": 4,
+            "s": 2.949
+          },
+          {
+            "n": 3,
+            "s": 4.098
+          }
+        ]
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-multiply-fractions/ramlah/action.mp3",
+        "durationInSeconds": 11.749,
+        "numberTimes": [
+          {
+            "n": 1,
+            "s": 0.743
+          },
+          {
+            "n": 2,
+            "s": 1.358
+          },
+          {
+            "n": 2,
+            "s": 3.448
+          },
+          {
+            "n": 1,
+            "s": 5.283
+          },
+          {
+            "n": 3,
+            "s": 8.139
+          },
+          {
+            "n": 8,
+            "s": 10.147
+          }
+        ]
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-multiply-fractions/ramlah/record.mp3",
+        "durationInSeconds": 14.721,
+        "numberTimes": [
+          {
+            "n": 1,
+            "s": 0.453
+          },
+          {
+            "n": 2,
+            "s": 0.952
+          },
+          {
+            "n": 3,
+            "s": 1.707
+          },
+          {
+            "n": 4,
+            "s": 2.229
+          },
+          {
+            "n": 3,
+            "s": 2.798
+          },
+          {
+            "n": 8,
+            "s": 3.344
+          },
+          {
+            "n": 1,
+            "s": 5.178
+          },
+          {
+            "n": 3,
+            "s": 5.817
+          },
+          {
+            "n": 3,
+            "s": 6.304
+          },
+          {
+            "n": 2,
+            "s": 8.742
+          },
+          {
+            "n": 4,
+            "s": 9.265
+          },
+          {
+            "n": 8,
+            "s": 9.776
+          }
+        ]
+      }
+    ]
+  },
+  "cur-divide-fractions": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-divide-fractions/ramlah/ask.mp3",
+        "durationInSeconds": 9.009,
+        "numberTimes": [
+          {
+            "n": 3,
+            "s": 0
+          },
+          {
+            "n": 4,
+            "s": 0.801
+          },
+          {
+            "n": 1,
+            "s": 1.858
+          },
+          {
+            "n": 4,
+            "s": 2.392
+          },
+          {
+            "n": 1,
+            "s": 5.654
+          },
+          {
+            "n": 4,
+            "s": 6.188
+          },
+          {
+            "n": 3,
+            "s": 7.79
+          },
+          {
+            "n": 4,
+            "s": 8.336
+          }
+        ]
+      },
+      {
+        "id": "parts",
+        "file": "lesson-voice/cur-divide-fractions/ramlah/parts.mp3",
+        "durationInSeconds": 6.037,
+        "numberTimes": [
+          {
+            "n": 3,
+            "s": 0.511
+          },
+          {
+            "n": 4,
+            "s": 1.068
+          },
+          {
+            "n": 3,
+            "s": 1.788
+          },
+          {
+            "n": 1,
+            "s": 4.795
+          },
+          {
+            "n": 4,
+            "s": 5.375
+          }
+        ]
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-divide-fractions/ramlah/action.mp3",
+        "durationInSeconds": 7.988,
+        "numberTimes": [
+          {
+            "n": 3,
+            "s": 6.838
+          }
+        ]
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-divide-fractions/ramlah/record.mp3",
+        "durationInSeconds": 13.514,
+        "numberTimes": [
+          {
+            "n": 3,
+            "s": 0
+          },
+          {
+            "n": 4,
+            "s": 0.813
+          },
+          {
+            "n": 1,
+            "s": 1.823
+          },
+          {
+            "n": 4,
+            "s": 2.322
+          },
+          {
+            "n": 3,
+            "s": 2.786
+          },
+          {
+            "n": 3,
+            "s": 5.689
+          },
+          {
+            "n": 4,
+            "s": 6.258
+          },
+          {
+            "n": 4,
+            "s": 6.885
+          },
+          {
+            "n": 1,
+            "s": 7.477
+          }
+        ]
+      }
+    ]
+  },
+  "cur-mixed-numbers": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-mixed-numbers/ramlah/ask.mp3",
+        "durationInSeconds": 7.43,
+        "numberTimes": [
+          {
+            "n": 3,
+            "s": 0.639
+          },
+          {
+            "n": 4,
+            "s": 1.3
+          }
+        ]
+      },
+      {
+        "id": "parts",
+        "file": "lesson-voice/cur-mixed-numbers/ramlah/parts.mp3",
+        "durationInSeconds": 9.659,
+        "numberTimes": [
+          {
+            "n": 4,
+            "s": 1.324
+          },
+          {
+            "n": 1,
+            "s": 4.226
+          },
+          {
+            "n": 3,
+            "s": 6.792
+          },
+          {
+            "n": 3,
+            "s": 8.359
+          },
+          {
+            "n": 4,
+            "s": 8.998
+          }
+        ]
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-mixed-numbers/ramlah/action.mp3",
+        "durationInSeconds": 7.988,
+        "numberTimes": [
+          {
+            "n": 4,
+            "s": 1.37
+          },
+          {
+            "n": 4,
+            "s": 3.437
+          },
+          {
+            "n": 3,
+            "s": 4.946
+          },
+          {
+            "n": 7,
+            "s": 6.444
+          },
+          {
+            "n": 4,
+            "s": 6.803
+          }
+        ]
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-mixed-numbers/ramlah/record.mp3",
+        "durationInSeconds": 11.842,
+        "numberTimes": [
+          {
+            "n": 3,
+            "s": 1.045
+          },
+          {
+            "n": 4,
+            "s": 1.707
+          },
+          {
+            "n": 7,
+            "s": 3.262
+          },
+          {
+            "n": 4,
+            "s": 3.924
+          }
+        ]
+      }
+    ]
+  },
+  "cur-improper-fractions": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-improper-fractions/ramlah/ask.mp3",
+        "durationInSeconds": 7.059,
+        "numberTimes": [
+          {
+            "n": 7,
+            "s": 0
+          },
+          {
+            "n": 4,
+            "s": 0.859
+          }
+        ]
+      },
+      {
+        "id": "parts",
+        "file": "lesson-voice/cur-improper-fractions/ramlah/parts.mp3",
+        "durationInSeconds": 3.483,
+        "numberTimes": [
+          {
+            "n": 7,
+            "s": 0.592
+          },
+          {
+            "n": 4,
+            "s": 2.392
+          }
+        ]
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-improper-fractions/ramlah/action.mp3",
+        "durationInSeconds": 8.313,
+        "numberTimes": [
+          {
+            "n": 4,
+            "s": 1.289
+          },
+          {
+            "n": 3,
+            "s": 4.865
+          },
+          {
+            "n": 3,
+            "s": 6.49
+          }
+        ]
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-improper-fractions/ramlah/record.mp3",
+        "durationInSeconds": 12.492,
+        "numberTimes": [
+          {
+            "n": 7,
+            "s": 0.476
+          },
+          {
+            "n": 4,
+            "s": 1.242
+          },
+          {
+            "n": 1,
+            "s": 1.823
+          },
+          {
+            "n": 3,
+            "s": 2.81
+          },
+          {
+            "n": 4,
+            "s": 3.529
+          }
+        ]
+      }
+    ]
+  },
+  "cur-order-fractions": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-order-fractions/ramlah/ask.mp3",
+        "durationInSeconds": 6.177,
+        "numberTimes": [
+          {
+            "n": 3,
+            "s": 1.161
+          },
+          {
+            "n": 8,
+            "s": 1.707
+          },
+          {
+            "n": 1,
+            "s": 1.962
+          },
+          {
+            "n": 2,
+            "s": 2.45
+          },
+          {
+            "n": 3,
+            "s": 2.844
+          },
+          {
+            "n": 4,
+            "s": 3.344
+          }
+        ]
+      },
+      {
+        "id": "parts",
+        "file": "lesson-voice/cur-order-fractions/ramlah/parts.mp3",
+        "durationInSeconds": 9.334
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-order-fractions/ramlah/action.mp3",
+        "durationInSeconds": 10.031,
+        "numberTimes": [
+          {
+            "n": 3,
+            "s": 1.834
+          },
+          {
+            "n": 8,
+            "s": 2.426
+          },
+          {
+            "n": 1,
+            "s": 4.783
+          },
+          {
+            "n": 2,
+            "s": 5.329
+          },
+          {
+            "n": 3,
+            "s": 7.082
+          },
+          {
+            "n": 4,
+            "s": 7.697
+          }
+        ]
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-order-fractions/ramlah/record.mp3",
+        "durationInSeconds": 13.839,
+        "numberTimes": [
+          {
+            "n": 3,
+            "s": 1.683
+          },
+          {
+            "n": 8,
+            "s": 2.415
+          },
+          {
+            "n": 1,
+            "s": 3.251
+          },
+          {
+            "n": 2,
+            "s": 3.82
+          },
+          {
+            "n": 3,
+            "s": 4.679
+          },
+          {
+            "n": 4,
+            "s": 5.294
+          }
+        ]
+      }
+    ]
   }
 };
