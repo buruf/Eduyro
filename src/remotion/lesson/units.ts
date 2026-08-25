@@ -644,6 +644,7 @@ import { FUNCTION_UNITS } from "./units-functions";
 import { TRIG_UNITS } from "./units-trig";
 import { POLY_UNITS } from "./units-poly";
 import { FRAC_OPS_UNITS } from "./units-fracops";
+import { DECIMAL_OPS_UNITS } from "./units-decimalops";
 import { ADVANCED_UNITS } from "./units-advanced";
 
 // ---------------------------------------------------------------------------
@@ -1144,7 +1145,7 @@ export interface VideoUnitRef {
   id: string;
   label: string;
   /** Remotion composition that renders it. */
-  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph" | "FunctionMachine" | "Trig" | "Poly" | "FractionOps" | "Advanced";
+  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph" | "FunctionMachine" | "Trig" | "Poly" | "FractionOps" | "DecimalOps" | "Advanced";
 }
 
 export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
@@ -1166,6 +1167,7 @@ export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
   ...TRIG_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Trig" as const })),
   ...POLY_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Poly" as const })),
   ...FRAC_OPS_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "FractionOps" as const })),
+  ...DECIMAL_OPS_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "DecimalOps" as const })),
   ...ADVANCED_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Advanced" as const })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Count" as const })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Compare" as const })),
@@ -1197,6 +1199,9 @@ export function videoForSkillLabel(label: string | null | undefined): VideoUnitR
 // unit was added rather than aliasing to something that would show a child
 // numbers beyond what they're practising.
 const LABEL_ALIASES: Record<string, string> = {
+  // M7/M8 decimal + percent labels -> the new decimal-ops videos.
+  "Decimals — multiply two decimals": "cur-multiply-decimals",
+  "Percentages of a number": "cur-percent-of",
   // Skill-map labels served on sheets (audit-video-coverage). Rule unchanged:
   // alias ONLY when the video genuinely teaches that label's skill - a video
   // that says "plus" never fronts a "subtract" unit.

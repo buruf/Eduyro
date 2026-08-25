@@ -10500,5 +10500,693 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
         ]
       }
     ]
+  },
+  "cur-compare-decimals": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-compare-decimals/ramlah/ask.mp3",
+        "durationInSeconds": 8.777,
+        "numberTimes": [
+          {
+            "n": 0,
+            "s": 1.184
+          },
+          {
+            "n": 3,
+            "s": 1.916
+          },
+          {
+            "n": 0,
+            "s": 2.357
+          },
+          {
+            "n": 25,
+            "s": 2.937
+          },
+          {
+            "n": 0,
+            "s": 4.632
+          },
+          {
+            "n": 25,
+            "s": 5.19
+          }
+        ]
+      },
+      {
+        "id": "grid",
+        "file": "lesson-voice/cur-compare-decimals/ramlah/grid.mp3",
+        "durationInSeconds": 7.616,
+        "numberTimes": [
+          {
+            "n": 0,
+            "s": 1.834
+          },
+          {
+            "n": 3,
+            "s": 2.473
+          },
+          {
+            "n": 30,
+            "s": 2.949
+          },
+          {
+            "n": 100,
+            "s": 3.982
+          },
+          {
+            "n": 0,
+            "s": 4.888
+          },
+          {
+            "n": 25,
+            "s": 5.526
+          },
+          {
+            "n": 25,
+            "s": 6.293
+          }
+        ]
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-compare-decimals/ramlah/action.mp3",
+        "durationInSeconds": 7.059,
+        "numberTimes": [
+          {
+            "n": 30,
+            "s": 1.985
+          },
+          {
+            "n": 25,
+            "s": 3.344
+          }
+        ]
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-compare-decimals/ramlah/record.mp3",
+        "durationInSeconds": 12.307,
+        "numberTimes": [
+          {
+            "n": 0,
+            "s": 0.418
+          },
+          {
+            "n": 3,
+            "s": 1.115
+          },
+          {
+            "n": 0,
+            "s": 2.043
+          },
+          {
+            "n": 25,
+            "s": 2.717
+          }
+        ]
+      }
+    ]
+  },
+  "cur-round-decimals": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-round-decimals/ramlah/ask.mp3",
+        "durationInSeconds": 4.04,
+        "numberTimes": [
+          {
+            "n": 0,
+            "s": 0.441
+          },
+          {
+            "n": 67,
+            "s": 0.859
+          }
+        ]
+      },
+      {
+        "id": "grid",
+        "file": "lesson-voice/cur-round-decimals/ramlah/grid.mp3",
+        "durationInSeconds": 10.17,
+        "numberTimes": [
+          {
+            "n": 0,
+            "s": 1.556
+          },
+          {
+            "n": 6,
+            "s": 2.322
+          },
+          {
+            "n": 0,
+            "s": 2.786
+          },
+          {
+            "n": 7,
+            "s": 3.39
+          },
+          {
+            "n": 0,
+            "s": 7.152
+          },
+          {
+            "n": 67,
+            "s": 7.802
+          }
+        ]
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-round-decimals/ramlah/action.mp3",
+        "durationInSeconds": 9.52,
+        "numberTimes": [
+          {
+            "n": 0,
+            "s": 2.752
+          },
+          {
+            "n": 67,
+            "s": 3.32
+          },
+          {
+            "n": 0,
+            "s": 6.908
+          },
+          {
+            "n": 7,
+            "s": 7.512
+          },
+          {
+            "n": 0,
+            "s": 8.162
+          },
+          {
+            "n": 6,
+            "s": 8.731
+          }
+        ]
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-round-decimals/ramlah/record.mp3",
+        "durationInSeconds": 13.235,
+        "numberTimes": [
+          {
+            "n": 0,
+            "s": 0.441
+          },
+          {
+            "n": 67,
+            "s": 1.219
+          },
+          {
+            "n": 0,
+            "s": 2.74
+          },
+          {
+            "n": 7,
+            "s": 3.529
+          }
+        ]
+      }
+    ]
+  },
+  "cur-multiply-decimals": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-multiply-decimals/ramlah/ask.mp3",
+        "durationInSeconds": 6.269,
+        "numberTimes": [
+          {
+            "n": 0,
+            "s": 0
+          },
+          {
+            "n": 3,
+            "s": 0.894
+          },
+          {
+            "n": 0,
+            "s": 1.463
+          },
+          {
+            "n": 4,
+            "s": 2.009
+          }
+        ]
+      },
+      {
+        "id": "grid",
+        "file": "lesson-voice/cur-multiply-decimals/ramlah/grid.mp3",
+        "durationInSeconds": 5.062,
+        "numberTimes": [
+          {
+            "n": 0,
+            "s": 1.672
+          },
+          {
+            "n": 3,
+            "s": 2.345
+          },
+          {
+            "n": 3,
+            "s": 3.46
+          },
+          {
+            "n": 10,
+            "s": 4.389
+          }
+        ]
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-multiply-decimals/ramlah/action.mp3",
+        "durationInSeconds": 12.353,
+        "numberTimes": [
+          {
+            "n": 0,
+            "s": 0.789
+          },
+          {
+            "n": 4,
+            "s": 1.358
+          },
+          {
+            "n": 10,
+            "s": 4.598
+          },
+          {
+            "n": 4,
+            "s": 5.898
+          },
+          {
+            "n": 12,
+            "s": 9.648
+          },
+          {
+            "n": 100,
+            "s": 11.355
+          }
+        ]
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-multiply-decimals/ramlah/record.mp3",
+        "durationInSeconds": 12.307,
+        "numberTimes": [
+          {
+            "n": 12,
+            "s": 0
+          },
+          {
+            "n": 100,
+            "s": 0.766
+          },
+          {
+            "n": 0,
+            "s": 1.231
+          },
+          {
+            "n": 12,
+            "s": 1.823
+          },
+          {
+            "n": 0,
+            "s": 2.694
+          },
+          {
+            "n": 3,
+            "s": 3.32
+          },
+          {
+            "n": 0,
+            "s": 3.982
+          },
+          {
+            "n": 4,
+            "s": 4.656
+          },
+          {
+            "n": 0,
+            "s": 5.062
+          },
+          {
+            "n": 12,
+            "s": 5.677
+          }
+        ]
+      }
+    ]
+  },
+  "cur-divide-decimals": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-divide-decimals/ramlah/ask.mp3",
+        "durationInSeconds": 6.037,
+        "numberTimes": [
+          {
+            "n": 0,
+            "s": 0
+          },
+          {
+            "n": 8,
+            "s": 0.789
+          },
+          {
+            "n": 0,
+            "s": 1.602
+          },
+          {
+            "n": 2,
+            "s": 2.055
+          },
+          {
+            "n": 0.2,
+            "s": 3.808
+          },
+          {
+            "n": 0,
+            "s": 4.992
+          },
+          {
+            "n": 8,
+            "s": 5.457
+          }
+        ]
+      },
+      {
+        "id": "grid",
+        "file": "lesson-voice/cur-divide-decimals/ramlah/grid.mp3",
+        "durationInSeconds": 7.848,
+        "numberTimes": [
+          {
+            "n": 0,
+            "s": 0
+          },
+          {
+            "n": 8,
+            "s": 0.998
+          },
+          {
+            "n": 80,
+            "s": 1.498
+          },
+          {
+            "n": 0,
+            "s": 3.901
+          },
+          {
+            "n": 2,
+            "s": 4.493
+          },
+          {
+            "n": 20,
+            "s": 4.981
+          }
+        ]
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-divide-decimals/ramlah/action.mp3",
+        "durationInSeconds": 5.991,
+        "numberTimes": [
+          {
+            "n": 80,
+            "s": 0.836
+          },
+          {
+            "n": 20,
+            "s": 1.811
+          },
+          {
+            "n": 4,
+            "s": 5.004
+          }
+        ]
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-divide-decimals/ramlah/record.mp3",
+        "durationInSeconds": 13.839,
+        "numberTimes": [
+          {
+            "n": 0,
+            "s": 0.441
+          },
+          {
+            "n": 8,
+            "s": 1.045
+          },
+          {
+            "n": 0,
+            "s": 2.02
+          },
+          {
+            "n": 2,
+            "s": 2.624
+          },
+          {
+            "n": 4,
+            "s": 2.995
+          }
+        ]
+      }
+    ]
+  },
+  "cur-percent-of": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-percent-of/ramlah/ask.mp3",
+        "durationInSeconds": 6.084,
+        "numberTimes": [
+          {
+            "n": 20,
+            "s": 0.708
+          },
+          {
+            "n": 60,
+            "s": 1.625
+          },
+          {
+            "n": 20,
+            "s": 4.296
+          },
+          {
+            "n": 60,
+            "s": 5.213
+          }
+        ]
+      },
+      {
+        "id": "grid",
+        "file": "lesson-voice/cur-percent-of/ramlah/grid.mp3",
+        "durationInSeconds": 4.644,
+        "numberTimes": [
+          {
+            "n": 60,
+            "s": 0.569
+          },
+          {
+            "n": 100,
+            "s": 1.265
+          },
+          {
+            "n": 0,
+            "s": 3.193
+          },
+          {
+            "n": 6,
+            "s": 3.82
+          }
+        ]
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-percent-of/ramlah/action.mp3",
+        "durationInSeconds": 6.409,
+        "numberTimes": [
+          {
+            "n": 20,
+            "s": 0.72
+          },
+          {
+            "n": 20,
+            "s": 2.159
+          },
+          {
+            "n": 0,
+            "s": 3.518
+          },
+          {
+            "n": 6,
+            "s": 4.203
+          },
+          {
+            "n": 12,
+            "s": 5.573
+          }
+        ]
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-percent-of/ramlah/record.mp3",
+        "durationInSeconds": 15.511,
+        "numberTimes": [
+          {
+            "n": 20,
+            "s": 0.372
+          },
+          {
+            "n": 60,
+            "s": 1.149
+          },
+          {
+            "n": 12,
+            "s": 1.8
+          },
+          {
+            "n": 20,
+            "s": 6.594
+          },
+          {
+            "n": 0,
+            "s": 7.581
+          },
+          {
+            "n": 2,
+            "s": 8.29
+          },
+          {
+            "n": 0,
+            "s": 8.882
+          },
+          {
+            "n": 2,
+            "s": 9.485
+          },
+          {
+            "n": 60,
+            "s": 10.089
+          },
+          {
+            "n": 12,
+            "s": 10.809
+          },
+          {
+            "n": 20,
+            "s": 13.305
+          },
+          {
+            "n": 20,
+            "s": 14.152
+          }
+        ]
+      }
+    ]
+  },
+  "cur-percent-change": {
+    "ramlah": [
+      {
+        "id": "ask",
+        "file": "lesson-voice/cur-percent-change/ramlah/ask.mp3",
+        "durationInSeconds": 4.69,
+        "numberTimes": [
+          {
+            "n": 40,
+            "s": 0.952
+          },
+          {
+            "n": 25,
+            "s": 2.554
+          }
+        ]
+      },
+      {
+        "id": "grid",
+        "file": "lesson-voice/cur-percent-change/ramlah/grid.mp3",
+        "durationInSeconds": 3.855,
+        "numberTimes": [
+          {
+            "n": 25,
+            "s": 1.602
+          },
+          {
+            "n": 40,
+            "s": 2.508
+          },
+          {
+            "n": 10,
+            "s": 3.193
+          }
+        ]
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-percent-change/ramlah/action.mp3",
+        "durationInSeconds": 10.217,
+        "numberTimes": [
+          {
+            "n": 40,
+            "s": 1.428
+          },
+          {
+            "n": 10,
+            "s": 2.101
+          },
+          {
+            "n": 50,
+            "s": 2.531
+          },
+          {
+            "n": 25,
+            "s": 4.83
+          },
+          {
+            "n": 10,
+            "s": 7.488
+          },
+          {
+            "n": 40,
+            "s": 8.29
+          },
+          {
+            "n": 10,
+            "s": 8.998
+          },
+          {
+            "n": 30,
+            "s": 9.416
+          }
+        ]
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-percent-change/ramlah/record.mp3",
+        "durationInSeconds": 13.607,
+        "numberTimes": [
+          {
+            "n": 25,
+            "s": 0.488
+          },
+          {
+            "n": 50,
+            "s": 1.8
+          },
+          {
+            "n": 25,
+            "s": 2.984
+          },
+          {
+            "n": 30,
+            "s": 4.261
+          }
+        ]
+      }
+    ]
   }
 };

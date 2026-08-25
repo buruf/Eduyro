@@ -21,6 +21,7 @@ import { trigUnitById, triNumbers } from "./units-trig";
 import { polyUnitById } from "./units-poly";
 import { advancedUnitById, ADV } from "./units-advanced";
 import { fracOpsUnitById, fracOpsNumbers } from "./units-fracops";
+import { decimalOpsUnitById, decimalOpsNumbers } from "./units-decimalops";
 import { lineIntersection, quadraticRoots } from "./units";
 
 export interface TeachingContract {
@@ -289,6 +290,45 @@ export function contractFor(comp: string, unitId: string): TeachingContract {
     case "Advanced": {
       const u = advancedUnitById(unitId);
       return advancedContract(u.mode);
+    }
+
+    case "DecimalOps": {
+      const u = decimalOpsUnitById(unitId);
+      const x = decimalOpsNumbers(u);
+      const base = [...SCAFFOLD, u.a, x.b, x.pct, 100, x.aCells, x.bCells];
+      switch (u.mode) {
+        case "compare":
+          return {
+            requiredSpoken: uniq([u.a, x.b, x.aCells, x.bCells]),
+            allowedNumbers: uniq(base),
+          };
+        case "round":
+          return {
+            requiredSpoken: uniq([u.a, x.lower, x.upper, x.rounded]),
+            allowedNumbers: uniq([...base, x.lower, x.upper, x.rounded]),
+          };
+        case "multiply2":
+          return {
+            requiredSpoken: uniq([u.a, x.b, x.product, Math.round(x.product * 100)]),
+            allowedNumbers: uniq([...base, x.product, Math.round(x.product * 100), x.aTenths, x.bTenths, 10]),
+          };
+        case "divide":
+          return {
+            requiredSpoken: uniq([u.a, x.b, x.quotient]),
+            allowedNumbers: uniq([...base, x.quotient]),
+          };
+        case "percent-of":
+          return {
+            requiredSpoken: uniq([u.a, x.pct, x.part]),
+            allowedNumbers: uniq([...base, x.part, x.pct / 100, Math.round((u.a / 100) * 100) / 100]),
+          };
+        case "percent-change":
+          return {
+            requiredSpoken: uniq([u.a, x.pct, x.part, x.increased, x.decreased]),
+            allowedNumbers: uniq([...base, x.part, x.increased, x.decreased]),
+          };
+      }
+      break;
     }
 
     case "FractionOps": {
