@@ -27,6 +27,9 @@ const PUBLIC_ROUTES = [
   "/placement",
   // Public worksheet generator tool
   "/pdf-generator",
+  // Public lesson library - the SEO surface for the lesson videos, and the
+  // page every YouTube description points back to.
+  "/lessons",
   // Public printable writing prompts (static content, no student data)
   "/print/writing-prompt",
   // Metadata routes (no file extension → not caught by the dot rule below).

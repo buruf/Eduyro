@@ -1,6 +1,7 @@
 // src/app/sitemap.ts → serves https://eduyro.com/sitemap.xml
 // Lists the public, indexable pages so Google can discover the whole site.
 import type { MetadataRoute } from "next";
+import { lessonCatalog } from "@/lib/lessons/catalog";
 
 const BASE = "https://eduyro.com";
 
@@ -13,15 +14,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/schools",   priority: 0.8, freq: "monthly" },
     { path: "/register",  priority: 0.6, freq: "monthly" },
     { path: "/signin",    priority: 0.4, freq: "yearly" },
+    { path: "/lessons",   priority: 0.9, freq: "weekly" },
     { path: "/about",     priority: 0.5, freq: "yearly" },
     { path: "/accessibility", priority: 0.3, freq: "yearly" },
     { path: "/privacy",   priority: 0.3, freq: "yearly" },
     { path: "/terms",     priority: 0.3, freq: "yearly" },
   ];
-  return pages.map((p) => ({
+  const staticPages = pages.map((p) => ({
     url: `${BASE}${p.path}`,
     lastModified: now,
     changeFrequency: p.freq,
     priority: p.priority,
   }));
+  // Every lesson page individually, so each can be found on its own search
+  // terms ("how to multiply fractions") rather than only through the index.
+  const lessons = lessonCatalog().map((l) => ({
+    url: `${BASE}/lessons/${l.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+  return [...staticPages, ...lessons];
 }
