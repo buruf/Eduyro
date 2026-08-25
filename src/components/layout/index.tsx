@@ -48,6 +48,7 @@ export function PublicNavbar() {
         <div className="hidden md:flex items-center gap-8 text-sm text-muted">
           <Link href="/#how-it-works" className="hover:text-ink transition-colors">How it works</Link>
           <Link href="/#curriculum" className="hover:text-ink transition-colors">Curriculum</Link>
+          <Link href="/lessons" className="hover:text-ink transition-colors">Lesson videos</Link>
           <Link href="/shop" className="hover:text-ink transition-colors">Shop workbooks</Link>
           <Link href="/#pricing" className="hover:text-ink transition-colors">Pricing</Link>
           <Link href="/#faq" className="hover:text-ink transition-colors">FAQ</Link>
@@ -66,6 +67,7 @@ export function PublicNavbar() {
         <div className="md:hidden border-t border-border p-4 space-y-3">
           <Link href="/#how-it-works" className="block text-sm text-muted">How it works</Link>
           <Link href="/#curriculum" className="block text-sm text-muted">Curriculum</Link>
+          <Link href="/lessons" className="block text-sm text-muted">Lesson videos</Link>
           <Link href="/shop" className="block text-sm text-muted">Shop workbooks</Link>
           <Link href="/#pricing" className="block text-sm text-muted">Pricing</Link>
           <Link href="/#faq" className="block text-sm text-muted">FAQ</Link>
@@ -98,6 +100,7 @@ export function PublicFooter() {
               { label: "Home", href: "/" },
               { label: "How it works", href: "/#how-it-works" },
               { label: "Curriculum", href: "/#curriculum" },
+              { label: "Lesson videos", href: "/lessons" },
               { label: "Pricing", href: "/#pricing" },
               { label: "Shop", href: "/shop" },
             ]}
