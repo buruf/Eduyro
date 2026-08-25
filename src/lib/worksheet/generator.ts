@@ -142,6 +142,14 @@ export function generateProblems(config: GeneratorConfig): {
   // Reading keeps passages adjacent to their questions, so window by PASSAGE block.
   const hasPassage = converted.some((p) => (p.points ?? 0) === 0 || p.question.startsWith("READ THIS PASSAGE"));
   const sn = Math.max(1, config.sheetNumber ?? 1);
+  // Sibling units often SHARE a bank (four R9 main-idea units all read the
+  // same passages). Rotating by sheet number alone gave every sibling the
+  // identical rotation - a child finishing "Finding the Main Idea" started
+  // "Supporting Details" on the very same questions. A stable per-unit offset
+  // starts each sibling at a different point in the shared bank, so the same
+  // content is at least SEQUENCED differently per unit, and sheet 1 of a new
+  // unit is never sheet 1 of the last one.
+  const unitOffset = unitRotationOffset(skillName);
   let final: Problem[];
   if (hasPassage) {
     // Group each passage block (the READ-THIS-PASSAGE header + its questions) and
@@ -162,7 +170,7 @@ export function generateProblems(config: GeneratorConfig): {
       if (blocks.length) blocks[0] = [...lead, ...blocks[0]];
       else blocks.push(lead);
     }
-    const block = blocks.length ? blocks[(sn - 1) % blocks.length] : converted;
+    const block = blocks.length ? blocks[(sn - 1 + (unitOffset % blocks.length)) % blocks.length] : converted;
     final = block.slice(0, problemCount);
   } else {
     // UNIQUENESS GUARD: tile the bank into `distinct` NON-OVERLAPPING sheets so a
@@ -173,7 +181,7 @@ export function generateProblems(config: GeneratorConfig): {
     if (per === 0) {
       final = [];
     } else {
-      const tile = (sn - 1) % distinct;
+      const tile = (sn - 1 + (unitOffset % distinct)) % distinct;
       const off = tile * per;
       final = ordered.slice(off, off + per); // no wrap → tiles never overlap
     }
@@ -196,6 +204,20 @@ export function generateProblems(config: GeneratorConfig): {
 // Memoized full non-math bank (post multiple-choice conversion) per (subject,
 // skill). Pure and deterministic in content, so caching is safe; callers that
 // emit sheets clone with fresh ids. Keyed case-insensitively on skill name.
+/** Deterministic small offset from a unit's name. Stable across processes
+ *  (plain string hash, no randomness), so regenerating a sheet reproduces it. */
+function unitRotationOffset(skillName: string): number {
+  // Prefer the unit's INDEX among its curriculum siblings: sibling units are
+  // exactly the ones that share a bank, and consecutive indexes are the only
+  // offsets guaranteed distinct modulo a small block count (a name hash
+  // collides mod 3 far too often). Non-curriculum names fall back to a hash.
+  const mod = READING_CURRICULUM.find((m) => m.units.includes(skillName));
+  if (mod) return mod.units.indexOf(skillName);
+  let h = 0;
+  for (let i = 0; i < skillName.length; i++) h = (h * 31 + skillName.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
 const _nonMathBankCache = new Map<string, Problem[]>();
 function nonMathBank(subjectSlug: string, skillName: string): Problem[] {
   const key = `${subjectSlug}::${skillName.toLowerCase()}`;
