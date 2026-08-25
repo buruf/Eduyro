@@ -116,7 +116,16 @@ export function generateProblems(config: GeneratorConfig): {
     }
 
     // M3–M12 by skill. (M13–M18 handled just above.)
-    const skill = LEVEL_TO_SKILL[config.levelCode] ?? "POLYNOMIALS";
+    const skill = LEVEL_TO_SKILL[config.levelCode];
+    if (!skill) {
+      // A typo'd or future level code used to fall back to POLYNOMIALS - a
+      // second-grader whose progress row carried a malformed code would have
+      // received algebra. Unknown levels are a caller bug and must be loud,
+      // not quietly survivable with the wrong curriculum.
+      throw new Error(
+        `Unknown MATH level code "${config.levelCode}" - no curriculum is mapped to it`,
+      );
+    }
     const ws = generateProgressiveSheet(
       skill,
       config.sheetNumber ?? 1,
