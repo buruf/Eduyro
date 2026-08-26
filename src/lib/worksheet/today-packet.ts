@@ -243,7 +243,16 @@ export async function buildTodayPacket(
         sheetNumber: contentSheet,
         totalSheets: 100,
       });
-      if (formOf(stored) === formOf(expected.problems)) continue; // matches the lesson → fine
+      // Re-mint when the stored content is the wrong LESSON (shape differs)
+      // OR the wrong LENGTH. The length case is the sheet-size cap: long
+      // multiplication moved to 10 problems, but the cap only applies when a
+      // row is generated, so rows minted before it kept 24 forever - and a
+      // failed sheet is re-served from its stored row, so a child could redo
+      // a 24-problem sheet indefinitely. Reported as "why is Ridwan still
+      // getting 24 questions" after his pending sheets were fixed by hand.
+      const sameLesson = formOf(stored) === formOf(expected.problems);
+      const sameLength = stored.length === expected.problems.length;
+      if (sameLesson && sameLength) continue;
       await db.worksheet.update({
         where: { id: ws.id },
         data: {
