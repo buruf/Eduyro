@@ -415,12 +415,27 @@ export function buildScaffold(
     if (a >= 10 && b >= 10) {
       const bT = Math.floor(b / 10) * 10;
       const bO = b % 10;
+      // A ROUND second factor needs no splitting - "split the 80 into 80 + 0"
+      // and "add the pieces: 1840 = 1840" is nonsense dressed as a method.
+      // It is the multiply-by-tens move the mul-tens video teaches: cover the
+      // zero, multiply, put the zero back.
+      if (bO === 0) {
+        return {
+          explanation: `${a} × ${b}: cover the zero, multiply, then put it back.`,
+          hints: [
+            `Cover the zero in ${b}. That leaves ${a} × ${bT / 10}.`,
+            `${a} × ${bT / 10} = ${a * (bT / 10)}.`,
+            `Now put the zero back on: ${A}.`,
+          ],
+          answer: A,
+        };
+      }
       return {
-        explanation: `${a} × ${b} is too big to count — split the ${b} into ${bT} + ${bO}, multiply each piece, then add.`,
+        explanation: `${a} × ${b} is too big to count - split the ${b} into ${bT} + ${bO}, multiply each piece, then add.`,
         hints: [
           `${a} × ${bT}: do ${a} × ${bT / 10} = ${a * (bT / 10)}, then put the zero back → ${a * bT}.`,
-          bO === 0 ? `There's nothing left to add — ${b} is exactly ${bT}.` : `${a} × ${bO} = ${a * bO}.`,
-          `Add the pieces: ${a * bT}${bO === 0 ? "" : ` + ${a * bO}`} = ${A}.`,
+          `${a} × ${bO} = ${a * bO}.`,
+          `Add the pieces: ${a * bT} + ${a * bO} = ${A}.`,
         ],
         answer: A,
       };

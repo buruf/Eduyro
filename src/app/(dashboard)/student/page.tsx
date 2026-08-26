@@ -1215,7 +1215,21 @@ function PracticeModal({
     const questionText = isBareExpr ? `${p.question} =` : p.question;
     const stack = opts ? null : parseColumnar(p.question);
     const ld = opts || stack ? null : parseLongDivision(p.question);
-    const set = (v: string) => setAnswers((a) => ({ ...a, [p.id]: v }));
+    // Editing the answer clears the PREVIOUS verdict. Without this the
+    // "Not quite" banner and its hint stay on screen while the child types a
+    // new answer, so a corrected - and correct - answer still sits under a
+    // red "Not quite". Reported as "why is this wrong?" against a right
+    // answer: the answer had not been re-checked, only the stale result was
+    // still showing.
+    const set = (v: string) => {
+      setAnswers((a) => ({ ...a, [p.id]: v }));
+      setLive((m) => {
+        if (!(p.id in m)) return m;
+        const next = { ...m };
+        delete next[p.id];
+        return next;
+      });
+    };
 
     // Interactive graphing item — dispatch by the spec's kind.
     if (p.interactive && p.answerType === "point") {
