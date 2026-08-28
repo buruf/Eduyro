@@ -18,6 +18,7 @@ import { trigUnitById } from "./units-trig";
 import { polyLineIds } from "./script-poly";
 import { FRAC_OPS_LINE_IDS } from "./script-fracops";
 import { DECIMAL_OPS_LINE_IDS } from "./script-decimalops";
+import { PLACE_VALUE_LINE_IDS } from "./script-placevalue";
 import { polyUnitById } from "./units-poly";
 import { advancedLineIds } from "./script-advanced";
 import { advancedUnitById } from "./units-advanced";
@@ -404,6 +405,16 @@ export function decimalOpsSceneTimings(unitId: string, voiceKey: string = DEFAUL
 }
 export function decimalOpsTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return decimalOpsSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the place-value template (M2). */
+const PLACE_VALUE_MIN_SECONDS: Record<string, number> = { ask: 4, build: 6, action: 8, record: 5 };
+
+export function placeValueSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
+  return earlyTimings(PLACE_VALUE_LINE_IDS, PLACE_VALUE_MIN_SECONDS, unitId, voiceKey);
+}
+export function placeValueTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return placeValueSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }
 export function graphTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return graphSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);

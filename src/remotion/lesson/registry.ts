@@ -51,6 +51,8 @@ import { FRAC_OPS_UNITS } from "./units-fracops";
 import { fracOpsLines } from "./script-fracops";
 import { DECIMAL_OPS_UNITS } from "./units-decimalops";
 import { decimalOpsLines } from "./script-decimalops";
+import { PLACE_VALUE_UNITS } from "./units-placevalue";
+import { placeValueLines } from "./script-placevalue";
 import { ADVANCED_UNITS } from "./units-advanced";
 import { advancedLines } from "./script-advanced";
 
@@ -83,6 +85,7 @@ export const ALL_LESSON_UNITS: RegisteredUnit[] = [
   ...POLY_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Poly", lines: () => polyLines(u) })),
   ...FRAC_OPS_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "FractionOps", lines: () => fracOpsLines(u) })),
   ...DECIMAL_OPS_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "DecimalOps", lines: () => decimalOpsLines(u) })),
+  ...PLACE_VALUE_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "PlaceValue", lines: () => placeValueLines(u) })),
   ...ADVANCED_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Advanced", lines: () => advancedLines(u) })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Count", lines: () => countLines(u) })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Compare", lines: () => compareLines(u) })),

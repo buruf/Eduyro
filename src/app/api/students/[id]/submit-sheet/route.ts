@@ -346,7 +346,12 @@ async function updateProgressAndMastery(
   const alreadyCleared = dailyRecord.clearedAt !== null;
   const dayCleared =
     !alreadyCleared &&
-    todayCount === sheetsPerDay &&
+    // AT LEAST the quota, not EXACTLY it. A child who does extra practice
+    // pushed todayCount past sheetsPerDay and the day could then never clear
+    // - keen work was punished. Safe now that clearedAt makes clearing
+    // once-per-day; before that guard, ">=" would have re-fired on every
+    // further sheet.
+    todayCount >= sheetsPerDay &&
     (learningDay || (todayAvg >= level.masteryThresholdPct && allFluent));
   if (dayCleared) {
     await tx.dailyAccuracy.update({

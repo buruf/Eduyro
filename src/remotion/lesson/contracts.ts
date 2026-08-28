@@ -22,6 +22,7 @@ import { polyUnitById } from "./units-poly";
 import { advancedUnitById, ADV } from "./units-advanced";
 import { fracOpsUnitById, fracOpsNumbers } from "./units-fracops";
 import { decimalOpsUnitById, decimalOpsNumbers } from "./units-decimalops";
+import { placeValueUnitById, placeValueNumbers } from "./units-placevalue";
 import { lineIntersection, quadraticRoots } from "./units";
 
 export interface TeachingContract {
@@ -290,6 +291,39 @@ export function contractFor(comp: string, unitId: string): TeachingContract {
     case "Advanced": {
       const u = advancedUnitById(unitId);
       return advancedContract(u.mode);
+    }
+
+    case "PlaceValue": {
+      const u = placeValueUnitById(unitId);
+      const x = placeValueNumbers(u);
+      switch (u.mode) {
+        case "tens":
+          return {
+            requiredSpoken: uniq([u.n, x.tens, x.ones, x.tensValue]),
+            allowedNumbers: uniq([...SCAFFOLD, u.n, x.tens, x.ones, x.tensValue, 10]),
+          };
+        case "ones":
+          return {
+            requiredSpoken: uniq([u.n, x.ones, x.tensValue]),
+            allowedNumbers: uniq([...SCAFFOLD, u.n, x.tens, x.ones, x.tensValue, 10]),
+          };
+        case "compare2d":
+          return {
+            requiredSpoken: uniq([u.n, x.n2, x.tens, x.ones, x.tens2, x.ones2, x.bigger, x.smaller]),
+            allowedNumbers: uniq([...SCAFFOLD, u.n, x.n2, x.tens, x.ones, x.tens2, x.ones2, (x.tens - x.tens2) * 10, 10]),
+          };
+        case "skip":
+          return {
+            requiredSpoken: uniq([x.step, ...x.sequence]),
+            allowedNumbers: uniq([...SCAFFOLD, x.step, ...x.sequence, 0]),
+          };
+        case "before":
+          return {
+            requiredSpoken: uniq([u.n, x.prev, x.next]),
+            allowedNumbers: uniq([...SCAFFOLD, u.n, x.prev, x.next]),
+          };
+      }
+      break;
     }
 
     case "DecimalOps": {

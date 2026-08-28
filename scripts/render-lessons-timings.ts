@@ -23,6 +23,7 @@ import {
   advancedTotalFrames,
   fracOpsTotalFrames,
   decimalOpsTotalFrames,
+  placeValueTotalFrames,
 } from "../src/remotion/lesson/timeline";
 import { ALL_LESSON_UNITS } from "../src/remotion/lesson/registry";
 
@@ -47,6 +48,7 @@ const BY_COMP: Record<string, (unitId: string, voice: string) => number> = {
   Advanced: advancedTotalFrames,
   FractionOps: fracOpsTotalFrames,
   DecimalOps: decimalOpsTotalFrames,
+  PlaceValue: placeValueTotalFrames,
 };
 
 export function timingsFor(unitId: string, voice: string): number {
