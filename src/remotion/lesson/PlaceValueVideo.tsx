@@ -80,18 +80,21 @@ function Title({ text, enter }: { text: string; enter: { opacity: number; transl
 }
 
 const UNIT = 26; // one "one" cube
+// Compare stacks TWO numbers, and a rod is ten cubes tall - at full size they
+// collide with each other and with the caption.
+const CMP_UNIT = 16;
 const GAP = 4;
 
 /** A rod: ten unit cubes fused into a column. */
-function Rod({ x, y, colour = GOLD, dim = false }: { x: number; y: number; colour?: string; dim?: boolean }) {
+function Rod({ x, y, colour = GOLD, dim = false, unit = UNIT }: { x: number; y: number; colour?: string; dim?: boolean; unit?: number }) {
   return (
     <div style={{ position: "absolute", left: x, top: y, opacity: dim ? 0.25 : 1 }}>
       {Array.from({ length: 10 }, (_, i) => (
         <div
           key={i}
           style={{
-            width: UNIT,
-            height: UNIT,
+            width: unit,
+            height: unit,
             marginBottom: 1,
             backgroundColor: colour,
             border: `2px solid ${EDGE}`,
@@ -104,15 +107,15 @@ function Rod({ x, y, colour = GOLD, dim = false }: { x: number; y: number; colou
 }
 
 /** A loose single. */
-function One({ x, y, colour = BLUE, dim = false }: { x: number; y: number; colour?: string; dim?: boolean }) {
+function One({ x, y, colour = BLUE, dim = false, unit = UNIT }: { x: number; y: number; colour?: string; dim?: boolean; unit?: number }) {
   return (
     <div
       style={{
         position: "absolute",
         left: x,
         top: y,
-        width: UNIT,
-        height: UNIT,
+        width: unit,
+        height: unit,
         backgroundColor: colour,
         border: `2px solid ${EDGE}`,
         borderRadius: 3,
@@ -133,6 +136,7 @@ function Blocks({
   dimRods = false,
   dimOnes = false,
   rodsShown = Infinity,
+  unit = UNIT,
 }: {
   x: number;
   y: number;
@@ -143,21 +147,23 @@ function Blocks({
   dimRods?: boolean;
   dimOnes?: boolean;
   rodsShown?: number;
+  unit?: number;
 }) {
-  const rodStep = UNIT + 10;
+  const rodStep = unit + 10;
   const onesX = x + tens * rodStep + 26;
   return (
     <>
       {Array.from({ length: tens }, (_, i) =>
-        i < rodsShown ? <Rod key={i} x={x + i * rodStep} y={y} colour={rodColour} dim={dimRods} /> : null,
+        i < rodsShown ? <Rod key={i} x={x + i * rodStep} y={y} colour={rodColour} dim={dimRods} unit={unit} /> : null,
       )}
       {Array.from({ length: ones }, (_, i) => (
         <One
           key={`o${i}`}
-          x={onesX + (i % 3) * (UNIT + GAP)}
-          y={y + Math.floor(i / 3) * (UNIT + GAP)}
+          x={onesX + (i % 3) * (unit + GAP)}
+          y={y + Math.floor(i / 3) * (unit + GAP)}
           colour={oneColour}
           dim={dimOnes}
+          unit={unit}
         />
       ))}
     </>
@@ -339,13 +345,13 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 24 }}>
         <Title text={headline} enter={title} />
-        <div style={{ position: "relative", width: STAGE_W, height: 420 }}>
+        <div style={{ position: "relative", width: STAGE_W, height: 400 }}>
           {sceneId !== "ask" && (
             <>
-              <div style={{ position: "absolute", left: 120, top: 8, fontSize: 46, fontWeight: 800, color: INK }}>{unit.n}</div>
-              <Blocks x={230} y={0} tens={x.tens} ones={x.ones} dimOnes={focusRods} />
-              <div style={{ position: "absolute", left: 120, top: 228, fontSize: 46, fontWeight: 800, color: INK }}>{x.n2}</div>
-              <Blocks x={230} y={220} tens={x.tens2} ones={x.ones2} rodColour={GREEN} dimOnes={focusRods} />
+              <div style={{ position: "absolute", left: 300, top: 44, fontSize: 46, fontWeight: 800, color: INK }}>{unit.n}</div>
+              <Blocks x={400} y={0} tens={x.tens} ones={x.ones} dimOnes={focusRods} unit={CMP_UNIT} />
+              <div style={{ position: "absolute", left: 300, top: 244, fontSize: 46, fontWeight: 800, color: INK }}>{x.n2}</div>
+              <Blocks x={400} y={200} tens={x.tens2} ones={x.ones2} rodColour={GREEN} dimOnes={focusRods} unit={CMP_UNIT} />
             </>
           )}
         </div>
