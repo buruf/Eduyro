@@ -19,6 +19,18 @@
 // careful-but-quick child.
 const FACT_PACE_SEC = 6;
 
+// FACT FAMILIES are not plain recall. "7 + 8" is one retrieval; "13 - ___ = 5"
+// means reading an equation, recognising which family it belongs to, and THEN
+// retrieving - and these units also mix in multiple-choice and missing-number
+// formats that simply take longer to read. Field evidence: a Grade 3 student
+// sat on "Fact families to 18" for nine days at 90-96% accuracy, blocked only
+// by the 6s target while improving from 18s to under 7s a question. The target
+// was written for single-fact recall and was never right for this skill.
+const FACT_FAMILY_PACE_SEC = 10;
+
+/** Fact-family / missing-number units, in every fact level. */
+const FACT_FAMILY_SKILL = /fact famil|missing addend|missing factor|missing dividend|missing number/i;
+
 // The single-digit fact levels. M1/M2 (counting / number sense) are NOT timed —
 // they're about understanding, not recall speed.
 const FACT_LEVELS = new Set(["M3", "M4", "M5", "M6"]);
@@ -32,6 +44,7 @@ const NON_FACT_SKILL = /2-digit|3-digit|multi.?digit|mixed review|standard form/
 export function factPaceTargetSec(levelCode: string, skillLabel: string): number | null {
   if (!FACT_LEVELS.has(levelCode)) return null;
   if (NON_FACT_SKILL.test(skillLabel || "")) return null;
+  if (FACT_FAMILY_SKILL.test(skillLabel || "")) return FACT_FAMILY_PACE_SEC;
   return FACT_PACE_SEC;
 }
 
