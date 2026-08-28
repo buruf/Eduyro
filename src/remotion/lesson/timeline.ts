@@ -19,6 +19,7 @@ import { polyLineIds } from "./script-poly";
 import { FRAC_OPS_LINE_IDS } from "./script-fracops";
 import { DECIMAL_OPS_LINE_IDS } from "./script-decimalops";
 import { PLACE_VALUE_LINE_IDS } from "./script-placevalue";
+import { POLY_OPS_LINE_IDS } from "./script-polyops";
 import { polyUnitById } from "./units-poly";
 import { advancedLineIds } from "./script-advanced";
 import { advancedUnitById } from "./units-advanced";
@@ -405,6 +406,16 @@ export function decimalOpsSceneTimings(unitId: string, voiceKey: string = DEFAUL
 }
 export function decimalOpsTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return decimalOpsSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the polynomial-operations template (M12). */
+const POLY_OPS_MIN_SECONDS: Record<string, number> = { ask: 5, work: 8, twist: 9, record: 6 };
+
+export function polyOpsSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
+  return earlyTimings(POLY_OPS_LINE_IDS, POLY_OPS_MIN_SECONDS, unitId, voiceKey);
+}
+export function polyOpsTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return polyOpsSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }
 
 /** Scene timing for the place-value template (M2). */

@@ -24,6 +24,7 @@ import {
   fracOpsTotalFrames,
   decimalOpsTotalFrames,
   placeValueTotalFrames,
+  polyOpsTotalFrames,
 } from "../src/remotion/lesson/timeline";
 import { ALL_LESSON_UNITS } from "../src/remotion/lesson/registry";
 
@@ -49,6 +50,7 @@ const BY_COMP: Record<string, (unitId: string, voice: string) => number> = {
   FractionOps: fracOpsTotalFrames,
   DecimalOps: decimalOpsTotalFrames,
   PlaceValue: placeValueTotalFrames,
+  PolyOps: polyOpsTotalFrames,
 };
 
 export function timingsFor(unitId: string, voice: string): number {

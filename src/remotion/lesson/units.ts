@@ -646,6 +646,7 @@ import { POLY_UNITS } from "./units-poly";
 import { FRAC_OPS_UNITS } from "./units-fracops";
 import { DECIMAL_OPS_UNITS } from "./units-decimalops";
 import { PLACE_VALUE_UNITS } from "./units-placevalue";
+import { POLY_OPS_UNITS } from "./units-polyops";
 import { ADVANCED_UNITS } from "./units-advanced";
 
 // ---------------------------------------------------------------------------
@@ -1146,7 +1147,7 @@ export interface VideoUnitRef {
   id: string;
   label: string;
   /** Remotion composition that renders it. */
-  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph" | "FunctionMachine" | "Trig" | "Poly" | "FractionOps" | "DecimalOps" | "PlaceValue" | "Advanced";
+  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph" | "FunctionMachine" | "Trig" | "Poly" | "PolyOps" | "FractionOps" | "DecimalOps" | "PlaceValue" | "Advanced";
 }
 
 export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
@@ -1170,6 +1171,7 @@ export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
   ...FRAC_OPS_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "FractionOps" as const })),
   ...DECIMAL_OPS_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "DecimalOps" as const })),
   ...PLACE_VALUE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "PlaceValue" as const })),
+  ...POLY_OPS_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "PolyOps" as const })),
   ...ADVANCED_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Advanced" as const })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Count" as const })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Compare" as const })),
@@ -1204,6 +1206,11 @@ const LABEL_ALIASES: Record<string, string> = {
   // M1/M2 early-number labels. "Counting back" IS what-comes-before, the
   // same number-line step, so it maps to that video honestly.
   "Counting back — what comes before": "cur-numbers-before",
+  // M12. The standard-form video names, points at, and computes BOTH of
+  // these in the scene the contract pins them to, so they are the same
+  // lesson under two names - not a near-miss.
+  "Leading coefficient": "cur-poly-anatomy",
+  "Constant term": "cur-poly-anatomy",
   // M7/M8 decimal + percent labels -> the new decimal-ops videos.
   "Decimals — multiply two decimals": "cur-multiply-decimals",
   "Percentages of a number": "cur-percent-of",

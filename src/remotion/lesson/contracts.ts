@@ -23,6 +23,7 @@ import { advancedUnitById, ADV } from "./units-advanced";
 import { fracOpsUnitById, fracOpsNumbers } from "./units-fracops";
 import { decimalOpsUnitById, decimalOpsNumbers } from "./units-decimalops";
 import { placeValueUnitById, placeValueNumbers } from "./units-placevalue";
+import { polyOpsUnitById, polyOpsNumbers } from "./units-polyops";
 import { lineIntersection, quadraticRoots } from "./units";
 
 export interface TeachingContract {
@@ -321,6 +322,66 @@ export function contractFor(comp: string, unitId: string): TeachingContract {
           return {
             requiredSpoken: uniq([u.n, x.prev, x.next]),
             allowedNumbers: uniq([...SCAFFOLD, u.n, x.prev, x.next]),
+          };
+      }
+      break;
+    }
+
+    case "PolyOps": {
+      const u = polyOpsUnitById(unitId);
+      const n = polyOpsNumbers(u);
+      const A = [n.c2, n.c1, n.c0].map(Math.abs);
+      switch (u.mode) {
+        case "anatomy":
+          return {
+            // The three namings ARE the lesson, so each is pinned to the
+            // scene that teaches it — a video that mentions "constant term"
+            // only in passing at the end fails.
+            requiredSpoken: uniq([...A, n.degree]),
+            allowedNumbers: uniq([...SCAFFOLD, ...A, n.degree]),
+            perScene: { work: uniq([...A]), twist: uniq([Math.abs(n.c2), Math.abs(n.c0), n.degree]) },
+          };
+        case "evaluate":
+          return {
+            requiredSpoken: uniq([n.at, n.sq, n.termSq, n.termX, n.value, ...A]),
+            allowedNumbers: uniq([...SCAFFOLD, n.at, n.sq, n.termSq, n.termX, n.value, ...A]),
+            perScene: {
+              work: uniq([n.at, n.sq, n.termSq]),
+              twist: uniq([n.termX, n.value]),
+              record: uniq([n.at, n.value]),
+            },
+          };
+        case "subtract": {
+          const B = [n.b2, n.b1, n.b0].map(Math.abs);
+          const D = n.diff.map(Math.abs);
+          return {
+            requiredSpoken: uniq([...A, ...B, ...D]),
+            allowedNumbers: uniq([...SCAFFOLD, ...A, ...B, ...D]),
+            // The sign flip must happen where the flip is taught, and the
+            // combined terms where they are combined.
+            perScene: { work: uniq(B), twist: uniq(D) },
+          };
+        }
+        case "monomial-mult":
+          return {
+            requiredSpoken: uniq([Math.abs(n.c1), n.k, n.p, n.monoCoef, n.monoExp]),
+            allowedNumbers: uniq([...SCAFFOLD, Math.abs(n.c1), n.k, n.p, n.monoCoef, n.monoExp]),
+            perScene: {
+              twist: uniq([n.p, n.monoExp, n.monoCoef]),
+              record: uniq([n.monoCoef, n.monoExp]),
+            },
+          };
+        case "divide-mono":
+          return {
+            requiredSpoken: uniq([Math.abs(n.c2), Math.abs(n.c1), n.k, n.divA, n.divB, n.divAExp]),
+            allowedNumbers: uniq([...SCAFFOLD, Math.abs(n.c2), Math.abs(n.c1), n.k, n.p, n.divA, n.divB, n.divAExp, n.divBExp]),
+            perScene: { twist: uniq([n.divA, n.divB]) },
+          };
+        case "gcf":
+          return {
+            requiredSpoken: uniq([Math.abs(n.c2), Math.abs(n.c1), n.k, n.gcfA, n.gcfB]),
+            allowedNumbers: uniq([...SCAFFOLD, Math.abs(n.c2), Math.abs(n.c1), n.k, n.p, n.gcfA, n.gcfB, n.gcfAExp]),
+            perScene: { work: uniq([Math.abs(n.c2), Math.abs(n.c1), n.k]), twist: uniq([n.gcfA, n.gcfB]) },
           };
       }
       break;
