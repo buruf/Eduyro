@@ -24,6 +24,7 @@ import { fracOpsUnitById, fracOpsNumbers } from "./units-fracops";
 import { decimalOpsUnitById, decimalOpsNumbers } from "./units-decimalops";
 import { placeValueUnitById, placeValueNumbers } from "./units-placevalue";
 import { polyOpsUnitById, polyOpsNumbers } from "./units-polyops";
+import { preAlgUnitById, preAlgNumbers } from "./units-prealg";
 import { lineIntersection, quadraticRoots } from "./units";
 
 export interface TeachingContract {
@@ -322,6 +323,62 @@ export function contractFor(comp: string, unitId: string): TeachingContract {
           return {
             requiredSpoken: uniq([u.n, x.prev, x.next]),
             allowedNumbers: uniq([...SCAFFOLD, u.n, x.prev, x.next]),
+          };
+      }
+      break;
+    }
+
+    case "PreAlg": {
+      const u = preAlgUnitById(unitId);
+      const n = preAlgNumbers(u);
+      switch (u.mode) {
+        case "evaluate-add":
+          return {
+            requiredSpoken: uniq([n.a, n.at, n.sum, n.at2, n.sum2, Math.abs(n.difference)]),
+            allowedNumbers: uniq([...SCAFFOLD, n.a, n.b, n.at, n.at2, n.sum, n.sum2, Math.abs(n.difference)]),
+            // The whole point is that the SAME rule gives a different answer,
+            // so both substitutions must land in the scene that compares them.
+            perScene: { work: uniq([n.at, n.sum]), twist: uniq([n.at2, n.sum2]) },
+          };
+        case "evaluate-mul":
+          return {
+            requiredSpoken: uniq([n.a, n.at, n.product, n.at2, n.product2]),
+            allowedNumbers: uniq([
+              ...SCAFFOLD, n.a, n.at, n.at2, n.product, n.product2,
+              ...Array.from({ length: n.a }, (_, i) => n.at * (i + 1)),
+            ]),
+            perScene: { twist: uniq([n.at, n.product]) },
+          };
+        case "like-terms":
+          return {
+            requiredSpoken: uniq([n.a, n.b, n.combined]),
+            allowedNumbers: uniq([...SCAFFOLD, n.a, n.b, n.combined]),
+            // The non-example matters as much as the example: a video that
+            // never says "3x + 2 will not combine" has not taught this skill.
+            perScene: { work: uniq([n.a, n.b, n.combined]), twist: uniq([n.a, n.b]) },
+          };
+        case "distribute":
+          return {
+            requiredSpoken: uniq([n.a, n.b, n.outer, n.at, n.inner, n.checkLeft]),
+            allowedNumbers: uniq([...SCAFFOLD, n.a, n.b, n.at, n.outer, n.inner, n.checkLeft, n.checkRight, n.a * n.at]),
+            perScene: { work: uniq([n.a, n.b, n.outer]), twist: uniq([n.at, n.checkLeft]) },
+          };
+        case "solve-times":
+          return {
+            requiredSpoken: uniq([n.a, n.b, n.solution]),
+            allowedNumbers: uniq([...SCAFFOLD, n.a, n.b, n.solution]),
+            perScene: { twist: uniq([n.a, n.b, n.solution]) },
+          };
+        case "integers":
+          return {
+            requiredSpoken: uniq([Math.abs(u.a), n.b, Math.abs(n.integerResult)]),
+            allowedNumbers: uniq([
+              ...SCAFFOLD,
+              Math.abs(u.a), n.b, Math.abs(n.integerResult), n.startAbs,
+              // the counted steps of the walk
+              ...Array.from({ length: n.b + 1 }, (_, i) => Math.abs(u.a - i)),
+            ]),
+            perScene: { twist: uniq([n.b, Math.abs(n.integerResult)]) },
           };
       }
       break;
