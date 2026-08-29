@@ -648,6 +648,7 @@ import { DECIMAL_OPS_UNITS } from "./units-decimalops";
 import { PLACE_VALUE_UNITS } from "./units-placevalue";
 import { POLY_OPS_UNITS } from "./units-polyops";
 import { PRE_ALG_UNITS } from "./units-prealg";
+import { LIN_EQ_UNITS } from "./units-lineq";
 import { ADVANCED_UNITS } from "./units-advanced";
 
 // ---------------------------------------------------------------------------
@@ -1148,7 +1149,7 @@ export interface VideoUnitRef {
   id: string;
   label: string;
   /** Remotion composition that renders it. */
-  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph" | "FunctionMachine" | "Trig" | "Poly" | "PolyOps" | "PreAlg" | "FractionOps" | "DecimalOps" | "PlaceValue" | "Advanced";
+  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph" | "FunctionMachine" | "Trig" | "Poly" | "PolyOps" | "PreAlg" | "LinEq" | "FractionOps" | "DecimalOps" | "PlaceValue" | "Advanced";
 }
 
 export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
@@ -1174,6 +1175,7 @@ export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
   ...PLACE_VALUE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "PlaceValue" as const })),
   ...POLY_OPS_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "PolyOps" as const })),
   ...PRE_ALG_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "PreAlg" as const })),
+  ...LIN_EQ_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "LinEq" as const })),
   ...ADVANCED_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Advanced" as const })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Count" as const })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Compare" as const })),

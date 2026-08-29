@@ -25,6 +25,7 @@ import { decimalOpsUnitById, decimalOpsNumbers } from "./units-decimalops";
 import { placeValueUnitById, placeValueNumbers } from "./units-placevalue";
 import { polyOpsUnitById, polyOpsNumbers } from "./units-polyops";
 import { preAlgUnitById, preAlgNumbers } from "./units-prealg";
+import { linEqUnitById, linEqNumbers } from "./units-lineq";
 import { lineIntersection, quadraticRoots } from "./units";
 
 export interface TeachingContract {
@@ -328,6 +329,68 @@ export function contractFor(comp: string, unitId: string): TeachingContract {
       break;
     }
 
+    case "LinEq": {
+      const u = linEqUnitById(unitId);
+      const n = linEqNumbers(u);
+      switch (u.mode) {
+        case "two-step":
+          return {
+            requiredSpoken: uniq([n.a, n.b, n.c, n.afterAdd, n.twoStepX]),
+            allowedNumbers: uniq([...SCAFFOLD, n.a, n.b, n.c, n.afterAdd, n.twoStepX]),
+            // Each undo must happen in the scene that teaches it, or the
+            // "reverse order" point is asserted rather than demonstrated.
+            perScene: { work: uniq([n.b, n.afterAdd]), twist: uniq([n.a, n.twoStepX]) },
+          };
+        case "distribute-eq":
+          return {
+            requiredSpoken: uniq([n.a, n.b, n.c, n.afterDivide, n.distributeX, n.expanded]),
+            allowedNumbers: uniq([...SCAFFOLD, n.a, n.b, n.c, n.afterDivide, n.distributeX, n.expanded, n.c - n.expanded]),
+            // Both routes must actually be walked: the shortcut in work, the
+            // expansion in twist, and they must land on the same x.
+            perScene: {
+              work: uniq([n.afterDivide, n.distributeX]),
+              twist: uniq([n.expanded, n.distributeX]),
+            },
+          };
+        case "both-sides":
+          return {
+            requiredSpoken: uniq([n.a, n.b, n.c, n.d, n.xDiff, n.constDiff, n.bothSidesX]),
+            allowedNumbers: uniq([
+              ...SCAFFOLD, n.a, n.b, n.c, n.d, n.xDiff, n.constDiff, n.bothSidesX,
+              n.a * n.bothSidesX + n.b,
+            ]),
+            perScene: { work: uniq([n.c, n.xDiff]), twist: uniq([n.constDiff, n.bothSidesX]) },
+          };
+        case "fraction-eq":
+          return {
+            requiredSpoken: uniq([n.a, n.b, n.fractionX]),
+            allowedNumbers: uniq([...SCAFFOLD, n.a, n.b, n.fractionX]),
+            perScene: { twist: uniq([n.a, n.fractionX]) },
+          };
+        case "transform":
+          return {
+            // All three transformations are named by the label, so all three
+            // must be worked — a reflection-only video does not teach it.
+            requiredSpoken: uniq([
+              Math.abs(n.px), Math.abs(n.py),
+              Math.abs(n.reflectXy), Math.abs(n.translatedX), Math.abs(n.translatedY),
+              Math.abs(n.rotatedX), Math.abs(n.rotatedY),
+            ]),
+            allowedNumbers: uniq([
+              ...SCAFFOLD,
+              Math.abs(n.px), Math.abs(n.py), Math.abs(n.tx), Math.abs(n.ty),
+              Math.abs(n.reflectXx), Math.abs(n.reflectXy), Math.abs(n.reflectYx), Math.abs(n.reflectYy),
+              Math.abs(n.translatedX), Math.abs(n.translatedY), Math.abs(n.rotatedX), Math.abs(n.rotatedY),
+            ]),
+            perScene: {
+              work: uniq([Math.abs(n.reflectXy)]),
+              twist: uniq([Math.abs(n.translatedX), Math.abs(n.translatedY), Math.abs(n.rotatedX)]),
+            },
+          };
+      }
+      break;
+    }
+
     case "PreAlg": {
       const u = preAlgUnitById(unitId);
       const n = preAlgNumbers(u);
@@ -449,6 +512,20 @@ export function contractFor(comp: string, unitId: string): TeachingContract {
       const x = decimalOpsNumbers(u);
       const base = [...SCAFFOLD, u.a, x.b, x.pct, 100, x.aCells, x.bCells];
       switch (u.mode) {
+        case "addsub":
+          return {
+            requiredSpoken: uniq([u.a, x.b, x.aCells, x.bCells, x.totalCells, x.total, x.gap, x.gapCells]),
+            allowedNumbers: uniq([...base, x.total, x.totalCells, x.gap, x.gapCells]),
+            // Hundredths must be named where the grid makes the case, and the
+            // subtraction must actually be done, not just alluded to.
+            perScene: { grid: uniq([x.aCells, x.bCells]), action: uniq([x.totalCells, x.total]), record: uniq([x.gap]) },
+          };
+        case "divide-whole":
+          return {
+            requiredSpoken: uniq([u.a, x.b, x.dividendTenths, x.shareTenths, x.share]),
+            allowedNumbers: uniq([...base, x.dividendTenths, x.shareTenths, x.share]),
+            perScene: { grid: uniq([x.dividendTenths]), action: uniq([x.shareTenths, x.share]) },
+          };
         case "compare":
           return {
             requiredSpoken: uniq([u.a, x.b, x.aCells, x.bCells]),

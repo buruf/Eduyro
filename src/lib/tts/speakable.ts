@@ -58,7 +58,19 @@ export function speakable(raw: string): string {
     // unambiguous and every digit gets its own timestamped word.
     .replace(/\b(\d+)\/(\d+)\b/g, "$1 over $2")
     .replace(/−/g, " minus ")
-    .replace(/([0-9a-zA-Z])\s*-\s*([0-9])/g, "$1 minus $2")
+    // A plain "-" is three different things, and the old single rule
+    // (any letter-or-digit, hyphen, digit) got all three wrong at once. It
+    // read "the hundred square - 30 hundredths" as "...square MINUS 30", and
+    // "a radius-1 circle" as "a radiu-s minus 1 circle", because the last
+    // letter of an ordinary word counted as the left operand.
+    //
+    //   -3          attached to a digit, nothing before it  → NEGATIVE three
+    //   7 - 4       a number or lone variable on each side  → seven MINUS four
+    //   word - 30   anything else                           → a dash, spoken
+    //                                                         as a pause
+    // Order matters: the unary case must be taken before the binary one.
+    .replace(/(^|[\s(])-(\d)/g, "$1negative $2")
+    .replace(/(^|[\s(])([0-9]+|[a-zA-Z])\s+-\s+([0-9])/g, "$1$2 minus $3")
     .replace(/\s*\+\s*/g, " plus ")
     .replace(/½/g, "one half").replace(/⅓/g, "one third").replace(/¼/g, "one quarter").replace(/¾/g, "three quarters")
     .replace(/[{}$\\]/g, "")

@@ -36,7 +36,7 @@ for (const [label, code] of served) {
 // with no honest video yet (subtract/multiply/divide fractions, place value,
 // polynomial technique drills, ...). New videos shrink it; it may never grow:
 // growth means a new unit shipped without a video plan, or an alias was lost.
-const PINNED_GAPS = 32;
+const PINNED_GAPS = 25;
 console.log(`served labels: ${served.size} = ${covered} with video + ${exempt} exempt (review/mastery) + ${gaps.length} gaps (pinned ceiling ${PINNED_GAPS})`);
 if (gaps.length > PINNED_GAPS) {
   console.log("FAIL - the video gap GREW:");

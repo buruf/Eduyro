@@ -23,6 +23,18 @@ const cases: [string, string][] = [
   ["A ball's height after t seconds is h(t) = 4t². Its speed is h′(t) = 8t. How fast is it moving at t = 3?",
    "A ball's height after t seconds is h(t) equals 4 t squared. Its speed is h prime of (t) equals 8 t. How fast is it moving at t equals 3?"],
   ["7 − 4", "7 minus 4"],
+  ["7 - 4", "7 minus 4"],
+  ["x - 3", "ex minus 3"],
+  // Unary minus. This shipped as "gives s minus 3" — the "s" of "gives" was
+  // being consumed as the left operand.
+  ["Minus 1 gives -3", "Minus 1 gives negative 3"],
+  ["it crosses zero at -2, and at 2", "it crosses zero at negative 2, and at 2"],
+  // A hyphen inside a compound word is neither.
+  ["every point on a radius-1 circle", "every point on a radius-1 circle"],
+  // A hyphen used as a DASH must not become an operator. This shipped as
+  // "the hundred square minus 30 hundredths" before the left-operand rule.
+  ["the hundred square - 30 hundredths", "the hundred square - 30 hundredths"],
+  ["Undo in reverse order - the last thing done", "Undo in reverse order - the last thing done"],
   ["3 × 4 = 12", "3 times 4 equals 12"],
   ["30° + 60° = 90°", "30 degrees plus 60 degrees equals 90 degrees"],
   ["√49", "the square root of 49"],

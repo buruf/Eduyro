@@ -13,7 +13,7 @@ export interface DecimalOpsUnit {
   id: string;
   /** Must equal the curriculum skill label the dashboard looks up. */
   label: string;
-  mode: "compare" | "round" | "multiply2" | "divide" | "percent-of" | "percent-change";
+  mode: "compare" | "round" | "multiply2" | "divide" | "divide-whole" | "addsub" | "percent-of" | "percent-change";
   /** Primary decimal. */
   a: number;
   /** Second decimal (compare/multiply2/divide), or the whole for percent modes. */
@@ -56,6 +56,27 @@ export const DECIMAL_OPS_UNITS: DecimalOpsUnit[] = [
     a: 0.8,
     b: 0.2, // 4
     tip: "Division asks how many fit - decimals are no different",
+  },
+  {
+    // Adding decimals is where "line up the digits" quietly becomes wrong.
+    // 0.3 and 0.25 have different digit counts on purpose: the grid shows
+    // 0.3 IS 30 hundredths, which is why the POINTS line up, not the ends.
+    id: "cur-add-subtract-decimals",
+    label: "Add & subtract decimals",
+    mode: "addsub",
+    a: 0.3,
+    b: 0.25, // 0.55, and 0.05 the other way
+    tip: "Line up the decimal points, not the ends of the numbers",
+  },
+  {
+    // Distinct from cur-divide-decimals (0.8 ÷ 0.2, "how many fit"). Dividing
+    // by a WHOLE number is sharing, and that is a different question.
+    id: "cur-divide-by-whole",
+    label: "Decimals — divide by a whole number",
+    mode: "divide-whole",
+    a: 1.2,
+    b: 3, // 0.4
+    tip: "Share the tenths out - the point does not move",
   },
   {
     id: "cur-percent-of",
@@ -107,6 +128,15 @@ export function decimalOpsNumbers(u: DecimalOpsUnit) {
     lower: Math.floor(a * 10) / 10,
     upper: Math.round((Math.floor(a * 10) / 10 + 0.1) * 10) / 10,
     rounded: Math.round(a * 10) / 10,
+    /** addsub: both ways round, as hundredths so the picture matches */
+    total: round2(a + b),
+    totalCells: Math.round(round2(a + b) * 100),
+    gap: round2(a - b),
+    gapCells: Math.round(round2(a - b) * 100),
+    /** divide-whole: 1.2 shared into 3 is 0.4 — counted in TENTHS */
+    share: b ? round2(a / b) : 0,
+    dividendTenths: Math.round(a * 10),
+    shareTenths: b ? Math.round((a / b) * 10) : 0,
     /** percent-of: 20% of 60 = 12 */
     part: round2((a * pct) / 100),
     /** percent-change */

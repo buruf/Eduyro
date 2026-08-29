@@ -91,6 +91,46 @@ export function decimalOpsLines(u: DecimalOpsUnit): LessonLine[] {
         },
       ];
 
+    case "addsub":
+      return [
+        {
+          id: "ask",
+          text: `${u.a} plus ${x.b}. One has a single digit after the point, the other has two - and that is exactly where people go wrong, because they line up the ENDS of the numbers.`,
+        },
+        {
+          id: "grid",
+          text: `The grid settles it. ${u.a} is ${x.aCells} cells of the hundred square - ${x.aCells} hundredths. ${x.b} is ${x.bCells} cells. Written as ${x.aCells} hundredths and ${x.bCells} hundredths, they are the same KIND of thing, and you can just add them.`,
+        },
+        {
+          id: "action",
+          text: `${x.aCells} cells plus ${x.bCells} cells is ${x.totalCells} cells. That is ${x.totalCells} hundredths, which is ${x.total}. On paper you get there by lining up the decimal POINTS, one under the other, and letting the columns sort themselves out.`,
+        },
+        {
+          id: "record",
+          text: `${u.a} plus ${x.b} is ${x.total}. Subtracting works the same way: ${x.aCells} cells take away ${x.bCells} cells is ${x.gapCells} cells, so ${u.a} minus ${x.b} is ${x.gap}. ${u.tip}.`,
+        },
+      ];
+
+    case "divide-whole":
+      return [
+        {
+          id: "ask",
+          text: `${u.a} divided by ${x.b}. This one is different from dividing by a decimal. Dividing by a whole number is SHARING: split ${u.a} equally between ${x.b}.`,
+        },
+        {
+          id: "grid",
+          text: `Counting in tenths makes it easy. ${u.a} is ${x.dividendTenths} tenths. And ${x.dividendTenths} is a number you already know how to share.`,
+        },
+        {
+          id: "action",
+          text: `${x.dividendTenths} tenths shared between ${x.b} gives ${x.shareTenths} tenths each. ${x.shareTenths} tenths is ${x.share}. So ${u.a} divided by ${x.b} is ${x.share}.`,
+        },
+        {
+          id: "record",
+          text: `Share the tenths, then write the answer in tenths again. The decimal point stays exactly where it was - it does not slide about. ${u.tip}.`,
+        },
+      ];
+
     case "percent-of":
       return [
         {

@@ -26,6 +26,7 @@ import {
   placeValueTotalFrames,
   polyOpsTotalFrames,
   preAlgTotalFrames,
+  linEqTotalFrames,
 } from "../src/remotion/lesson/timeline";
 import { ALL_LESSON_UNITS } from "../src/remotion/lesson/registry";
 
@@ -53,6 +54,7 @@ const BY_COMP: Record<string, (unitId: string, voice: string) => number> = {
   PlaceValue: placeValueTotalFrames,
   PolyOps: polyOpsTotalFrames,
   PreAlg: preAlgTotalFrames,
+  LinEq: linEqTotalFrames,
 };
 
 export function timingsFor(unitId: string, voice: string): number {

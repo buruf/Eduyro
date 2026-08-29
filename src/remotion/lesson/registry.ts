@@ -51,6 +51,8 @@ import { FRAC_OPS_UNITS } from "./units-fracops";
 import { fracOpsLines } from "./script-fracops";
 import { DECIMAL_OPS_UNITS } from "./units-decimalops";
 import { decimalOpsLines } from "./script-decimalops";
+import { LIN_EQ_UNITS } from "./units-lineq";
+import { linEqLines } from "./script-lineq";
 import { PRE_ALG_UNITS } from "./units-prealg";
 import { preAlgLines } from "./script-prealg";
 import { POLY_OPS_UNITS } from "./units-polyops";
@@ -87,6 +89,7 @@ export const ALL_LESSON_UNITS: RegisteredUnit[] = [
   ...FUNCTION_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "FunctionMachine", lines: () => functionLines(u) })),
   ...TRIG_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Trig", lines: () => trigLines(u) })),
   ...POLY_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "Poly", lines: () => polyLines(u) })),
+  ...LIN_EQ_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "LinEq", lines: () => linEqLines(u) })),
   ...PRE_ALG_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "PreAlg", lines: () => preAlgLines(u) })),
   ...POLY_OPS_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "PolyOps", lines: () => polyOpsLines(u) })),
   ...FRAC_OPS_UNITS.map((u) => ({ id: u.id, label: u.label, comp: "FractionOps", lines: () => fracOpsLines(u) })),

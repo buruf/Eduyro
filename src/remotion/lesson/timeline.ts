@@ -21,6 +21,7 @@ import { DECIMAL_OPS_LINE_IDS } from "./script-decimalops";
 import { PLACE_VALUE_LINE_IDS } from "./script-placevalue";
 import { POLY_OPS_LINE_IDS } from "./script-polyops";
 import { PRE_ALG_LINE_IDS } from "./script-prealg";
+import { LIN_EQ_LINE_IDS } from "./script-lineq";
 import { polyUnitById } from "./units-poly";
 import { advancedLineIds } from "./script-advanced";
 import { advancedUnitById } from "./units-advanced";
@@ -407,6 +408,16 @@ export function decimalOpsSceneTimings(unitId: string, voiceKey: string = DEFAUL
 }
 export function decimalOpsTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return decimalOpsSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the linear-equations template (M11). */
+const LIN_EQ_MIN_SECONDS: Record<string, number> = { ask: 5, work: 9, twist: 10, record: 6 };
+
+export function linEqSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
+  return earlyTimings(LIN_EQ_LINE_IDS, LIN_EQ_MIN_SECONDS, unitId, voiceKey);
+}
+export function linEqTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return linEqSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }
 
 /** Scene timing for the pre-algebra template (M10). */

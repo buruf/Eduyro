@@ -338,6 +338,110 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
   }
 
   // ---- divide: group the shaded cells --------------------------------------
+  // ---- addsub: both amounts on ONE grid, in different colours -------------
+  // Adding decimals only looks hard because the digits line up badly. Shading
+  // both amounts into the same hundred square makes them the same KIND of
+  // thing (hundredths), and then it is plain counting.
+  if (unit.mode === "addsub") {
+    const cell = 46;
+    const gw = 10 * (cell + 4);
+    const gx = (STAGE_W - gw) / 2;
+    const showB = sceneId !== "ask";
+    const merged = sceneId === "action" || sceneId === "record";
+    const headline =
+      sceneId === "ask"
+        ? `${unit.a} + ${x.b}`
+        : sceneId === "grid"
+          ? `${x.aCells} hundredths + ${x.bCells} hundredths`
+          : sceneId === "action"
+            ? `${x.totalCells} hundredths`
+            : `${unit.a} + ${x.b} = ${x.total}`;
+    return (
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 24 }}>
+        <Title text={headline} enter={title} />
+        <div style={{ position: "relative", width: STAGE_W, height: 560 }}>
+          <Grid
+            x={gx}
+            y={10}
+            cell={cell}
+            colourOf={(i) => {
+              if (i < x.aCells) return merged ? GREEN : GOLD;
+              if (showB && i < x.totalCells) return merged ? GREEN : BLUE;
+              return null;
+            }}
+            label={
+              merged ? (
+                <span style={{ color: GREEN }}>
+                  {x.totalCells} cells = {x.total}
+                </span>
+              ) : showB ? (
+                <span>
+                  <span style={{ color: GOLD }}>{x.aCells}</span>
+                  {" + "}
+                  <span style={{ color: BLUE }}>{x.bCells}</span>
+                </span>
+              ) : undefined
+            }
+          />
+        </div>
+        {(sceneId === "action" || sceneId === "record") && (
+          <div style={{ fontSize: 40, fontWeight: 800, color: MUTED, opacity: reveal(step(0.55)) }}>
+            line up the decimal POINTS, not the ends
+          </div>
+        )}
+      </AbsoluteFill>
+    );
+  }
+
+  // ---- divide-whole: share the tenths into equal groups -------------------
+  // Counted in TENTHS rather than hundredths, because "12 tenths shared
+  // between 3" is a fact a child already owns.
+  if (unit.mode === "divide-whole") {
+    const groups = Math.round(x.b);
+    const per = x.shareTenths;
+    const cell = 62;
+    const shown =
+      sceneId === "ask" ? 0 : sceneId === "grid" ? 1 : Math.min(groups, Math.max(1, Math.floor((frame - step(0.15)) / Math.max(1, step(0.22))) + 1));
+    const palette = [GOLD, BLUE, GREEN, "#B23B2E", "#7A5AA8"];
+    const headline =
+      sceneId === "ask"
+        ? `${unit.a} ÷ ${x.b} — share it out`
+        : sceneId === "grid"
+          ? `${unit.a} is ${x.dividendTenths} tenths`
+          : sceneId === "action"
+            ? `${x.dividendTenths} tenths into ${groups} groups`
+            : `${unit.a} ÷ ${x.b} = ${x.share}`;
+    return (
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 34 }}>
+        <Title text={headline} enter={title} />
+        {/* every tenth as a bar, then fenced into equal shares */}
+        <div style={{ display: "flex", gap: sceneId === "ask" || sceneId === "grid" ? 8 : 30 }}>
+          {Array.from({ length: groups }, (_, g) => (
+            <div key={g} style={{ display: "flex", gap: 8 }}>
+              {Array.from({ length: per }, (_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: cell * 0.5,
+                    height: cell,
+                    borderRadius: 6,
+                    border: `2px solid ${LINE}`,
+                    backgroundColor: sceneId === "ask" ? "transparent" : g < shown ? palette[g % palette.length] : "rgba(200,144,42,0.22)",
+                  }}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+        {(sceneId === "action" || sceneId === "record") && (
+          <div style={{ fontSize: 46, fontWeight: 800, color: GREEN, opacity: reveal(step(0.5)) }}>
+            {per} tenths each = {x.share}
+          </div>
+        )}
+      </AbsoluteFill>
+    );
+  }
+
   if (unit.mode === "divide") {
     const cell = 46;
     const gw = 10 * (cell + 4);
