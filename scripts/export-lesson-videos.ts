@@ -8,11 +8,12 @@
 //
 // Also writes CHECKLIST.md — one line per video with a tick box, so a review
 // pass can be recorded while watching rather than remembered afterwards.
-import { copyFileSync, existsSync, mkdirSync, writeFileSync, statSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, writeFileSync, statSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { PrismaClient } from "@prisma/client";
 import { ALL_VIDEO_UNITS, videoForSkillLabel } from "../src/remotion/lesson/units";
+import { getMathSheetMeta } from "../src/lib/worksheet/generator";
 import { DEFAULT_VOICE_KEY } from "../src/remotion/lesson/voices";
 
 const ROOT = process.cwd();
@@ -37,8 +38,37 @@ function safe(name: string): string {
 async function main() {
   const db = new PrismaClient();
 
-  // Which module does each unit belong to? Answer from the sheets themselves,
-  // so the folders match where a child actually meets the lesson.
+  // Which module does each unit belong to?
+  //
+  // FIRST from the curriculum ITSELF (getMathSheetMeta), because that is what
+  // actually decides which module serves a lesson. The stored Worksheet rows
+  // are a partial cache — every lesson built since the engine moved to
+  // code-generated sheets has no row — so trusting them alone dumped 35
+  // correctly-wired videos into "_not-linked-to-any-sheet", where they were
+  // impossible to find by module.
+  const levels = await db.level.findMany({
+    where: { code: { startsWith: "M" } },
+    select: { code: true, name: true },
+  });
+  const levelName = new Map(levels.map((l) => [l.code, l.name]));
+
+  const levelOfUnitFromCurriculum = new Map<string, { code: string; name: string }>();
+  for (let n = 1; n <= 18; n++) {
+    const code = `M${n}`;
+    const name = levelName.get(code);
+    if (!name) continue;
+    for (let s = 1; s <= 100; s++) {
+      let label: string | null = null;
+      try {
+        label = getMathSheetMeta(code, s)?.subSkillLabel ?? null;
+      } catch { /* not generatable */ }
+      if (!label) continue;
+      const v = videoForSkillLabel(label);
+      if (v && !levelOfUnitFromCurriculum.has(v.id)) levelOfUnitFromCurriculum.set(v.id, { code, name });
+    }
+  }
+
+  // The stored sheets still give an honest "how many sheets use this" count.
   const sheets = await db.worksheet.findMany({
     where: { level: { code: { startsWith: "M" } } },
     select: { title: true, skill: { select: { name: true } }, level: { select: { code: true, name: true } } },
@@ -62,6 +92,7 @@ async function main() {
   mkdirSync(DEST, { recursive: true });
 
   const rows: { level: string; folder: string; file: string; unit: string; label: string; sheets: number; mb: number }[] = [];
+  const written = new Set<string>();
   let missing = 0;
 
   for (const u of ALL_VIDEO_UNITS) {
@@ -71,7 +102,7 @@ async function main() {
       missing++;
       continue;
     }
-    const lvl = levelOfUnit.get(u.id);
+    const lvl = levelOfUnitFromCurriculum.get(u.id) ?? levelOfUnit.get(u.id);
     // Units with no sheet pointing at them still get exported, under _unused —
     // silently dropping them would hide a wiring mistake.
     const folder = lvl
@@ -82,6 +113,7 @@ async function main() {
 
     const file = `${safe(u.label)} [${u.id}].mp4`;
     copyFileSync(src, join(dir, file));
+    written.add(join(dir, file));
     rows.push({
       level: lvl?.code ?? "—",
       folder,
@@ -91,6 +123,24 @@ async function main() {
       sheets: sheetsOfUnit.get(u.id) ?? 0,
       mb: Number((statSync(src).size / 1048576).toFixed(1)),
     });
+  }
+
+  // Sweep up videos left behind by an EARLIER export — a lesson that has since
+  // been refiled into its real module would otherwise sit in both places, and
+  // a stale copy of a re-rendered video is worse than no copy. Only .mp4 files
+  // this script itself writes are touched; anything else in the folder stays.
+  let pruned = 0;
+  for (const entry of readdirSync(DEST, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const dir = join(DEST, entry.name);
+    for (const f of readdirSync(dir)) {
+      if (!f.endsWith(".mp4")) continue;
+      const p = join(dir, f);
+      if (written.has(p)) continue;
+      rmSync(p);
+      pruned++;
+    }
+    if (readdirSync(dir).length === 0) rmSync(dir, { recursive: true });
   }
 
   // Sort by module number, then label.
@@ -129,6 +179,7 @@ async function main() {
   const totalMb = rows.reduce((n, r) => n + r.mb, 0);
   console.log(`\nExported ${rows.length} videos (${totalMb.toFixed(0)}MB) to:`);
   console.log(`  ${DEST}`);
+  if (pruned) console.log(`Removed ${pruned} stale file(s) left by earlier exports.`);
   if (missing) console.log(`\n${missing} unit(s) had no rendered file.`);
 }
 
