@@ -151,6 +151,50 @@ export function polyOpsLines(u: PolyOpsUnit): LessonLine[] {
         },
       ];
 
+    case "distribute-mono": {
+      const b = u.b ?? [0, 0, 0];
+      return [
+        {
+          id: "ask",
+          text: `${mono(x.k, x.p)}, bracket, ${spoken(u.a)}. One term outside, a bracket inside. The outside term has to reach EVERY term in there — and the way to make sure it does is a rectangle.`,
+        },
+        {
+          id: "work",
+          text: `Draw it ${mono(x.k, x.p)} tall, with the width split into ${power(1)} and ${Math.abs(x.c0)}. Two rooms. First room: ${mono(x.k, x.p)} times ${power(1)} — coefficients multiply, exponents add — that is ${mono(x.distA, x.distAExp)}. Second room: ${mono(x.k, x.p)} times ${Math.abs(x.c0)} is ${mono(x.distB, x.distBExp)}. So the answer is ${mono(x.distA, x.distAExp)} plus ${mono(x.distB, x.distBExp)}.`,
+        },
+        {
+          id: "twist",
+          text: `Now a trinomial: ${spoken(b)}. Three terms inside instead of two. Watch what changes about the method... nothing. The rectangle simply gets a third room. ${mono(x.triA, x.p + 2)}. Then ${mono(x.triB, x.p + 1)}. Then ${mono(x.triC, x.p)}. However many terms are in the bracket, that is how many rooms you draw.`,
+        },
+        {
+          id: "record",
+          text: `One room per term inside. Multiply the coefficients, add the exponents, and never leave a room empty. ${u.tip}.`,
+        },
+      ];
+    }
+
+    case "long-division": {
+      const b = u.b ?? [0, 0, 0];
+      return [
+        {
+          id: "ask",
+          text: `${spoken(u.a)}, divided by x plus ${x.root}. This looks like a new skill. It is the long division you learned with numbers, with x's along for the ride.`,
+        },
+        {
+          id: "work",
+          text: `Three steps, on repeat: divide, multiply, subtract. Divide: what times x gives ${power(2)}? x. So x is the first piece of the answer. Multiply: x times x plus ${x.root} is ${power(2)} plus ${x.root} x. Subtract that from the top. The ${power(2)} cancels, and ${x.c1} x take away ${x.root} x leaves ${x.afterFirst} x.`,
+        },
+        {
+          id: "twist",
+          text: `Bring down the ${x.c0}, and go round again. Divide: what times x gives ${x.afterFirst} x? ${x.afterFirst}. Multiply: ${x.afterFirst} times x plus ${x.root} is ${x.afterFirst} x plus ${x.c0}. Subtract... nothing left. A remainder of zero, which tells you x plus ${x.root} was a factor all along. The answer is x plus ${x.afterFirst}.`,
+        },
+        {
+          id: "record",
+          text: `Divide, multiply, subtract, bring down — then repeat until nothing is left. ${u.tip}.`,
+        },
+      ];
+    }
+
     case "gcf":
       return [
         {

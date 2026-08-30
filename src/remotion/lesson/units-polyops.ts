@@ -12,7 +12,7 @@ export interface PolyOpsUnit {
   id: string;
   /** Must equal the curriculum skill label the dashboard looks up. */
   label: string;
-  mode: "anatomy" | "evaluate" | "subtract" | "monomial-mult" | "divide-mono" | "gcf";
+  mode: "anatomy" | "evaluate" | "subtract" | "monomial-mult" | "divide-mono" | "gcf" | "distribute-mono" | "long-division";
   /** Coefficients [x², x, 1] for the polynomial under study. */
   a: [number, number, number];
   /** Second polynomial (subtract). */
@@ -75,6 +75,30 @@ export const POLY_OPS_UNITS: PolyOpsUnit[] = [
     k: 3,
     p: 1, // GCF 3x -> 3x(2x + 3)
     tip: "Factoring out is distributing, run backwards",
+  },
+  {
+    // Serves BOTH "Distribute a monomial" (5x(x + 4)) and "Multiply by a
+    // trinomial" (3x(x² + 3x + 2)). Identical method, one more room in the
+    // rectangle - so the video does the binomial, then adds the third term
+    // on screen and shows nothing about the method changes.
+    id: "cur-distribute-monomial",
+    label: "Distribute a monomial",
+    mode: "distribute-mono",
+    // [x², x, 1] coefficients, so (x + 4) is [0, 1, 4] — NOT [1, 4, 0],
+    // which is x² + 4x and a different lesson entirely.
+    a: [0, 1, 4],
+    b: [1, 3, 2], // the trinomial shown in the twist
+    k: 5,
+    p: 1, // 5x(x + 4) = 5x² + 20x
+    tip: "Every term in the bracket gets multiplied - no exceptions",
+  },
+  {
+    id: "cur-long-division",
+    label: "Polynomial long division",
+    mode: "long-division",
+    a: [1, 5, 6], // x² + 5x + 6
+    b: [0, 1, 2], // ÷ (x + 2)  ->  x + 3
+    tip: "Same steps as long division with numbers - divide, multiply, subtract",
   },
 ];
 
@@ -143,5 +167,21 @@ export function polyOpsNumbers(u: PolyOpsUnit) {
     gcfAExp: 2 - p,
     gcfB: c1 / k,
     gcfBExp: 1 - p,
+    /** distribute-mono: k·x^p times each term of the bracket (x + c0) */
+    distA: k * c1,
+    distAExp: p + 1,
+    distB: k * c0,
+    distBExp: p,
+    /** and the same monomial over the trinomial in `b` */
+    triA: k * b[0],
+    triB: k * b[1],
+    triC: k * b[2],
+    /** long-division: (x² + bx + c) ÷ (x + r) — the quotient's second term */
+    root: b[2],
+    quotientConst: b[2] ? c0 / b[2] : 0,
+    /** what the divisor times the first quotient term produces */
+    firstProduct: b[2],
+    /** the middle term left after that subtraction */
+    afterFirst: c1 - b[2],
   };
 }

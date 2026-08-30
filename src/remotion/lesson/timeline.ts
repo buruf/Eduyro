@@ -22,6 +22,8 @@ import { PLACE_VALUE_LINE_IDS } from "./script-placevalue";
 import { POLY_OPS_LINE_IDS } from "./script-polyops";
 import { PRE_ALG_LINE_IDS } from "./script-prealg";
 import { LIN_EQ_LINE_IDS } from "./script-lineq";
+import { QUAD_LINE_IDS } from "./script-quad";
+import { FACTOR_LINE_IDS } from "./script-factor";
 import { polyUnitById } from "./units-poly";
 import { advancedLineIds } from "./script-advanced";
 import { advancedUnitById } from "./units-advanced";
@@ -408,6 +410,26 @@ export function decimalOpsSceneTimings(unitId: string, voiceKey: string = DEFAUL
 }
 export function decimalOpsTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
   return decimalOpsSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the factoring template (M12). */
+const FACTOR_MIN_SECONDS: Record<string, number> = { ask: 5, work: 9, twist: 11, record: 6 };
+
+export function factorSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
+  return earlyTimings(FACTOR_LINE_IDS, FACTOR_MIN_SECONDS, unitId, voiceKey);
+}
+export function factorTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return factorSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
+}
+
+/** Scene timing for the quadratics template (M13). */
+const QUAD_MIN_SECONDS: Record<string, number> = { ask: 5, work: 9, twist: 10, record: 6 };
+
+export function quadSceneTimings(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): SceneTiming[] {
+  return earlyTimings(QUAD_LINE_IDS, QUAD_MIN_SECONDS, unitId, voiceKey);
+}
+export function quadTotalFrames(unitId: string, voiceKey: string = DEFAULT_VOICE_KEY): number {
+  return quadSceneTimings(unitId, voiceKey).reduce((n, s) => n + s.dur, 0);
 }
 
 /** Scene timing for the linear-equations template (M11). */

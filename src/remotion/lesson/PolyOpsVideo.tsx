@@ -389,6 +389,143 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
     );
   }
 
+  if (unit.mode === "distribute-mono") {
+    // The area rectangle, with the number of ROOMS driven by the bracket —
+    // which is the entire point of the twist: three terms, three rooms, same
+    // method.
+    const b = unit.b ?? [0, 0, 0];
+    const tri = sceneId === "twist" || sceneId === "record";
+    const rooms = tri
+      ? [
+          { top: "x²", body: monoText(x.triA, x.p + 2), colour: BLUE, w: 300 },
+          { top: `${Math.abs(b[1])}x`, body: monoText(x.triB, x.p + 1), colour: GOLD, w: 260 },
+          { top: `${Math.abs(b[2])}`, body: monoText(x.triC, x.p), colour: GREEN, w: 220 },
+        ]
+      : [
+          { top: "x", body: monoText(x.distA, x.distAExp), colour: BLUE, w: 330 },
+          { top: `${Math.abs(x.c0)}`, body: monoText(x.distB, x.distBExp), colour: GOLD, w: 290 },
+        ];
+    const headline =
+      sceneId === "ask"
+        ? `${monoText(x.k, x.p)}( ${polyOpsText(unit.a)} )`
+        : sceneId === "work"
+          ? "One room per term"
+          : sceneId === "twist"
+            ? "Three terms — three rooms"
+            : "Nothing in the bracket gets missed";
+    return (
+      <AbsoluteFill style={stage}>
+        <Title text={headline} enter={title} />
+        <div style={{ position: "relative", paddingLeft: 90, paddingTop: 46 }}>
+          <div style={{ position: "absolute", left: 0, top: 46 + 80, fontSize: 46, fontWeight: 800, color: MUTED }}>
+            {monoText(x.k, x.p)}
+          </div>
+          <div style={{ display: "flex" }}>
+            {rooms.map((r, i) => (
+              <div key={i} style={{ position: "relative" }}>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: -46,
+                    left: 0,
+                    width: r.w,
+                    textAlign: "center",
+                    fontSize: 42,
+                    fontWeight: 800,
+                    color: r.colour,
+                  }}
+                >
+                  {r.top}
+                </div>
+                <div
+                  style={{
+                    width: r.w,
+                    height: 200,
+                    border: `6px solid ${r.colour}`,
+                    borderLeftWidth: i === 0 ? 6 : 3,
+                    backgroundColor: "#FFF",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 56,
+                    fontWeight: 800,
+                    color: r.colour,
+                    opacity: sceneId === "ask" ? 0.12 : frame >= step(0.12) + i * step(0.2) ? 1 : 0.15,
+                  }}
+                >
+                  {sceneId === "ask" ? "" : r.body}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        {sceneId === "record" && (
+          <div style={{ fontSize: 42, fontWeight: 800, color: GREEN, textAlign: "center" }}>{unit.tip}</div>
+        )}
+      </AbsoluteFill>
+    );
+  }
+
+  if (unit.mode === "long-division") {
+    // Laid out as the actual bus-stop division, because recognising the
+    // familiar shape is half of what makes this feel possible.
+    const rows: { text: string; colour: string; indent: number; rule?: boolean }[] = [
+      { text: `x² + ${x.c1}x + ${x.c0}`, colour: INK, indent: 0 },
+      { text: `− ( x² + ${x.root}x )`, colour: RED, indent: 0, rule: true },
+      { text: `${x.afterFirst}x + ${x.c0}`, colour: BLUE, indent: 90 },
+      { text: `− ( ${x.afterFirst}x + ${x.c0} )`, colour: RED, indent: 90, rule: true },
+      { text: `0`, colour: GREEN, indent: 90 },
+    ];
+    const shown = sceneId === "ask" ? 1 : sceneId === "work" ? 3 : 5;
+    const headline =
+      sceneId === "ask"
+        ? `( ${polyOpsText(unit.a)} ) ÷ ( x + ${x.root} )`
+        : sceneId === "work"
+          ? "Divide, multiply, subtract"
+          : sceneId === "twist"
+            ? "Bring down, and go again"
+            : `x + ${x.afterFirst}, remainder 0`;
+    return (
+      <AbsoluteFill style={stage}>
+        <Title text={headline} enter={title} />
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 18 }}>
+          <div style={{ fontSize: 48, fontWeight: 800, color: MUTED, paddingTop: 66 }}>x + {x.root}</div>
+          <div>
+            {/* the quotient sits above the bar, as it does on paper */}
+            <div style={{ fontSize: 54, fontWeight: 800, color: GREEN, paddingLeft: 26, height: 66 }}>
+              {sceneId === "ask" ? "" : `x${shown >= 5 ? ` + ${x.afterFirst}` : ""}`}
+            </div>
+            <div style={{ borderTop: `5px solid ${INK}`, borderLeft: `5px solid ${INK}`, paddingLeft: 26, paddingTop: 10 }}>
+              {rows.slice(0, shown).map((r, i) => (
+                <div
+                  key={i}
+                  style={{
+                    fontSize: 48,
+                    fontWeight: 800,
+                    color: r.colour,
+                    paddingLeft: r.indent,
+                    borderBottom: r.rule ? `3px solid ${MUTED}` : undefined,
+                    paddingBottom: r.rule ? 8 : 0,
+                    marginBottom: r.rule ? 8 : 4,
+                    opacity: interpolate(frame, [step(0.1 + i * 0.13), step(0.1 + i * 0.13) + 10], [0, 1], {
+                      extrapolateLeft: "clamp",
+                      extrapolateRight: "clamp",
+                    }),
+                  }}
+                >
+                  {r.text}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        {sceneId === "record" && (
+          <div style={{ fontSize: 42, fontWeight: 800, color: GREEN, textAlign: "center" }}>{unit.tip}</div>
+        )}
+      </AbsoluteFill>
+    );
+  }
+
   if (unit.mode === "divide-mono") {
     const div = monoText(x.k, x.p);
     const headline =

@@ -26,6 +26,8 @@ import { placeValueUnitById, placeValueNumbers } from "./units-placevalue";
 import { polyOpsUnitById, polyOpsNumbers } from "./units-polyops";
 import { preAlgUnitById, preAlgNumbers } from "./units-prealg";
 import { linEqUnitById, linEqNumbers } from "./units-lineq";
+import { quadUnitById, quadNumbers } from "./units-quad";
+import { factorUnitById, factorNumbers } from "./units-factor";
 import { lineIntersection, quadraticRoots } from "./units";
 
 export interface TeachingContract {
@@ -329,6 +331,100 @@ export function contractFor(comp: string, unitId: string): TeachingContract {
       break;
     }
 
+    case "Factor": {
+      const u = factorUnitById(unitId);
+      const n = factorNumbers(u);
+      switch (u.mode) {
+        case "trinomial-a":
+          return {
+            requiredSpoken: uniq([n.a, n.b, n.c, n.ac, n.split1, n.split2, n.q]),
+            allowedNumbers: uniq([...SCAFFOLD, n.a, n.b, n.c, n.ac, n.split1, n.split2, n.q, 1 + n.ac]),
+            // The ac step IS the lesson; the grouping that follows is the
+            // proof it worked. Each must land in its own scene.
+            perScene: { work: uniq([n.ac, n.split1, n.split2]), twist: uniq([n.split1, n.split2, n.q]) },
+          };
+        case "diff-squares":
+          return {
+            requiredSpoken: uniq([n.squared, n.root]),
+            allowedNumbers: uniq([...SCAFFOLD, n.squared, n.root]),
+            // The cancellation must be shown where it is claimed, or the
+            // video has only asserted the pattern.
+            perScene: { work: uniq([n.root, n.squared]), twist: uniq([n.root, n.squared]) },
+          };
+        case "perfect-square":
+          return {
+            requiredSpoken: uniq([n.c, n.half, n.middle]),
+            allowedNumbers: uniq([...SCAFFOLD, n.c, n.half, n.middle]),
+            // The doubling test is the whole skill — it must be performed in
+            // the twist, not merely mentioned at the end.
+            perScene: { work: uniq([n.c, n.half]), twist: uniq([n.half, n.middle]) },
+          };
+        case "grouping":
+          return {
+            requiredSpoken: uniq([n.g1, n.g2, n.c]),
+            allowedNumbers: uniq([...SCAFFOLD, n.g1, n.g2, n.c]),
+            perScene: { work: uniq([n.g1, n.g2, n.c]), twist: uniq([n.g1, n.g2]) },
+          };
+        case "cubes":
+          return {
+            requiredSpoken: uniq([n.cube, n.cubeRoot, n.cubeSquare]),
+            allowedNumbers: uniq([...SCAFFOLD, n.cube, n.cubeRoot, n.cubeSquare]),
+            perScene: { work: uniq([n.cubeRoot, n.cubeSquare]), twist: uniq([n.cubeRoot, n.cubeSquare]) },
+          };
+      }
+      break;
+    }
+
+    case "Quad": {
+      const u = quadUnitById(unitId);
+      const n = quadNumbers(u);
+      switch (u.mode) {
+        case "perfect-squares":
+          return {
+            requiredSpoken: uniq([n.square, n.side]),
+            allowedNumbers: uniq([...SCAFFOLD, n.square, n.side]),
+            perScene: { work: uniq([n.side, n.square]), twist: uniq([n.side, n.square]) },
+          };
+        case "solve-x2-k":
+          return {
+            requiredSpoken: uniq([n.a, n.b]),
+            allowedNumbers: uniq([...SCAFFOLD, n.a, n.b]),
+            // The negative root must be worked in BOTH the scene that checks
+            // it and the scene that explains why it survives. A video that
+            // only ever says "3" has taught the classic lost mark.
+            perScene: { work: uniq([n.b, n.a]), twist: uniq([n.b, n.a]) },
+          };
+        case "simplify-roots":
+          return {
+            requiredSpoken: uniq([n.a, n.factor, n.inside, n.outside]),
+            allowedNumbers: uniq([...SCAFFOLD, n.a, n.factor, n.inside, n.outside, 2.8]),
+            perScene: { work: uniq([n.factor, n.inside]), twist: uniq([n.outside, n.inside]) },
+          };
+        case "zero-product":
+          return {
+            requiredSpoken: uniq([n.root1, n.root2]),
+            allowedNumbers: uniq([...SCAFFOLD, n.root1, n.root2, n.product, n.sum]),
+            perScene: { twist: uniq([n.root1, n.root2]) },
+          };
+        case "solve-factoring":
+          return {
+            requiredSpoken: uniq([n.sum, n.product, n.root1, n.root2]),
+            allowedNumbers: uniq([
+              ...SCAFFOLD, n.sum, n.product, n.root1, n.root2,
+              n.root1 * n.root1, n.sum * n.root1,
+            ]),
+            perScene: { work: uniq([n.product, n.sum, n.root1, n.root2]), twist: uniq([n.root1, n.root2]) },
+          };
+        case "discriminant":
+          return {
+            requiredSpoken: uniq([n.a, n.b, n.c, n.bSquared, n.fourAC, Math.abs(n.discriminant)]),
+            allowedNumbers: uniq([...SCAFFOLD, n.a, n.b, n.c, n.bSquared, n.fourAC, Math.abs(n.discriminant)]),
+            perScene: { work: uniq([n.bSquared, n.fourAC, Math.abs(n.discriminant)]) },
+          };
+      }
+      break;
+    }
+
     case "LinEq": {
       const u = linEqUnitById(unitId);
       const n = linEqNumbers(u);
@@ -497,6 +593,25 @@ export function contractFor(comp: string, unitId: string): TeachingContract {
             allowedNumbers: uniq([...SCAFFOLD, Math.abs(n.c2), Math.abs(n.c1), n.k, n.p, n.divA, n.divB, n.divAExp, n.divBExp]),
             perScene: { twist: uniq([n.divA, n.divB]) },
           };
+        case "distribute-mono": {
+          const b = u.b ?? [0, 0, 0];
+          return {
+            requiredSpoken: uniq([n.k, Math.abs(n.c0), n.distA, n.distB, n.triA, n.triB, n.triC]),
+            allowedNumbers: uniq([
+              ...SCAFFOLD, n.k, n.p, ...A, ...b.map(Math.abs),
+              n.distA, n.distAExp, n.distB, n.distBExp, n.triA, n.triB, n.triC, n.p + 2, n.p + 1,
+            ]),
+            // The trinomial must actually be worked in the twist. That scene
+            // is the only reason this one video may serve two labels.
+            perScene: { work: uniq([n.distA, n.distB]), twist: uniq([n.triA, n.triB, n.triC]) },
+          };
+        }
+        case "long-division":
+          return {
+            requiredSpoken: uniq([Math.abs(n.c1), Math.abs(n.c0), n.root, n.afterFirst]),
+            allowedNumbers: uniq([...SCAFFOLD, ...A, n.root, n.afterFirst, 0]),
+            perScene: { work: uniq([n.root, n.afterFirst]), twist: uniq([Math.abs(n.c0), n.afterFirst]) },
+          };
         case "gcf":
           return {
             requiredSpoken: uniq([Math.abs(n.c2), Math.abs(n.c1), n.k, n.gcfA, n.gcfB]),
@@ -658,6 +773,102 @@ function advancedContract(mode: ReturnType<typeof advancedUnitById>["mode"]): Te
       return {
         requiredSpoken: uniq([t, 2 * t]),
         allowedNumbers: uniq([...SCAFFOLD, t, 2 * t, t * t]),
+      };
+    }
+
+    case "y-intercept": {
+      const { a, b, c } = ADV.yInt;
+      return {
+        requiredSpoken: uniq([a, b, Math.abs(c)]),
+        allowedNumbers: uniq([...SCAFFOLD, a, b, Math.abs(c)]),
+        // The constant must be named as the answer where the point is made.
+        perScene: { twist: uniq([Math.abs(c)]) },
+      };
+    }
+    case "multiplicity": {
+      const { r1, m1, r2 } = ADV.mult;
+      return {
+        requiredSpoken: uniq([r1, m1, Math.abs(r2), 1]),
+        allowedNumbers: uniq([...SCAFFOLD, r1, m1, Math.abs(r2)]),
+        // Both behaviours must appear in the scene that contrasts them, or
+        // the lesson has taught only half of "even bounces, odd crosses".
+        perScene: { twist: uniq([r1, Math.abs(r2)]) },
+      };
+    }
+    case "turning-points": {
+      const d = ADV.turns.degree;
+      return {
+        requiredSpoken: uniq([d, d - 1]),
+        allowedNumbers: uniq([...SCAFFOLD, d, d - 1]),
+        perScene: { twist: uniq([d, d - 1]) },
+      };
+    }
+    case "fta": {
+      const d = ADV.fta.degree;
+      return {
+        requiredSpoken: uniq([d]),
+        allowedNumbers: uniq([...SCAFFOLD, d]),
+      };
+    }
+    case "synthetic": {
+      const { a, b, c, r } = ADV.synth;
+      const s1 = a * r + b;
+      const rem = s1 * r + c;
+      return {
+        requiredSpoken: uniq([a, b, Math.abs(c), r, s1, rem]),
+        allowedNumbers: uniq([...SCAFFOLD, a, b, Math.abs(c), r, a * r, s1, s1 * r, rem]),
+        perScene: { work: uniq([a * r, s1]), twist: uniq([rem]) },
+      };
+    }
+    case "rational-root": {
+      const { constant, leading, root } = ADV.rational;
+      return {
+        requiredSpoken: uniq([constant, leading, root]),
+        allowedNumbers: uniq([...SCAFFOLD, constant, leading, root, 5]),
+        perScene: { work: uniq([constant, leading]), twist: uniq([root, constant]) },
+      };
+    }
+    case "exponential": {
+      const { base, power } = ADV.expo;
+      return {
+        requiredSpoken: uniq([base, power, base ** power]),
+        allowedNumbers: uniq([...SCAFFOLD, base, power, base ** power, base * base]),
+        perScene: { work: uniq([base ** power]), twist: uniq([power]) },
+      };
+    }
+    case "powers-of-i":
+      return {
+        requiredSpoken: uniq([1, 2, 3, 4]),
+        allowedNumbers: uniq([...SCAFFOLD, 5]),
+        // The cycle length is the entire takeaway.
+        perScene: { twist: uniq([4]) },
+      };
+    case "geometric": {
+      const { first, ratio, term } = ADV.geo;
+      const terms = Array.from({ length: term }, (_, i) => first * ratio ** i);
+      return {
+        requiredSpoken: uniq([first, ratio, term, terms[term - 1]]),
+        allowedNumbers: uniq([...SCAFFOLD, first, ratio, term, ...terms, term - 1]),
+        perScene: { work: uniq([...terms]), twist: uniq([terms[term - 1]]) },
+      };
+    }
+    case "limit-poly": {
+      const { at, c } = ADV.limit;
+      return {
+        requiredSpoken: uniq([at, c, at * at + at + c]),
+        // The narration closes in from both sides: 3.9, 3.99, 4.1, 4.01. The
+        // voice says these as "3 point 99", so the validator sees the token
+        // 99 — the decimal parts have to be allowed in their SPOKEN form.
+        allowedNumbers: uniq([...SCAFFOLD, at, c, at * at, at * at + at + c, 9, 99, 1, 4]),
+        perScene: { twist: uniq([at * at, at * at + at + c]) },
+      };
+    }
+    case "integrate-power": {
+      const { n } = ADV.integral;
+      return {
+        requiredSpoken: uniq([n, n + 1]),
+        allowedNumbers: uniq([...SCAFFOLD, n, n + 1]),
+        perScene: { twist: uniq([n + 1]) },
       };
     }
   }

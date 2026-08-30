@@ -649,6 +649,8 @@ import { PLACE_VALUE_UNITS } from "./units-placevalue";
 import { POLY_OPS_UNITS } from "./units-polyops";
 import { PRE_ALG_UNITS } from "./units-prealg";
 import { LIN_EQ_UNITS } from "./units-lineq";
+import { QUAD_UNITS } from "./units-quad";
+import { FACTOR_UNITS } from "./units-factor";
 import { ADVANCED_UNITS } from "./units-advanced";
 
 // ---------------------------------------------------------------------------
@@ -1149,7 +1151,7 @@ export interface VideoUnitRef {
   id: string;
   label: string;
   /** Remotion composition that renders it. */
-  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph" | "FunctionMachine" | "Trig" | "Poly" | "PolyOps" | "PreAlg" | "LinEq" | "FractionOps" | "DecimalOps" | "PlaceValue" | "Advanced";
+  composition: "EqualGroups" | "Column" | "TenFrame" | "Dealing" | "FactFamily" | "Area" | "Count" | "Compare" | "NumberLine" | "FractionBar" | "HundredGrid" | "RatioTable" | "Balance" | "Graph" | "FunctionMachine" | "Trig" | "Poly" | "PolyOps" | "PreAlg" | "LinEq" | "Quad" | "Factor" | "FractionOps" | "DecimalOps" | "PlaceValue" | "Advanced";
 }
 
 export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
@@ -1176,6 +1178,8 @@ export const ALL_VIDEO_UNITS: VideoUnitRef[] = [
   ...POLY_OPS_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "PolyOps" as const })),
   ...PRE_ALG_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "PreAlg" as const })),
   ...LIN_EQ_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "LinEq" as const })),
+  ...QUAD_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Quad" as const })),
+  ...FACTOR_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Factor" as const })),
   ...ADVANCED_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Advanced" as const })),
   ...COUNT_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Count" as const })),
   ...COMPARE_UNITS.map((u) => ({ id: u.id, label: u.label, composition: "Compare" as const })),
@@ -1210,6 +1214,9 @@ const LABEL_ALIASES: Record<string, string> = {
   // M1/M2 early-number labels. "Counting back" IS what-comes-before, the
   // same number-line step, so it maps to that video honestly.
   "Counting back — what comes before": "cur-numbers-before",
+  // Same monomial-over-a-bracket method; the video works a trinomial on
+  // screen in the scene the contract pins it to.
+  "Multiply by a trinomial": "cur-distribute-monomial",
   // M12. The standard-form video names, points at, and computes BOTH of
   // these in the scene the contract pins them to, so they are the same
   // lesson under two names - not a near-miss.

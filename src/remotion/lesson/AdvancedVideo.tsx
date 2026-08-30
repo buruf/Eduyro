@@ -4,6 +4,7 @@
 // operations, a plane with arrows for complex numbers and vectors, hop-chips
 // and running sums for sequences, and rule cards applied to concrete powers
 // for the calculus trio. Numbers all come from ADV (units-advanced.ts).
+import React from "react";
 import {
   AbsoluteFill,
   Audio,
@@ -32,6 +33,12 @@ const BLUE = "#1B4F8A";
 const MUTED = "#8A7A5E";
 const GREEN = "#2F7D4F";
 const RED = "#B23B2E";
+
+/** Unicode superscript for a small exponent, so the screen shows x⁵ while
+ *  the narration says "x to the power 5". */
+function sup(n: number): string {
+  return String(n).split("").map((d) => "⁰¹²³⁴⁵⁶⁷⁸⁹"[Number(d)]).join("");
+}
 
 interface SceneProps {
   dur: number;
@@ -181,12 +188,561 @@ function Plane({
   );
 }
 
+/** A sketched curve. Auto-scales to whatever the function does over the
+ *  window, so a mode can change its polynomial without the picture falling
+ *  off the stage. */
+function Sketch({
+  f,
+  from,
+  to,
+  width = 760,
+  height = 340,
+  marks = [],
+}: {
+  f: (x: number) => number;
+  from: number;
+  to: number;
+  width?: number;
+  height?: number;
+  /** x-positions to ring on the curve, with a colour and a caption. */
+  marks?: { x: number; colour: string; label?: string }[];
+}) {
+  const N = 160;
+  const xs = Array.from({ length: N + 1 }, (_, i) => from + ((to - from) * i) / N);
+  const ys = xs.map(f);
+  const lo = Math.min(...ys, 0);
+  const hi = Math.max(...ys, 0);
+  const pad = (hi - lo) * 0.12 || 1;
+  const px = (x: number) => ((x - from) / (to - from)) * width;
+  const py = (y: number) => height - ((y - (lo - pad)) / (hi - lo + 2 * pad)) * height;
+  const d = xs.map((x, i) => `${i ? "L" : "M"}${px(x).toFixed(1)},${py(ys[i]).toFixed(1)}`).join(" ");
+  return (
+    <svg width={width} height={height} style={{ overflow: "visible" }}>
+      {/* axes */}
+      <line x1={0} y1={py(0)} x2={width} y2={py(0)} stroke={INK} strokeWidth={4} />
+      <line x1={px(0)} y1={0} x2={px(0)} y2={height} stroke={INK} strokeWidth={4} />
+      <path d={d} fill="none" stroke={BLUE} strokeWidth={7} strokeLinecap="round" />
+      {marks.map((m, i) => (
+        <g key={i}>
+          <circle cx={px(m.x)} cy={py(f(m.x))} r={13} fill={m.colour} />
+          {m.label && (
+            <text
+              x={px(m.x)}
+              y={py(f(m.x)) + (f(m.x) >= 0 ? -30 : 46)}
+              textAnchor="middle"
+              fontSize={30}
+              fontWeight={800}
+              fill={m.colour}
+            >
+              {m.label}
+            </text>
+          )}
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+/** A row of value chips — used wherever a lesson is really a list. */
+function Chips({
+  items,
+  shown,
+  colourOf,
+}: {
+  items: (string | number)[];
+  shown: number;
+  colourOf?: (i: number) => string;
+}) {
+  return (
+    <div style={{ display: "flex", gap: 22, flexWrap: "wrap", justifyContent: "center" }}>
+      {items.map((v, i) => (
+        <div
+          key={i}
+          style={{
+            borderRadius: 16,
+            border: `5px solid ${colourOf?.(i) ?? GOLD}`,
+            backgroundColor: "#FFF",
+            padding: "16px 30px",
+            fontSize: 52,
+            fontWeight: 800,
+            color: colourOf?.(i) ?? GOLD,
+            opacity: i < shown ? 1 : 0.14,
+          }}
+        >
+          {v}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
   const frame = useCurrentFrame();
   const title = useEnter(4);
   const step = (k: number) => Math.round(dur * k);
   const reveal = (count: number, from = 0.15, span = 0.6) =>
     Math.min(count, Math.max(0, Math.floor((frame - step(from)) / Math.max(1, Math.floor((dur * span) / count))) + 1));
+
+  // ── M16 / M17 / M18 ──────────────────────────────────────────────────────
+  const stage = { alignItems: "center", justifyContent: "center", gap: 28 } as const;
+  const tipLine = <div style={{ fontSize: 40, fontWeight: 800, color: GREEN, textAlign: "center", maxWidth: 1500 }}>{unit.tip}</div>;
+  const fade = (at: number) =>
+    interpolate(frame, [step(at), step(at) + 12], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+
+  if (unit.mode === "y-intercept") {
+    const { a, b, c } = ADV.yInt;
+    const f = (x: number) => a * x * x + b * x + c;
+    const rows = [
+      `f(0) = ${a}(0)² + ${b}(0) − ${Math.abs(c)}`,
+      `f(0) = 0 + 0 − ${Math.abs(c)}`,
+      `f(0) = −${Math.abs(c)}`,
+    ];
+    const shown = sceneId === "ask" ? 0 : sceneId === "work" ? 2 : 3;
+    const headline =
+      sceneId === "ask"
+        ? `f(x) = ${a}x² + ${b}x − ${Math.abs(c)}`
+        : sceneId === "work"
+          ? "On the y axis, x is zero"
+          : sceneId === "twist"
+            ? "The constant IS the y-intercept"
+            : `y-intercept: (0, −${Math.abs(c)})`;
+    return (
+      <AbsoluteFill style={stage}>
+        <Title text={headline} enter={title} />
+        <div style={{ display: "flex", gap: 70, alignItems: "center" }}>
+          <Sketch f={f} from={-3} to={2} width={560} height={320} marks={[{ x: 0, colour: GOLD, label: `−${Math.abs(c)}` }]} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {rows.slice(0, shown).map((r, i) => (
+              <div key={i} style={{ fontSize: 44, fontWeight: 800, color: i === 2 ? GREEN : INK, opacity: fade(0.12 + i * 0.16) }}>
+                {r}
+              </div>
+            ))}
+          </div>
+        </div>
+        {sceneId === "record" && tipLine}
+      </AbsoluteFill>
+    );
+  }
+
+  if (unit.mode === "multiplicity") {
+    const { r1, m1, r2 } = ADV.mult;
+    const f = (x: number) => Math.pow(x - r1, m1) * (x - r2) * 0.5;
+    const showMarks = sceneId === "twist" || sceneId === "record";
+    const headline =
+      sceneId === "ask"
+        ? `f(x) = (x − ${r1})²(x + ${Math.abs(r2)})`
+        : sceneId === "work"
+          ? `Count the repeats: ${r1} twice, −${Math.abs(r2)} once`
+          : sceneId === "twist"
+            ? "Even bounces. Odd crosses."
+            : "The count decides the shape";
+    return (
+      <AbsoluteFill style={stage}>
+        <Title text={headline} enter={title} />
+        <Sketch
+          f={f}
+          from={-4.2}
+          to={3.4}
+          width={860}
+          height={360}
+          marks={
+            showMarks
+              ? [
+                  { x: r1, colour: GOLD, label: "bounce" },
+                  { x: r2, colour: RED, label: "cross" },
+                ]
+              : []
+          }
+        />
+        {showMarks && (
+          // Ordered by position on the axis, so the caption on the left
+          // describes the root on the left. Reading order matters when the
+          // whole lesson is "which one bounces".
+          <div style={{ display: "flex", gap: 90, opacity: fade(0.4) }}>
+            <div style={{ fontSize: 40, fontWeight: 800, color: RED }}>x = −{Math.abs(r2)}, multiplicity 1 — odd</div>
+            <div style={{ fontSize: 40, fontWeight: 800, color: GOLD }}>x = {r1}, multiplicity {m1} — even</div>
+          </div>
+        )}
+        {sceneId === "record" && tipLine}
+      </AbsoluteFill>
+    );
+  }
+
+  if (unit.mode === "turning-points") {
+    const d = ADV.turns.degree;
+    // A genuine degree-4 curve with three visible turns.
+    const f = (x: number) => (x + 2) * (x + 0.4) * (x - 1) * (x - 2.4) * 0.6;
+    // Find the turns from the CURVE rather than typing in three x-values.
+    // Hand-placed dots drift the moment the polynomial changes, and a dot
+    // that is not on a turning point is teaching the wrong thing.
+    const turns: number[] = [];
+    {
+      const lo = -2.6, hi = 3, N = 400;
+      const at = (i: number) => lo + ((hi - lo) * i) / N;
+      for (let i = 1; i < N; i++) {
+        const before = f(at(i)) - f(at(i - 1));
+        const after = f(at(i + 1)) - f(at(i));
+        if (before === 0 || after === 0) continue;
+        if (before > 0 !== after > 0) turns.push(at(i));
+      }
+    }
+    const headline =
+      sceneId === "ask"
+        ? `Degree ${d} — how many turns?`
+        : sceneId === "work"
+          ? "Line 0, parabola 1, cubic 2…"
+          : sceneId === "twist"
+            ? `At most ${d - 1}`
+            : `Degree ${d} → at most ${d - 1} turning points`;
+    return (
+      <AbsoluteFill style={stage}>
+        <Title text={headline} enter={title} />
+        <Sketch
+          f={f}
+          from={-2.6}
+          to={3}
+          width={900}
+          height={360}
+          marks={
+            sceneId === "ask" ? [] : turns.map((x) => ({ x, colour: GOLD }))
+          }
+        />
+        {sceneId !== "ask" && (
+          <div style={{ fontSize: 44, fontWeight: 800, color: GOLD, opacity: fade(0.3) }}>
+            {d} − 1 = {d - 1} turns
+          </div>
+        )}
+        {sceneId === "record" && tipLine}
+      </AbsoluteFill>
+    );
+  }
+
+  if (unit.mode === "fta") {
+    const d = ADV.fta.degree;
+    const shown = sceneId === "ask" ? 0 : reveal(d, 0.12, 0.55);
+    const headline =
+      sceneId === "ask"
+        ? `Degree ${d}`
+        : sceneId === "work"
+          ? `Exactly ${d} roots`
+          : sceneId === "twist"
+            ? "Counting repeats, and complex ones"
+            : `Degree ${d} → exactly ${d} roots`;
+    return (
+      <AbsoluteFill style={stage}>
+        <Title text={headline} enter={title} />
+        <Chips
+          items={Array.from({ length: d }, (_, i) => i + 1)}
+          shown={shown}
+          colourOf={(i) => (sceneId === "twist" || sceneId === "record" ? (i >= d - 3 ? RED : GOLD) : GOLD)}
+        />
+        {(sceneId === "twist" || sceneId === "record") && (
+          <div style={{ fontSize: 40, fontWeight: 800, color: RED, opacity: fade(0.35) }}>
+            some may repeat, and some may be complex
+          </div>
+        )}
+        {sceneId === "record" && tipLine}
+      </AbsoluteFill>
+    );
+  }
+
+  if (unit.mode === "synthetic") {
+    const { a, b, c, r } = ADV.synth;
+    const s1 = a * r + b;
+    const rem = s1 * r + c;
+    const shown = sceneId === "ask" ? 1 : sceneId === "work" ? 2 : 3;
+    const headline =
+      sceneId === "ask"
+        ? `(${a}x² + ${b}x − ${Math.abs(c)}) ÷ (x − ${r})`
+        : sceneId === "work"
+          ? "Bring down, multiply, add"
+          : sceneId === "twist"
+            ? "Repeat — the last number is the remainder"
+            : `${a}x + ${s1}, remainder ${rem}`;
+    const top = [a, b, c];
+    const mid = ["", a * r, s1 * r];
+    const bot = [a, s1, rem];
+    return (
+      <AbsoluteFill style={stage}>
+        <Title text={headline} enter={title} />
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <div style={{ fontSize: 56, fontWeight: 800, color: GOLD, paddingRight: 14 }}>{r}</div>
+          <div style={{ borderLeft: `6px solid ${INK}`, paddingLeft: 26 }}>
+            {[top, mid, bot].slice(0, shown).map((row, ri) => (
+              <div
+                key={ri}
+                style={{
+                  display: "flex",
+                  gap: 44,
+                  borderTop: ri === 2 ? `5px solid ${INK}` : undefined,
+                  paddingTop: ri === 2 ? 12 : 0,
+                  marginTop: ri === 2 ? 10 : 6,
+                  opacity: fade(0.1 + ri * 0.2),
+                }}
+              >
+                {row.map((v, ci) => (
+                  <div
+                    key={ci}
+                    style={{
+                      width: 130,
+                      textAlign: "center",
+                      fontSize: 50,
+                      fontWeight: 800,
+                      color: ri === 1 ? RED : ri === 2 && ci === 2 ? GREEN : INK,
+                    }}
+                  >
+                    {v === "" ? "" : v}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+        {shown >= 3 && (
+          <div style={{ fontSize: 40, fontWeight: 800, color: MUTED, opacity: fade(0.7) }}>
+            quotient {a}x + {s1} · remainder {rem}
+          </div>
+        )}
+        {sceneId === "record" && tipLine}
+      </AbsoluteFill>
+    );
+  }
+
+  if (unit.mode === "rational-root") {
+    const { constant, leading, root } = ADV.rational;
+    const factors = [1, 3, 5, 15];
+    const shown = sceneId === "ask" ? 0 : sceneId === "work" ? reveal(factors.length, 0.3, 0.5) : factors.length;
+    const headline =
+      sceneId === "ask"
+        ? "Which guesses are worth making?"
+        : sceneId === "work"
+          ? `factors of ${constant} ÷ factors of ${leading}`
+          : sceneId === "twist"
+            ? "± each one — a short list"
+            : `${root} is one that works`;
+    return (
+      <AbsoluteFill style={stage}>
+        <Title text={headline} enter={title} />
+        <Chips
+          items={sceneId === "ask" ? factors : factors.map((f) => (sceneId === "work" ? f : `±${f}`))}
+          shown={shown}
+          colourOf={(i) => ((sceneId === "twist" || sceneId === "record") && factors[i] === root ? GREEN : GOLD)}
+        />
+        {sceneId !== "ask" && (
+          <div style={{ fontSize: 40, fontWeight: 800, color: MUTED, opacity: fade(0.55) }}>
+            constant {constant} · leading coefficient {leading}
+          </div>
+        )}
+        {sceneId === "record" && tipLine}
+      </AbsoluteFill>
+    );
+  }
+
+  if (unit.mode === "exponential") {
+    const { base, power } = ADV.expo;
+    const value = base ** power;
+    const rows = [`${base}^x = ${value}`, `${value} = ${base}³`, `${base}^x = ${base}³`, `x = ${power}`];
+    const shown = sceneId === "ask" ? 1 : sceneId === "work" ? 2 : sceneId === "twist" ? 4 : 4;
+    const headline =
+      sceneId === "ask"
+        ? "x is stuck in the exponent"
+        : sceneId === "work"
+          ? `Write ${value} as a power of ${base}`
+          : sceneId === "twist"
+            ? "Same base → same exponent"
+            : `x = ${power}`;
+    return (
+      <AbsoluteFill style={stage}>
+        <Title text={headline} enter={title} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 18, alignItems: "center" }}>
+          {rows.slice(0, shown).map((r, i) => (
+            <div key={i} style={{ fontSize: i === 3 ? 78 : 58, fontWeight: 800, color: i === 3 ? GREEN : i === 2 ? BLUE : INK, opacity: fade(0.1 + i * 0.16) }}>
+              {r}
+            </div>
+          ))}
+        </div>
+        {sceneId === "record" && tipLine}
+      </AbsoluteFill>
+    );
+  }
+
+  if (unit.mode === "powers-of-i") {
+    const cyc = [
+      { p: "i¹", v: "i", colour: BLUE },
+      { p: "i²", v: "−1", colour: GOLD },
+      { p: "i³", v: "−i", colour: RED },
+      { p: "i⁴", v: "1", colour: GREEN },
+    ];
+    const shown = sceneId === "ask" ? 0 : sceneId === "work" ? reveal(4, 0.12, 0.6) : 4;
+    const headline =
+      sceneId === "ask"
+        ? "i² = −1"
+        : sceneId === "work"
+          ? "Work up the powers"
+          : sceneId === "twist"
+            ? "Back to 1 — it repeats every 4"
+            : "Divide the power by 4, keep the remainder";
+    return (
+      <AbsoluteFill style={stage}>
+        <Title text={headline} enter={title} />
+        <div style={{ display: "flex", gap: 26, alignItems: "center" }}>
+          {cyc.map((c, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <div style={{ fontSize: 44, color: MUTED, opacity: i < shown ? 1 : 0.14 }}>→</div>}
+              <div style={{ textAlign: "center", opacity: i < shown ? 1 : 0.14 }}>
+                <div style={{ fontSize: 36, fontWeight: 800, color: MUTED }}>{c.p}</div>
+                <div
+                  style={{
+                    borderRadius: 16,
+                    border: `5px solid ${c.colour}`,
+                    backgroundColor: "#FFF",
+                    padding: "18px 34px",
+                    fontSize: 58,
+                    fontWeight: 800,
+                    color: c.colour,
+                    marginTop: 8,
+                  }}
+                >
+                  {c.v}
+                </div>
+              </div>
+            </React.Fragment>
+          ))}
+          {(sceneId === "twist" || sceneId === "record") && (
+            <div style={{ fontSize: 44, color: GREEN, fontWeight: 800, opacity: fade(0.45) }}>↻</div>
+          )}
+        </div>
+        {sceneId === "record" && tipLine}
+      </AbsoluteFill>
+    );
+  }
+
+  if (unit.mode === "geometric") {
+    const { first, ratio, term } = ADV.geo;
+    const terms = Array.from({ length: term }, (_, i) => first * ratio ** i);
+    const shown = sceneId === "ask" ? 1 : sceneId === "work" ? reveal(term, 0.15, 0.6) : term;
+    const headline =
+      sceneId === "ask"
+        ? `first ${first}, ratio ${ratio}`
+        : sceneId === "work"
+          ? `Multiply by ${ratio} each step`
+          : sceneId === "twist"
+            ? `${term} − 1 = ${term - 1} steps, not ${term}`
+            : `Term ${term} is ${terms[term - 1]}`;
+    return (
+      <AbsoluteFill style={stage}>
+        <Title text={headline} enter={title} />
+        <div style={{ display: "flex", gap: 22, alignItems: "center" }}>
+          {terms.map((t, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && (
+                <div style={{ textAlign: "center", opacity: i < shown ? 1 : 0.14 }}>
+                  <div style={{ fontSize: 32, fontWeight: 800, color: RED }}>× {ratio}</div>
+                  <div style={{ fontSize: 40, color: MUTED }}>→</div>
+                </div>
+              )}
+              <div
+                style={{
+                  borderRadius: 16,
+                  border: `5px solid ${i === term - 1 && shown >= term ? GREEN : GOLD}`,
+                  backgroundColor: "#FFF",
+                  padding: "20px 40px",
+                  fontSize: 62,
+                  fontWeight: 800,
+                  color: i === term - 1 && shown >= term ? GREEN : GOLD,
+                  opacity: i < shown ? 1 : 0.14,
+                }}
+              >
+                {t}
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+        {sceneId === "record" && tipLine}
+      </AbsoluteFill>
+    );
+  }
+
+  if (unit.mode === "limit-poly") {
+    const { at, c } = ADV.limit;
+    const f = (x: number) => x * x + x + c;
+    const value = f(at);
+    const approach = [3.9, 3.99, 4.01, 4.1];
+    const shown = sceneId === "ask" ? 0 : sceneId === "work" ? reveal(4, 0.15, 0.6) : 4;
+    const headline =
+      sceneId === "ask"
+        ? `lim x→${at} (x² + x + ${c})`
+        : sceneId === "work"
+          ? "Close in from both sides"
+          : sceneId === "twist"
+            ? "No gaps — so just substitute"
+            : `The limit is ${value}`;
+    return (
+      <AbsoluteFill style={stage}>
+        <Title text={headline} enter={title} />
+        {sceneId === "twist" || sceneId === "record" ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center" }}>
+            <div style={{ fontSize: 56, fontWeight: 800, color: INK, opacity: fade(0.1) }}>
+              {at}² + {at} + {c}
+            </div>
+            <div style={{ fontSize: 56, fontWeight: 800, color: BLUE, opacity: fade(0.3) }}>
+              {at * at} + {at} + {c}
+            </div>
+            <div style={{ fontSize: 84, fontWeight: 800, color: GREEN, opacity: fade(0.5) }}>= {value}</div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 28, alignItems: "center" }}>
+            {approach.map((x, i) => (
+              <div key={i} style={{ textAlign: "center", opacity: i < shown ? 1 : 0.14 }}>
+                <div style={{ fontSize: 34, fontWeight: 800, color: MUTED }}>x = {x}</div>
+                <div style={{ fontSize: 46, fontWeight: 800, color: i < 2 ? GOLD : BLUE }}>
+                  {f(x).toFixed(2)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {sceneId === "record" && tipLine}
+      </AbsoluteFill>
+    );
+  }
+
+  if (unit.mode === "integrate-power") {
+    const { n } = ADV.integral;
+    const rows = [
+      { t: `∫ x${sup(n)} dx`, c: INK },
+      { t: `try x${sup(n + 1)}`, c: MUTED },
+      { t: `differentiates to ${n + 1}x${sup(n)}  — ${n + 1}× too big`, c: RED },
+      { t: `x${sup(n + 1)} / ${n + 1} + C`, c: GREEN },
+    ];
+    const shown = sceneId === "ask" ? 1 : sceneId === "work" ? 3 : 4;
+    const headline =
+      sceneId === "ask"
+        ? "Differentiating, run backwards"
+        : sceneId === "work"
+          ? "Add one to the power, then check"
+          : sceneId === "twist"
+            ? `Divide by ${n + 1} — and add C`
+            : `x${sup(n + 1)} / ${n + 1} + C`;
+    return (
+      <AbsoluteFill style={stage}>
+        <Title text={headline} enter={title} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, alignItems: "center" }}>
+          {rows.slice(0, shown).map((r, i) => (
+            <div key={i} style={{ fontSize: i === 3 ? 74 : 50, fontWeight: 800, color: r.c, opacity: fade(0.1 + i * 0.17) }}>
+              {r.t}
+            </div>
+          ))}
+        </div>
+        {(sceneId === "twist" || sceneId === "record") && (
+          <div style={{ fontSize: 38, fontWeight: 800, color: MUTED, opacity: fade(0.7) }}>
+            a constant differentiates to zero, so C could be anything
+          </div>
+        )}
+        {sceneId === "record" && tipLine}
+      </AbsoluteFill>
+    );
+  }
 
   if (unit.mode === "order-integers") {
     const marks = ADV.integers;
