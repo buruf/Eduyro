@@ -144,6 +144,19 @@ export async function buildTodayPacket(
   const mathSkillIdx = Math.min(Math.max(0, progress.currentSkillIndex ?? 0), Math.max(0, mathSkills.length - 1));
   const curMathSkill = mathSkills[mathSkillIdx];
 
+  // How far into the CURRENT lesson is this student? Sheets carry their lesson
+  // label in the title, so counting completed sheets for that label gives a
+  // position within the lesson that resets to zero the moment the skill map
+  // advances — which is what the content sheet number has to follow.
+  const doneInCurrentLesson = curMathSkill
+    ? await db.completedSheet.count({
+        where: {
+          studentId,
+          worksheet: { levelId: progress.levelId, title: { startsWith: `${curMathSkill.label} — ` } },
+        },
+      })
+    : 0;
+
   let nextWorksheets = await db.worksheet.findMany({
     where: {
       levelId: progress.levelId,
@@ -184,10 +197,17 @@ export async function buildTodayPacket(
       let nextNum = (maxSheet._max.sheetNumber ?? 0) + 1;
       const created: typeof nextWorksheets = [];
       for (let i = 0; i < deficit; i++) {
-        // For MATH, map the CONTENT sheet number into the current skill's range so
-        // the packet serves the current lesson; otherwise use the running number.
+        // For MATH, the CONTENT sheet must be positioned by how far the student
+        // is through THIS lesson — not by `nextNum`, which is a running count
+        // across every lesson on the level and never resets when the skill map
+        // advances. That bug put a child on her first day of regrouping onto
+        // content sheet 62 of the 45–64 range: the third-hardest sheet in the
+        // unit, every problem carrying, nine of ten crossing 100.
         const contentSheet = curMathSkill
-          ? curMathSkill.range[0] + ((nextNum - 1) % (curMathSkill.range[1] - curMathSkill.range[0] + 1))
+          ? Math.min(
+              curMathSkill.range[1],
+              curMathSkill.range[0] + doneInCurrentLesson + i,
+            )
           : Math.min(100, nextNum);
         const { problems, answerKey } = generateProblems({
           subjectSlug: progress.level?.subject?.slug ?? "MATH",

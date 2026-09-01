@@ -60,6 +60,44 @@ function enumAddClean(aLo: number, aHi: number, bLo: number, bHi: number): AProb
   });
   return out;
 }
+// ── "2-digit addition (regrouping)" — the ramp this unit never had ───────────
+//
+// The unit used to be plain enumAdd(10,99,10,99,true): every problem carries,
+// ordered only by operand size. That put answers OVER 100 on the very first
+// regrouping sheet — and an answer over 100 needs a carry out of the TENS
+// column, which the curriculum does not teach until "3-digit addition", two
+// lessons later. A child meeting regrouping for the first time was being asked
+// 94 + 97. The multiplication unit was given a staged ramp for exactly this
+// reason; addition was left with none.
+//
+// Two bands, ordered by `diff` so the sheet window walks them in order:
+//   band 1  ones carry, answer stays UNDER 100 (37 + 45 = 82) — the case the
+//           unit's own worked example teaches, and the only one it has taught
+//   band 2  answer crosses 100, so the tens column carries too — reached only
+//           after band 1 is exhausted, i.e. late in the unit
+// Band 2 is STRIDED, for the same reason the multiplication ramp strides its
+// hardest stage: selectProblems' difficulty window spans ~70% of the pool, so
+// ordering alone does not keep a band off the first sheet — it has to be a
+// small enough share of the pool. Un-strided, band 2 is 64% of the carrying
+// pairs and floods sheet one; at 1/4 it is ~22%, which sits below the window.
+const OVER_HUNDRED_STRIDE = 4;
+
+function enumAddRegroup(): AProblem[] {
+  const out: AProblem[] = [];
+  let over = 0;
+  eachPair(10, 99, 10, 99, (a, b) => {
+    if (addCarry(a, b) !== 1) return;
+    const sum = a + b;
+    const m = Math.max(a, b);
+    if (sum < 100) {
+      out.push({ q: `${a} + ${b}`, a: String(sum), diff: magnitude(m) + (m >= 50 ? 40 : 0), key: `ar1-${a}+${b}` });
+    } else if (over++ % OVER_HUNDRED_STRIDE === 0) {
+      out.push({ q: `${a} + ${b}`, a: String(sum), diff: 900 + sum, key: `ar2-${a}+${b}` });
+    }
+  });
+  return out;
+}
+
 // Same defect as enumMissingSub, mirrored. To solve "___ + b = s" the child
 // computes s - b, so a missing-ADDEND problem is really a subtraction — and on
 // a no-regrouping unit that subtraction was borrowing (___ + 25 = 61 needs
@@ -69,7 +107,16 @@ function enumMissingAdd(aLo: number, aHi: number, bLo: number, bHi: number, carr
   const out: AProblem[] = [];
   eachPair(aLo, aHi, bLo, bHi, (a, b) => {
     if (carry !== undefined && addCarry(a, b) !== (carry ? 1 : 0)) return;
-    out.push({ q: `___ + ${b} = ${a + b}`, a: String(a), diff: (digits(a + b) - 1) * 30 + magnitude(a + b) + 18, key: `m+${a}_${b}` });
+    // A total that crosses 100 makes this a subtraction across the hundreds
+    // (___ + 66 = 130 means 130 − 66), which is a harder skill than the
+    // 2-digit units teach. The old `digits × 30` term ranked it only ~30
+    // higher, so those landed among the easiest problems in the pool. Band it
+    // the same way the regrouping enumerator does, so it sorts to late sheets
+    // in the units that mix both, and stays neutral in units where every
+    // total crosses 100 anyway.
+    const sum = a + b;
+    const band = sum >= 100 ? 900 : 0;
+    out.push({ q: `___ + ${b} = ${sum}`, a: String(a), diff: band + (digits(sum) - 1) * 30 + magnitude(sum) + 18, key: `m+${a}_${b}` });
   });
   return out;
 }
@@ -395,7 +442,7 @@ const CURRICULA: Record<string, Unit[]> = {
     { id:"add-make-ten", label:"Make ten & bridging through 10", objective:"Student makes ten first, then adding the rest (8+5 = 8+2+3)", grade:"Grade 2", stars:2, range:[16,20], pool:()=>spiral(addFormats(fMakeTen()), addFormats(fNearDoubles()), addFormats(fDoubles()), "ad5"), example:{ problem:"8 + 5 =", steps:["8 + 2 = 10","10 + 3 = 13"], answer:"13" } },
     { id:"add-fact-family", label:"Fact families to 18", objective:"Student uses the add/subtract inverse and missing addends", grade:"Grade 2", stars:3, range:[21,28], pool:()=>spiral(addFormats(fFactFamily()), addFormats(fMakeTen()), addFormats(fNearDoubles()), "ad6"), example:{ problem:"7 + ___ = 12", steps:["12 - 7 = 5"], answer:"5" } },
     { id:"add-2d-noregroup", label:"2-digit addition (no regrouping)", objective:"Student adds tens and ones separately", grade:"Grade 2-3", stars:3, range:[29,44], pool:()=>[...enumAddClean(11,88,11,88), ...det(enumMissingAdd(11,77,11,22,false), 60, "ad7m"), ...det(addFormats(fFactFamily()), 20, "ad7p")], example:{ problem:"34 + 25 =", steps:["Ones: 4 + 5 = 9","Tens: 3 + 2 = 5","Answer: 59"], answer:"59" } },
-    { id:"add-2d-regroup", label:"2-digit addition (regrouping)", objective:"Student carries the ten when ones reach 10", grade:"Grade 3", stars:4, range:[45,64], pool:()=>[...enumAdd(10,99,10,99,true), ...det(enumMissingAdd(30,99,20,70), 60, "ad8m"), ...det(addFormats(fMakeTen()), 20, "ad8p")], example:{ problem:"37 + 45 =", steps:["Ones: 7 + 5 = 12 → write 2, carry 1","Tens: 3 + 4 + 1 = 8","Answer: 82"], answer:"82" } },
+    { id:"add-2d-regroup", label:"2-digit addition (regrouping)", objective:"Student carries the ten when ones reach 10", grade:"Grade 3", stars:4, range:[45,64], pool:()=>[...enumAddRegroup(), ...det(enumMissingAdd(30,99,20,70), 60, "ad8m"), ...det(addFormats(fMakeTen()), 20, "ad8p")], example:{ problem:"37 + 45 =", steps:["Ones: 7 + 5 = 12 → write 2, carry 1","Tens: 3 + 4 + 1 = 8","Answer: 82"], answer:"82" } },
     { id:"add-3d-three", label:"3-digit addition & three addends", objective:"Student adds across columns, chaining three numbers", grade:"Grade 3-4", stars:4, range:[65,84], pool:()=>[...enumAdd(100,999,100,999), ...enumMissingAdd(100,999,50,500), ...enumThreeAdd(15,99)], example:{ problem:"248 + 167 =", steps:["Ones: 8+7=15 → 5 carry 1","Tens: 4+6+1=11 → 1 carry 1","Hundreds: 2+1+1=4","Answer: 415"], answer:"415" } },
     { id:"add-missing-review", label:"Missing addend & mixed review", objective:"Student solves for the unknown, reviewing every addition type", grade:"Grade 4", stars:5, range:[85,100], pool:()=>[...enumMissingAdd(10,99,10,99), ...enumAdd(100,999,100,999), ...enumAdd(10,99,10,99,true)], example:{ problem:"___ + 25 = 61", steps:["61 - 25 = 36"], answer:"36" } },
   ],
@@ -517,7 +564,17 @@ function selectProblems(pool: AProblem[], t: number, count: number, seed: number
   const N = sorted.length;
   // Difficulty window for THIS sheet (keeps cross-sheet progression). A wide
   // window + seeded sampling means consecutive sheets draw different subsets.
-  const W = Math.min(N, Math.max(count, Math.round(N * 0.7)));
+  //
+  // The window OPENS as the unit progresses. It used to be a flat 70% of the
+  // pool at every t, which meant the very first sheet of a lesson could draw
+  // from all but the hardest 30% — so day one of "2-digit addition
+  // (regrouping)" served answers over 100, needing a tens-column carry the
+  // curriculum does not teach for another two lessons. Starting at 35% keeps
+  // the first sheets inside the part of the pool the lesson has actually
+  // taught, and there is still ample variety: 35% of a ~300-problem pool is
+  // ~100 problems for a 10-problem sheet.
+  const tc = Math.min(1, Math.max(0, t));
+  const W = Math.min(N, Math.max(count, Math.round(N * (0.35 + 0.35 * tc))));
   const start = N <= count ? 0 : Math.round(t * (N - W));
   const win = N <= count ? sorted : sorted.slice(start, start + W);
   // Seeded sample of `count` distinct items from the window (round-robin if the
