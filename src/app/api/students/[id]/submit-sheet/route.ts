@@ -7,7 +7,7 @@ import {
   ok, notFound, forbidden, err, handleRouteError, withAuth, parseRequest,
 } from "@/lib/api/helpers";
 import { SubmitSheetSchema } from "@/lib/validation/schemas";
-import { answersMatch } from "@/lib/grading";
+import { answersMatch, scoreSubmission } from "@/lib/grading";
 import { getMathLevelSkills } from "@/lib/worksheet/generator";
 import { isSheetFluent, isSheetOnPace, isAccurateButSlow, skillLabelFromTitle } from "@/lib/mastery/fluency";
 import { isAlgorithmUnit } from "@/lib/shop/arithmetic-engine";
@@ -79,19 +79,13 @@ export async function POST(
         };
       });
 
-      const gradedScore = gradedAnswers.filter((a) => a.isCorrect).length;
-      const totalProblems = gradedAnswers.length;
-      // Interactive practice retries till right, so grading the FINAL answers
-      // always yields ~100%. Prefer the client's honest first-try accuracy for
-      // the recorded score + mastery; paper submissions omit it (final == first try).
-      // Server-side bound: first-try accuracy can never EXCEED the final graded
-      // accuracy (retries only improve answers). Clamp so a tampered client
-      // can't claim 100% mastery while submitting wrong final answers.
-      const finalPct = Math.round((gradedScore / Math.max(totalProblems, 1)) * 100);
-      const ftRaw = parsed.data.firstTryAccuracyPct;
-      const ft = ftRaw != null ? Math.min(Math.max(0, Math.round(ftRaw)), finalPct) : null;
-      const accuracyPct = ft != null ? ft : finalPct;
-      const score = ft != null ? Math.round((accuracyPct / 100) * totalProblems) : gradedScore;
+      // Scoring lives in src/lib/grading so it can be tested without a request:
+      // it excludes non-question items (a reading passage ships with points: 0)
+      // and records first-try accuracy clamped to the final graded accuracy.
+      const { score, totalProblems, accuracyPct } = scoreSubmission(
+        gradedAnswers,
+        parsed.data.firstTryAccuracyPct,
+      );
 
       // ── Persist atomically. An advisory lock on (student, level) serializes
       // concurrent submissions for this student+level so the daily count is

@@ -25,6 +25,25 @@ import { isSkillMastered } from "@/lib/mastery";
 import { isSheetFluent, skillLabelFromTitle } from "@/lib/mastery/fluency";
 import type { TodaySheet } from "@/types";
 
+/**
+ * Which sheet of a lesson range to generate next.
+ *
+ * Positioned by how far the student is through THIS lesson, so it resets to
+ * the start of the range the moment the skill map advances. It used to be a
+ * running per-level counter modulo the range size, which never reset: a child
+ * on day one of 2-digit addition (regrouping) was handed content sheet 62 of
+ * the 45-64 range - the third hardest sheet in the unit, every problem
+ * carrying, nine of ten crossing 100.
+ *
+ * @param range        the lesson [first, last] content sheet numbers
+ * @param doneInLesson sheets this student has already completed in this lesson
+ * @param offset       index within a batch being minted in one go
+ */
+export function contentSheetFor(range: readonly [number, number], doneInLesson: number, offset = 0): number {
+  const at = range[0] + Math.max(0, doneInLesson) + Math.max(0, offset);
+  return Math.min(range[1], at);
+}
+
 export async function buildTodayPacket(
   studentId: string,
   progress: any
@@ -204,10 +223,7 @@ export async function buildTodayPacket(
         // content sheet 62 of the 45–64 range: the third-hardest sheet in the
         // unit, every problem carrying, nine of ten crossing 100.
         const contentSheet = curMathSkill
-          ? Math.min(
-              curMathSkill.range[1],
-              curMathSkill.range[0] + doneInCurrentLesson + i,
-            )
+          ? contentSheetFor(curMathSkill.range, doneInCurrentLesson, i)
           : Math.min(100, nextNum);
         const { problems, answerKey } = generateProblems({
           subjectSlug: progress.level?.subject?.slug ?? "MATH",

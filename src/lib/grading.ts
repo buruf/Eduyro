@@ -77,3 +77,59 @@ function parseNumeric(s: string): number | null {
   const n = Number(cleaned);
   return Number.isFinite(n) ? n : null;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sheet scoring
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** The shape scoring needs from a graded answer. */
+export interface ScorableItem {
+  isCorrect: boolean;
+  /** 0 marks an item that is NOT a question — a passage block, a heading. */
+  points?: number;
+}
+
+export interface SheetScore {
+  score: number;
+  totalProblems: number;
+  accuracyPct: number;
+}
+
+/** An item is graded only if it is worth points. Reading sheets ship the
+ *  passage itself as an item with `points: 0` and the answer "(passage — no
+ *  answer required)" — it is material to read, not a question. Counting it
+ *  made every passage sheet unwinnable: the child was marked wrong for not
+ *  answering something with no answer, and capped at 6/7 before starting. */
+export function isGradable(item: { points?: number }): boolean {
+  return (item.points ?? 1) > 0;
+}
+
+/**
+ * The recorded score for a submission.
+ *
+ * Interactive practice retries until the answer is right, so grading the FINAL
+ * answers always lands near 100%. The honest measure of mastery is the client's
+ * FIRST-TRY accuracy, which is what gets recorded — and it is clamped to the
+ * final graded accuracy so a tampered client cannot claim mastery it did not
+ * demonstrate. Paper submissions omit first-try, where final IS first try.
+ *
+ * This is why a sheet's stored `score` legitimately differs from the number of
+ * answers flagged correct: they measure different things, and `score` is
+ * always the lower of the two.
+ */
+export function scoreSubmission(
+  graded: ScorableItem[],
+  firstTryAccuracyPct: number | null | undefined,
+): SheetScore {
+  const scored = graded.filter(isGradable);
+  const totalProblems = scored.length;
+  const gradedScore = scored.filter((a) => a.isCorrect).length;
+  const finalPct = Math.round((gradedScore / Math.max(totalProblems, 1)) * 100);
+  const ft =
+    firstTryAccuracyPct != null
+      ? Math.min(Math.max(0, Math.round(firstTryAccuracyPct)), finalPct)
+      : null;
+  const accuracyPct = ft != null ? ft : finalPct;
+  const score = ft != null ? Math.round((accuracyPct / 100) * totalProblems) : gradedScore;
+  return { score, totalProblems, accuracyPct };
+}
