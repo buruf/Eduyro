@@ -18,7 +18,7 @@
 import { MathText } from "@/components/MathText";
 import { QuestionWithViz } from "@/components/FractionViz";
 import { Narration } from "@/components/Narration";
-import { buildScaffold } from "@/lib/tutor/scaffold";
+import { coachFor } from "@/lib/tutor/coach";
 import { factPaceTargetSec } from "@/lib/mastery/fluency";
 import { isFactLevel } from "@/lib/mastery/fact-sprint";
 import { FactSprintModal } from "@/components/practice/FactSprintModal";
@@ -959,31 +959,10 @@ function PracticeModal({
    * fully-worked 3-step scaffold above problems 1–3 (fading across them). */
   scaffoldFirstThree?: boolean;
 }) {
-  // Scaffold with a WORKED-EXAMPLE fallback: when buildScaffold has no real
-  // handler for a question form (bland "the correct answer is X"), reuse the
-  // unit's authored tutorial example as the hint sequence — a similar problem
-  // fully worked, step by step — so EVERY question form coaches, across the
-  // board, without per-form authoring.
-  const scaffoldFor = (question: string, correctAnswer: string, studentAnswer: string, explanation?: string) => {
-    const sc = buildScaffold(question, correctAnswer, studentAnswer, { subjectSlug, explanation, directive: sheet.skillName });
-    // Ask the scaffold whether it actually recognised the question, rather
-    // than matching its wording. The old check looked for a one-hint
-    // "The correct answer is …" that the non-math branch had stopped
-    // producing, so this fallback never fired and every reading, writing and
-    // science question was answered with a reveal instead of a worked example.
-    if (!sc.generic) return sc;
-    const ex = getMicroSkillLesson(subjectSlug, levelCode, sheet.skillName)?.example;
-    if (!ex?.steps?.length) return sc;
-    return {
-      explanation: studentAnswer ? `You answered ${studentAnswer}. Let's walk through a similar example first.` : `Let's walk through a similar example first.`,
-      hints: [
-        `Similar example: ${ex.problem}`,
-        ...ex.steps,
-        `The example's answer is ${ex.answer}. Use the SAME steps on yours — the correct answer is ${correctAnswer}.`,
-      ],
-      answer: correctAnswer,
-    };
-  };
+  // The one coaching path, shared with scripts/audit-example-depth.ts so the
+  // audit grades exactly what the child is shown.
+  const scaffoldFor = (question: string, correctAnswer: string, studentAnswer: string, explanation?: string) =>
+    coachFor({ question, correctAnswer, studentAnswer, subjectSlug, levelCode, skillName: sheet.skillName, explanation });
 
   const [problems, setProblems] = useState<PracticeProblem[]>([]);
   const [loading, setLoading] = useState(true);

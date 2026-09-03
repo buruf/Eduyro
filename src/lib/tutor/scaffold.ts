@@ -339,8 +339,32 @@ export function buildScaffold(
     // a point" was matching /round/ and giving geometry sheets rounding hints.
     if (/\brounds?\b|\brounding\b|\bround\b/.test(dir)) {
       const place = /whole/.test(q) ? "ones" : /tenth/.test(q) ? "tenths" : "named";
+      // Work THIS number rather than reciting the rule at it: name the digit
+      // that decides, say what it decides, and only then give the answer.
+      const nm = q.match(/(\d+\.\d+)/);
+      if (nm) {
+        const decimals = nm[1].split(".")[1] ?? "";
+        const keepIdx = place === "ones" ? -1 : 0;          // -1 = keep no decimals
+        const decider = decimals[keepIdx + 1];
+        if (decider !== undefined) {
+          const kept = place === "ones" ? nm[1].split(".")[0] : `${nm[1].split(".")[0]}.${decimals[0]}`;
+          return {
+            explanation: `Rounding keeps the ${place} place and lets the NEXT digit decide.`,
+            hints: [
+              `Keeping the ${place} place means keeping ${kept}.`,
+              `The digit just after it is ${decider} — ${+decider >= 5 ? "5 or more, so round UP" : "less than 5, so round DOWN and leave it"}.`,
+              `Answer: ${A}.`,
+            ],
+            answer: A,
+          };
+        }
+      }
       return { explanation: `Look at the digit just right of the ${place} place.`,
-        hints: [`If it's 5 or more, round up; otherwise round down.`, `Answer: ${A}.`], answer: A };
+        hints: [
+          `Keep everything up to the ${place} place, then look at the very next digit.`,
+          `If it's 5 or more, round up; otherwise leave the kept digit alone.`,
+          `Answer: ${A}.`,
+        ], answer: A };
     }
     // Percent of a number "25% of 80"
     if (/percent of|find .*percent/.test(dir) && /%\s*of/.test(q)) {
