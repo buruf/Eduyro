@@ -966,8 +966,12 @@ function PracticeModal({
   // board, without per-form authoring.
   const scaffoldFor = (question: string, correctAnswer: string, studentAnswer: string, explanation?: string) => {
     const sc = buildScaffold(question, correctAnswer, studentAnswer, { subjectSlug, explanation, directive: sheet.skillName });
-    const bland = sc.hints.length === 1 && /^The correct answer is/.test(sc.hints[0]);
-    if (!bland) return sc;
+    // Ask the scaffold whether it actually recognised the question, rather
+    // than matching its wording. The old check looked for a one-hint
+    // "The correct answer is …" that the non-math branch had stopped
+    // producing, so this fallback never fired and every reading, writing and
+    // science question was answered with a reveal instead of a worked example.
+    if (!sc.generic) return sc;
     const ex = getMicroSkillLesson(subjectSlug, levelCode, sheet.skillName)?.example;
     if (!ex?.steps?.length) return sc;
     return {

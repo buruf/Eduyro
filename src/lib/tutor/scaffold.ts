@@ -20,6 +20,15 @@ export interface Scaffold {
   hints: string[];
   /** The correct answer (shown after the hints). */
   answer: string;
+  /** True when NO handler recognised this question and the hints are the
+   *  generic "rule out the choices, here is the answer" pair. Callers use it
+   *  to substitute the unit's authored worked example instead.
+   *
+   *  This exists because the student page used to detect that case by matching
+   *  the fallback's exact wording — a string that had since changed, so the
+   *  check never fired and every reading, writing and science question was
+   *  answered with a reveal instead of a lesson. A flag cannot drift. */
+  generic?: boolean;
   /** OPTIONAL viz marker ("[[viz missdots 6 13]]") rendered ONLY in the
    *  interactive practice modal — a see-and-count picture for young learners.
    *  PDF worked examples and the tutorial step-list ignore it, so it never
@@ -1020,6 +1029,9 @@ export function buildScaffold(
       explanation: student ? `You chose "${student}". Let's check it.` : `Let's find the best choice.`,
       hints,
       answer: A,
+      // Without a per-item explanation these hints teach nothing — say so, so
+      // the caller can fall back to the unit's worked example.
+      generic: !opts.explanation,
     };
   }
 
@@ -2142,6 +2154,7 @@ export function buildScaffold(
       `The correct answer is ${A}.`,
     ],
     answer: A,
+    generic: true,
   };
 }
 

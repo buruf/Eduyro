@@ -25,6 +25,7 @@
 import { getMathLevelSkills, generateProblems, type LevelSkill } from "@/lib/worksheet/generator";
 import { contentSheetFor } from "@/lib/worksheet/today-packet";
 import { scoreSubmission, isGradable } from "@/lib/grading";
+import { buildScaffold } from "@/lib/tutor/scaffold";
 
 const MATH_LEVELS = Array.from({ length: 18 }, (_, i) => `M${i + 1}`);
 
@@ -241,6 +242,38 @@ describe("child journey — 30 days through the math curriculum", () => {
           }
         }
       }
+    });
+  });
+
+  // ── what happens when a child gets it WRONG ────────────────────────────
+  // A wrong answer is the moment teaching matters most. The page swaps in the
+  // unit's worked example whenever the scaffold did not recognise a question —
+  // but it used to decide that by matching the fallback's exact wording, which
+  // had changed. The check silently stopped firing, and every reading, writing
+  // and science question answered a mistake with the answer rather than a
+  // method. The flag below is what that decision now rests on, so it is worth
+  // pinning.
+  describe("a wrong answer is met with teaching, not the answer", () => {
+    const opts = (subjectSlug: string) => ({ subjectSlug, directive: "" });
+
+    it("admits when it does not recognise a question", () => {
+      const sc = buildScaffold("Which word rhymes with 'tap'?", "map", "cat", opts("READING"));
+      expect(sc.generic).toBe(true);
+    });
+
+    it("does NOT claim to be generic when it genuinely taught something", () => {
+      const sc = buildScaffold("27 + 45", "72", "62", opts("MATH"));
+      expect(sc.generic).toBeFalsy();
+      expect(sc.hints.filter((h) => !/^The correct answer is/.test(h)).length).toBeGreaterThanOrEqual(2);
+    });
+
+    it("stops being generic once the item carries its own explanation", () => {
+      const sc = buildScaffold("Which word rhymes with 'tap'?", "map", "cat", {
+        subjectSlug: "READING",
+        directive: "",
+        explanation: "Rhyming words share their ending sound: -ap.",
+      });
+      expect(sc.generic).toBeFalsy();
     });
   });
 });
