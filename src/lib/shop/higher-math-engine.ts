@@ -613,12 +613,30 @@ function tAngleDragRad(): XP[] {
     interactive: { kind: "angle-drag", xRange: [-1.4, 1.4], yRange: [-1.4, 1.4], snap: 1 },
   }));
 }
+// Two forms over six triples is twelve problems, and a sheet holds thirty — so
+// this unit used to round-robin and show a child the same question up to five
+// times. Every form below is the SAME identity asked a different way, which is
+// what the unit is for: sin²θ + cos²θ = 1 is not a lookup, it is a relation you
+// can enter from any side.
 function tPythagIdentity(): XP[] {
   const out: XP[] = [];
   for (const [a, b, c] of TRIPLES) {
     out.push({ q: `sin θ = ${frac(a, c)}. Find cos θ (acute angle)`, a: frac(b, c), diff: c + 28, key: `tpi:${a}_${c}` });
     out.push({ q: `cos θ = ${frac(b, c)}. Find sin θ (acute angle)`, a: frac(a, c), diff: c + 29, key: `tpi2:${b}_${c}` });
+    // Square first, root second — the step students skip.
+    out.push({ q: `sin θ = ${frac(a, c)}. Find cos²θ`, a: frac(b * b, c * c), diff: c + 30, key: `tpi3:${a}_${c}` });
+    // The identity holds whatever θ is: the answer is always 1, and seeing that
+    // six times with six different givens is the lesson, not padding.
+    out.push({ q: `sin θ = ${frac(a, c)}. Evaluate sin²θ + cos²θ`, a: "1", diff: c + 31, key: `tpi4:${a}_${c}` });
+    // Enter from tangent — needs cos via the identity first.
+    out.push({ q: `sin θ = ${frac(a, c)}. Find tan θ (acute angle)`, a: frac(a, b), diff: c + 33, key: `tpi5:${a}_${c}` });
   }
+  // Rearranged forms, stated symbolically.
+  out.push({ q: `Complete the identity: sin²θ + ___ = 1`, a: "cos²θ", diff: 30, key: "tpi:comp1" });
+  out.push({ q: `Complete the identity: ___ + cos²θ = 1`, a: "sin²θ", diff: 31, key: "tpi:comp2" });
+  out.push({ q: `Simplify: 1 − sin²θ`, a: "cos²θ", diff: 32, key: "tpi:simp1" });
+  out.push({ q: `Simplify: 1 − cos²θ`, a: "sin²θ", diff: 33, key: "tpi:simp2" });
+  out.push({ q: `Simplify: sin²θ + cos²θ`, a: "1", diff: 34, key: "tpi:simp3" });
   return out;
 }
 
@@ -627,8 +645,17 @@ function tPythagIdentity(): XP[] {
 // ═════════════════════════════════════════════════════════════════════════════
 function a2Log(): XP[] {
   const out: XP[] = [];
-  for (const b of [2, 3, 5, 10]) for (let k = 1; k <= 5; k++)
+  for (const b of [2, 3, 4, 5, 10]) for (let k = 1; k <= 5; k++)
     out.push({ q: `Evaluate log_${b}(${b ** k}).`, a: `${k}`, diff: b + k, key: `lg:${b}_${k}` });
+  // The two special cases students most often get backwards, and the reverse
+  // reading of the same definition. Twenty problems could not fill a sheet.
+  for (const b of [2, 3, 4, 5, 10]) {
+    out.push({ q: `Evaluate log_${b}(1).`, a: "0", diff: b + 0.5, key: `lg1:${b}` });
+    out.push({ q: `Evaluate log_${b}(${b}).`, a: "1", diff: b + 0.6, key: `lgb:${b}` });
+  }
+  // Definition form: a log IS the question "what power?".
+  for (const b of [2, 3, 5, 10]) for (const k of [2, 3, 4])
+    out.push({ q: `log_${b}(x) = ${k}. Find x.`, a: `${b ** k}`, diff: b + k + 0.7, key: `lgr:${b}_${k}` });
   return out;
 }
 function a2ExpEval(): XP[] {
@@ -738,6 +765,10 @@ function a2TurningPoints(): XP[] {
   for (let n = 2; n <= 9; n++) {
     out.push({ q: `A polynomial of degree ${n} has at most how many turning points?`, a: `${n - 1}`, diff: n, key: `tp:${n}` });
     out.push({ q: `f(x) = ${jPoly([{ c: 2, n }, { c: -3, n: 1 }, { c: 1, n: 0 }])} has at most how many turning points?`, a: `${n - 1}`, diff: n + 0.4, key: `tpp:${n}` });
+    // Read the relation backwards, and test the word that carries it: "at
+    // most" is a ceiling, not a count — the misconception this unit exists for.
+    out.push({ q: `A graph turns ${n - 1} times. What is the smallest degree its polynomial could have?`, a: `${n}`, diff: n + 0.6, key: `tpr:${n}` });
+    out.push(tfXP(`tpt:${n}`, `True or false: every polynomial of degree ${n} has exactly ${n - 1} turning points.`, "False", n + 0.8));
   }
   return out;
 }
@@ -748,6 +779,11 @@ function a2FTA(): XP[] {
   for (let n = 2; n <= 9; n++) {
     out.push({ q: `By the Fundamental Theorem of Algebra, a degree-${n} polynomial has exactly how many roots (counting multiplicity)?`, a: `${n}`, diff: n, key: `fta:${n}` });
     out.push({ q: `How many roots (with multiplicity) does ${jPoly([{ c: 1, n }, { c: 2, n: 1 }, { c: -3, n: 0 }])} = 0 have?`, a: `${n}`, diff: n + 0.4, key: `ftap:${n}` });
+    // The small print IS the theorem: the missing roots are complex, and the
+    // count is exact rather than a maximum.
+    const real = Math.max(0, n - 2);
+    out.push({ q: `A degree-${n} polynomial has ${real} real roots. How many of its roots are complex?`, a: `${n - real}`, diff: n + 0.6, key: `ftac:${n}` });
+    out.push({ q: `A polynomial has exactly ${n} roots, counting multiplicity. What is its degree?`, a: `${n}`, diff: n + 0.7, key: `ftar:${n}` });
   }
   return out;
 }
@@ -773,7 +809,17 @@ function a2RRT(): XP[] {
     const q = `By the Rational Root Theorem, which of these is a POSSIBLE rational root of x² − x − ${c}?  (leading coefficient 1)`;
     const mc = mcXP(`rrt:${c}`, "multiple-choice", q, `${divs[0]}`, nonDivs, c * 0.4);
     if (mc) out.push(mc);
+    // Eight multiple-choice items could not fill a sheet. The theorem is a
+    // recipe with two halves — the constant on top, the leading coefficient
+    // underneath — so ask for each half directly as well.
+    out.push({ q: `For x² − x − ${c} (leading coefficient 1), the possible rational roots are ± the divisors of which number?`, a: `${c}`, diff: c * 0.4 + 0.1, key: `rrtc:${c}` });
+    out.push({ q: `How many POSITIVE divisors does ${c} have? (the count of possible positive rational roots of x² − x − ${c})`, a: `${divs.length + 2}`, diff: c * 0.4 + 0.2, key: `rrtn:${c}` });
+    const mc2 = mcXP(`rrtx:${c}`, "multiple-choice", `Which of these could NOT be a rational root of x² − x − ${c}?`, nonDivs[0], [`${divs[0]}`, `${c}`, "1"], c * 0.4 + 0.3);
+    if (mc2) out.push(mc2);
   }
+  // With a leading coefficient above 1 the denominator finally does something.
+  for (const [lead, konst] of [[2, 3], [3, 4], [2, 5], [4, 3], [3, 8], [2, 9]] as [number, number][])
+    out.push({ q: `For ${lead}x² + x − ${konst}, the possible rational roots are ± (divisors of ${konst}) over (divisors of which number?)`, a: `${lead}`, diff: lead + konst * 0.3, key: `rrtl:${lead}_${konst}` });
   return out;
 }
 
@@ -874,6 +920,24 @@ function pcConics(): XP[] {
     const opts = Array.from(new Set([correct, ...dist])).slice(0, 4);
     if (opts.length >= 3) out.push({ q: `Which graph matches y = ${base}²${kterm}?`, a: correct, diff: 3 + mi * 0.1, key: `pcmg:${h}_${k}`, type: "multiple_choice", options: shuffleByKey(opts, `pcmg:${h}_${k}`), fmt: "match-graph" });
   }
+  // Fourteen problems could not fill a thirty-problem sheet, so the selector
+  // round-robined and a child saw the same parabola five times. These read the
+  // SAME vertex form the unit is built on, from the other three directions:
+  // equation → vertex, vertex → equation, and the axis of symmetry that falls
+  // straight out of h.
+  const VK: [number, number][] = [[2, 1], [-1, 3], [3, -2], [-2, -1], [0, 2], [1, -3], [-3, 1], [2, -4], [4, 0], [-4, 2]];
+  VK.forEach(([h, k], i) => {
+    const base = h === 0 ? "x" : `(x ${h > 0 ? `− ${h}` : `+ ${-h}`})`;
+    const kterm = k === 0 ? "" : k > 0 ? ` + ${k}` : ` − ${-k}`;
+    out.push({ q: `What is the vertex of y = ${base}²${kterm}?`, a: `${h},${k}`, diff: 2 + i * 0.05, key: `pcve:${h}_${k}`, type: "short_answer", answerType: "point" });
+    // The sign trap: the bracket says (x − h), so the vertex x is +h.
+    out.push({ q: `What is the axis of symmetry of y = ${base}²${kterm}?`, a: `x = ${h}`, diff: 2.6 + i * 0.05, key: `pcas:${h}_${k}` });
+  });
+  VK.slice(0, 6).forEach(([h, k], i) => {
+    const base = h === 0 ? "x" : `(x ${h > 0 ? `− ${h}` : `+ ${-h}`})`;
+    const kterm = k === 0 ? "" : k > 0 ? ` + ${k}` : ` − ${-k}`;
+    out.push({ q: `Write the equation of the parabola with vertex (${h}, ${k}) and a = 1.`, a: `y = ${base}²${kterm}`, diff: 4 + i * 0.1, key: `pceq:${h}_${k}` });
+  });
   return out;
 }
 

@@ -164,30 +164,23 @@ describe("child journey — 30 days through the math curriculum", () => {
       expect(all.filter((s) => s.blank > 0).map((s) => s.where)).toEqual([]);
     });
 
-    // RATCHET. A sheet repeating a question means that lesson's content bank is
-    // too thin to fill it — the selector round-robins rather than leaving gaps.
-    // That is a content debt, not a logic fault, so it is pinned rather than
-    // failed outright: it may shrink, never grow. Growth means a new lesson
-    // shipped without enough material behind it.
-    const PINNED_REPEATING_SHEETS = 103;
-    it(`does not repeat questions on more than ${PINNED_REPEATING_SHEETS} sheets`, () => {
+    // Was a ratchet pinned at 103 while the thin banks were being filled. All
+    // eleven units have been widened, so this is now an outright rule: no
+    // child should ever answer the same question twice on one sheet, and a new
+    // lesson may not ship without enough material to fill its sheets.
+    it("never repeats a question on a sheet", () => {
       const repeating = all.filter((s) => s.distinct < s.of);
-      if (repeating.length > PINNED_REPEATING_SHEETS) {
+      if (repeating.length) {
         const worst = [...repeating]
           .sort((a, b) => a.distinct / a.of - b.distinct / b.of)
           .slice(0, 10)
           .map((s) => `${s.distinct}/${s.of} distinct — ${s.where}`);
         throw new Error(
-          `Thin content banks GREW: ${repeating.length} of ${all.length} servable sheets repeat a question ` +
-            `(pinned ceiling ${PINNED_REPEATING_SHEETS}).\nWorst:\n  ${worst.join("\n  ")}`,
+          `${repeating.length} of ${all.length} servable sheets repeat a question — that lesson's ` +
+            `content bank is too thin to fill a sheet.\nWorst:\n  ${worst.join("\n  ")}`,
         );
       }
-      if (repeating.length < PINNED_REPEATING_SHEETS) {
-        console.log(
-          `NOTE: repeating sheets dropped to ${repeating.length} — lower PINNED_REPEATING_SHEETS.`,
-        );
-      }
-      expect(repeating.length).toBeLessThanOrEqual(PINNED_REPEATING_SHEETS);
+      expect(repeating).toEqual([]);
     });
 
     it("never leaves a sheet less than half distinct", () => {

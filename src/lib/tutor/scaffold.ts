@@ -1707,6 +1707,13 @@ export function buildScaffold(
       `Then feed that RESULT into f.`,
       `Answer: ${A}.`,
     ], answer: A };
+    // log_b(x) = k → the definition read the other way round.
+    fm = qn.match(/log_?(\d+)\s*\(\s*x\s*\)\s*=\s*(\d+)/i);
+    if (fm) return { explanation: `A log equation IS an exponent equation in disguise.`, hints: [
+      `log_${fm[1]}(x) = ${fm[2]} says: ${fm[1]} to the power ${fm[2]} gives x.`,
+      `So x = ${fm[1]}${"^"}${fm[2]}.`,
+      `Answer: ${A}.`,
+    ], answer: A };
     // Evaluate log_b(k)
     fm = qn.match(/log_?(\d+)\s*\(\s*(\d+)\s*\)/i);
     if (fm) return { explanation: `A log asks: "the base to WHAT POWER gives this number?"`, hints: [
@@ -1895,6 +1902,49 @@ export function buildScaffold(
       `Simplify the fraction: divide ${em[1]} and 180 by ${g} → ${+em[1] / g}π/${180 / g}.`,
       `Answer: ${A}.`,
     ], answer: A }; }
+    // ── Pythagorean-identity forms ────────────────────────────────────────
+    // These sit ABOVE the "Find cos θ" branch below, which would otherwise
+    // swallow "Find cos²θ" and explain the wrong thing (a side ratio rather
+    // than its square).
+    em = qe.match(/(sin|cos)\s*θ\s*=\s*(\d+)\/(\d+)\.\s*Find (sin|cos)²θ/i);
+    if (em) { const o = +em[2], h = +em[3]; return { explanation: `Rearrange the identity, then square — do not root.`, hints: [
+      `sin²θ + cos²θ = 1, so ${em[4].toLowerCase()}²θ = 1 − ${em[1].toLowerCase()}²θ.`,
+      `${em[1].toLowerCase()}²θ = (${o}/${h})² = ${o * o}/${h * h}.`,
+      `1 − ${o * o}/${h * h} = ${h * h - o * o}/${h * h}.`,
+      `Answer: ${A}.`,
+    ], answer: A }; }
+    em = qe.match(/(sin|cos)\s*θ\s*=\s*(\d+)\/(\d+)\.\s*Evaluate sin²θ \+ cos²θ/i);
+    if (em) return { explanation: `This is the identity itself — the given value never matters.`, hints: [
+      `sin²θ + cos²θ = 1 holds for EVERY angle θ.`,
+      `You were given a value for ${em[1].toLowerCase()} θ, but you do not need it.`,
+      `Answer: 1.`,
+    ], answer: A };
+    em = qe.match(/sin\s*θ\s*=\s*(\d+)\/(\d+)\.\s*Find tan θ/i);
+    if (em) { const o = +em[1], h = +em[2], adj = Math.round(Math.sqrt(h * h - o * o)); return {
+      explanation: `tan θ is sin over cos — so find cos first.`, hints: [
+      `cos²θ = 1 − (${o}/${h})² = ${h * h - o * o}/${h * h}, so cos θ = ${adj}/${h}.`,
+      `tan θ = sin θ ÷ cos θ = (${o}/${h}) ÷ (${adj}/${h}).`,
+      `The ${h}s cancel, leaving ${o}/${adj}.`,
+      `Answer: ${A}.`,
+    ], answer: A }; }
+    em = qe.match(/Complete the identity:\s*(sin²θ \+ ___|___ \+ cos²θ)\s*=\s*1/i);
+    if (em) return { explanation: `The identity has exactly two terms, and they always sum to 1.`, hints: [
+      `The full identity is sin²θ + cos²θ = 1.`,
+      `Match it against what is written and read off the missing term.`,
+      `Answer: ${A}.`,
+    ], answer: A };
+    em = qe.match(/Simplify:\s*1\s*[−-]\s*(sin|cos)²θ/i);
+    if (em) { const other = em[1].toLowerCase() === "sin" ? "cos" : "sin"; return {
+      explanation: `Rearrange sin²θ + cos²θ = 1.`, hints: [
+      `Take ${em[1].toLowerCase()}²θ from both sides: 1 − ${em[1].toLowerCase()}²θ = ${other}²θ.`,
+      `So the expression is just ${other}²θ.`,
+      `Answer: ${A}.`,
+    ], answer: A }; }
+    if (/Simplify:\s*sin²θ \+ cos²θ/i.test(qe)) return { explanation: `Straight from the identity.`, hints: [
+      `sin²θ + cos²θ is the left side of the Pythagorean identity.`,
+      `It equals 1 for every angle.`,
+      `Answer: 1.`,
+    ], answer: A };
     em = qe.match(/(sin|cos)\s*θ\s*=\s*(\d+)\/(\d+)\.\s*Find (cos|sin)/i);
     if (em) { const o = +em[2], h = +em[3]; return { explanation: `Use sin²θ + cos²θ = 1 (or the missing side of the triangle).`, hints: [
       `The missing side = √(${h}² − ${o}²) = √${h * h - o * o} = ${Math.sqrt(h * h - o * o)}.`,
@@ -1907,6 +1957,24 @@ export function buildScaffold(
       const n = +[...em[2]].map((c) => SUPD[c]).join(""); return { explanation: `A power means repeated multiplication.`, hints: [
       `${em[1]}${em[2]} means ${Array(n).fill(em[1]).join(" × ")}.`,
       `Multiply step by step.`,
+      `Answer: ${A}.`,
+    ], answer: A }; }
+    // ── Vertex form, read three ways ──────────────────────────────────────
+    // The sign trap is the whole lesson: the bracket says (x − h), so the
+    // vertex sits at +h.
+    em = qe.match(/What is the (vertex|axis of symmetry) of y = \(?x\s*([−+-])\s*(\d+)\)?²\s*([+−-]\s*\d+)?/i);
+    if (em) { const sign = em[2] === "+" ? -1 : 1; const h = sign * +em[3]; return {
+      explanation: `Read the vertex straight out of the bracket — with the sign flipped.`, hints: [
+      `Vertex form is y = (x − h)² + k, and the vertex is (h, k).`,
+      `The bracket here gives h = ${h} — the sign flips coming out of the bracket.`,
+      em[1].toLowerCase() === "vertex" ? `k is the number added on the end.` : `The axis of symmetry is the vertical line through the vertex: x = h.`,
+      `Answer: ${A}.`,
+    ], answer: A }; }
+    em = qe.match(/Write the equation of the parabola with vertex \((-?\d+), (-?\d+)\)/i);
+    if (em) { const h = +em[1], k = +em[2]; return { explanation: `Drop the vertex into y = (x − h)² + k.`, hints: [
+      `Vertex form: y = (x − h)² + k with vertex (h, k).`,
+      `Here h = ${h} and k = ${k}, so the bracket is (x ${h >= 0 ? `− ${h}` : `+ ${-h}`}).`,
+      `Then add k on the end.`,
       `Answer: ${A}.`,
     ], answer: A }; }
     // Which graph matches y = (x − h)² + k
@@ -1937,6 +2005,25 @@ export function buildScaffold(
       `ODD multiplicity → the graph crosses straight through.`,
       `Answer: ${A}.`,
     ], answer: A };
+    // ── Degree ↔ turns ↔ roots, read backwards ────────────────────────────
+    em = qe.match(/A graph turns (\d+) times.*smallest degree/i);
+    if (em) return { explanation: `Turn the "at most n − 1" rule around.`, hints: [
+      `A degree-n polynomial turns at most n − 1 times.`,
+      `To turn ${em[1]} times it needs n − 1 ≥ ${em[1]}, so n ≥ ${+em[1] + 1}.`,
+      `Answer: ${A}.`,
+    ], answer: A };
+    em = qe.match(/degree-(\d+) polynomial has (\d+) real roots.*how many.*complex/i);
+    if (em) return { explanation: `The Fundamental Theorem counts ALL roots, real and complex.`, hints: [
+      `A degree-${em[1]} polynomial has exactly ${em[1]} roots in total.`,
+      `${em[2]} of them are real, so the rest must be complex: ${em[1]} − ${em[2]}.`,
+      `Answer: ${A}.`,
+    ], answer: A };
+    em = qe.match(/has exactly (\d+) roots, counting multiplicity\. What is its degree/i);
+    if (em) return { explanation: `The theorem runs both ways.`, hints: [
+      `A degree-n polynomial has exactly n roots, counting multiplicity.`,
+      `So a polynomial with ${em[1]} roots has degree ${em[1]}.`,
+      `Answer: ${A}.`,
+    ], answer: A };
     em = qe.match(/degree[- ](\d+).*turning points|polynomial of degree (\d+) has at most/i);
     if (em || /turning points/i.test(qe)) return { explanation: `Turning points are limited by the degree.`, hints: [
       `A degree-n polynomial has at most n − 1 turning points.`,
@@ -1954,6 +2041,32 @@ export function buildScaffold(
       `Substitute ${k} for x and work it out.`,
       `Answer: ${A}.`,
     ], answer: A }; }
+    // ── Rational Root Theorem, asked a piece at a time ────────────────────
+    em = qe.match(/possible rational roots are ± the divisors of which number\?/i);
+    if (em) return { explanation: `The theorem's numerator comes from the CONSTANT term.`, hints: [
+      `Possible rational roots = ± (divisors of the constant) ÷ (divisors of the leading coefficient).`,
+      `The constant is the term with no x — the number on the end.`,
+      `Answer: ${A}.`,
+    ], answer: A };
+    em = qe.match(/How many POSITIVE divisors does (\d+) have/i);
+    if (em) { const c = +em[1]; const ds: number[] = []; for (let d = 1; d <= c; d++) if (c % d === 0) ds.push(d);
+      return { explanation: `Count every whole number that divides it exactly.`, hints: [
+      `Test 1, 2, 3 … up to ${c} and keep the ones that divide with no remainder.`,
+      `The divisors of ${c} are ${ds.join(", ")}.`,
+      `Answer: ${A}.`,
+    ], answer: A }; }
+    em = qe.match(/Which of these could NOT be a rational root/i);
+    if (em) return { explanation: `Rule OUT anything that does not divide the constant.`, hints: [
+      `Possible roots are ± the divisors of the constant term.`,
+      `Check each option: does it divide the constant exactly?`,
+      `The one that does NOT is the answer: ${A}.`,
+    ], answer: A };
+    em = qe.match(/over \(divisors of which number\?\)/i);
+    if (em) return { explanation: `The denominator comes from the LEADING coefficient.`, hints: [
+      `Possible rational roots = ± (divisors of the constant) ÷ (divisors of the leading coefficient).`,
+      `The leading coefficient is the number in front of the highest power.`,
+      `Answer: ${A}.`,
+    ], answer: A };
     if (/Rational Root Theorem/i.test(qe)) return { explanation: `Possible rational roots divide the constant term.`, hints: [
       `List the ± divisors of the constant term.`,
       `Pick the option that IS one of those divisors.`,

@@ -57,10 +57,21 @@ function placeValue(lo: number, hi: number, part: "tens" | "ones"): EP[] {
     out.push({ q: `How many ${part} in ${n}?`, a: String(part === "tens" ? Math.floor(n / 10) : n % 10), diff: n, key: `pv${part}:${n}` });
   return out;
 }
+// One question shape — blank on the end — gave a pool too small to fill a
+// sheet, so children saw the same sequence twice on a page. The three added
+// shapes are the SAME skill (spot the constant step) entered from elsewhere,
+// and a blank in the middle is the one that proves a child sees the step
+// rather than just adding to whatever number came last.
 function skipCount(step: number, startLo: number, startHi: number): EP[] {
   const out: EP[] = [];
-  for (let s = startLo; s <= startHi; s += step)
-    out.push({ q: `${s}, ${s + step}, ${s + 2 * step}, ___`, a: String(s + 3 * step), diff: s + step * 3, key: `sk${step}:${s}` });
+  for (let s = startLo; s <= startHi; s += step) {
+    const a = s, b = s + step, c = s + 2 * step, d = s + 3 * step;
+    out.push({ q: `${a}, ${b}, ${c}, ___`, a: String(d), diff: s + step * 3, key: `sk${step}:${s}` });
+    out.push({ q: `${a}, ___, ${c}, ${d}`, a: String(b), diff: s + step * 3 + 0.1, key: `skm${step}:${s}` });
+    out.push({ q: `___, ${b}, ${c}, ${d}`, a: String(a), diff: s + step * 3 + 0.2, key: `skf${step}:${s}` });
+    // Counting DOWN by the same step — the pattern read right to left.
+    out.push({ q: `${d}, ${c}, ${b}, ___`, a: String(a), diff: s + step * 3 + 0.3, key: `skb${step}:${s}` });
+  }
   return out;
 }
 

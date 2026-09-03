@@ -359,6 +359,22 @@ function enumFactorCubes(): XP[] {
     out.push({ q: `Factor x³ + ${k * k * k}.`, a: `(x + ${k})(x² - ${term(k, "x")} + ${k * k})`, diff: k, key: `cub:+${k}` });
     out.push({ q: `Factor x³ - ${k * k * k}.`, a: `(x - ${k})(x² + ${term(k, "x")} + ${k * k})`, diff: k + 0.5, key: `cub:-${k}` });
   }
+  // Twenty problems across four sheets meant a child saw the same cube twice
+  // on one page. A leading coefficient is the same pattern with the first cube
+  // root no longer hiding: a³x³ ± k³ = (ax ± k)(a²x² ∓ akx + k²).
+  for (const a of [2, 3, 4]) for (let k = 1; k <= 5; k++) {
+    const a3 = a * a * a, k3 = k * k * k;
+    out.push({
+      q: `Factor ${term(a3, "x³")} + ${k3}.`,
+      a: `(${term(a, "x")} + ${k})(${term(a * a, "x²")} - ${term(a * k, "x")} + ${k * k})`,
+      diff: a * 2 + k + 10, key: `cuba:+${a}_${k}`,
+    });
+    out.push({
+      q: `Factor ${term(a3, "x³")} - ${k3}.`,
+      a: `(${term(a, "x")} - ${k})(${term(a * a, "x²")} + ${term(a * k, "x")} + ${k * k})`,
+      diff: a * 2 + k + 10.5, key: `cuba:-${a}_${k}`,
+    });
+  }
   return out;
 }
 
@@ -402,8 +418,14 @@ function enumPolyClassify(): XP[] {
 }
 function enumPolyIdentify(): XP[] {
   const out: XP[] = [];
-  const yes = ["x² + 3x + 1", "5x - 2", "7x³", "x + 9", "4x² - x", "2x⁴ + 1", "x³ - 5", "6x² + 2x", "x + 1", "3x⁵", "8x² + 3x - 2", "x⁴ - x²", "9 - x", "x² + 10"];
-  const no = ["1/x + 5", "√x - 3", "x⁻² + 1", "3ˣ + 2", "2/x²", "1/x²", "√x + 4", "5/x", "x⁻¹ + 7", "2ˣ - 1", "4/x + x", "6x⁻³", "√x - x", "1/(x + 2)"];
+  // Twenty-eight examples across three sheets left no room to spare, so a
+  // sheet could repeat. Each addition is a DIFFERENT reason to say yes or no —
+  // a constant and a bare variable are polynomials; roots, negative powers,
+  // variable exponents and variables in a denominator are the four ways out.
+  const yes = ["x² + 3x + 1", "5x - 2", "7x³", "x + 9", "4x² - x", "2x⁴ + 1", "x³ - 5", "6x² + 2x", "x + 1", "3x⁵", "8x² + 3x - 2", "x⁴ - x²", "9 - x", "x² + 10",
+    "12", "x", "x⁶ + x³ + 1", "0.5x² + 2", "-4x³ + x", "x² - 7x + 12", "2x", "5x⁴ - 3x² + 6"];
+  const no = ["1/x + 5", "√x - 3", "x⁻² + 1", "3ˣ + 2", "2/x²", "1/x²", "√x + 4", "5/x", "x⁻¹ + 7", "2ˣ - 1", "4/x + x", "6x⁻³", "√x - x", "1/(x + 2)",
+    "x^(1/2) + 1", "7/x³", "∛x + 2", "5ˣ", "x² + 1/x", "2x⁻⁴", "√(x + 1)", "1/(3x)"];
   yes.forEach((e, i) => out.push({ q: `Is this a polynomial?   ${e}`, a: "Yes", diff: scatterDiff(`id:y:${i}`), type: "multiple_choice", options: ["Yes", "No"], key: `id:y:${i}` }));
   no.forEach((e, i) => out.push({ q: `Is this a polynomial?   ${e}`, a: "No", diff: scatterDiff(`id:n:${i}`), type: "multiple_choice", options: ["Yes", "No"], key: `id:n:${i}` }));
   return out;
