@@ -631,6 +631,11 @@ function generateSimileMetaphorProblems(count: number): Problem[] {
     { q: "'The baby's skin was as soft as silk' is a:", a: "Simile", opts: ["Simile", "Metaphor", "Personification", "Idiom"], type: "multiple_choice" },
     { q: "The main difference between a simile and a metaphor is:", a: "A simile uses 'like'/'as'; a metaphor does not", opts: ["A simile uses 'like'/'as'; a metaphor does not", "A metaphor uses 'like'/'as'", "They are the same", "A simile must rhyme"], type: "multiple_choice" },
     { q: "'Life is a journey' is a:", a: "Metaphor", opts: ["Metaphor", "Simile", "Idiom", "Hyperbole"], type: "multiple_choice" },
+    { q: "'The moon, a silver coin, hangs in the night.' The device in this poem line is a:", a: "Metaphor", opts: ["Metaphor", "Simile", "Idiom", "Hyperbole"], type: "multiple_choice" },
+    { q: "'My thoughts drift like leaves on a slow stream.' This poem line uses a:", a: "Simile", opts: ["Simile", "Metaphor", "Idiom", "Personification"], type: "multiple_choice" },
+    { q: "'Her laughter was music in the empty hall.' The poet uses a:", a: "Metaphor", opts: ["Metaphor", "Simile", "Hyperbole", "Idiom"], type: "multiple_choice" },
+    { q: "'The road unrolled before us like a ribbon.' Which device is in this verse line?", a: "Simile", opts: ["Simile", "Metaphor", "Idiom", "Hyperbole"], type: "multiple_choice" },
+    { q: "'Grief is a heavy coat I cannot take off.' Which device does the poet use?", a: "Metaphor", opts: ["Metaphor", "Simile", "Idiom", "Personification"], type: "multiple_choice" },
   ], count);
 }
 
@@ -643,12 +648,12 @@ function generatePersonificationProblems(count: number): Problem[] {
     { q: "'The flowers danced in the breeze' works because flowers cannot really:", a: "Dance", opts: ["Dance", "Grow", "Bloom", "Smell nice"], type: "multiple_choice" },
     { q: "Which is personification?", a: "The thunder grumbled in the distance.", opts: ["The thunder grumbled in the distance.", "The thunder was loud.", "Thunder followed the lightning.", "There was a storm."], type: "multiple_choice" },
     { q: "'The old car coughed and groaned before it started.' This gives the car:", a: "Human actions", opts: ["Human actions", "A color", "A price", "A size"], type: "multiple_choice" },
-    { q: "Which sentence uses personification?", a: "Opportunity knocked on her door.", opts: ["Opportunity knocked on her door.", "She opened the door.", "The door was open.", "There was a knock."], type: "multiple_choice" },
+    { q: "Which sentence gives a human action to an idea?", a: "Opportunity knocked on her door.", opts: ["Opportunity knocked on her door.", "She opened the door.", "The door was open.", "There was a knock."], type: "multiple_choice" },
     { q: "'The leaves waved goodbye as autumn arrived.' What is personified?", a: "The leaves", opts: ["The leaves", "Autumn's color", "The wind speed", "The ground"], type: "multiple_choice" },
     { q: "Personification is a type of:", a: "Figurative language", opts: ["Figurative language", "Punctuation", "Spelling rule", "Rhyme scheme"], type: "multiple_choice" },
     { q: "Which sentence is personification?", a: "The waves reached for the shore.", opts: ["The waves reached for the shore.", "The waves were big.", "Waves hit the rocks.", "The sea was rough."], type: "multiple_choice" },
     { q: "'Lightning stitched across the sky' gives lightning the human-like ability to:", a: "Sew / stitch", opts: ["Sew / stitch", "Shine", "Flash", "Strike"], type: "multiple_choice" },
-    { q: "Which sentence uses personification?", a: "Hunger gnawed at his stomach.", opts: ["Hunger gnawed at his stomach.", "He was very hungry.", "He had not eaten.", "His stomach was empty."], type: "multiple_choice" },
+    { q: "Which sentence gives hunger a human-like action?", a: "Hunger gnawed at his stomach.", opts: ["Hunger gnawed at his stomach.", "He was very hungry.", "He had not eaten.", "His stomach was empty."], type: "multiple_choice" },
     { q: "'The camera loves her' is personification because a camera cannot really:", a: "Feel love", opts: ["Feel love", "Take photos", "Be held", "Turn on"], type: "multiple_choice" },
     { q: "Why do writers use personification?", a: "To make descriptions vivid and relatable", opts: ["To make descriptions vivid and relatable", "To add more facts", "To fill space", "To confuse readers"], type: "multiple_choice" },
     { q: "Which is NOT personification?", a: "She ran like the wind.", opts: ["She ran like the wind.", "The fire danced.", "The clock stared at me.", "The trees whispered."], type: "multiple_choice" },
@@ -664,13 +669,13 @@ function generateHyperboleProblems(count: number): Problem[] {
     { q: "Which is a hyperbole?", a: "My backpack weighs a thousand pounds.", opts: ["My backpack weighs a thousand pounds.", "My backpack is full.", "My backpack is blue.", "I packed my backpack."], type: "multiple_choice" },
     { q: "Writers use hyperbole to:", a: "Add emphasis or humor", opts: ["Add emphasis or humor", "State exact facts", "Give directions", "Ask questions"], type: "multiple_choice" },
     { q: "'It took forever to load the page' is hyperbole because:", a: "It exaggerates the wait time", opts: ["It exaggerates the wait time", "It is literally true", "It compares with 'like'", "It rhymes"], type: "multiple_choice" },
-    { q: "Which sentence is a hyperbole?", a: "I laughed so hard I almost died.", opts: ["I laughed so hard I almost died.", "I laughed at the joke.", "The joke was funny.", "I smiled a little."], type: "multiple_choice" },
+    { q: "Which sentence exaggerates about laughing?", a: "I laughed so hard I almost died.", opts: ["I laughed so hard I almost died.", "I laughed at the joke.", "The joke was funny.", "I smiled a little."], type: "multiple_choice" },
     { q: "'Her smile was a mile wide' is:", a: "Hyperbole", opts: ["Hyperbole", "A fact", "An idiom", "Onomatopoeia"], type: "multiple_choice" },
     { q: "Which is NOT a hyperbole?", a: "The walk took twenty minutes.", opts: ["The walk took twenty minutes.", "The walk took an eternity.", "I walked a million miles.", "My feet are killing me."], type: "multiple_choice" },
     { q: "'I'm dying of thirst' is hyperbole that really means:", a: "I am very thirsty", opts: ["I am very thirsty", "I am actually dying", "I am not thirsty", "I drank water"], type: "multiple_choice" },
     { q: "Which sentence uses hyperbole?", a: "He's older than the hills.", opts: ["He's older than the hills.", "He is quite old.", "He is sixty years old.", "He has grey hair."], type: "multiple_choice" },
     { q: "'This homework is taking a lifetime' exaggerates to show:", a: "It feels very long", opts: ["It feels very long", "It is short", "It is easy", "It is fun"], type: "multiple_choice" },
-    { q: "Which is a hyperbole?", a: "I have a ton of homework tonight.", opts: ["I have a ton of homework tonight.", "I have three assignments.", "Homework is due Friday.", "I finished my homework."], type: "multiple_choice" },
+    { q: "Which sentence exaggerates about homework?", a: "I have a ton of homework tonight.", opts: ["I have a ton of homework tonight.", "I have three assignments.", "Homework is due Friday.", "I finished my homework."], type: "multiple_choice" },
     { q: "Hyperbole should be understood as:", a: "Not literally true", opts: ["Not literally true", "Always true", "A measurement", "A warning"], type: "multiple_choice" },
     { q: "'My dad will kill me if I'm late' uses hyperbole to mean:", a: "He will be very upset", opts: ["He will be very upset", "He will actually harm him", "He won't mind", "He is happy"], type: "multiple_choice" },
   ], count);
@@ -694,6 +699,10 @@ function generateIdiomProblems(count: number): Problem[] {
     { q: "'On the same page' means people:", a: "Agree or understand each other", opts: ["Agree or understand each other", "Read the same book", "Sit together", "Write together"], type: "multiple_choice" },
     { q: "'When pigs fly' means:", a: "Something will never happen", opts: ["Something will never happen", "Very soon", "At the farm", "In the sky"], type: "multiple_choice" },
     { q: "Why can idioms be confusing?", a: "Their meaning is not the literal words", opts: ["Their meaning is not the literal words", "They are too short", "They have no meaning", "They are always questions"], type: "multiple_choice" },
+    { q: "'She has a heart of gold' means she is:", a: "Very kind", opts: ["Very kind", "Very rich", "Very strong", "Very old"], type: "multiple_choice" },
+    { q: "'The ball is in your court' means:", a: "It is your turn to act", opts: ["It is your turn to act", "You must play tennis", "You lost the game", "You should sit down"], type: "multiple_choice" },
+    { q: "'Keep your chin up' means:", a: "Stay cheerful in a hard time", opts: ["Stay cheerful in a hard time", "Look at the ceiling", "Stand up straight", "Stop talking"], type: "multiple_choice" },
+    { q: "'Burning the midnight oil' means:", a: "Working late into the night", opts: ["Working late into the night", "Lighting a lamp", "Wasting fuel", "Going to bed early"], type: "multiple_choice" },
   ], count);
 }
 
@@ -1230,6 +1239,65 @@ function generateLiteraryDevicesProblems(count: number): Problem[] {
     ...generateIdiomProblems(each),
   ].slice(0, count);
 }
+// R25 · Personification & Hyperbole — the two device banks merged.
+function generatePersonificationHyperboleProblems(count: number): Problem[] {
+  const each = Math.ceil(count / 2);
+  return [...generatePersonificationProblems(each), ...generateHyperboleProblems(each)].slice(0, count);
+}
+// R30 · Combining Facts from Two Texts (Grade 5) — each item carries both
+// snippets inline so every sheet is self-contained.
+function generateCombiningFactsProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "Text A: \"Honeybees live in large groups called colonies. One colony can hold 50,000 bees.\" Text B: \"A honeybee visits hundreds of flowers on a single trip to collect nectar.\" Which statement uses a fact from BOTH texts?", a: "Thousands of bees in a colony gather nectar from many flowers.", opts: ["Thousands of bees in a colony gather nectar from many flowers.", "Bees collect nectar from hundreds of flowers on each trip.", "Honeybees live alone and never form groups.", "Bees make honey so that people can sell it."], type: "multiple_choice" },
+    { q: "Text A: \"Octopuses have eight arms and no bones.\" Text B: \"An octopus can squeeze through a gap the size of a coin.\" Which sentence combines information from both texts?", a: "Having no bones lets an eight-armed octopus fit through tiny gaps.", opts: ["Having no bones lets an eight-armed octopus fit through tiny gaps.", "Octopuses have strong bones that protect their arms.", "An octopus can fit through a coin-sized gap.", "Octopuses live for about thirty years in the wild."], type: "multiple_choice" },
+    { q: "Text A: \"Tornadoes form during strong thunderstorms.\" Text B: \"Most tornadoes happen in spring and early summer.\" Which statement combines a fact from each text?", a: "Tornadoes form from thunderstorms and are most common in spring.", opts: ["Tornadoes form from thunderstorms and are most common in spring.", "Tornadoes usually happen in the middle of winter.", "Strong thunderstorms can produce tornadoes.", "Tornadoes only form after dark."], type: "multiple_choice" },
+    { q: "Text A: \"The first bicycles had no pedals; riders pushed along the ground with their feet.\" Text B: \"Pedals were added to bicycles in the 1860s.\" Which statement uses BOTH texts?", a: "Riders pushed bicycles with their feet until pedals arrived in the 1860s.", opts: ["Riders pushed bicycles with their feet until pedals arrived in the 1860s.", "Bicycles have always had pedals.", "Riders of the first bicycles pushed with their feet.", "The first bicycles were made entirely of rubber."], type: "multiple_choice" },
+    { q: "Text A: \"A soccer team has eleven players on the field, including a goalkeeper.\" Text B: \"Only the goalkeeper may touch the ball with their hands during play.\" Which sentence combines the two texts?", a: "Of a team's eleven players, only the goalkeeper can use their hands.", opts: ["Of a team's eleven players, only the goalkeeper can use their hands.", "All eleven players may pick up the ball with their hands.", "A soccer team has eleven players on the field.", "Soccer games last exactly ninety minutes."], type: "multiple_choice" },
+    { q: "Text A: \"Rice is grown in flooded fields called paddies.\" Text B: \"Rice is a main food for more than half of the people on Earth.\" Which statement draws on BOTH texts?", a: "A food eaten by half the world is grown in flooded paddies.", opts: ["A food eaten by half the world is grown in flooded paddies.", "Rice grows best in dry desert soil.", "Rice is grown in flooded fields called paddies.", "Rice was first grown in Canada."], type: "multiple_choice" },
+    { q: "Text A: \"The school library has 4,000 books and is open every school day.\" Text B: \"Students may borrow two books at a time for two weeks.\" Which sentence uses a fact from each text?", a: "Students can borrow two of the library's 4,000 books for two weeks.", opts: ["Students can borrow two of the library's 4,000 books for two weeks.", "The library is only open on Fridays.", "Students may borrow two books at a time.", "The library charges a fee for late books."], type: "multiple_choice" },
+    { q: "Text A: \"The Moon has no air, so there is no wind or weather.\" Text B: \"Astronaut footprints on the Moon have lasted since 1969.\" Which statement combines the two texts?", a: "With no wind to sweep them away, Moon footprints have lasted for decades.", opts: ["With no wind to sweep them away, Moon footprints have lasted for decades.", "Strong winds on the Moon erase footprints quickly.", "The Moon has no air and no weather.", "Astronauts planted trees on the Moon in 1969."], type: "multiple_choice" },
+    { q: "Text A: \"Penguins are birds, but they cannot fly.\" Text B: \"Penguins use their wings as flippers to swim as fast as some fish.\" Which sentence uses BOTH texts?", a: "Penguins cannot fly, but their wings make them fast swimmers.", opts: ["Penguins cannot fly, but their wings make them fast swimmers.", "Penguins fly south every winter.", "Penguins swim as fast as some fish.", "Penguins eat mostly berries and seeds."], type: "multiple_choice" },
+    { q: "Text A: \"Hail forms when raindrops are carried up into freezing air inside a storm cloud.\" Text B: \"Some hailstones grow larger than a golf ball before they fall.\" Which statement combines the texts?", a: "Raindrops frozen inside a storm cloud can grow bigger than a golf ball.", opts: ["Raindrops frozen inside a storm cloud can grow bigger than a golf ball.", "Hail forms on warm, clear days.", "Some hailstones are larger than a golf ball.", "Hail only falls high in the mountains."], type: "multiple_choice" },
+    { q: "Text A: \"The first public libraries let people borrow books for free.\" Text B: \"Before public libraries, most people could not afford to buy books.\" Which sentence draws on BOTH texts?", a: "Free public libraries gave books to people who could not afford them.", opts: ["Free public libraries gave books to people who could not afford them.", "Early libraries charged high fees to borrow a book.", "Most people could not afford to buy books.", "The first library was built on a ship."], type: "multiple_choice" },
+    { q: "Text A: \"In basketball, a shot from behind the arc is worth three points.\" Text B: \"A shot from inside the arc is worth two points, and a free throw is worth one.\" Which statement uses both texts?", a: "Shots can be worth one, two, or three points depending on the spot.", opts: ["Shots can be worth one, two, or three points depending on the spot.", "Every basketball shot is worth two points.", "A shot from behind the arc scores three points.", "Basketball was invented in France."], type: "multiple_choice" },
+    { q: "Text A: \"Cocoa beans grow inside large pods on cacao trees.\" Text B: \"Cocoa beans are dried, roasted, and ground to make chocolate.\" Which sentence combines a fact from each text?", a: "Chocolate is made from beans that grow in pods on cacao trees.", opts: ["Chocolate is made from beans that grow in pods on cacao trees.", "Cocoa beans grow underground like potatoes.", "Cocoa beans are roasted and ground to make chocolate.", "Chocolate was invented last year."], type: "multiple_choice" },
+    { q: "Text A: \"The science fair takes place on the last Friday in March.\" Text B: \"Each science fair project must include a poster and a written report.\" Which statement uses BOTH texts?", a: "Projects with a poster and report are shown on the last Friday in March.", opts: ["Projects with a poster and report are shown on the last Friday in March.", "The science fair is held in September.", "Each project needs a poster and a report.", "Winners of the fair receive a trip."], type: "multiple_choice" },
+    { q: "Text A: \"Mars is called the Red Planet because of the rusty dust that covers it.\" Text B: \"Mars has the tallest volcano in the solar system, Olympus Mons.\" Which sentence combines the two texts?", a: "The rusty-red planet Mars is home to the solar system's tallest volcano.", opts: ["The rusty-red planet Mars is home to the solar system's tallest volcano.", "Mars is blue because it is covered in water.", "Olympus Mons is the tallest volcano in the solar system.", "People have lived on Mars since 1990."], type: "multiple_choice" },
+    { q: "Text A: \"Elephants are the largest land animals and can weigh six tonnes.\" Text B: \"An elephant eats up to 150 kilograms of plants every day.\" Which statement uses a fact from each text?", a: "The largest land animal eats up to 150 kilograms of plants daily.", opts: ["The largest land animal eats up to 150 kilograms of plants daily.", "Elephants are the smallest land animals.", "Elephants can weigh as much as six tonnes.", "Elephants hunt fish in rivers."], type: "multiple_choice" },
+    { q: "Text A: \"A rainbow appears when sunlight shines through raindrops.\" Text B: \"To see a rainbow, you must stand with the Sun behind you.\" Which sentence draws on BOTH texts?", a: "Rainbows appear in raindrops when the Sun is shining behind you.", opts: ["Rainbows appear in raindrops when the Sun is shining behind you.", "Rainbows appear only at night.", "You must have the Sun behind you to see a rainbow.", "Rainbows are made of coloured glass."], type: "multiple_choice" },
+    { q: "Text A: \"The ancient Egyptians built the pyramids as tombs for their kings.\" Text B: \"The Great Pyramid took about twenty years to finish.\" Which statement combines the texts?", a: "A king's tomb, the Great Pyramid, took about twenty years to build.", opts: ["A king's tomb, the Great Pyramid, took about twenty years to build.", "The pyramids were built as schools.", "The Great Pyramid took twenty years to finish.", "The pyramids were built by machines."], type: "multiple_choice" },
+    { q: "Text A: \"A marathon is a race that is 42.2 kilometres long.\" Text B: \"Top marathon runners finish in a little over two hours.\" Which sentence uses BOTH texts?", a: "The best runners cover 42.2 kilometres in just over two hours.", opts: ["The best runners cover 42.2 kilometres in just over two hours.", "A marathon is a five-kilometre race.", "Top runners finish a marathon in about two hours.", "Marathons are always run indoors."], type: "multiple_choice" },
+    { q: "When you combine facts from two texts, the new sentence should:", a: "Use accurate information from each text", opts: ["Use accurate information from each text", "Copy one text word for word", "Add your own guesses", "Change the facts to sound better"], type: "multiple_choice" },
+    { q: "A sentence that uses a fact found in only ONE of two texts is:", a: "Not a combined statement", opts: ["Not a combined statement", "Always false", "The main idea of both", "A contradiction"], type: "multiple_choice" },
+  ], count);
+}
+// R59 · News vs Opinion vs Sponsored (Grade 10 media literacy). Outlets, brands
+// and people are invented.
+function generateMediaTypeProblems(count: number): Problem[] {
+  return bankToProblems([
+    { q: "A piece is labelled 'Paid partnership with Brightline Shoes' at the top and ends with a link to buy the shoes. What type of piece is it?", a: "Sponsored content", opts: ["Sponsored content", "News report", "Opinion column", "Letter to the editor"], type: "multiple_choice" },
+    { q: "Headline: 'City council approves new bike lanes in 7–2 vote.' The article quotes the mayor and two council members. This is a:", a: "News report", opts: ["News report", "Opinion column", "Sponsored content", "Product review"], type: "multiple_choice" },
+    { q: "Headline: 'Why our city should ban cars downtown.' The writer uses 'I believe' and 'we must'. This is an:", a: "Opinion column", opts: ["Opinion column", "News report", "Sponsored post", "Weather bulletin"], type: "multiple_choice" },
+    { q: "Which signal most clearly identifies SPONSORED content?", a: "A 'Paid partnership' or 'Promoted' label", opts: ["A 'Paid partnership' or 'Promoted' label", "A headline in large type", "Quotes from an expert", "A dateline with the city name"], type: "multiple_choice" },
+    { q: "Which feature is typical of a NEWS report?", a: "Facts attributed to named sources", opts: ["Facts attributed to named sources", "First-person recommendations", "A 'Sponsored' tag", "Calls for readers to take a side"], type: "multiple_choice" },
+    { q: "Which line signals an OPINION piece rather than news?", a: "'The council should reject this plan.'", opts: ["'The council should reject this plan.'", "'The council voted 7–2 on Tuesday.'", "'The plan costs $4 million, the report says.'", "'The meeting begins at 6 p.m.'"], type: "multiple_choice" },
+    { q: "A glowing article about a new phone carries the tag 'Presented by Nova Mobile'. The tag tells you the piece was:", a: "Paid for by the company", opts: ["Paid for by the company", "Written by a news reporter", "Fact-checked by an editor", "Voted on by readers"], type: "multiple_choice" },
+    { q: "An article appears on the editorial page under the heading 'Our View'. This placement signals it is:", a: "An opinion piece", opts: ["An opinion piece", "A news report", "Sponsored content", "A weather update"], type: "multiple_choice" },
+    { q: "Headline: 'Storm knocks out power to 12,000 homes, utility says.' The signal that this is NEWS is:", a: "The fact is attributed to a source", opts: ["The fact is attributed to a source", "It uses 'I think'", "It has a product link", "It asks readers to buy something"], type: "multiple_choice" },
+    { q: "Which sentence would NOT belong in a straight news report?", a: "Frankly, the new stadium is a waste of money.", opts: ["Frankly, the new stadium is a waste of money.", "The stadium will seat 30,000 people.", "Construction is expected to finish in 2028.", "The city will pay half the cost, officials said."], type: "multiple_choice" },
+    { q: "A post reads: 'Tired of slow mornings? GlowUp Coffee changed my life — grab yours with code SUNRISE.' This is best described as:", a: "Sponsored content", opts: ["Sponsored content", "A news report", "An editorial", "A police bulletin"], type: "multiple_choice" },
+    { q: "Which is the strongest reason to read sponsored content carefully?", a: "The advertiser paid to shape the message", opts: ["The advertiser paid to shape the message", "It is always written by a robot", "It never mentions a product", "It appears only in newspapers"], type: "multiple_choice" },
+    { q: "A columnist writes: 'In my view, the school board got it wrong.' Which type of piece is this?", a: "Opinion column", opts: ["Opinion column", "News report", "Sponsored content", "Public notice"], type: "multiple_choice" },
+    { q: "A news reporter wants to stay neutral. Which should they do?", a: "Quote sources without adding personal judgement", opts: ["Quote sources without adding personal judgement", "Tell readers which side is right", "Include a discount code", "Use 'I believe' to sound more confident"], type: "multiple_choice" },
+    { q: "Two articles cover the same product launch. One ends with 'Buy now — 20% off with our link'; the other quotes analysts on sales figures. The first is most likely:", a: "Sponsored content", opts: ["Sponsored content", "A news report", "An opinion column", "A court record"], type: "multiple_choice" },
+    { q: "A headline reads 'OPINION: It's time to raise the voting age'. The word 'OPINION' tells you the piece will:", a: "Argue the writer's personal view", opts: ["Argue the writer's personal view", "Report a completed vote", "Advertise a product", "List verified statistics only"], type: "multiple_choice" },
+    { q: "Which detail best shows a piece is an OPINION column rather than news?", a: "It takes a side and is labelled 'columnist'", opts: ["It takes a side and is labelled 'columnist'", "It quotes the fire chief", "It gives the date and location", "It is marked 'Paid post'"], type: "multiple_choice" },
+    { q: "Sponsored content is designed to look like:", a: "A regular article", opts: ["A regular article", "A weather map", "A crossword", "A classified ad"], type: "multiple_choice" },
+    { q: "A piece praises a product's 'game-changing features', never mentions a drawback, and carries a 'Promoted' tag. This suggests:", a: "The piece is advertising", opts: ["The piece is advertising", "The piece is a news report", "The piece is a court record", "The piece is an editorial"], type: "multiple_choice" },
+    { q: "Which question best helps you tell news from opinion?", a: "Does it report events or argue a view?", opts: ["Does it report events or argue a view?", "How many paragraphs does it have?", "Is it printed in colour?", "Does it have a headline?"], type: "multiple_choice" },
+    { q: "A verified fact in a news story usually comes with:", a: "The source it came from", opts: ["The source it came from", "An exclamation mark", "A coupon code", "The writer's feelings"], type: "multiple_choice" },
+  ], count);
+}
 // R9 · Comparative Text Analysis — compare two short texts.
 function generateComparativeTextProblems(count: number): Problem[] {
   return bankToProblems([
@@ -1306,7 +1374,7 @@ function withBandPassages(skillName: string): Problem[] | null {
   // through the memoized bank (whose cache key is subject + skill only).
   const mod = READING_CURRICULUM.find((m) => m.units.includes(skillName));
   if (!mod) return null;
-  const pool = passagesForUnit(mod.grade);
+  const pool = passagesForUnit(mod.grade, undefined, skillName);
   if (!pool.length) return null;
 
   // Emit every passage in the band; the windowing rotates one per sheet, so
@@ -1409,11 +1477,16 @@ function generateReadingProblems(skillName: string, count: number): Problem[] {
   // R7 — Author's Purpose → Perspective & Purpose (purpose + fact/opinion)
   if (skill.includes("perspective") || skill.includes("purpose") || skill.includes("author")) return generatePerspectivePurposeProblems(count);
   if (skill.includes("tone") || skill.includes("mood")) return generateToneMoodProblems(count);   // legacy alias
+  // Units that merely CONTAIN "fact"/"opinion" must be routed to their own banks
+  // BEFORE the legacy alias below captures them.
+  if (skill.includes("combining facts") || skill.includes("two texts")) return generateCombiningFactsProblems(count); // R30
+  if (skill.includes("sponsored") || skill.includes("news vs")) return generateMediaTypeProblems(count);              // R59
   if (skill.includes("fact") || skill.includes("opinion")) return generateFactOpinionProblems(count); // legacy alias
 
   // R8 — Figurative Language → Literary Devices (all devices)
   if (skill.includes("literary device") || skill.includes("figurative")) return generateLiteraryDevicesProblems(count);
   if (skill.includes("simile") || skill.includes("metaphor")) return generateSimileMetaphorProblems(count); // legacy aliases
+  if (skill.includes("personification") && skill.includes("hyperbole")) return generatePersonificationHyperboleProblems(count); // R25 paired unit
   if (skill.includes("personification")) return generatePersonificationProblems(count);
   if (skill.includes("hyperbole")) return generateHyperboleProblems(count);
   if (skill.includes("idiom")) return generateIdiomProblems(count);
@@ -2147,15 +2220,17 @@ function generateNounsVerbsProblems(count: number): Problem[] {
     { q: "Identify the verb: 'She ran to school.'", a: "ran", opts: ["ran", "She", "school", "to"], type: "multiple_choice" },
     { q: "Identify the noun: 'The dog barked.'", a: "dog", opts: ["dog", "barked", "the", "loudly"], type: "multiple_choice" },
     { q: "Which is a proper noun (names a specific thing)?", a: "London", opts: ["London", "city", "river", "table"], type: "multiple_choice" },
-    { q: "Which word is a noun?", a: "school", opts: ["school", "run", "blue", "quickly"], type: "multiple_choice" },
+    { q: "Which word is a noun that names a place?", a: "school", opts: ["school", "run", "blue", "quickly"], type: "multiple_choice" },
     { q: "Which word is the action verb in 'The bird flies high'?", a: "flies", opts: ["flies", "bird", "high", "the"], type: "multiple_choice" },
     { q: "Change to past tense: 'I walk to the store.' The verb becomes:", a: "walked", opts: ["walked", "walking", "walks", "will walk"], type: "multiple_choice" },
     { q: "Which sentence has the verb underlined correctly? (verb in CAPS)", a: "The cat SLEEPS on the bed.", opts: ["The cat SLEEPS on the bed.", "The CAT sleeps on the bed.", "The cat sleeps on the BED.", "THE cat sleeps."], type: "multiple_choice" },
     { q: "Which word is a noun in 'My brother plays soccer'?", a: "brother", opts: ["brother", "plays", "my", "fast"], type: "multiple_choice" },
     { q: "Which is a 'being' verb?", a: "is", opts: ["is", "run", "jump", "sing"], type: "multiple_choice" },
     { q: "How many nouns are in 'The boy kicked the ball'?", a: "Two (boy, ball)", opts: ["Two (boy, ball)", "One", "Three", "Zero"], type: "multiple_choice" },
-    { q: "Which word is a verb?", a: "sing", opts: ["sing", "song", "loud", "stage"], type: "multiple_choice" },
+    { q: "Which word is an action verb?", a: "sing", opts: ["sing", "song", "loud", "stage"], type: "multiple_choice" },
     { q: "Which word names a thing (noun)?", a: "apple", opts: ["apple", "eat", "sweet", "quickly"], type: "multiple_choice" },
+    { q: "Which word is the verb in 'The children laughed at the puppet'?", a: "laughed", opts: ["laughed", "children", "puppet", "the"], type: "multiple_choice" },
+    { q: "Which word is a plural noun?", a: "boxes", opts: ["boxes", "jump", "green", "slowly"], type: "multiple_choice" },
   ], count);
 }
 
@@ -2176,7 +2251,9 @@ function generateAdjAdverbProblems(count: number): Problem[] {
     { q: "Which word is an adjective in 'a cold, windy day'?", a: "cold", opts: ["cold", "day", "a", "blew"], type: "multiple_choice" },
     { q: "Adverbs can tell:", a: "How, when, or where", opts: ["How, when, or where", "Who or what", "Which one only", "How many only"], type: "multiple_choice" },
     { q: "Which is the adverb in 'The turtle moved slowly'?", a: "slowly", opts: ["slowly", "turtle", "moved", "the"], type: "multiple_choice" },
-    { q: "Which word is an adjective?", a: "shiny", opts: ["shiny", "shine", "shines", "shining quickly"], type: "multiple_choice" },
+    { q: "Which word is an adjective (a describing word)?", a: "shiny", opts: ["shiny", "shine", "shines", "shining quickly"], type: "multiple_choice" },
+    { q: "Identify the adverb: 'The baby slept peacefully.'", a: "peacefully", opts: ["peacefully", "slept", "baby", "the"], type: "multiple_choice" },
+    { q: "Which word is an adjective in 'The gentle giant waved'?", a: "gentle", opts: ["gentle", "giant", "waved", "the"], type: "multiple_choice" },
   ], count);
 }
 
@@ -2199,7 +2276,11 @@ function generateSentenceTypeProblems(count: number): Problem[] {
     { q: "What kind of sentence is 'We won the game, and the crowd cheered'?", a: "Compound", opts: ["Compound", "Simple", "Complex", "Fragment"], type: "multiple_choice" },
     { q: "What kind of sentence is 'Although she was tired, she finished'?", a: "Complex", opts: ["Complex", "Simple", "Compound", "Run-on"], type: "multiple_choice" },
     { q: "An independent clause can:", a: "Stand alone as a sentence", opts: ["Stand alone as a sentence", "Never stand alone", "Only ask questions", "Have no subject"], type: "multiple_choice" },
-    { q: "Which is a simple sentence?", a: "Birds fly south in winter.", opts: ["Birds fly south in winter.", "Birds fly south, and bears sleep.", "When winter comes, birds fly.", "Flying south quickly."], type: "multiple_choice" },
+    { q: "Which of these is a simple sentence?", a: "Birds fly south in winter.", opts: ["Birds fly south in winter.", "Birds fly south, and bears sleep.", "When winter comes, birds fly.", "Flying south quickly."], type: "multiple_choice" },
+    { q: "What kind of sentence is 'The kitten chased the yarn across the floor'?", a: "Simple", opts: ["Simple", "Compound", "Complex", "Fragment"], type: "multiple_choice" },
+    { q: "What kind of sentence is 'Unless you hurry, you will miss the train'?", a: "Complex", opts: ["Complex", "Simple", "Compound", "Run-on"], type: "multiple_choice" },
+    { q: "What kind of sentence is 'The wind howled, and the shutters banged'?", a: "Compound", opts: ["Compound", "Simple", "Complex", "Fragment"], type: "multiple_choice" },
+    { q: "Which sentence contains a dependent clause?", a: "If it snows, school will close.", opts: ["If it snows, school will close.", "It snowed all night.", "It snowed, so school closed.", "Snow covered the roads."], type: "multiple_choice" },
   ], count);
 }
 
@@ -2270,22 +2351,30 @@ function generateCompletingSentenceProblems(count: number): Problem[] {
 
 function generateCapitalLettersProblems(count: number): Problem[] {
   return bankToProblems([
-    { q: "Which sentence is written correctly?", a: "My dog runs.", opts: ["my dog runs.", "My dog runs.", "my Dog runs.", "MY dog runs."], type: "multiple_choice" },
-    { q: "Which sentence is written correctly?", a: "We went to the park.", opts: ["we went to the park.", "We went to the park.", "we Went to the park.", "WE went to the park."], type: "multiple_choice" },
+    { q: "Which sentence begins with a capital letter correctly?", a: "My dog runs.", opts: ["my dog runs.", "My dog runs.", "my Dog runs.", "MY dog runs."], type: "multiple_choice" },
+    { q: "Which sentence about the park is capitalized correctly?", a: "We went to the park.", opts: ["we went to the park.", "We went to the park.", "we Went to the park.", "WE went to the park."], type: "multiple_choice" },
     { q: "Which word should always start with a capital letter?", a: "London", opts: ["dog", "London", "happy", "table"], type: "multiple_choice" },
     { q: "Every sentence must begin with a:", a: "capital letter", opts: ["capital letter", "lowercase letter", "number", "comma"], type: "multiple_choice" },
-    { q: "Which sentence is correct?", a: "Sam likes apples.", opts: ["sam likes apples.", "Sam likes apples.", "sam Likes apples.", "Sam Likes Apples."], type: "multiple_choice" },
+    { q: "Which sentence capitalizes the name 'Sam' correctly?", a: "Sam likes apples.", opts: ["sam likes apples.", "Sam likes apples.", "sam Likes apples.", "Sam Likes Apples."], type: "multiple_choice" },
     { q: "Which name is written correctly?", a: "Maria", opts: ["maria", "Maria", "mARIA", "MARia"], type: "multiple_choice" },
     { q: "The word 'i' (meaning myself) should be written as:", a: "I", opts: ["i", "I", "ai", "eye"], type: "multiple_choice" },
-    { q: "Which sentence is correct?", a: "Today is Monday.", opts: ["today is monday.", "Today is Monday.", "today is Monday.", "Today is monday."], type: "multiple_choice" },
+    { q: "Which sentence capitalizes the day of the week correctly?", a: "Today is Monday.", opts: ["today is monday.", "Today is Monday.", "today is Monday.", "Today is monday."], type: "multiple_choice" },
     { q: "Which word needs a capital letter?", a: "canada", opts: ["river", "canada", "table", "happy"], type: "multiple_choice" },
     { q: "Which is the correct way to start a sentence?", a: "The cat sat down.", opts: ["the cat sat down.", "The cat sat down.", "tHe cat sat down.", "THE cat sat down."], type: "multiple_choice" },
     { q: "Days of the week (like Friday) should start with a:", a: "capital letter", opts: ["capital letter", "lowercase letter", "number", "space"], type: "multiple_choice" },
-    { q: "Which sentence is correct?", a: "I love my family.", opts: ["i love my family.", "I love my family.", "I Love My Family.", "i Love my family."], type: "multiple_choice" },
-    { q: "Which is correct?", a: "We visited Paris.", opts: ["we visited paris.", "We visited Paris.", "we visited Paris.", "We Visited paris."], type: "multiple_choice" },
+    { q: "Which sentence uses the word 'I' correctly?", a: "I love my family.", opts: ["i love my family.", "I love my family.", "I Love My Family.", "i Love my family."], type: "multiple_choice" },
+    { q: "Which sentence capitalizes the city name correctly?", a: "We visited Paris.", opts: ["we visited paris.", "We visited Paris.", "we visited Paris.", "We Visited paris."], type: "multiple_choice" },
     { q: "A person's name should begin with a:", a: "capital letter", opts: ["capital letter", "lowercase letter", "small letter", "number"], type: "multiple_choice" },
-    { q: "Which sentence is correct?", a: "The bus is here.", opts: ["the bus is here.", "The bus is here.", "the Bus is here.", "THE BUS is here."], type: "multiple_choice" },
+    { q: "Which sentence about the bus is capitalized correctly?", a: "The bus is here.", opts: ["the bus is here.", "The bus is here.", "the Bus is here.", "THE BUS is here."], type: "multiple_choice" },
     { q: "Which month is written correctly?", a: "July", opts: ["july", "July", "jULY", "JUly"], type: "multiple_choice" },
+    { q: "Which holiday name is capitalized correctly?", a: "Thanksgiving", opts: ["thanksgiving", "Thanksgiving", "thanksGiving", "THANKSgiving"], type: "multiple_choice" },
+    { q: "Which street name is written correctly?", a: "Maple Street", opts: ["maple street", "Maple Street", "maple Street", "Maple street"], type: "multiple_choice" },
+    { q: "Which book title is capitalized correctly?", a: "The Lost Kite", opts: ["the lost kite", "The Lost Kite", "The lost kite", "the Lost Kite"], type: "multiple_choice" },
+    { q: "Which sentence capitalizes the language correctly?", a: "She speaks Spanish at home.", opts: ["She speaks spanish at home.", "She speaks Spanish at home.", "she speaks Spanish at home.", "She Speaks Spanish At Home."], type: "multiple_choice" },
+    { q: "Which word does NOT need a capital letter?", a: "winter", opts: ["winter", "tuesday", "africa", "lucy"], type: "multiple_choice" },
+    { q: "Which sentence capitalizes the title before a name correctly?", a: "We met Doctor Patel today.", opts: ["We met doctor Patel today.", "We met Doctor Patel today.", "We met Doctor patel today.", "we met doctor patel today."], type: "multiple_choice" },
+    { q: "Which sentence capitalizes the planet name correctly?", a: "The probe flew past Jupiter.", opts: ["The probe flew past jupiter.", "The probe flew past Jupiter.", "the probe flew past Jupiter.", "The Probe flew past jupiter."], type: "multiple_choice" },
+    { q: "Which sentence capitalizes a school subject that is a language?", a: "I have French after lunch.", opts: ["I have french after lunch.", "I have French after lunch.", "i have French after lunch.", "I Have french after lunch."], type: "multiple_choice" },
   ], count);
 }
 
@@ -2323,34 +2412,46 @@ function generateCommaProblems(count: number): Problem[] {
     { q: "Which list is punctuated correctly?", a: "We need eggs, milk, and bread.", opts: ["We need eggs milk and bread.", "We need eggs, milk, and bread.", "We need, eggs milk and bread.", "We need eggs, milk and, bread."], type: "multiple_choice" },
     { q: "Where should a comma go? 'Before we leave let's eat.'", a: "Before we leave, let's eat.", opts: ["Before, we leave let's eat.", "Before we leave, let's eat.", "Before we, leave let's eat.", "Before we leave let's, eat."], type: "multiple_choice" },
     { q: "Which uses commas correctly?", a: "My friend, who is tall, plays basketball.", opts: ["My friend who is tall plays basketball.", "My friend, who is tall, plays basketball.", "My friend who is tall, plays basketball.", "My, friend who is tall plays basketball."], type: "multiple_choice" },
-    { q: "Which sentence is correct?", a: "Well, I am not sure about that.", opts: ["Well I am not sure about that.", "Well, I am not sure about that.", "Well I am, not sure about that.", "Well I am not sure, about that."], type: "multiple_choice" },
+    { q: "Which sentence puts a comma after 'Well' correctly?", a: "Well, I am not sure about that.", opts: ["Well I am not sure about that.", "Well, I am not sure about that.", "Well I am, not sure about that.", "Well I am not sure, about that."], type: "multiple_choice" },
     { q: "Which address is punctuated correctly?", a: "He lives in Toronto, Ontario.", opts: ["He lives in Toronto Ontario.", "He lives in Toronto, Ontario.", "He lives, in Toronto Ontario.", "He lives in, Toronto Ontario."], type: "multiple_choice" },
     { q: "A comma is needed after an introductory word or phrase. Which is correct?", a: "Finally, the rain stopped.", opts: ["Finally the rain stopped.", "Finally, the rain stopped.", "Finally the rain, stopped.", "Finally the, rain stopped."], type: "multiple_choice" },
     { q: "Which sentence correctly separates two adjectives?", a: "It was a long, boring movie.", opts: ["It was a long boring movie.", "It was a long, boring movie.", "It was a, long boring movie.", "It was a long boring, movie."], type: "multiple_choice" },
-    { q: "Which is correct?", a: "No, I haven't finished yet.", opts: ["No I haven't finished yet.", "No, I haven't finished yet.", "No I haven't, finished yet.", "No I, haven't finished yet."], type: "multiple_choice" },
+    { q: "Which sentence puts a comma after 'No' correctly?", a: "No, I haven't finished yet.", opts: ["No I haven't finished yet.", "No, I haven't finished yet.", "No I haven't, finished yet.", "No I, haven't finished yet."], type: "multiple_choice" },
     { q: "Which sentence uses commas correctly in a series?", a: "She is kind, smart, and funny.", opts: ["She is kind smart and funny.", "She is kind, smart, and funny.", "She is, kind smart and funny.", "She is kind, smart and, funny."], type: "multiple_choice" },
     { q: "Where does the comma belong? 'When the bell rang the students left.'", a: "When the bell rang, the students left.", opts: ["When, the bell rang the students left.", "When the bell rang, the students left.", "When the bell, rang the students left.", "When the bell rang the students, left."], type: "multiple_choice" },
+    { q: "Which sentence uses a comma correctly after 'However'?", a: "However, the store was closed.", opts: ["However the store was closed.", "However, the store was closed.", "However the store, was closed.", "However the, store was closed."], type: "multiple_choice" },
+    { q: "Which greeting in a letter is punctuated correctly?", a: "Dear Grandma,", opts: ["Dear Grandma,", "Dear, Grandma", "Dear Grandma.", "Dear Grandma;"], type: "multiple_choice" },
+    { q: "Which sentence uses commas correctly around an interrupting phrase?", a: "The trip, of course, was delayed.", opts: ["The trip of course was delayed.", "The trip, of course, was delayed.", "The trip, of course was delayed.", "The trip of course, was delayed."], type: "multiple_choice" },
+    { q: "Which tag question is punctuated correctly?", a: "You finished the book, didn't you?", opts: ["You finished the book didn't you?", "You finished the book, didn't you?", "You finished, the book didn't you?", "You, finished the book didn't you?"], type: "multiple_choice" },
+    { q: "Which number is written correctly with a comma?", a: "1,250 tickets", opts: ["1250, tickets", "1,250 tickets", "12,50 tickets", "1,25,0 tickets"], type: "multiple_choice" },
+    { q: "Which sentence correctly uses a comma before 'but'?", a: "I wanted to swim, but the pool was closed.", opts: ["I wanted to swim but, the pool was closed.", "I wanted to swim, but the pool was closed.", "I wanted, to swim but the pool was closed.", "I wanted to swim but the pool, was closed."], type: "multiple_choice" },
   ], count);
 }
 
 function generateApostropheProblems(count: number): Problem[] {
   return bankToProblems([
-    { q: "Which is correct?", a: "the dog's bone", opts: ["the dogs bone", "the dog's bone", "the dogs' bone", "the do'gs bone"], type: "multiple_choice" },
+    { q: "Which shows the bone belonging to one dog?", a: "the dog's bone", opts: ["the dogs bone", "the dog's bone", "the dogs' bone", "the do'gs bone"], type: "multiple_choice" },
     { q: "Which contraction is correct for 'do not'?", a: "don't", opts: ["dont", "do'nt", "don't", "don't'"], type: "multiple_choice" },
-    { q: "Which is correct?", a: "It's raining outside.", opts: ["Its raining outside.", "It's raining outside.", "Its' raining outside.", "I'ts raining outside."], type: "multiple_choice" },
+    { q: "Which sentence uses the contraction for 'it is' correctly?", a: "It's raining outside.", opts: ["Its raining outside.", "It's raining outside.", "Its' raining outside.", "I'ts raining outside."], type: "multiple_choice" },
     { q: "Which shows the toy belonging to the baby?", a: "the baby's toy", opts: ["the babys toy", "the baby's toy", "the babys' toy", "the bab'ys toy"], type: "multiple_choice" },
     { q: "Which contraction means 'they are'?", a: "they're", opts: ["their", "there", "they're", "theyre"], type: "multiple_choice" },
     { q: "Which is correct for more than one dog owning the bones?", a: "the dogs' bones", opts: ["the dogs bones", "the dog's bones", "the dogs' bones", "the dogs's bones"], type: "multiple_choice" },
-    { q: "Which is correct?", a: "We can't go today.", opts: ["We cant go today.", "We can't go today.", "We ca'nt go today.", "We can't' go today."], type: "multiple_choice" },
-    { q: "Which sentence is correct?", a: "That is Sarah's book.", opts: ["That is Sarahs book.", "That is Sarah's book.", "That is Sarahs' book.", "That is Sara'hs book."], type: "multiple_choice" },
+    { q: "Which sentence spells the contraction of 'cannot' correctly?", a: "We can't go today.", opts: ["We cant go today.", "We can't go today.", "We ca'nt go today.", "We can't' go today."], type: "multiple_choice" },
+    { q: "Which sentence shows the book belonging to Sarah?", a: "That is Sarah's book.", opts: ["That is Sarahs book.", "That is Sarah's book.", "That is Sarahs' book.", "That is Sara'hs book."], type: "multiple_choice" },
     { q: "Which contraction means 'I have'?", a: "I've", opts: ["Ive", "I've", "I'have", "Iv'e"], type: "multiple_choice" },
     { q: "Choose the correct word: 'The cat licked ___ paw.'", a: "its", opts: ["its", "it's", "its'", "it is'"], type: "multiple_choice" },
-    { q: "Which is correct?", a: "the children's playground", opts: ["the childrens playground", "the children's playground", "the childrens' playground", "the childre'ns playground"], type: "multiple_choice" },
+    { q: "Which shows the playground belonging to the children?", a: "the children's playground", opts: ["the childrens playground", "the children's playground", "the childrens' playground", "the childre'ns playground"], type: "multiple_choice" },
     { q: "Which contraction means 'will not'?", a: "won't", opts: ["wont", "wo'nt", "won't", "willn't"], type: "multiple_choice" },
-    { q: "Which sentence is correct?", a: "You're my best friend.", opts: ["Your my best friend.", "You're my best friend.", "Youre my best friend.", "Yo'ure my best friend."], type: "multiple_choice" },
+    { q: "Which sentence uses the contraction for 'you are' correctly?", a: "You're my best friend.", opts: ["Your my best friend.", "You're my best friend.", "Youre my best friend.", "Yo'ure my best friend."], type: "multiple_choice" },
     { q: "Which shows the car belonging to James?", a: "James's car", opts: ["James car", "James's car", "Jame's car", "Jamess car"], type: "multiple_choice" },
     { q: "Which contraction means 'is not'?", a: "isn't", opts: ["isnt", "is'nt", "isn't", "i'snt"], type: "multiple_choice" },
     { q: "Choose the correct sentence:", a: "The students' desks were clean.", opts: ["The students desks were clean.", "The students' desks were clean.", "The student's desks were clean (for many students).", "The studen'ts desks were clean."], type: "multiple_choice" },
+    { q: "Which contraction means 'she is'?", a: "she's", opts: ["shes", "she's", "sh'es", "she'is"], type: "multiple_choice" },
+    { q: "Which shows the nest belonging to one bird?", a: "the bird's nest", opts: ["the birds nest", "the bird's nest", "the birds' nest", "the bir'ds nest"], type: "multiple_choice" },
+    { q: "Which shows the lounge shared by many teachers?", a: "the teachers' lounge", opts: ["the teachers lounge", "the teacher's lounge", "the teachers' lounge", "the teachers's lounge"], type: "multiple_choice" },
+    { q: "Which contraction means 'could not'?", a: "couldn't", opts: ["couldnt", "could'nt", "couldn't", "coul'dnt"], type: "multiple_choice" },
+    { q: "Which sentence uses 'who's' correctly?", a: "Who's coming to the party?", opts: ["Whose coming to the party?", "Who's coming to the party?", "Whos coming to the party?", "Who'se coming to the party?"], type: "multiple_choice" },
+    { q: "Which plural does NOT need an apostrophe?", a: "three apples", opts: ["three apple's", "three apples", "three apples'", "three apples's"], type: "multiple_choice" },
   ], count);
 }
 
@@ -2358,20 +2459,28 @@ function generateQuotationProblems(count: number): Problem[] {
   return bankToProblems([
     { q: "Which sentence punctuates the quotation correctly?", a: "\"Let's go,\" said Mia.", opts: ["Let's go, said Mia.", "\"Let's go,\" said Mia.", "\"Let's go\" said Mia.", "\"Let's go,\" said Mia"], type: "multiple_choice" },
     { q: "Where do quotation marks go?", a: "Around the exact words someone says", opts: ["Around the exact words someone says", "Around every sentence", "Around names", "At the end of a paragraph"], type: "multiple_choice" },
-    { q: "Which is correct?", a: "Dad said, \"Dinner is ready.\"", opts: ["Dad said, Dinner is ready.", "Dad said, \"Dinner is ready.\"", "Dad said \"Dinner is ready\".", "\"Dad said, Dinner is ready.\""], type: "multiple_choice" },
+    { q: "Which sentence punctuates what Dad said correctly?", a: "Dad said, \"Dinner is ready.\"", opts: ["Dad said, Dinner is ready.", "Dad said, \"Dinner is ready.\"", "Dad said \"Dinner is ready\".", "\"Dad said, Dinner is ready.\""], type: "multiple_choice" },
     { q: "Which sentence is punctuated correctly?", a: "\"Where are you going?\" she asked.", opts: ["\"Where are you going\"? she asked.", "\"Where are you going?\" she asked.", "Where are you going? she asked.", "\"Where are you going? she asked.\""], type: "multiple_choice" },
     { q: "In dialogue, a new speaker means you should:", a: "Start a new paragraph", opts: ["Start a new paragraph", "Use a comma", "Use all capitals", "Skip the quotation marks"], type: "multiple_choice" },
-    { q: "Which is correct?", a: "\"I won!\" shouted Leo.", opts: ["I won! shouted Leo.", "\"I won!\" shouted Leo.", "\"I won\"! shouted Leo.", "\"I won! shouted Leo.\""], type: "multiple_choice" },
+    { q: "Which sentence punctuates what Leo shouted correctly?", a: "\"I won!\" shouted Leo.", opts: ["I won! shouted Leo.", "\"I won!\" shouted Leo.", "\"I won\"! shouted Leo.", "\"I won! shouted Leo.\""], type: "multiple_choice" },
     { q: "Which sentence places the comma correctly?", a: "\"Thank you,\" he whispered.", opts: ["\"Thank you\", he whispered.", "\"Thank you,\" he whispered.", "\"Thank you\" he whispered.", "Thank you, he whispered."], type: "multiple_choice" },
-    { q: "Which is correct?", a: "The teacher said, \"Open your books.\"", opts: ["The teacher said \"Open your books.\"", "The teacher said, \"Open your books.\"", "The teacher said, Open your books.", "\"The teacher said, Open your books.\""], type: "multiple_choice" },
+    { q: "Which sentence punctuates the teacher's words correctly?", a: "The teacher said, \"Open your books.\"", opts: ["The teacher said \"Open your books.\"", "The teacher said, \"Open your books.\"", "The teacher said, Open your books.", "\"The teacher said, Open your books.\""], type: "multiple_choice" },
     { q: "Quotation marks come in:", a: "Pairs — one set before and one after the words", opts: ["Pairs — one set before and one after the words", "Only at the start", "Only at the end", "Threes"], type: "multiple_choice" },
-    { q: "Which sentence is correct?", a: "\"Be careful,\" Mom warned.", opts: ["Be careful, Mom warned.", "\"Be careful,\" Mom warned.", "\"Be careful\" Mom warned.", "\"Be careful, Mom warned.\""], type: "multiple_choice" },
+    { q: "Which sentence punctuates Mom's warning correctly?", a: "\"Be careful,\" Mom warned.", opts: ["Be careful, Mom warned.", "\"Be careful,\" Mom warned.", "\"Be careful\" Mom warned.", "\"Be careful, Mom warned.\""], type: "multiple_choice" },
     { q: "Where does the end punctuation usually go in a quotation?", a: "Inside the quotation marks", opts: ["Inside the quotation marks", "Outside the quotation marks", "It is not needed", "Before the quotation marks"], type: "multiple_choice" },
-    { q: "Which is correct?", a: "\"Can we play now?\" asked Tom.", opts: ["Can we play now? asked Tom.", "\"Can we play now?\" asked Tom.", "\"Can we play now\"? asked Tom.", "\"Can we play now? asked Tom.\""], type: "multiple_choice" },
+    { q: "Which sentence punctuates Tom's question correctly?", a: "\"Can we play now?\" asked Tom.", opts: ["Can we play now? asked Tom.", "\"Can we play now?\" asked Tom.", "\"Can we play now\"? asked Tom.", "\"Can we play now? asked Tom.\""], type: "multiple_choice" },
     { q: "Which sentence correctly shows what Ana said?", a: "Ana said, \"I'm hungry.\"", opts: ["Ana said I'm hungry.", "Ana said, \"I'm hungry.\"", "Ana said \"I'm hungry\".", "\"Ana said I'm hungry.\""], type: "multiple_choice" },
     { q: "Which is punctuated correctly?", a: "\"Look out!\" he yelled.", opts: ["Look out! he yelled.", "\"Look out!\" he yelled.", "\"Look out\"! he yelled.", "\"Look out! he yelled.\""], type: "multiple_choice" },
-    { q: "Which sentence is correct?", a: "\"We're almost there,\" said the driver.", opts: ["We're almost there, said the driver.", "\"We're almost there,\" said the driver.", "\"We're almost there\" said the driver.", "\"We're almost there, said the driver.\""], type: "multiple_choice" },
+    { q: "Which sentence punctuates the driver's words correctly?", a: "\"We're almost there,\" said the driver.", opts: ["We're almost there, said the driver.", "\"We're almost there,\" said the driver.", "\"We're almost there\" said the driver.", "\"We're almost there, said the driver.\""], type: "multiple_choice" },
     { q: "What do quotation marks tell the reader?", a: "These are the exact words a person spoke", opts: ["These are the exact words a person spoke", "This is a question", "This is important", "This is the title only"], type: "multiple_choice" },
+    { q: "Which sentence puts quotation marks around only the spoken words?", a: "\"Pass the salt,\" said Grandpa.", opts: ["\"Pass the salt, said Grandpa.\"", "\"Pass the salt,\" said Grandpa.", "Pass the salt, \"said Grandpa.\"", "\"Pass\" the salt, said Grandpa."], type: "multiple_choice" },
+    { q: "Which sentence starts the quoted words with a capital letter correctly?", a: "The coach said, \"Run faster.\"", opts: ["The coach said, \"run faster.\"", "The coach said, \"Run faster.\"", "The coach said \"run Faster.\"", "The coach said, \"run faster\"."], type: "multiple_choice" },
+    { q: "Which sentence correctly punctuates a split quotation?", a: "\"If we hurry,\" said Nadia, \"we can still make it.\"", opts: ["\"If we hurry\" said Nadia \"we can still make it.\"", "\"If we hurry,\" said Nadia, \"we can still make it.\"", "\"If we hurry,\" said Nadia, we can still make it.", "If we hurry, said Nadia, \"we can still make it.\""], type: "multiple_choice" },
+    { q: "Which sentence punctuates the poem title correctly?", a: "We read the poem \"Autumn Wind\" in class.", opts: ["We read the poem Autumn Wind\" in class.", "We read the poem \"Autumn Wind\" in class.", "We read the poem \"Autumn Wind in class.\"", "We read \"the poem Autumn Wind\" in class."], type: "multiple_choice" },
+    { q: "Which is an INDIRECT quotation (no quotation marks needed)?", a: "Mom said that dinner was ready.", opts: ["Mom said that dinner was ready.", "Mom said, \"Dinner is ready.\"", "\"Dinner is ready,\" Mom said.", "\"Is dinner ready?\" Mom asked."], type: "multiple_choice" },
+    { q: "When the QUOTED words are a question, the question mark goes:", a: "Inside the closing quotation mark", opts: ["Inside the closing quotation mark", "Outside the closing quotation mark", "After the speaker's name", "Nowhere; it is left out"], type: "multiple_choice" },
+    { q: "Which sentence punctuates dialogue correctly when the speaker comes first?", a: "Priya asked, \"Where is my hat?\"", opts: ["Priya asked \"Where is my hat?\"", "Priya asked, \"Where is my hat?\"", "Priya asked, \"Where is my hat\"?", "Priya asked, Where is my hat?"], type: "multiple_choice" },
+    { q: "Which sentence shows an exclamation inside quotation marks correctly?", a: "\"Watch out for the puddle!\" cried Sam.", opts: ["\"Watch out for the puddle\"! cried Sam.", "\"Watch out for the puddle!\" cried Sam.", "\"Watch out for the puddle! cried Sam.\"", "Watch out for the puddle! \"cried Sam.\""], type: "multiple_choice" },
   ], count);
 }
 
@@ -2466,6 +2575,9 @@ function generatePronounProblems(count: number): Problem[] {
     { q: "What type of pronoun is 'who'?", a: "Relative", opts: ["Personal","Reflexive","Relative","Indefinite"] },
     { q: "Replace: 'The dog wagged the dog's tail.'", a: "The dog wagged its tail." },
     { q: "What is an indefinite pronoun? Give an example.", a: "A pronoun that does not refer to a specific person or thing (e.g., everyone, nobody, someone)" },
+    { q: "Choose the correct pronoun: The teacher gave ___ a gold star. (I / me / my / mine)", a: "me", opts: ["I","me","my","mine"] },
+    { q: "Which word is a possessive pronoun? (they / theirs / them / she)", a: "theirs", opts: ["they","theirs","them","she"] },
+    { q: "Which pronoun replaces 'the twins' in 'The twins built a snowman'?", a: "They", opts: ["They","It","She","Him"] },
   ];
   return shuffleArray(items).slice(0, count).map((item) => ({
     id: nanoid(8), type: (item.opts ? "multiple_choice" : "short_answer") as any,
@@ -2487,6 +2599,10 @@ function generatePrepositionProblems(count: number): Problem[] {
     { q: "What does a preposition show?", a: "The relationship between a noun/pronoun and another word (position, direction, time, etc.)" },
     { q: "Give three examples of prepositions of place.", a: "(e.g., on, under, above, beside, between, near, behind, in front of)" },
     { q: "Give three examples of prepositions of time.", a: "(e.g., at, on, in, before, after, during, since, until)" },
+    { q: "Which word is a preposition in 'The keys are beside the lamp'?", a: "beside", opts: ["beside","keys","lamp","are"] },
+    { q: "Choose the correct preposition: We waited ___ the bus stop. (at / of / for / with)", a: "at", opts: ["at","of","for","with"] },
+    { q: "Which group of words is a prepositional phrase?", a: "under the bridge", opts: ["under the bridge","ran quickly","a tall tree","she laughed"] },
+    { q: "Choose the correct preposition: The movie starts ___ eight o'clock. (in / on / at / from)", a: "at", opts: ["in","on","at","from"] },
   ];
   return shuffleArray(items).slice(0, count).map((item) => ({
     id: nanoid(8), type: (item.opts ? "multiple_choice" : "short_answer") as any,

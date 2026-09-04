@@ -50,6 +50,13 @@ export interface Passage {
   items: PassageItem[];
   /** Optional partner passage id — paired texts begin at G8. */
   pairedWith?: string;
+  /**
+   * Optional UNIT SCOPE. A passage listing units was written FOR those units
+   * (an author's-purpose text belongs on an author's-purpose sheet, not on
+   * every Grade 4 reading unit). Unit-scoped passages are excluded from the
+   * band's general pool; unscoped passages keep serving the whole band.
+   */
+  units?: string[];
 }
 
 export interface BandSpec {
@@ -92,8 +99,9 @@ export function bandForGrade(grade: number): BandId | null {
 // current content and the audit trivially passes.
 // ─────────────────────────────────────────────────────────────────────────────
 import { PASSAGES_G2_3 } from "./passages-g2-3";
+import { PASSAGES_UPPER } from "./passages-upper";
 
-export const PASSAGES: Passage[] = [...PASSAGES_G2_3];
+export const PASSAGES: Passage[] = [...PASSAGES_G2_3, ...PASSAGES_UPPER];
 
 export function passagesForBand(band: BandId): Passage[] {
   return PASSAGES.filter((p) => p.band === band);
@@ -104,10 +112,16 @@ export function passagesForBand(band: BandId): Passage[] {
  * sees passages from its OWN band — this is the rule that makes the
  * "Grade 10 gets the Grade 3 bee passage" bug structurally impossible.
  */
-export function passagesForUnit(grade: number, skill?: PassageSkill): Passage[] {
+export function passagesForUnit(grade: number, skill?: PassageSkill, unitName?: string): Passage[] {
   const band = bandForGrade(grade);
   if (!band) return [];               // Grade 1 → Track A owns it
-  const inBand = passagesForBand(band);
+  // A unit that has texts written FOR it reads those and nothing else. Every
+  // other unit sees only the band's unscoped, general-purpose passages — so
+  // adding a purpose/bias text for one unit can never change another's sheet.
+  const scoped = unitName
+    ? passagesForBand(band).filter((p) => p.units?.includes(unitName))
+    : [];
+  const inBand = scoped.length ? scoped : passagesForBand(band).filter((p) => !p.units?.length);
   if (!skill) return inBand;
   const matching = inBand.filter((p) => p.items.some((i) => i.skill === skill));
   return matching.length ? matching : inBand;

@@ -70,6 +70,16 @@ const NONSENSE: Record<StageId, string[]> = {
   "suffixes": ["vabs", "jating", "zomped", "yunning", "veps", "zilts"],
 };
 
+// Three ways of asking the SAME real-vs-nonsense question. The wording differs
+// so that a sheet showing more than one of them doesn't look like a repeat; the
+// phrase "REAL word" is kept in every one because that is what the audit (and a
+// parent skimming the page) recognises the item type by.
+const REAL_WORD_PROMPTS = [
+  "Which one is a REAL word?",
+  "Only one of these is a REAL word. Which one?",
+  "Three of these are made-up. Which one is a REAL word?",
+];
+
 function nonsenseWords(stage: StageId, realWords: Set<string>): string[] {
   return (NONSENSE[stage] ?? []).filter(
     (w) => !realWords.has(w) && judgeWord(w, stage).decodable,
@@ -87,16 +97,18 @@ export function generateWordItems(stage: StageId, count: number, seed = 1): Word
   const items: WordItem[] = [];
 
   // 1. Real vs nonsense — the cleanest proof a child is decoding, not guessing.
-  for (const nw of nonsense.slice(0, 3)) {
+  // Each one is worded differently: a sheet carrying three items all headed
+  // "Which one is a REAL word?" reads as the same question asked three times.
+  nonsense.slice(0, REAL_WORD_PROMPTS.length).forEach((nw, i) => {
     const real = pick(words, r);
     const others = shuffle(nonsense.filter((n) => n !== nw), r).slice(0, 2);
-    if (others.length < 2) break;
+    if (others.length < 2) return;
     items.push({
-      question: `Which one is a REAL word?`,
+      question: REAL_WORD_PROMPTS[i],
       options: shuffle([real, nw, ...others], r),
       answer: real,
     });
-  }
+  });
 
   // 2. Rhyme / word family — same rime unit.
   // Practise THIS stage's new pattern first — a magic-e lesson whose items are
@@ -110,7 +122,7 @@ export function generateWordItems(stage: StageId, count: number, seed = 1): Word
     const k = rime(w);
     byRime.set(k, [...(byRime.get(k) ?? []), w]);
   }
-  for (const [k, group] of focusFirst([...byRime.entries()].filter(([, g]) => g.length >= 2)).slice(0, 3)) {
+  for (const [k, group] of focusFirst([...byRime.entries()].filter(([, g]) => g.length >= 2)).slice(0, 6)) {
     const [a, b] = shuffle(group, r);
     const wrong = shuffle(words.filter((w) => rime(w) !== k), r).slice(0, 3);
     if (wrong.length < 3) continue;
@@ -127,7 +139,7 @@ export function generateWordItems(stage: StageId, count: number, seed = 1): Word
     const o = onset(w);
     if (o) byOnset.set(o, [...(byOnset.get(o) ?? []), w]);
   }
-  for (const [o, group] of focusFirst([...byOnset.entries()].filter(([, g]) => g.length >= 2)).slice(0, 3)) {
+  for (const [o, group] of focusFirst([...byOnset.entries()].filter(([, g]) => g.length >= 2)).slice(0, 6)) {
     const [a, b] = shuffle(group, r);
     const wrong = shuffle(words.filter((w) => onset(w) !== o), r).slice(0, 3);
     if (wrong.length < 3) continue;
@@ -139,7 +151,7 @@ export function generateWordItems(stage: StageId, count: number, seed = 1): Word
   }
 
   // 4. One-sound swap (word chains) — the core blending routine.
-  for (const [k, group] of focusFirst([...byRime.entries()].filter(([, g]) => g.length >= 2)).slice(0, 3)) {
+  for (const [k, group] of focusFirst([...byRime.entries()].filter(([, g]) => g.length >= 2)).slice(0, 6)) {
     const [from, to] = shuffle(group, r);
     const fromOnset = onset(from), toOnset = onset(to);
     if (!fromOnset || !toOnset || fromOnset === toOnset) continue;
@@ -153,7 +165,7 @@ export function generateWordItems(stage: StageId, count: number, seed = 1): Word
   }
 
   // 5. Sound counting — phoneme segmentation (graphemes = sounds).
-  for (const w of shuffle([...focus, ...words], r).slice(0, 3)) {
+  for (const w of shuffle([...new Set([...focus, ...words])], r).slice(0, 6)) {
     const g = judgeWord(w, stage).graphemes;
     if (!g) continue;
     const n = g.length;
@@ -167,5 +179,12 @@ export function generateWordItems(stage: StageId, count: number, seed = 1): Word
     });
   }
 
-  return shuffle(items, r).slice(0, count);
+  // A sheet must never ask the same question twice. Two generators can land on
+  // the same prompt (the same word can head both a rhyme group and an onset
+  // group), so de-duplicate by question text before the sheet is cut.
+  const seen = new Set<string>();
+  const unique = shuffle(items, r).filter(
+    (it) => !seen.has(it.question) && (seen.add(it.question), true),
+  );
+  return unique.slice(0, count);
 }
