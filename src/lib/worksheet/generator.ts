@@ -1323,6 +1323,13 @@ function withBandPassages(skillName: string): Problem[] | null {
       options: it.options,
       answer: it.options[it.correctIndex],
       points: 1,
+      // Every passage item carries EVIDENCE: the sentence that proves the
+      // answer, quoted verbatim and checked by scripts/audit-passages.ts. It
+      // was being dropped here, so a child who got a comprehension question
+      // wrong was coached with a generic worked example while the exact line
+      // that answers it sat unused in the bank. Pointing at the text IS the
+      // comprehension skill — so it becomes the coach's explanation.
+      ...(it.evidence ? { explanation: `Find it in the text — the passage says: "${it.evidence}"` } : {}),
     })),
   ]);
 }

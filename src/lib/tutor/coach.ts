@@ -42,10 +42,19 @@ export function coachFor(input: CoachInput): Scaffold {
     explanation,
     directive: skillName,
   });
-  if (!sc.generic) return sc;
+  // Trigger on DEPTH, not just the generic flag. A passage item supplies its
+  // evidence sentence as an explanation, which makes the scaffold non-generic
+  // while still offering only one real hint — so keying off the flag alone
+  // silently traded a worked example for a single line.
+  if (teachingDepth(sc) >= 2) return sc;
 
   const ex = getMicroSkillLesson(subjectSlug, levelCode, skillName)?.example;
   if (!ex?.steps?.length) return sc;
+
+  // Keep whatever the scaffold DID contribute — for reading that is the quoted
+  // line from the passage, which is the most useful hint on the page — and put
+  // the method in front of it.
+  const kept = sc.hints.filter((h) => !isBlandHint(h));
 
   return {
     explanation: studentAnswer
@@ -54,6 +63,7 @@ export function coachFor(input: CoachInput): Scaffold {
     hints: [
       `Similar example: ${ex.problem}`,
       ...ex.steps,
+      ...kept,
       `The example's answer is ${ex.answer}. Use the SAME steps on yours — the correct answer is ${correctAnswer}.`,
     ],
     answer: correctAnswer,
