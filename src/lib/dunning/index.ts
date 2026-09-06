@@ -4,6 +4,7 @@
 
 import { db } from "@/lib/db";
 import { sendPaymentFailedEmail } from "@/lib/email";
+import type { Prisma } from "@prisma/client";
 
 // ─────────────────────────────────────────────
 // Dunning state machine
@@ -15,7 +16,41 @@ export const DUNNING_STAGES = [
   { day: 7, label: "final_warning", subject: "Final notice — your account moves to Free tomorrow" },
 ] as const;
 
+const FINAL_STAGE = DUNNING_STAGES[DUNNING_STAGES.length - 1];
 const DOWNGRADE_DAY = 8; // day after final warning
+
+/** The query the job opens with. Exported so a test can validate its SHAPE
+ *  against the real Prisma client: this query carried a `take: 1` inside a
+ *  one-to-one `school` include (hidden by `as any`), and Prisma rejected it
+ *  before reading a row — every run from Jun 16 to Sep 4 2026 failed here, and
+ *  no past-due customer was contacted. School subs are skipped below, so only
+ *  the user is needed. */
+export const PAST_DUE_QUERY = {
+  where: { status: "PAST_DUE" },
+  include: { user: true },
+} satisfies Prisma.SubscriptionFindManyArgs;
+
+/** Which stage is due for a subscription that has been past due for
+ *  `daysSinceFail` days, given the stage labels already sent? The highest
+ *  stage whose day has arrived and has not gone out yet — one email per run,
+ *  so a missed day (or three months of a broken cron) catches up in order
+ *  rather than jumping straight to a downgrade nobody was warned about. */
+export function nextDunningStage(
+  daysSinceFail: number,
+  sentLabels: ReadonlySet<string>,
+): (typeof DUNNING_STAGES)[number] | null {
+  for (let i = DUNNING_STAGES.length - 1; i >= 0; i--) {
+    const s = DUNNING_STAGES[i];
+    if (s.day <= daysSinceFail && !sentLabels.has(s.label)) return s;
+  }
+  return null;
+}
+
+/** Downgrade only a customer who has actually received the final warning.
+ *  Never move a paying account to Free on the strength of a date alone. */
+export function shouldDowngrade(daysSinceFail: number, sentLabels: ReadonlySet<string>): boolean {
+  return daysSinceFail >= DOWNGRADE_DAY && sentLabels.has(FINAL_STAGE.label);
+}
 
 // ─────────────────────────────────────────────
 // Run dunning checks for all PAST_DUE subscriptions
@@ -25,14 +60,7 @@ export async function processDunningEmails(): Promise<{
   recordsProcessed: number;
   metadata: Record<string, any>;
 }> {
-  // Find all subscriptions stuck in PAST_DUE
-  const pastDueSubs = await db.subscription.findMany({
-    where: { status: "PAST_DUE" },
-    include: {
-      user: true,
-      school: { include: { teachers: { include: { user: true } }, take: 1 } as any },
-    },
-  });
+  const pastDueSubs = await db.subscription.findMany(PAST_DUE_QUERY);
 
   let emailsSent = 0;
   let accountsDowngraded = 0;
@@ -46,19 +74,17 @@ export async function processDunningEmails(): Promise<{
       (Date.now() - sub.updatedAt.getTime()) / (24 * 60 * 60 * 1000)
     );
 
-    // Find which stage we should send (if any)
-    const stage = DUNNING_STAGES.find((s) => s.day === daysSinceFail);
-    if (stage) {
-      // Check if we already sent this stage
-      const alreadySent = await db.notification.findFirst({
-        where: {
-          userId: sub.userId!,
-          type: "PAYMENT_FAILED",
-          metadata: { path: ["dunningStage"], equals: stage.label } as any,
-        },
-      });
-      if (alreadySent) continue;
+    // Everything this customer has already been told
+    const prior = await db.notification.findMany({
+      where: { userId: sub.userId!, type: "PAYMENT_FAILED" },
+      select: { metadata: true },
+    });
+    const sentLabels = new Set<string>(
+      prior.map((n) => (n.metadata as any)?.dunningStage).filter(Boolean),
+    );
 
+    const stage = nextDunningStage(daysSinceFail, sentLabels);
+    if (stage) {
       await sendPaymentFailedEmail({
         email: sub.user.email,
         firstName: sub.user.firstName ?? "there",
@@ -77,10 +103,10 @@ export async function processDunningEmails(): Promise<{
       });
 
       emailsSent++;
+      continue; // one step per run; the downgrade waits for the next one
     }
 
-    // Auto-downgrade at day 8
-    if (daysSinceFail >= DOWNGRADE_DAY) {
+    if (shouldDowngrade(daysSinceFail, sentLabels)) {
       await db.subscription.update({
         where: { id: sub.id },
         data: { plan: "FREE", status: "CANCELED", canceledAt: new Date() },
