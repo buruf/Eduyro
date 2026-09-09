@@ -43,7 +43,7 @@ function enumAdd(aLo: number, aHi: number, bLo: number, bHi: number, carry?: boo
   eachPair(aLo, aHi, bLo, bHi, (a, b) => {
     if (carry !== undefined && addCarry(a, b) !== (carry ? 1 : 0)) return;
     const m = Math.max(a, b);
-    out.push({ q: `${a} + ${b}`, a: String(a + b), diff: (digits(m) - 1) * 30 + magnitude(m) + addCarry(a, b) * 20, key: `${a}+${b}` });
+    out.push({ q: `${a} + ${b}`, a: String(a + b), diff: (digits(m) - 1) * 30 + magnitude(m) + addCarry(a, b) * 20 + (a + b >= 1000 ? 150 : 0), key: `${a}+${b}` });
   });
   return out;
 }
@@ -116,7 +116,7 @@ function enumMissingAdd(aLo: number, aHi: number, bLo: number, bHi: number, carr
     // total crosses 100 anyway.
     const sum = a + b;
     const band = sum >= 100 ? 900 : 0;
-    out.push({ q: `___ + ${b} = ${sum}`, a: String(a), diff: band + (digits(sum) - 1) * 30 + magnitude(sum) + 18, key: `m+${a}_${b}` });
+    out.push({ q: `___ + ${b} = ${sum}`, a: String(a), diff: band + (digits(sum) - 1) * 30 + magnitude(sum) + addCarry(a, b) * 20 + 18, key: `m+${a}_${b}` });
   });
   return out;
 }
@@ -140,7 +140,7 @@ function enumSub(aLo: number, aHi: number, bLo: number, bHi: number, borrow?: bo
   eachPair(aLo, aHi, bLo, bHi, (a, b) => {
     if (b > a) return;
     if (borrow !== undefined && subBorrow(a, b) !== (borrow ? 1 : 0)) return;
-    out.push({ q: `${a} - ${b}`, a: String(a - b), diff: (digits(a) - 1) * 30 + magnitude(a) + subBorrow(a, b) * 25, key: `${a}-${b}` });
+    out.push({ q: `${a} - ${b}`, a: String(a - b), diff: (digits(a) - 1) * 30 + magnitude(a) + subBorrow(a, b) * 25 + (digits(a) >= 3 && /0/.test(String(a).slice(1)) ? 150 : 0), key: `${a}-${b}` });
   });
   return out;
 }
@@ -158,7 +158,7 @@ function enumMissingSub(aLo: number, aHi: number, bLo: number, bHi: number, borr
   eachPair(aLo, aHi, bLo, bHi, (a, b) => {
     if (b > a) return;
     if (borrow !== undefined && subBorrow(a, b) !== (borrow ? 1 : 0)) return;
-    out.push({ q: `${a} - ___ = ${a - b}`, a: String(b), diff: (digits(a) - 1) * 30 + magnitude(a) + 18, key: `${a}-m${b}` });
+    out.push({ q: `${a} - ___ = ${a - b}`, a: String(b), diff: (digits(a) - 1) * 30 + magnitude(a) + subBorrow(a, b) * 25 + 18, key: `${a}-m${b}` });
   });
   return out;
 }
@@ -386,7 +386,7 @@ function enumMul(aLo: number, aHi: number, bLo: number, bHi: number, carry?: boo
     const c = (a % 10) * (b % 10) >= 10 ? 1 : 0;
     if (carry !== undefined && c !== (carry ? 1 : 0)) return;
     const m = Math.max(a, b);
-    out.push({ q: `${a} × ${b}`, a: String(a * b), diff: m * 3 + (digits(a) + digits(b) - 2) * 30, key: `${a}x${b}` });
+    out.push({ q: `${a} × ${b}`, a: String(a * b), diff: m * 3 + (digits(a) + digits(b) - 2) * 30 + (Math.min(a, b) >= 20 ? 300 : 0), key: `${a}x${b}` });
   });
   return out;
 }
@@ -403,7 +403,7 @@ function enumDivExact(divLo: number, divHi: number, qLo: number, qHi: number): A
   const out: AProblem[] = [];
   eachPair(divLo, divHi, qLo, qHi, (d, q) => {
     const dividend = d * q;
-    out.push({ q: `${dividend} ÷ ${d}`, a: String(q), diff: d * 5 + (digits(dividend) - 1) * 25, key: `${dividend}/${d}` });
+    out.push({ q: `${dividend} ÷ ${d}`, a: String(q), diff: d * 5 + (digits(dividend) - 1) * 100, key: `${dividend}/${d}` });
   });
   return out;
 }
@@ -413,7 +413,7 @@ function enumDivRemainder(divLo: number, divHi: number, dividendLo: number, divi
     if (d < 2 || dividend < d) return;
     const q = Math.floor(dividend / d), r = dividend % d;
     if (r === 0) return; // remainder problems only
-    out.push({ q: `${dividend} ÷ ${d}`, a: `${q} r ${r}`, diff: d * 5 + (digits(dividend) - 1) * 25 + 20, key: `${dividend}/${d}r` });
+    out.push({ q: `${dividend} ÷ ${d}`, a: `${q} r ${r}`, diff: d * 5 + (digits(dividend) - 1) * 100 + (q > 12 ? 300 : 0) + 20, key: `${dividend}/${d}r` });
   });
   return out;
 }
@@ -443,8 +443,8 @@ const CURRICULA: Record<string, Unit[]> = {
     { id:"add-fact-family", label:"Fact families to 18", objective:"Student uses the add/subtract inverse and missing addends", grade:"Grade 2", stars:3, range:[21,28], pool:()=>spiral(addFormats(fFactFamily()), addFormats(fMakeTen()), addFormats(fNearDoubles()), "ad6"), example:{ problem:"7 + ___ = 12", steps:["12 - 7 = 5"], answer:"5" } },
     { id:"add-2d-noregroup", label:"2-digit addition (no regrouping)", objective:"Student adds tens and ones separately", grade:"Grade 2-3", stars:3, range:[29,44], pool:()=>[...enumAddClean(11,88,11,88), ...det(enumMissingAdd(11,77,11,22,false), 60, "ad7m"), ...det(addFormats(fFactFamily()), 20, "ad7p")], example:{ problem:"34 + 25 =", steps:["Ones: 4 + 5 = 9","Tens: 3 + 2 = 5","Answer: 59"], answer:"59" } },
     { id:"add-2d-regroup", label:"2-digit addition (regrouping)", objective:"Student carries the ten when ones reach 10", grade:"Grade 3", stars:4, range:[45,64], pool:()=>[...enumAddRegroup(), ...det(enumMissingAdd(30,99,20,70), 60, "ad8m"), ...det(addFormats(fMakeTen()), 20, "ad8p")], example:{ problem:"37 + 45 =", steps:["Ones: 7 + 5 = 12 → write 2, carry 1","Tens: 3 + 4 + 1 = 8","Answer: 82"], answer:"82" } },
-    { id:"add-3d-three", label:"3-digit addition & three addends", objective:"Student adds across columns, chaining three numbers", grade:"Grade 3-4", stars:4, range:[65,84], pool:()=>[...enumAdd(100,999,100,999), ...enumMissingAdd(100,999,50,500), ...enumThreeAdd(15,99)], example:{ problem:"248 + 167 =", steps:["Ones: 8+7=15 → 5 carry 1","Tens: 4+6+1=11 → 1 carry 1","Hundreds: 2+1+1=4","Answer: 415"], answer:"415" } },
-    { id:"add-missing-review", label:"Missing addend & mixed review", objective:"Student solves for the unknown, reviewing every addition type", grade:"Grade 4", stars:5, range:[85,100], pool:()=>[...enumMissingAdd(10,99,10,99), ...enumAdd(100,999,100,999), ...enumAdd(10,99,10,99,true)], example:{ problem:"___ + 25 = 61", steps:["61 - 25 = 36"], answer:"36" } },
+    { id:"add-3d-three", label:"3-digit addition & three addends", objective:"Student adds across columns, chaining three numbers", grade:"Grade 3-4", stars:4, range:[65,84], pool:()=>[...enumAdd(100,999,100,999), ...enumMissingAdd(100,999,50,500), ...enumThreeAdd(15,99)], example:{ problem:"248 + 167 =", steps:["Ones: 8+7=15 → 5 carry 1","Tens: 4+6+1=11 → 1 carry 1","Hundreds: 2+1+1=4","Answer: 415","Three numbers (15 + 34 + 15): add the first two, then add the third: 49 + 15 = 64"], answer:"415" } },
+    { id:"add-missing-review", label:"Missing addend & mixed review", objective:"Student solves for the unknown, reviewing every addition type", grade:"Grade 4", stars:5, range:[85,100], pool:()=>[...enumMissingAdd(10,99,10,99), ...enumAdd(100,999,100,999), ...enumAdd(10,99,10,99,true)], example:{ problem:"___ + 25 = 61", steps:["Count up from 25 to 61","25 + 30 = 55, then 55 + 6 = 61","You added 30 + 6 = 36"], answer:"36" } },
   ],
 
   SUBTRACTION: [
@@ -456,7 +456,7 @@ const CURRICULA: Record<string, Unit[]> = {
     { id:"sub-fact-family", label:"Fact families to 18", objective:"Student uses the subtract/add inverse", grade:"Grade 2-3", stars:3, range:[33,40], pool:()=>spiral(subFormats(sFactFamily()), subFormats(sBridge()), subFormats(sNearDoubles()), "sb6"), example:{ problem:"13 - ___ = 5", steps:["13 - 5 = 8"], answer:"8" } },
     { id:"sub-2d-noborrow", label:"2-digit subtraction (no borrowing)", objective:"Student subtracts tens and ones separately", grade:"Grade 2-3", stars:3, range:[41,54], pool:()=>[...enumSub(10,99,1,9,false), ...enumSub(10,99,10,99,false), ...enumMissingSub(10,99,1,9,false), ...enumMissingSub(10,99,1,40,false), ...det(subFormats(sFactFamily()), 20, "sb7p")], example:{ problem:"58 - 23 =", steps:["Ones: 8 - 3 = 5","Tens: 5 - 2 = 3","Answer: 35"], answer:"35" } },
     { id:"sub-2d-borrow", label:"2-digit subtraction (borrowing)", objective:"Student borrows a ten when needed", grade:"Grade 3", stars:4, range:[55,72], pool:()=>[...enumSub(10,99,1,9,true), ...enumSub(10,99,10,99,true), ...enumMissingSub(20,99,1,50), ...det(subFormats(sBridge()), 20, "sb8p")], example:{ problem:"52 - 27 =", steps:["Ones: 2 - 7 borrow → 12 - 7 = 5","Tens: 4 - 2 = 2","Answer: 25"], answer:"25" } },
-    { id:"sub-3d", label:"3-digit subtraction (regrouping)", objective:"Student regroups across columns", grade:"Grade 3-4", stars:4, range:[73,88], pool:()=>[...enumSub(100,999,100,999), ...enumMissingSub(100,999,10,400), ...det(enumSub(10,99,10,99,true), 18, "sb9p")], example:{ problem:"403 - 158 =", steps:["Borrow across to subtract ones and tens","Answer: 245"], answer:"245" } },
+    { id:"sub-3d", label:"3-digit subtraction (regrouping)", objective:"Student regroups across columns", grade:"Grade 3-4", stars:4, range:[73,88], pool:()=>[...enumSub(100,999,100,999), ...enumMissingSub(100,999,10,400), ...det(enumSub(10,99,10,99,true), 18, "sb9p")], example:{ problem:"542 - 372 =", steps:["Ones: 2 - 2 = 0","Tens: 4 - 7 can't → borrow a hundred: 14 - 7 = 7","Hundreds: 4 - 3 = 1","Answer: 170"], answer:"170" } },
     { id:"sub-missing-review", label:"Missing number & mixed review", objective:"Student solves for the unknown, reviewing every subtraction type", grade:"Grade 4", stars:5, range:[89,100], pool:()=>[...enumMissingSub(20,99,1,40), ...enumSub(100,999,100,999), ...enumSub(10,99,10,99,true)], example:{ problem:"45 - ___ = 18", steps:["45 - 18 = 27"], answer:"27" } },
   ],
 
@@ -494,8 +494,8 @@ const CURRICULA: Record<string, Unit[]> = {
     { id:"div-fact-family", label:"Fact families & missing dividend", objective:"Student uses the ÷/× inverse to find the missing number", grade:"Grade 4", stars:4, range:[37,48], pool:()=>spiral(divFormats(dAll()), divFormats(dTables([6,7,8,9],"hard-facts")), divFormats(dTables([3,4],"build-up")), "d6"), example:{ problem:"___ ÷ 6 = 7", steps:["6 × 7 = 42"], answer:"42" } },
     { id:"div-10-12", label:"÷10, ÷11, ÷12", objective:"Student divides by 10, 11 and 12", grade:"Grade 4", stars:3, range:[49,58], pool:()=>spiral(divFormats(dTables([10,11,12],"big-tables")), divFormats(dAll()), [], "d7"), example:{ problem:"84 ÷ 12 =", steps:["12 × 7 = 84","So 84 ÷ 12 = 7"], answer:"7" } },
     { id:"div-remainder", label:"Division with remainders", objective:"Student divides with remainders", grade:"Grade 4-5", stars:5, range:[59,76], pool:()=>[...enumDivRemainder(2,9,10,99), ...det(divFormats(dAll()), 20, "d8p")], example:{ problem:"29 ÷ 4 =", steps:["4 × 7 = 28","29 - 28 = 1","Answer: 7 r 1"], answer:"7 r 1" } },
-    { id:"div-larger", label:"2-digit & 3-digit ÷ 1-digit", objective:"Student divides larger numbers by 1 digit", grade:"Grade 5", stars:5, range:[77,92], pool:()=>[...enumDivExact(3,9,5,15), ...enumDivExact(3,9,15,99)], example:{ problem:"96 ÷ 6 =", steps:["6 × 16 = 96","So 96 ÷ 6 = 16"], answer:"16" } },
-    { id:"div-review", label:"Mixed review", objective:"Student divides fluently across all types", grade:"Grade 5", stars:5, range:[93,100], pool:()=>[...enumDivExact(2,12,2,12), ...enumDivRemainder(2,9,10,99), ...enumMissingDividend(2,12,2,12)], example:{ problem:"175 ÷ 7 =", steps:["7 × 25 = 175","So 175 ÷ 7 = 25"], answer:"25" } },
+    { id:"div-larger", label:"2-digit & 3-digit ÷ 1-digit", objective:"Student divides larger numbers by 1 digit", grade:"Grade 5", stars:5, range:[77,92], pool:()=>[...enumDivExact(3,9,5,15), ...enumDivExact(3,9,15,33), ...det(enumDivExact(3,9,34,99), 160, "d9p")], example:{ problem:"96 ÷ 6 =", steps:["Split 96 into pieces that divide by 6: 60 + 36","60 ÷ 6 = 10 and 36 ÷ 6 = 6","10 + 6 = 16"], answer:"16" } },
+    { id:"div-review", label:"Mixed review", objective:"Student divides fluently across all types", grade:"Grade 5", stars:5, range:[93,100], pool:()=>[...enumDivExact(2,12,2,12), ...enumDivRemainder(2,9,10,99), ...enumMissingDividend(2,12,2,12)], example:{ problem:"175 ÷ 7 =", steps:["Split 175 into 140 + 35 (both divide by 7)","140 ÷ 7 = 20 and 35 ÷ 7 = 5","20 + 5 = 25"], answer:"25" } },
   ],
 };
 
@@ -571,10 +571,10 @@ function selectProblems(pool: AProblem[], t: number, count: number, seed: number
   // (regrouping)" served answers over 100, needing a tens-column carry the
   // curriculum does not teach for another two lessons. Starting at 35% keeps
   // the first sheets inside the part of the pool the lesson has actually
-  // taught, and there is still ample variety: 35% of a ~300-problem pool is
-  // ~100 problems for a 10-problem sheet.
+  // taught, and there is still ample variety: 20% of a ~300-problem pool is
+  // 60 problems for a 10-problem sheet.
   const tc = Math.min(1, Math.max(0, t));
-  const W = Math.min(N, Math.max(count, Math.round(N * (0.35 + 0.35 * tc))));
+  const W = Math.min(N, Math.max(count, Math.round(N * (0.2 + 0.5 * tc))));
   const start = N <= count ? 0 : Math.round(t * (N - W));
   const win = N <= count ? sorted : sorted.slice(start, start + W);
   // Seeded sample of `count` distinct items from the window (round-robin if the
@@ -592,8 +592,10 @@ function selectProblems(pool: AProblem[], t: number, count: number, seed: number
  *  across all four operation curricula; labels are unit-unique). Without this,
  *  M3–M6 lessons fell back to KEYWORD-matched tutorials — "Fact families &
  *  missing FACTOR" matched the M12 factoring tutorial (user-reported). */
-export function getArithmeticMicroLesson(label: string): { goal: string; bigIdea: string; example: { problem: string; steps: string[]; answer: string }; umbrella: string } | null {
+export function getArithmeticMicroLesson(label: string, levelCode?: string): { goal: string; bigIdea: string; example: { problem: string; steps: string[]; answer: string }; umbrella: string } | null {
+  const only = levelCode ? Object.keys(SKILL_CODE).find((k) => SKILL_CODE[k] === levelCode) : undefined;
   for (const [skill, units] of Object.entries(CURRICULA)) {
+    if (only && skill !== only) continue;
     const u = units.find((x) => x.label === label);
     if (u) {
       const g = u.objective.replace(/^Student /, "").replace(/^./, (c) => c.toUpperCase());
@@ -642,6 +644,20 @@ export function arithmeticUnits(skill: string): { index: number; id: string; lab
   return (CURRICULA[skill] ?? []).map((u, i) => ({ index: i, id: u.id, label: u.label, objective: u.objective, grade: u.grade, range: u.range }));
 }
 
+/** Is the missing-number form allowed on this sheet of this unit? */
+export function allowsMissingForms(skill: string, unitIndex: number, sheetNumber: number): boolean {
+  const units = CURRICULA[skill];
+  const unit = units[unitIndex];
+  if (/missing|fact famil/i.test(unit.label)) return true;
+  const factFamily = units.findIndex((u) => /fact-family/.test(u.id));
+  if (factFamily !== -1 && unitIndex < factFamily) return false;
+  return sheetNumber !== unit.range[0];
+}
+function poolForSheet(skill: string, unitIndex: number, sheetNumber: number): AProblem[] {
+  const pool = buildScoredPool(skill, unitIndex);
+  return allowsMissingForms(skill, unitIndex, sheetNumber) ? pool : pool.filter((p) => !/___/.test(p.q));
+}
+
 export function generateArithmeticSheet(
   skill: ShopSkill, sheetNumber: number, totalSheets: number, problemCount = 30,
 ): WorksheetData {
@@ -653,7 +669,13 @@ export function generateArithmeticSheet(
   // callers, so every path (daily packet, print, vacation pack) agrees.
   if (isAlgorithmUnit(unit.label)) problemCount = Math.min(problemCount, ALGORITHM_SHEET_SIZE);
 
-  const selected = selectProblems(buildScoredPool(skill, ui), t, problemCount, hashStr(`${skill}:${sheetNumber}`));
+  const pool = poolForSheet(skill, ui, sheetNumber);
+  // A fact unit has as many questions as it has facts. Doubles is twelve
+  // facts; before the fact-family lesson the missing-number form is untaught
+  // and stays off the sheet, so a 30-slot sheet would have to repeat. A child
+  // never answers the same question twice on one sheet — the sheet is shorter.
+  problemCount = Math.min(problemCount, new Set(pool.map((p) => p.q)).size);
+  const selected = selectProblems(pool, t, problemCount, hashStr(`${skill}:${sheetNumber}`));
   const problems = selected.map((p, i) => ({
     id: nanoid(8),
     type: (p.type ?? "arithmetic") as "arithmetic" | "multiple_choice" | "true_false",
@@ -735,7 +757,7 @@ export function validateCurriculumStage(skill: string, totalSheets = 100): { ok:
     for (const s of [unit.range[0], Math.round((unit.range[0] + unit.range[1]) / 2)]) {
       const span = unit.range[1] - unit.range[0];
       const t = span === 0 ? 0.5 : (s - unit.range[0]) / span;
-      const sel = selectProblems(buildScoredPool(skill, unitIndexForSheet(skill, s)), t, 30, hashStr(`${skill}:${s}`));
+      const sel = selectProblems(poolForSheet(skill, unitIndexForSheet(skill, s), s), t, 30, hashStr(`${skill}:${s}`));
       const ans = sel.map(p => Number(p.a));
       // non-predictability
       let eqAdj = 0; for (let i = 1; i < sel.length; i++) if (Number.isFinite(ans[i]) && ans[i] === ans[i - 1]) eqAdj++;
@@ -747,7 +769,7 @@ export function validateCurriculumStage(skill: string, totalSheets = 100): { ok:
       if (nums.length > 8 && steps.size <= 2) issues.push(`${skill}/${unit.id} sheet ${s}: answer sequence too regular (steps=${steps.size})`);
       // format variety
       const fmts = new Set(sel.map(p => p.options ? (p.type === "true_false" ? "tf" : "mc") : (/___/.test(p.q) ? "missing" : "direct")));
-      if (fmts.size < 2) issues.push(`${skill}/${unit.id} sheet ${s}: only ${fmts.size} format`);
+      if (fmts.size < 2 && allowsMissingForms(skill, unitIndexForSheet(skill, s), s)) issues.push(`${skill}/${unit.id} sheet ${s}: only ${fmts.size} format`);
       // strategy dominance (staged units only)
       if (stratTagged && target) {
         const onTarget = sel.filter(p => p.strat === target).length / sel.length;

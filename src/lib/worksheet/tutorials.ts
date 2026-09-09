@@ -52,7 +52,7 @@ export function getMicroSkillLesson(
   if (subjectSlug === "MATH") {
     const early = getEarlyMathMicroLesson(microSkillLabel); // M1–M2 (exact unit match)
     if (early) return early;
-    const arith = getArithmeticMicroLesson(microSkillLabel); // M3–M6 (exact unit match)
+    const arith = getArithmeticMicroLesson(microSkillLabel, levelCode); // M3–M6 (exact unit match, within the level's operation)
     if (arith) return arith;
     const adv = getAdvancedMicroLesson(microSkillLabel); // M8–M12
     if (adv) return adv;

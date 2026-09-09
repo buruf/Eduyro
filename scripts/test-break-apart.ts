@@ -81,10 +81,17 @@ const carryMix = (from: number, sheets = 3) => {
   let gentle = 0, hard = 0;
   for (let sheet = from; sheet < from + sheets; sheet++) {
     for (const p of generateArithmeticSheet("MULTIPLICATION" as any, sheet, 100, 30).problems) {
-      const m = /^(\d{2}) × (\d)(?: =)?$/.exec(String(p.question));
+      // Bare "27 × 4" AND the scaffolded stage-1 items ("27 × 4   Ones first: …",
+      // "27 × 4   Tens: …") count toward the ramp: since the opening window
+      // narrowed to 20% (Sep 2026 transition audit) the first carrying sheets
+      // are the scaffolded stage by design, and those pairs are gentle by
+      // construction. The answer is checked on bare items only — a scaffold
+      // item's answer is one partial product.
+      const q = String(p.question);
+      const m = /^(\d{2}) × (\d)(?=\s|$)/.exec(q);
       if (!m) continue;
       const a = Number(m[1]), b = Number(m[2]);
-      if (a * b !== Number(p.answer)) bad(`carry: ${p.question} = ${p.answer}`);
+      if (/^\d{2} × \d(?: =)?$/.test(q) && a * b !== Number(p.answer)) bad(`carry: ${p.question} = ${p.answer}`);
       if (Math.floor(a / 10) * b + carryOf(a, b) <= 9) gentle++; else hard++;
     }
   }
