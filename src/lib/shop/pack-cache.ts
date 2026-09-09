@@ -9,7 +9,7 @@ import { uploadToS3, getSignedDownloadUrl } from "@/lib/pdf/generator";
 import { writeFileSync, existsSync, mkdirSync, statSync } from "fs";
 import { join } from "path";
 
-const CACHE_VERSION = "v119"; // Lesson-transition fixes: opening sheets teach the direct form, missing-number forms rank after the computation they hide, narrower opening window, rewritten worked examples.
+const CACHE_VERSION = "v120"; // v120: second transition pass - 62 majors fixed across M2-M18 (opening sheets serve only the taught shape, worked examples cover every case the sheet asks, same-template distractors).
 const CACHE_PREFIX  = `shop-packs/${CACHE_VERSION}`;
 const SAMPLE_PREFIX = `shop-samples/${CACHE_VERSION}`;
 

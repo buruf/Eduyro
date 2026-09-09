@@ -96,22 +96,44 @@ function tfXP(key: string, q: string, correct: "True" | "False", diff: number): 
 // (collision-guarded). One generic mechanism so every M14–M18 micro-skill mixes
 // representations — direct entry + reasoning-style MC — instead of one repeated
 // format. (M13 authors its own richer formats and does NOT use this.)
+// A plain typed item: no authored format, no interactive widget. Only these are
+// converted to multiple choice; items that already carry their own options
+// (find-the-mistake, true/false) keep the distractors their author wrote.
+const isPlainTyped = (p: XP): boolean =>
+  (p.type === undefined || p.type === "short_answer") && !p.options && !p.answerType && !p.interactive;
+
 function diversify(base: XP[]): XP[] {
-  return base.map((b, i) => {
-    // CONVERT every other item to multiple choice (don't add a twin — that would
-    // duplicate the question text and could put both on one sheet). MC keeps the
-    // SAME difficulty so the unit's difficulty curve is unchanged.
-    if (i % 2 === 0) {
+  // Distractors come ONLY from the item's own template (same fmt) and only
+  // from plain typed items. The old "nearest array neighbour" rule leaked
+  // "True", student names, and numbers from other question shapes into a
+  // numeric item's options (the six-reviewer transition audit, M14–M18).
+  const byFmt = new Map<string, XP[]>();
+  for (const p of base) {
+    if (!isPlainTyped(p)) continue;
+    const f = p.fmt ?? "_";
+    const g = byFmt.get(f); if (g) g.push(p); else byFmt.set(f, [p]);
+  }
+  const posInFmt = new Map<string, number>();
+  for (const [, list] of byFmt) list.forEach((p, i) => posInFmt.set(p.key, i));
+  let n = 0;
+  return base.map((b) => {
+    if (!isPlainTyped(b)) return b;
+    // CONVERT every other plain item to multiple choice (don't add a twin — that
+    // would duplicate the question text and could put both on one sheet). MC
+    // keeps the SAME difficulty so the unit's difficulty curve is unchanged.
+    if (n++ % 2 === 0) {
+      const siblings = byFmt.get(b.fmt ?? "_") ?? [];
+      const i = posInFmt.get(b.key) ?? 0;
       const near: string[] = [];
-      for (const d of [1, -1, 2, -2, 3, -3, 4]) {
+      for (const d of [1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6]) {
         const j = i + d;
-        if (j >= 0 && j < base.length) { const a = base[j].a; if (a !== b.a && !near.includes(a)) near.push(a); }
+        if (j >= 0 && j < siblings.length) { const a = siblings[j].a; if (a !== b.a && !near.includes(a)) near.push(a); }
         if (near.length >= 3) break;
       }
       const mc = mcXP(`${b.key}:mc`, "multiple-choice", b.q, b.a, near, b.diff);
       if (mc) return mc;
     }
-    return { ...b, type: b.type ?? "short_answer", fmt: b.fmt ?? "direct" };
+    return { ...b, type: "short_answer", fmt: b.fmt ?? "direct" };
   });
 }
 
@@ -263,11 +285,16 @@ function qFactor(): XP[] {
   const out: XP[] = [];
   for (let p = 1; p <= 9; p++) for (let q = p; q <= 9; q++) {
     const s = p + q, prod = p * q, ans = p === q ? `${p}` : `${p}, ${q}`, d = 7 + (s + prod / 4) * 0.05;
-    out.push({ q: `Solve x² - ${s}x + ${prod} = 0`, a: ans, diff: d, key: `fac:dir:${p}_${q}`, type: "short_answer", fmt: "direct" });
+    // The repeated root (one answer) is a special case the lesson mentions but
+    // does not work; distinct roots open the unit, repeated roots follow.
+    out.push({ q: `Solve x² - ${s}x + ${prod} = 0`, a: ans, diff: p === q ? d + 1.2 : d, key: `fac:dir:${p}_${q}`, type: "short_answer", fmt: "direct" });
     if (p !== q) {
+      // Reading k off an expansion is the inverse task (expand, then match
+      // the middle term). It is banded ABOVE every direct solve so it never
+      // reaches the opening sheet, where the lesson taught solving only.
       const mc = mcXP(`fac:fe:${p}_${q}`, "find-the-equation",
         `For which value of k can x² + kx + ${prod} be factored as (x + ${p})(x + ${q})?`,
-        `k = ${s}`, [`k = ${prod}`, `k = ${-s}`, `k = ${Math.abs(p - q) || prod}`], d + 0.4);
+        `k = ${s}`, [`k = ${prod}`, `k = ${-s}`, `k = ${Math.abs(p - q) || prod}`], d + 3);
       if (mc) out.push(mc);
     }
   }
@@ -312,10 +339,14 @@ function qSelectQuadratics(): XP[] {
 // ── Micro-skill 7: evaluate quadratics & axis of symmetry (mixed mastery) ──
 function qEvaluateAxis(): XP[] {
   const out: XP[] = [];
+  // The micro-lesson that fires on day one teaches the axis of symmetry, so the
+  // axis items must be ON the opening sheet: they sit at the bottom of the
+  // band (with the evaluations), and the vertex drags / graph matches — old
+  // skills from "Meet the parabola" — come after them.
   for (let b = 1; b <= 6; b++) for (let c = 1; c <= 6; c++) for (let v = 1; v <= 6; v++)
-    out.push({ q: `Evaluate x² + ${term(b, "x")} + ${c} when x = ${v}`, a: `${v * v + b * v + c}`, diff: 9 + (b + c + v) * 0.03, key: `ev:${b}_${c}_${v}`, type: "short_answer", fmt: "evaluate" });
+    out.push({ q: `Evaluate x² + ${term(b, "x")} + ${c} when x = ${v}`, a: `${v * v + b * v + c}`, diff: 9.1 + (b + c + v) * 0.03, key: `ev:${b}_${c}_${v}`, type: "short_answer", fmt: "evaluate" });
   for (let b = 2; b <= 40; b += 2)
-    out.push({ q: `Find the axis of symmetry of y = x² + ${b}x.`, a: `x = ${-b / 2}`, diff: 9.5 + b * 0.02, key: `ax:${b}`, type: "short_answer", fmt: "axis" });
+    out.push({ q: `Find the axis of symmetry of y = x² + ${b}x.`, a: `x = ${-b / 2}`, diff: 9 + b * 0.01, key: `ax:${b}`, type: "short_answer", fmt: "axis" });
   // INTERACTIVE: drag the parabola's vertex to a target point. The answer is the
   // snapped "x,y" string; grading reuses the standard value match. Shape a = 1.
   const VERTS: [number, number][] = [
@@ -324,7 +355,7 @@ function qEvaluateAxis(): XP[] {
   for (const [h, k] of VERTS)
     out.push({
       q: `Drag the vertex of the parabola to the point (${h}, ${k}).`,
-      a: `${h},${k}`, diff: 9.3, key: `vd:${h}_${k}`, type: "short_answer", fmt: "vertex-drag",
+      a: `${h},${k}`, diff: 9.7, key: `vd:${h}_${k}`, type: "short_answer", fmt: "vertex-drag",
       answerType: "point",
       interactive: { kind: "vertex-drag", a: 1, xRange: [-8, 8], yRange: [-8, 8], snap: 0.5 },
     });
@@ -375,8 +406,11 @@ function fEvalLinear(): XP[] {
   for (let m = 2; m <= 9; m++) for (let b = 1; b <= 9; b++) for (let v = 1; v <= 6; v++)
     out.push({ q: `f(x) = ${m}x + ${b}. Find f(${v})`, a: `${m * v + b}`, diff: m + b + v, key: `fl:${m}_${b}_${v}`, fmt: "evaluate" });
   // Reverse: which INPUT produced this output? (undo the machine)
+  // Reverse, error-analysis and true/false forms are banded ABOVE the plain
+  // evaluations (they used to scatter from diff 0 and made up 13 of the 20
+  // opening items): day one is the task the lesson taught — find f(k).
   for (let m = 2; m <= 7; m++) for (let b = 1; b <= 6; b++) for (let v = 2; v <= 5; v++)
-    out.push({ q: `f(x) = ${m}x + ${b}. For which x is f(x) = ${m * v + b}?`, a: `${v}`, diff: m + b + v + 3, key: `fl:r${m}_${b}_${v}`, fmt: "reverse" });
+    out.push({ q: `f(x) = ${m}x + ${b}. For which x is f(x) = ${m * v + b}?`, a: `${v}`, diff: m + b + v + 8, key: `fl:r${m}_${b}_${v}`, fmt: "reverse" });
   // Real-world rate: fixed charge + per-unit rate IS f(x) = mx + b.
   for (let m = 2; m <= 6; m++) for (let b = 2; b <= 5; b++) for (const v of [3, 5])
     out.push({ q: `A taxi charges $${b} to start plus $${m} per km. How much is a ${v} km ride?`, a: `${m * v + b}`, diff: m + b + v + 2, key: `fl:w${m}_${b}_${v}`, fmt: "word" });
@@ -389,13 +423,13 @@ function fEvalLinear(): XP[] {
         `Nothing — ${m * (v + 4)} is correct`,
         `${who} should have subtracted 4`,
         `${who} used the wrong value of x`,
-      ], scatterDiff(`fl:e${m}_${v}`));
+      ], 12 + scatterDiff(`fl:e${m}_${v}`));
     if (mc) out.push(mc);
   }
   // f(0) = b — the intercept idea as true/false.
   for (let b = 1; b <= 8; b++) {
     const truth = b % 2 === 1;
-    out.push(tfXP(`fl:t${b}`, `True or false: for f(x) = 3x + ${b}, f(0) = ${truth ? b : b + 3}`, truth ? "True" : "False", scatterDiff(`fl:t${b}`)));
+    out.push(tfXP(`fl:t${b}`, `True or false: for f(x) = 3x + ${b}, f(0) = ${truth ? b : b + 3}`, truth ? "True" : "False", 10 + scatterDiff(`fl:t${b}`)));
   }
   return out;
 }
@@ -404,13 +438,14 @@ function fEvalQuad(): XP[] {
   for (let c = 1; c <= 9; c++) for (let v = 1; v <= 9; v++)
     out.push({ q: `f(x) = x² + ${c}. Find f(${v})`, a: `${v * v + c}`, diff: c + v + 6, key: `fq:${c}_${v}`, fmt: "evaluate" });
   // Symmetry insight as true/false: f(−v) = f(v) because squaring kills the sign.
+  // Banded above the plain evaluations (needs a negative input).
   for (let c = 1; c <= 6; c++) for (const v of [2, 3]) {
     const truth = (c + v) % 2 === 0;
-    out.push(tfXP(`fq:t${c}_${v}`, `True or false: for f(x) = x² + ${c}, f(−${v}) ${truth ? "=" : ">"} f(${v})`, truth ? "True" : "False", scatterDiff(`fq:t${c}_${v}`) + 6));
+    out.push(tfXP(`fq:t${c}_${v}`, `True or false: for f(x) = x² + ${c}, f(−${v}) ${truth ? "=" : ">"} f(${v})`, truth ? "True" : "False", scatterDiff(`fq:t${c}_${v}`) + 16));
   }
   // Reverse: which positive input gives this output?
   for (let c = 1; c <= 6; c++) for (let v = 2; v <= 6; v++)
-    out.push({ q: `f(x) = x² + ${c}. For which positive x is f(x) = ${v * v + c}?`, a: `${v}`, diff: c + v + 8, key: `fq:r${c}_${v}`, fmt: "reverse" });
+    out.push({ q: `f(x) = x² + ${c}. For which positive x is f(x) = ${v * v + c}?`, a: `${v}`, diff: c + v + 10, key: `fq:r${c}_${v}`, fmt: "reverse" });
   return out;
 }
 // INTERACTIVE (M14): build the equation of a shown linear function f(x)=mx+b.
@@ -430,7 +465,9 @@ function fVertexDrag(): XP[] {
   for (const h of [-3, -2, -1, 0, 1, 2, 3]) for (const k of [-2, -1, 0, 1, 2])
     out.push({
       q: `Drag the vertex of the parabola to the point (${h}, ${k}).`,
-      a: `${h},${k}`, diff: 6 + i++ * 0.02, key: `fvd:${h}_${k}`, type: "short_answer", answerType: "point",
+      // Vertex-dragging is an M13 skill, not "evaluate x² + c": it lives at the
+      // TOP of the unit's band (it was 10 of the 26 opening items at diff 6).
+      a: `${h},${k}`, diff: 22 + i++ * 0.02, key: `fvd:${h}_${k}`, type: "short_answer", answerType: "point",
       interactive: { kind: "vertex-drag", a: 1, xRange: [-8, 8], yRange: [-8, 8], snap: 0.5 },
     });
   return out;
@@ -468,7 +505,9 @@ function fDomain(): XP[] {
 }
 function fRange(): XP[] {
   const out: XP[] = [];
-  for (let c = -15; c <= 15; c++) out.push({ q: `Range of f(x) = x² + ${c < 0 ? `(${c})` : c}`, a: `y ≥ ${c}`, diff: c + 30, key: `fr:${c}`, fmt: "range" });
+  // Positive c first (the lesson's case), then zero, then negatives — and
+  // rendered as "x² − 15", never the raw "x² + (-15)".
+  for (let c = -15; c <= 15; c++) out.push({ q: `Range of f(x) = x² ${c < 0 ? `− ${-c}` : `+ ${c}`}`, a: `y ≥ ${c}`, diff: c > 0 ? c + 14 : 30 - c, key: `fr:${c}`, fmt: "range" });
   // Reverse: recover the function from its range.
   for (let c = 1; c <= 9; c++) {
     const mc = mcXP(`fr:r${c}`, "reverse", `Which function has range y ≥ ${c}?`, `x² + ${c}`, [`x² − ${c}`, `x + ${c}`, `${c}x`], scatterDiff(`fr:r${c}`) + 30);
@@ -507,9 +546,11 @@ function tHypotenuse(): XP[] {
   const out: XP[] = [];
   for (const [a, b, c] of TRIPLES) for (let k = 1; k <= 6; k++)
     out.push({ q: `Right triangle with legs ${a * k} and ${b * k}. Find the hypotenuse`, a: `${c * k}`, diff: c * k, key: `th:${a}_${k}`, fmt: "hypotenuse" });
-  // Missing LEG — the theorem run backwards.
+  // Missing LEG — the theorem run backwards (subtract, then root). Banded
+  // above every opening-sheet hypotenuse so the lesson's extra step has been
+  // seen before the sheet asks for it.
   for (const [a, b, c] of TRIPLES) for (const k of [1, 2, 3])
-    out.push({ q: `Right triangle: hypotenuse ${c * k}, one leg ${a * k}. Find the other leg`, a: `${b * k}`, diff: c * k + 2, key: `th:l${a}_${k}`, fmt: "leg" });
+    out.push({ q: `Right triangle: hypotenuse ${c * k}, one leg ${a * k}. Find the other leg`, a: `${b * k}`, diff: c * k + 60, key: `th:l${a}_${k}`, fmt: "leg" });
   // Real-world: the ladder against the wall.
   for (const [a, b, c] of TRIPLES) for (const k of [1, 2])
     out.push({ q: `A ladder's foot stands ${a * k} m from a wall and its top reaches ${b * k} m up the wall. How long is the ladder (m)?`, a: `${c * k}`, diff: c * k + 3, key: `th:w${a}_${k}`, fmt: "word" });
@@ -550,12 +591,22 @@ function tRatio(): XP[] {
 const SIN: Record<number, string> = { 0: "0", 30: "1/2", 45: "√2/2", 60: "√3/2", 90: "1" };
 const COS: Record<number, string> = { 0: "1", 30: "√3/2", 45: "√2/2", 60: "1/2", 90: "0" };
 const TAN: Record<number, string> = { 0: "0", 30: "√3/3", 45: "1", 60: "√3" };
+// A standard value with a surd in it (√2/2, √3/3) is served as MULTIPLE CHOICE:
+// the grader is an exact string match, so a typed 1/√2 or 1/√3 — correct, and
+// what the lesson's triangles hand you before rationalising — would be marked
+// wrong. Plain values (0, 1, 1/2) stay typed.
+const UNIT_VALUES = ["0", "1/2", "√2/2", "√3/2", "1", "√3/3", "√3"];
+function unitItem(key: string, fmt: string, q: string, a: string, diff: number): XP {
+  if (!a.includes("√")) return { q, a, diff, key, fmt };
+  const dist = UNIT_VALUES.filter((v) => v !== a && v.includes("/") === a.includes("/")).slice(0, 3);
+  return mcXP(key, fmt, q, a, dist, diff) ?? { q, a, diff, key, fmt };
+}
 function tUnitCircle(): XP[] {
   const out: XP[] = [];
   let i = 0;
-  for (const deg of [0, 30, 45, 60, 90]) { out.push({ q: `Evaluate sin ${deg}°.`, a: SIN[deg], diff: 14 + i++, key: `tus:${deg}`, fmt: "evaluate" }); }
-  for (const deg of [0, 30, 45, 60, 90]) { out.push({ q: `Evaluate cos ${deg}°.`, a: COS[deg], diff: 14 + i++, key: `tuc:${deg}`, fmt: "evaluate" }); }
-  for (const deg of [0, 30, 45, 60]) { out.push({ q: `Evaluate tan ${deg}°.`, a: TAN[deg], diff: 14 + i++, key: `tut:${deg}`, fmt: "evaluate" }); }
+  for (const deg of [0, 30, 45, 60, 90]) { out.push(unitItem(`tus:${deg}`, "evaluate", `Evaluate sin ${deg}°.`, SIN[deg], 14 + i++)); }
+  for (const deg of [0, 30, 45, 60, 90]) { out.push(unitItem(`tuc:${deg}`, "evaluate", `Evaluate cos ${deg}°.`, COS[deg], 14 + i++)); }
+  for (const deg of [0, 30, 45, 60]) { out.push(unitItem(`tut:${deg}`, "evaluate", `Evaluate tan ${deg}°.`, TAN[deg], 14 + i++)); }
   // Reverse: which ANGLE has this value? (unique values only)
   for (const [deg, val] of [[30, "1/2"], [45, "√2/2"], [60, "√3/2"], [90, "1"], [0, "0"]] as [number, string][]) {
     const mc = mcXP(`tus:r${deg}`, "reverse", `For which angle is sin θ = ${val}?`, `${deg}°`, ["0°", "30°", "45°", "60°", "90°"].filter((d) => d !== `${deg}°`).slice(0, 3), 14 + i++);
@@ -563,8 +614,8 @@ function tUnitCircle(): XP[] {
   }
   // Coordinates: the point ON the circle is (cos θ, sin θ).
   for (const deg of [0, 30, 45, 60, 90]) {
-    out.push({ q: `On the unit circle, the point at ${deg}° is (cos ${deg}°, sin ${deg}°). What is its x-coordinate?`, a: COS[deg], diff: 15 + i++, key: `tux:${deg}`, fmt: "coordinates" });
-    out.push({ q: `On the unit circle, what is the y-coordinate of the point at ${deg}°?`, a: SIN[deg], diff: 15 + i++, key: `tuy:${deg}`, fmt: "coordinates" });
+    out.push(unitItem(`tux:${deg}`, "coordinates", `On the unit circle, the point at ${deg}° is (cos ${deg}°, sin ${deg}°). What is its x-coordinate?`, COS[deg], 15 + i++));
+    out.push(unitItem(`tuy:${deg}`, "coordinates", `On the unit circle, what is the y-coordinate of the point at ${deg}°?`, SIN[deg], 15 + i++));
   }
   // Co-function pattern as true/false: sin θ = cos (90° − θ). Truth is computed
   // straight from the value tables so it can never drift from the content.
@@ -621,22 +672,28 @@ function tAngleDragRad(): XP[] {
 function tPythagIdentity(): XP[] {
   const out: XP[] = [];
   for (const [a, b, c] of TRIPLES) {
-    out.push({ q: `sin θ = ${frac(a, c)}. Find cos θ (acute angle)`, a: frac(b, c), diff: c + 28, key: `tpi:${a}_${c}` });
-    out.push({ q: `cos θ = ${frac(b, c)}. Find sin θ (acute angle)`, a: frac(a, c), diff: c + 29, key: `tpi2:${b}_${c}` });
+    // Each form carries its own fmt so a multiple-choice variant draws its
+    // distractors from the same shape (a symbolic item never offers "9/40").
+    out.push({ q: `sin θ = ${frac(a, c)}. Find cos θ (acute angle)`, a: frac(b, c), diff: c + 28, key: `tpi:${a}_${c}`, fmt: "find-cos" });
+    out.push({ q: `cos θ = ${frac(b, c)}. Find sin θ (acute angle)`, a: frac(a, c), diff: c + 29, key: `tpi2:${b}_${c}`, fmt: "find-sin" });
     // Square first, root second — the step students skip.
-    out.push({ q: `sin θ = ${frac(a, c)}. Find cos²θ`, a: frac(b * b, c * c), diff: c + 30, key: `tpi3:${a}_${c}` });
+    out.push({ q: `sin θ = ${frac(a, c)}. Find cos²θ`, a: frac(b * b, c * c), diff: c + 30, key: `tpi3:${a}_${c}`, fmt: "cos-squared" });
     // The identity holds whatever θ is: the answer is always 1, and seeing that
     // six times with six different givens is the lesson, not padding.
-    out.push({ q: `sin θ = ${frac(a, c)}. Evaluate sin²θ + cos²θ`, a: "1", diff: c + 31, key: `tpi4:${a}_${c}` });
+    out.push({ q: `sin θ = ${frac(a, c)}. Evaluate sin²θ + cos²θ`, a: "1", diff: c + 31, key: `tpi4:${a}_${c}`, fmt: "identity-value" });
     // Enter from tangent — needs cos via the identity first.
-    out.push({ q: `sin θ = ${frac(a, c)}. Find tan θ (acute angle)`, a: frac(a, b), diff: c + 33, key: `tpi5:${a}_${c}` });
+    out.push({ q: `sin θ = ${frac(a, c)}. Find tan θ (acute angle)`, a: frac(a, b), diff: c + 33, key: `tpi5:${a}_${c}`, fmt: "find-tan" });
   }
-  // Rearranged forms, stated symbolically.
-  out.push({ q: `Complete the identity: sin²θ + ___ = 1`, a: "cos²θ", diff: 30, key: "tpi:comp1" });
-  out.push({ q: `Complete the identity: ___ + cos²θ = 1`, a: "sin²θ", diff: 31, key: "tpi:comp2" });
-  out.push({ q: `Simplify: 1 − sin²θ`, a: "cos²θ", diff: 32, key: "tpi:simp1" });
-  out.push({ q: `Simplify: 1 − cos²θ`, a: "sin²θ", diff: 33, key: "tpi:simp2" });
-  out.push({ q: `Simplify: sin²θ + cos²θ`, a: "1", diff: 34, key: "tpi:simp3" });
+  // Rearranged forms, stated symbolically (options are trig expressions only).
+  const SYM = ["cos²θ", "sin²θ", "1", "tan²θ"];
+  const sym = (key: string, q: string, a: string, diff: number) => mcXP(key, "symbolic", q, a, SYM.filter((s) => s !== a), diff);
+  for (const it of [
+    sym("tpi:comp1", `Complete the identity: sin²θ + ___ = 1`, "cos²θ", 30),
+    sym("tpi:comp2", `Complete the identity: ___ + cos²θ = 1`, "sin²θ", 31),
+    sym("tpi:simp1", `Simplify: 1 − sin²θ`, "cos²θ", 32),
+    sym("tpi:simp2", `Simplify: 1 − cos²θ`, "sin²θ", 33),
+    sym("tpi:simp3", `Simplify: sin²θ + cos²θ`, "1", 34),
+  ]) if (it) out.push(it);
   return out;
 }
 
@@ -689,7 +746,22 @@ function a2ExpSolve(): XP[] {
 function a2PowersOfI(): XP[] {
   const cyc = ["1", "i", "-1", "-i"];
   const out: XP[] = [];
-  for (let n = 1; n <= 30; n++) out.push({ q: `Simplify i${sup(n)}`, a: cyc[n % 4], diff: n + 18, key: `pi:${n}` });
+  // Exponents up to 8 can be walked by hand from i² = −1 (the lesson's
+  // example); larger exponents need the divide-by-4 remainder step and are
+  // banded onto later sheets.
+  for (let n = 1; n <= 30; n++) out.push({ q: `Simplify i${sup(n)}`, a: cyc[n % 4], diff: n <= 8 ? n + 18 : n + 40, key: `pi:${n}`, fmt: n <= 8 ? "power" : "big-power" });
+  // Products of small powers — add the exponents, then read the cycle.
+  for (const [p, q] of [[2, 1], [2, 2], [3, 1], [2, 3], [3, 2], [3, 3], [4, 1], [4, 2]] as [number, number][])
+    out.push({ q: `Simplify i${sup(p)} × i${sup(q)}`, a: cyc[(p + q) % 4], diff: 20 + p + q, key: `pi:m${p}_${q}`, fmt: "product" });
+  // The cycle itself, asked from the other side.
+  for (let r = 0; r < 4; r++) {
+    const opts = [4 + r, 5 + r, 6 + r, 7 + r].map((n) => `i${sup(n)}`);
+    const mc = mcXP(`pi:w${r}`, "which-power", `Which of these equals ${cyc[r]}?`, opts[0], opts.slice(1), 22 + r);
+    if (mc) out.push(mc);
+  }
+  for (const [n, val, truth] of [[2, "-1", true], [3, "i", false], [4, "1", true], [5, "-1", false], [6, "-1", true], [7, "i", false], [8, "1", true], [9, "-1", false]] as [number, string, boolean][])
+    out.push(tfXP(`pi:t${n}`, `True or false: i${sup(n)} = ${val}`, truth ? "True" : "False", 23 + n * 0.5));
+  out.push({ q: `The powers of i repeat in a cycle: i, −1, −i, 1, i, … How long is the cycle?`, a: "4", diff: 19, key: "pi:cycle", fmt: "cycle" });
   return out;
 }
 function a2ComplexAdd(): XP[] {
@@ -735,10 +807,11 @@ function a2XIntercepts(): XP[] {
   for (const r1 of [1, 2, 3, 4, 5]) for (const r2 of [1, 2, 3, 4, 6]) {
     if (r1 === r2) continue;
     out.push({ q: `f(x) = (x − ${r1})(x + ${r2}) crosses the x-axis at x = ${r1} and x = ?`, a: `-${r2}`, diff: r1 + r2, key: `xi:${r1}_${r2}`, fmt: "find-root" });
-    // Reverse: recover the function from its crossings.
+    // Reverse: recover the function from its crossings (root r → factor
+    // (x − r), the sign flips). Banded above the direct reads.
     const mc = mcXP(`xi:r${r1}_${r2}`, "reverse", `Which function crosses the x-axis at x = ${r1} and x = −${r2}?`, `(x − ${r1})(x + ${r2})`, [
       `(x + ${r1})(x − ${r2})`, `(x − ${r1})(x − ${r2})`, `(x + ${r1})(x + ${r2})`,
-    ], r1 + r2 + 1);
+    ], r1 + r2 + 12);
     if (mc) out.push(mc);
   }
   // The zero-product idea as true/false.
@@ -767,8 +840,11 @@ function a2TurningPoints(): XP[] {
     out.push({ q: `f(x) = ${jPoly([{ c: 2, n }, { c: -3, n: 1 }, { c: 1, n: 0 }])} has at most how many turning points?`, a: `${n - 1}`, diff: n + 0.4, key: `tpp:${n}` });
     // Read the relation backwards, and test the word that carries it: "at
     // most" is a ceiling, not a count — the misconception this unit exists for.
-    out.push({ q: `A graph turns ${n - 1} times. What is the smallest degree its polynomial could have?`, a: `${n}`, diff: n + 0.6, key: `tpr:${n}` });
-    out.push(tfXP(`tpt:${n}`, `True or false: every polynomial of degree ${n} has exactly ${n - 1} turning points.`, "False", n + 0.8));
+    out.push({ q: `A graph turns ${n - 1} time${n === 2 ? "" : "s"}. What is the smallest degree its polynomial could have?`, a: `${n}`, diff: n + 0.6, key: `tpr:${n}` });
+    // "At most" is a ceiling, not a count — EXCEPT for degree 2: every
+    // parabola has exactly one turning point, so that statement is TRUE.
+    // (It was keyed False, which marked a child reasoning correctly wrong.)
+    out.push(tfXP(`tpt:${n}`, `True or false: every polynomial of degree ${n} has exactly ${n - 1} turning point${n === 2 ? "" : "s"}.`, n === 2 ? "True" : "False", n + 0.8));
   }
   return out;
 }
@@ -779,10 +855,12 @@ function a2FTA(): XP[] {
   for (let n = 2; n <= 9; n++) {
     out.push({ q: `By the Fundamental Theorem of Algebra, a degree-${n} polynomial has exactly how many roots (counting multiplicity)?`, a: `${n}`, diff: n, key: `fta:${n}` });
     out.push({ q: `How many roots (with multiplicity) does ${jPoly([{ c: 1, n }, { c: 2, n: 1 }, { c: -3, n: 0 }])} = 0 have?`, a: `${n}`, diff: n + 0.4, key: `ftap:${n}` });
-    // The small print IS the theorem: the missing roots are complex, and the
-    // count is exact rather than a maximum.
+    // The small print IS the theorem: the count is exact, so roots that are
+    // not real numbers still count. Complex numbers are six lessons away, so
+    // the stem says "not real" and carries the total itself; the arithmetic
+    // is n − real.
     const real = Math.max(0, n - 2);
-    out.push({ q: `A degree-${n} polynomial has ${real} real roots. How many of its roots are complex?`, a: `${n - real}`, diff: n + 0.6, key: `ftac:${n}` });
+    out.push({ q: `A degree-${n} polynomial has ${n} roots in total, and ${real} of them ${real === 1 ? "is" : "are"} real. How many of its roots are NOT real numbers?`, a: `${n - real}`, diff: n + 0.6, key: `ftac:${n}` });
     out.push({ q: `A polynomial has exactly ${n} roots, counting multiplicity. What is its degree?`, a: `${n}`, diff: n + 0.7, key: `ftar:${n}` });
   }
   return out;
@@ -790,10 +868,13 @@ function a2FTA(): XP[] {
 // Synthetic division remainder = f(k) (Remainder Theorem) when dividing by (x−k).
 function a2SyntheticDiv(): XP[] {
   const out: XP[] = [];
+  // The method the lesson actually teaches is the Remainder Theorem (evaluate
+  // f(k)), so the stem names that method. Dividing by (x + 1) — the sign flip
+  // to k = −1 — is banded after the (x − k) cases.
   for (const a of [1, 2]) for (const b of [2, 3, -4, 5]) for (const c of [1, -6, 4, -3]) for (const k of [1, 2, -1, 3]) {
     const divisor = k >= 0 ? `(x − ${k})` : `(x + ${-k})`;
     const f = a * k * k + b * k + c;
-    out.push({ q: `Use synthetic division to find the remainder when ${jPoly([{ c: a, n: 2 }, { c: b, n: 1 }, { c, n: 0 }])} is divided by ${divisor}.`, a: `${f}`, diff: Math.abs(k) + a + Math.abs(b), key: `sd:${a}_${b}_${c}_${k}` });
+    out.push({ q: `Use the Remainder Theorem to find the remainder when ${jPoly([{ c: a, n: 2 }, { c: b, n: 1 }, { c, n: 0 }])} is divided by ${divisor}.`, a: `${f}`, diff: Math.abs(k) + a + Math.abs(b) + (k < 0 ? 4 : 0), key: `sd:${a}_${b}_${c}_${k}`, fmt: k < 0 ? "remainder-plus" : "remainder" });
   }
   return out;
 }
@@ -864,7 +945,20 @@ function pcLimitPoly(): XP[] {
 }
 function pcLimitFactor(): XP[] {
   const out: XP[] = [];
-  for (let a = 1; a <= 30; a++) out.push({ q: `lim(x→${a}) (x² - ${a * a})/(x - ${a})`, a: `${2 * a}`, diff: a + 26, key: `lf:${a}` });
+  // Squares up to 12² are ones a student recognises on sight; larger ones
+  // (784, 529…) are banded onto later sheets so the opening sheet is about the
+  // METHOD (0/0 → factor → cancel → substitute), not about spotting 28².
+  for (let a = 1; a <= 30; a++) out.push({ q: `lim(x→${a}) (x² - ${a * a})/(x - ${a})`, a: `${2 * a}`, diff: a <= 12 ? a + 26 : a + 60, key: `lf:${a}`, fmt: "limit" });
+  // The three steps of the method, each as its own item (a few of each, so
+  // the opening sheet is still mostly limits).
+  for (let a = 2; a <= 5; a++) {
+    const sub = mcXP(`lf:s${a}`, "substitute", `Substitute x = ${a} directly into (x² - ${a * a})/(x - ${a}). What do you get?`, "0/0 — not a number, so simplify first", [`${2 * a}`, "0", `${a}`], 26 + a * 0.3);
+    if (sub) out.push(sub);
+    const fac = mcXP(`lf:f${a}`, "factor", `Factor x² - ${a * a}`, `(x - ${a})(x + ${a})`, [`(x - ${a})²`, `(x + ${a})²`, `(x - ${a * a})(x + 1)`], 27 + a * 0.3);
+    if (fac) out.push(fac);
+    const can = mcXP(`lf:c${a}`, "cancel", `After cancelling the common factor, (x² - ${a * a})/(x - ${a}) simplifies to?`, `x + ${a}`, [`x - ${a}`, `x`, `x² + ${a}`], 28 + a * 0.3);
+    if (can) out.push(can);
+  }
   return out;
 }
 function pcVectorMag(): XP[] {
@@ -903,10 +997,12 @@ function pcVectorAdd(): XP[] {
 function pcConics(): XP[] {
   const out: XP[] = [];
   let i = 0;
+  // Order of the band: read the vertex from vertex form (the lesson) → drag
+  // the vertex → axis of symmetry → match a graph → write the equation.
   for (const [h, k] of [[2, 1], [-1, 3], [3, -2], [-2, -1], [0, 2], [1, -3], [-3, 1], [2, -4]] as [number, number][])
     out.push({
       q: `Drag the vertex of the parabola to the point (${h}, ${k}).`,
-      a: `${h},${k}`, diff: 1 + i++ * 0.05, key: `pcv:${h}_${k}`, type: "short_answer", answerType: "point",
+      a: `${h},${k}`, diff: 1.8 + i++ * 0.05, key: `pcv:${h}_${k}`, type: "short_answer", answerType: "point",
       interactive: { kind: "vertex-drag", a: 1, xRange: [-8, 8], yRange: [-8, 8], snap: 0.5 },
     });
   const MG: [number, number][] = [[0, 2], [2, 0], [-2, 0], [1, -3], [-1, 3], [2, 1]];
@@ -929,9 +1025,9 @@ function pcConics(): XP[] {
   VK.forEach(([h, k], i) => {
     const base = h === 0 ? "x" : `(x ${h > 0 ? `− ${h}` : `+ ${-h}`})`;
     const kterm = k === 0 ? "" : k > 0 ? ` + ${k}` : ` − ${-k}`;
-    out.push({ q: `What is the vertex of y = ${base}²${kterm}?`, a: `${h},${k}`, diff: 2 + i * 0.05, key: `pcve:${h}_${k}`, type: "short_answer", answerType: "point" });
+    out.push({ q: `What is the vertex of y = ${base}²${kterm}?`, a: `${h},${k}`, diff: 1 + i * 0.05, key: `pcve:${h}_${k}`, type: "short_answer", answerType: "point" });
     // The sign trap: the bracket says (x − h), so the vertex x is +h.
-    out.push({ q: `What is the axis of symmetry of y = ${base}²${kterm}?`, a: `x = ${h}`, diff: 2.6 + i * 0.05, key: `pcas:${h}_${k}` });
+    out.push({ q: `What is the axis of symmetry of y = ${base}²${kterm}?`, a: `x = ${h}`, diff: 2.4 + i * 0.05, key: `pcas:${h}_${k}` });
   });
   VK.slice(0, 6).forEach(([h, k], i) => {
     const base = h === 0 ? "x" : `(x ${h > 0 ? `− ${h}` : `+ ${-h}`})`;
@@ -960,9 +1056,15 @@ const scatterDiff = (key: string): number => (hashStr(key) % 1000) / 1000 * 8;
 // so regeneration stays stable; review diffs are re-scattered so the items land
 // throughout the sheet instead of clumping at one end.
 function withReview(main: XP[], ...priors: (() => XP[])[]): XP[] {
+  return withReviewShare(0.25, main, ...priors);
+}
+// Same, with an explicit review share — for a unit whose opening sheet must
+// be dominated by the taught form (M14 "Evaluate a quadratic function" was
+// 40% linear review on day one at the default share).
+function withReviewShare(share: number, main: XP[], ...priors: (() => XP[])[]): XP[] {
   const pool = priors.flatMap((p) => p());
   if (!pool.length) return main;
-  const want = Math.max(4, Math.round(main.length * 0.25));
+  const want = Math.max(4, Math.round(main.length * share));
   const k = Math.max(1, Math.floor(pool.length / want));
   // Spread review diffs across the MAIN pool's whole difficulty range — scoring
   // normalizes against the combined min/max, so review scattered in its own low
@@ -1086,13 +1188,18 @@ function caIntegralPower(): XP[] {
 }
 function caIntegralDef(): XP[] {
   const out: XP[] = [];
+  // The lesson's own shape (∫ x dx) opens the unit; a constant integrand and a
+  // non-zero lower limit exercise F(b) − F(a) on the same shape.
   for (let b = 2; b <= 20; b += 2) out.push({ q: `∫₀^${b} x dx`, a: `${(b * b) / 2}`, diff: b + 24, key: `id:${b}`, fmt: "definite" });
-  // ∫ 2x dx = b² and ∫ 3x² dx = b³ — clean integers, new shapes.
-  for (let b = 2; b <= 12; b++) out.push({ q: `∫₀^${b} 2x dx`, a: `${b * b}`, diff: b + 26, key: `id:2x${b}`, fmt: "definite" });
-  for (let b = 1; b <= 6; b++) out.push({ q: `∫₀^${b} 3x² dx`, a: `${b * b * b}`, diff: b + 30, key: `id:3x${b}`, fmt: "definite" });
+  for (let b = 2; b <= 7; b++) out.push({ q: `∫₀^${b} 1 dx`, a: `${b}`, diff: b + 22, key: `id:1_${b}`, fmt: "constant" });
+  for (const b of [3, 5, 7, 9, 11]) out.push({ q: `∫₁^${b} x dx`, a: `${(b * b - 1) / 2}`, diff: b + 30, key: `id:lo${b}`, fmt: "lower-limit" });
+  // ∫ 2x dx = b² and ∫ 3x² dx = b³ — a coefficient rides along (the lesson
+  // shows ∫ 2x dx); banded after the bare ∫ x dx items.
+  for (let b = 2; b <= 12; b++) out.push({ q: `∫₀^${b} 2x dx`, a: `${b * b}`, diff: b + 40, key: `id:2x${b}`, fmt: "coefficient" });
+  for (let b = 1; b <= 6; b++) out.push({ q: `∫₀^${b} 3x² dx`, a: `${b * b * b}`, diff: b + 50, key: `id:3x${b}`, fmt: "coefficient" });
   // The MEANING: a definite integral is an area.
   for (let b = 2; b <= 10; b++)
-    out.push({ q: `Find the area under y = 2x from x = 0 to x = ${b}`, a: `${b * b}`, diff: b + 28, key: `id:a${b}`, fmt: "area" });
+    out.push({ q: `Find the area under y = 2x from x = 0 to x = ${b}`, a: `${b * b}`, diff: b + 44, key: `id:a${b}`, fmt: "area" });
   return out;
 }
 function caSlope(): XP[] {
@@ -1123,58 +1230,61 @@ const CURRICULA: Record<string, Unit[]> = {
     { id: "q-solve-perfect", label: "Solve x² = k (perfect squares)", objective: "Student solves x² = k, finding BOTH the positive and negative root", grade: "Grade 9", stars: 2, range: [17, 32], multiFormat: true, pool: qSolvePerfect, example: { problem: "Solve x² = 49", steps: ["Take the square root of both sides", "Remember both signs", "x = ±7"], answer: "±7" } },
     { id: "q-larger", label: "Larger, estimate & simplify roots", objective: "Student solves larger squares and estimates/simplifies non-perfect roots", grade: "Grade 9-10", stars: 3, range: [33, 48], multiFormat: true, pool: qLargerNonPerfect, example: { problem: "Simplify the square root of 50.", steps: ["50 = 25 × 2", "√25 × √2 = 5√2"], answer: "5√2" } },
     { id: "q-zero", label: "Zero-product property", objective: "Student solves factored quadratics", grade: "Grade 9", stars: 3, range: [49, 62], multiFormat: true, pool: qZeroProduct, example: { problem: "Solve (x - 2)(x - 5) = 0", steps: ["Set each factor to 0", "x = 2 or x = 5"], answer: "2, 5" } },
-    { id: "q-factor", label: "Solve by factoring", objective: "Student solves x² - Sx + P = 0 by factoring", grade: "Grade 9-10", stars: 4, range: [63, 76], multiFormat: true, pool: qFactor, example: { problem: "Solve x² - 7x + 12 = 0", steps: ["Find two numbers that multiply to 12, add to 7: 3 and 4", "x = 3 or x = 4"], answer: "3, 4" } },
+    { id: "q-factor", label: "Solve by factoring", objective: "Student solves x² - Sx + P = 0 by factoring", grade: "Grade 9-10", stars: 4, range: [63, 76], multiFormat: true, pool: qFactor, example: { problem: "Solve x² - 7x + 12 = 0", steps: ["Find two numbers that multiply to +12 and ADD to −7: they are −3 and −4 (both negative — their product is positive, their sum negative)", "So the quadratic factors: (x − 3)(x − 4) = 0", "Zero-product property (yesterday's lesson): x − 3 = 0 or x − 4 = 0", "x = 3 or x = 4 — type both, separated by a comma: 3, 4. If both factors are the same, there is just one answer"], answer: "3, 4" } },
     { id: "q-disc", label: "Discriminant & # of solutions", objective: "Student computes b² - 4ac and reads its sign", grade: "Grade 10", stars: 4, range: [77, 90], multiFormat: true, pool: qDiscriminant, example: { problem: "How many real solutions? x² + 2x + 5 = 0", steps: ["b² - 4ac = 4 - 20 = -16", "Negative → no real solutions"], answer: "0" } },
-    { id: "q-evalaxis", label: "Evaluate & axis of symmetry", objective: "Student evaluates quadratics, finding the axis x = -b/2a", grade: "Grade 10", stars: 5, range: [91, 100], multiFormat: true, pool: () => [...qEvaluateAxis(), ...qSelectQuadratics()], example: { problem: "Axis of symmetry of y = x² + 6x", steps: ["A parabola is symmetric — the axis runs through its vertex", "For y = x² + bx the axis is x = -b/2", "Here b = 6: x = -6/2 = -3"], answer: "x = -3" } },
+    { id: "q-evalaxis", label: "Evaluate & axis of symmetry", objective: "Student evaluates quadratics, finding the axis x = -b/2a", grade: "Grade 10", stars: 5, range: [91, 100], multiFormat: true, pool: () => [...qEvaluateAxis(), ...qSelectQuadratics()], example: { problem: "Axis of symmetry of y = x² + 6x", steps: ["A parabola is symmetric — the axis runs through its vertex", "For y = x² + bx the axis is x = -b/2", "Here b = 6: x = -6/2 = -3 — type it as x = -3", "To EVALUATE a quadratic, substitute: x² + 6x at x = 2 is 2² + 6·2 = 4 + 12 = 16"], answer: "x = -3" } },
   ],
   M14: [
     { id: "f-lin", label: "Evaluate f(x) = mx + b", objective: "Student evaluates a linear function", grade: "Grade 8-9", stars: 2, range: [1, 16], multiFormat: true, pool: () => [...diversify(fEvalLinear()), ...fGraphLinear()], example: { problem: "f(x) = 2x + 3. Find f(4)", steps: ["f(4) means: replace every x with 4", "f(4) = 2(4) + 3", "Multiply first: 8, then add 3"], answer: "11" } },
-    { id: "f-quad", label: "Evaluate a quadratic function", objective: "Student evaluates f(x) = x² + c", grade: "Grade 9", stars: 3, range: [17, 32], multiFormat: true, pool: () => withReview([...diversify(fEvalQuad()), ...fVertexDrag()], fEvalLinear), example: { problem: "f(x) = x² + 5. Find f(3)", steps: ["f(3) means: replace x with 3", "f(3) = (3)² + 5", "Square first: 9, then add 5"], answer: "14" } },
+    { id: "f-quad", label: "Evaluate a quadratic function", objective: "Student evaluates f(x) = x² + c", grade: "Grade 9", stars: 3, range: [17, 32], multiFormat: true, pool: () => withReviewShare(0.1, [...diversify(fEvalQuad()), ...fVertexDrag()], fEvalLinear), example: { problem: "f(x) = x² + 5. Find f(3)", steps: ["f(3) means: replace x with 3", "f(3) = (3)² + 5", "Square first: 9, then add 5 → 14", "A negative input works the same way: f(−3) = (−3)² + 5 = 9 + 5 = 14 — squaring removes the sign, so f(−3) = f(3)"], answer: "14" } },
     { id: "f-compose", label: "Composition of functions", objective: "Student evaluates f(g(x))", grade: "Grade 10", stars: 4, range: [33, 50], multiFormat: true, pool: () => withReview(diversify(fCompose()), fEvalQuad), example: { problem: "f(x) = x + 1, g(x) = 2x. Find f(g(3))", steps: ["g(3) = 6", "f(6) = 7"], answer: "7" } },
     { id: "f-domain", label: "Domain of a rational function", objective: "Student finds excluded x-values", grade: "Grade 10", stars: 4, range: [51, 68], multiFormat: true, pool: () => withReview(diversify(fDomain()), fCompose), example: { problem: "Domain of f(x) = 1/(x - 4)", steps: ["Ask: what x would BREAK this function?", "Dividing by zero is impossible, so the denominator can't be 0", "x - 4 ≠ 0 → x ≠ 4; every other x is allowed"], answer: "x ≠ 4" } },
     { id: "f-range", label: "Range of a quadratic", objective: "Student finds the minimum of x² + c", grade: "Grade 10", stars: 4, range: [69, 84], multiFormat: true, pool: () => withReview(diversify(fRange()), fDomain), example: { problem: "Range of f(x) = x² + 2", steps: ["x² is never negative — its smallest value is 0 (at x = 0)", "So the smallest output is 0 + 2 = 2", "Every larger output happens too: y ≥ 2"], answer: "y ≥ 2" } },
     { id: "f-inverse", label: "Inverse functions", objective: "Student evaluates an inverse function", grade: "Grade 10-11", stars: 5, range: [85, 100], multiFormat: true, pool: () => withReview(diversify(fInverseLinear()), fRange), example: { problem: "f(x) = x + 5. Find f⁻¹(12)", steps: ["Inverse undoes +5", "12 - 5"], answer: "7" } },
   ],
   M15: [
-    { id: "t-hyp", label: "Pythagorean theorem", objective: "Student finds a hypotenuse", grade: "Grade 9", stars: 2, range: [1, 16], multiFormat: true, pool: () => diversify(tHypotenuse()), example: { problem: "Legs 3 and 4. Find the hypotenuse", steps: ["The hypotenuse is the longest side: a² + b² = c²", "3² + 4² = 9 + 16 = 25, so c² = 25", "Square root at the end: c = √25 = 5"], answer: "5" } },
-    { id: "t-ratio", label: "Right-triangle ratios", objective: "Student writes sin, cos, tan as ratios", grade: "Grade 10", stars: 3, range: [17, 34], multiFormat: true, pool: () => withReview([...diversify(tRatio()), ...tAngleDrag()], tHypotenuse), example: { problem: "opposite = 3, hypotenuse = 5. Find sin θ", steps: ["Label the sides FROM the angle first", "SOH: Sine = Opposite over Hypotenuse", "sin θ = 3/5"], answer: "3/5" } },
-    { id: "t-unit", label: "Unit-circle values", objective: "Student recalls sin/cos/tan of standard angles", grade: "Grade 11", stars: 4, range: [35, 56], multiFormat: true, pool: () => withReview([...diversify(tUnitCircle()), ...tAngleDrag()], tRatio), example: { problem: "Evaluate sin 30°.", steps: ["30° is a special angle — its values come from the 30-60-90 triangle (sides 1, √3, 2)", "sin = opposite/hypotenuse = 1/2", "On the unit circle: sin 30° is the y-coordinate at 30°"], answer: "1/2" } },
-    { id: "t-rad", label: "Degrees to radians", objective: "Student converts degrees to radians", grade: "Grade 11", stars: 4, range: [57, 78], multiFormat: true, pool: () => withReview([...diversify(tDegRad()), ...tAngleDragRad()], tUnitCircle), example: { problem: "Convert 90° to radians", steps: ["π radians = 180°, so degrees → radians is × π/180", "90 × π/180 = 90π/180", "Simplify the fraction: 90/180 = 1/2 → π/2"], answer: "π/2" } },
-    { id: "t-ident", label: "Pythagorean identity", objective: "Student uses sin²θ + cos²θ = 1", grade: "Grade 11-12", stars: 5, range: [79, 100], multiFormat: true, pool: () => withReview(diversify(tPythagIdentity()), tDegRad), example: { problem: "sin θ = 3/5. Find cos θ (acute)", steps: ["The identity: sin²θ + cos²θ = 1", "cos²θ = 1 - (3/5)² = 1 - 9/25 = 16/25", "cos θ = √(16/25) = 4/5 (positive — the angle is acute)"], answer: "4/5" } },
+    { id: "t-hyp", label: "Pythagorean theorem", objective: "Student finds a hypotenuse", grade: "Grade 9", stars: 2, range: [1, 16], multiFormat: true, pool: () => diversify(tHypotenuse()), example: { problem: "Legs 3 and 4. Find the hypotenuse", steps: ["The hypotenuse is the longest side: a² + b² = c²", "3² + 4² = 9 + 16 = 25, so c² = 25", "Square root at the end: c = √25 = 5", "To find a LEG instead, subtract: hypotenuse 5 and leg 3 → b² = 5² − 3² = 25 − 9 = 16, so b = 4"], answer: "5" } },
+    // The unit-circle drag items were removed from THIS pool: an angle measured
+    // round a circle (120°, 180°…) has no meaning in a right-triangle lesson.
+    // They belong to, and remain in, "Unit-circle values".
+    { id: "t-ratio", label: "Right-triangle ratios", objective: "Student writes sin, cos, tan as ratios", grade: "Grade 10", stars: 3, range: [17, 34], multiFormat: true, pool: () => withReview(diversify(tRatio()), tHypotenuse), example: { problem: "Right triangle: opposite = 3, adjacent = 4, hypotenuse = 5. Find sin θ", steps: ["Label the sides FROM the angle: opposite (across from θ), adjacent (next to θ), hypotenuse (the longest, across from the right angle)", "SOH-CAH-TOA — Sine = Opposite/Hypotenuse, Cosine = Adjacent/Hypotenuse, Tangent = Opposite/Adjacent", "On this triangle: sin θ = 3/5, cos θ = 4/5, tan θ = 3/4", "Type a ratio as a fraction, e.g. 3/5"], answer: "3/5" } },
+    { id: "t-unit", label: "Unit-circle values", objective: "Student recalls sin/cos/tan of standard angles", grade: "Grade 11", stars: 4, range: [35, 56], multiFormat: true, pool: () => withReview([...diversify(tUnitCircle()), ...tAngleDrag()], tRatio), example: { problem: "Evaluate sin 30°.", steps: ["Two special triangles give every value: the 30-60-90 triangle has sides 1, √3, 2 and the 45-45-90 triangle has sides 1, 1, √2", "sin 30° = opposite/hypotenuse = 1/2 · cos 30° = √3/2 · tan 30° = 1/√3, written √3/3 (no root underneath)", "From the 45° triangle: sin 45° = cos 45° = 1/√2 = √2/2, tan 45° = 1", "At 0° and 90° there is no triangle — read the unit-circle point (cos θ, sin θ): 0° is (1, 0) so cos 0° = 1, sin 0° = 0; 90° is (0, 1) so cos 90° = 0, sin 90° = 1"], answer: "1/2" } },
+    { id: "t-rad", label: "Degrees to radians", objective: "Student converts degrees to radians", grade: "Grade 11", stars: 4, range: [57, 78], multiFormat: true, pool: () => withReview([...diversify(tDegRad()), ...tAngleDragRad()], tUnitCircle), example: { problem: "Convert 90° to radians", steps: ["π radians = 180°, so degrees → radians is × π/180", "90 × π/180 = 90π/180", "Simplify the fraction: 90/180 = 1/2 → π/2", "Going BACK (radians → degrees) is × 180/π: π/3 × 180/π = 180/3 = 60°. On the circle, π/3 radians is the 60° point"], answer: "π/2" } },
+    { id: "t-ident", label: "Pythagorean identity", objective: "Student uses sin²θ + cos²θ = 1", grade: "Grade 11-12", stars: 5, range: [79, 100], multiFormat: true, pool: () => withReview(diversify(tPythagIdentity()), tDegRad), example: { problem: "sin θ = 3/5. Find cos θ (acute)", steps: ["The identity: sin²θ + cos²θ = 1 — rearranged, cos²θ = 1 − sin²θ (and sin²θ = 1 − cos²θ)", "cos²θ = 1 - (3/5)² = 1 - 9/25 = 16/25", "cos θ = √(16/25) = 4/5 (positive — the angle is acute)", "For tan, use tan θ = sin θ ÷ cos θ = (3/5) ÷ (4/5) = 3/4"], answer: "4/5" } },
   ],
   M16: [
     // ── Polynomial graph analysis + advanced solving (Tier 3) — each a
     // single-task unit so a sheet states its instruction once. ──
-    { id: "a-endbehav", label: "End behavior", objective: "Student determines end behavior from degree and leading coefficient", grade: "Grade 10", stars: 3, range: [1, 8], multiFormat: true, pool: () => a2EndBehavior(), example: { problem: "As x → −∞, f(x) = -x³ + 2x - 1 → ?", steps: ["Odd degree, negative lead: the left end rises", "As x → −∞, f(x) → +∞"], answer: "+∞" } },
+    { id: "a-endbehav", label: "End behavior", objective: "Student determines end behavior from degree and leading coefficient", grade: "Grade 10", stars: 3, range: [1, 8], multiFormat: true, pool: () => a2EndBehavior(), example: { problem: "As x → −∞, f(x) = -x³ + 2x - 1 → ?", steps: ["Far out, only the leading term matters: −x³", "Put in a big negative x: (−big)³ is negative (odd power keeps the sign); (−big)² or (−big)⁴ would be positive (even power)", "The lead's sign then applies: −(negative) = positive, so the left end rises → +∞", "All four cases as x → −∞ — even degree, + lead: +∞ · even degree, − lead: −∞ · odd degree, + lead: −∞ · odd degree, − lead: +∞"], answer: "+∞" } },
     { id: "a-yint", label: "y-intercept of a polynomial", objective: "Student finds the y-intercept (the constant term)", grade: "Grade 10", stars: 2, range: [9, 15], multiFormat: true, pool: () => withReview(diversify(a2YIntercept()), a2EndBehavior), example: { problem: "y-intercept of f(x) = 2x² + 3x - 5", steps: ["Set x = 0 → f(0) = the constant term", "y = -5"], answer: "-5" } },
-    { id: "a-xint", label: "x-intercepts (roots)", objective: "Student finds x-intercepts from factored form", grade: "Grade 10", stars: 3, range: [16, 23], multiFormat: true, pool: () => withReview(diversify(a2XIntercepts()), a2YIntercept), example: { problem: "f(x) = (x − 2)(x + 3) crosses the x-axis at x = 2 and x = ?", steps: ["Set each factor to 0: x + 3 = 0", "x = -3"], answer: "-3" } },
-    { id: "a-mult", label: "Multiplicity — cross or bounce", objective: "Student uses root multiplicity to decide cross vs. bounce", grade: "Grade 10-11", stars: 4, range: [24, 31], multiFormat: true, pool: () => withReview(a2Multiplicity(), a2XIntercepts), example: { problem: "For f(x) = (x − 2)²(x + 1), at x = 2 the graph ___ the x-axis.", steps: ["Multiplicity 2 is even → the graph is tangent", "It bounces (touches)"], answer: "bounces (touches)" } },
+    { id: "a-xint", label: "x-intercepts (roots)", objective: "Student finds x-intercepts from factored form", grade: "Grade 10", stars: 3, range: [16, 23], multiFormat: true, pool: () => withReview(diversify(a2XIntercepts()), a2YIntercept), example: { problem: "f(x) = (x − 2)(x + 3) crosses the x-axis at x = 2 and x = ?", steps: ["The graph crosses the x-axis where f(x) = 0, so set each factor to 0: x + 3 = 0", "x = -3", "The rule runs both ways: a root at x = r means a factor (x − r) — the sign flips. Root 2 → factor (x − 2); root −3 → factor (x + 3)", "So a function crossing at x = 1 and x = −4 is (x − 1)(x + 4)"], answer: "-3" } },
+    { id: "a-mult", label: "Multiplicity — cross or bounce", objective: "Student uses root multiplicity to decide cross vs. bounce", grade: "Grade 10-11", stars: 4, range: [24, 31], multiFormat: true, pool: () => withReview(a2Multiplicity(), a2XIntercepts), example: { problem: "For f(x) = (x − 2)²(x + 1), at x = 2 the graph ___ the x-axis.", steps: ["The multiplicity of a root is the power on its factor: (x − 2)² has multiplicity 2", "EVEN multiplicity (2, 4…) → the graph is tangent: it bounces (touches) and turns back", "ODD multiplicity (1, 3…) → the graph crosses the x-axis", "Here multiplicity 2 is even, so at x = 2 it bounces (touches)"], answer: "bounces (touches)" } },
     { id: "a-turning", label: "Turning points", objective: "Student finds the maximum number of turning points", grade: "Grade 10-11", stars: 4, range: [32, 38], multiFormat: true, pool: () => withReview(diversify(a2TurningPoints()), a2Multiplicity), example: { problem: "A polynomial of degree 5 has at most how many turning points?", steps: ["A degree-n polynomial has at most n − 1 turning points", "5 − 1 = 4"], answer: "4" } },
-    { id: "a-fta", label: "Fundamental Theorem of Algebra", objective: "Student applies the Fundamental Theorem of Algebra", grade: "Grade 11", stars: 4, range: [39, 45], multiFormat: true, pool: () => withReview(diversify(a2FTA()), a2TurningPoints), example: { problem: "A degree-4 polynomial has exactly how many roots (with multiplicity)?", steps: ["The Fundamental Theorem of Algebra: a degree-n polynomial has exactly n roots", "4"], answer: "4" } },
-    { id: "a-synthetic", label: "Synthetic division", objective: "Student finds a remainder by synthetic division (Remainder Theorem)", grade: "Grade 11", stars: 5, range: [46, 54], multiFormat: true, pool: () => withReview(diversify(a2SyntheticDiv()), a2FTA), example: { problem: "Remainder when x² + 5x + 6 is divided by (x − 2)", steps: ["Remainder Theorem: remainder = f(2)", "2² + 5·2 + 6 = 20"], answer: "20" } },
-    { id: "a-rrt", label: "Rational Root Theorem", objective: "Student lists possible rational roots", grade: "Grade 11", stars: 5, range: [55, 60], multiFormat: true, pool: () => withReview(a2RRT(), a2SyntheticDiv), example: { problem: "A possible rational root of x² − x − 6 (leading coefficient 1) is one of the ± divisors of 6.", steps: ["Possible rational roots = ± divisors of the constant: ±1, ±2, ±3, ±6", "3 is one of them"], answer: "3" } },
+    { id: "a-fta", label: "Fundamental Theorem of Algebra", objective: "Student applies the Fundamental Theorem of Algebra", grade: "Grade 11", stars: 4, range: [39, 45], multiFormat: true, pool: () => withReview(diversify(a2FTA()), a2TurningPoints), example: { problem: "A degree-4 polynomial has exactly how many roots (with multiplicity)?", steps: ["The Fundamental Theorem of Algebra: a degree-n polynomial has exactly n roots — count a repeated root each time it repeats", "Degree 4 → exactly 4 roots", "Not all of them need be real numbers (a parabola that never touches the x-axis still has 2 roots — they are just not real). Roots that are not real = total − real: 4 roots with 2 real means 2 are not real"], answer: "4" } },
+    { id: "a-synthetic", label: "Synthetic division", objective: "Student finds a remainder by synthetic division (Remainder Theorem)", grade: "Grade 11", stars: 5, range: [46, 54], multiFormat: true, pool: () => withReview(diversify(a2SyntheticDiv()), a2FTA), example: { problem: "Remainder when x² + 5x + 6 is divided by (x − 2)", steps: ["Remainder Theorem: dividing by (x − k) leaves remainder f(k) — no long division needed", "The divisor is (x − 2), so k = 2: f(2) = 2² + 5·2 + 6 = 4 + 10 + 6", "Remainder = 20", "If the divisor is (x + 1), write it as (x − (−1)): k = −1, so evaluate f(−1) = 1 − 5 + 6 = 2"], answer: "20" } },
+    { id: "a-rrt", label: "Rational Root Theorem", objective: "Student lists possible rational roots", grade: "Grade 11", stars: 5, range: [55, 60], multiFormat: true, pool: () => withReview(a2RRT(), a2SyntheticDiv), example: { problem: "A possible rational root of x² − x − 6 (leading coefficient 1) is one of the ± divisors of 6.", steps: ["Possible rational roots = ± divisors of the constant: ±1, ±2, ±3, ±6", "3 is one of them", "If the leading coefficient is NOT 1, the candidates are ± (divisor of the constant) ÷ (divisor of the leading coefficient): for 2x² + x − 3 the denominators come from 2"], answer: "3" } },
     // ── Logs, exponentials & complex numbers ──
     { id: "a-log", label: "Evaluate logarithms", objective: "Student evaluates log_b(bᵏ)", grade: "Grade 10-11", stars: 3, range: [61, 68], multiFormat: true, pool: () => withReview(diversify(a2Log()), a2RRT), example: { problem: "Evaluate log_2(8)", steps: ["log_2(8) asks: 2 to WHAT power gives 8?", "Try powers of 2: 2¹=2, 2²=4, 2³=8", "The power is 3"], answer: "3" } },
     { id: "a-exp", label: "Evaluate exponentials", objective: "Student evaluates powers", grade: "Grade 9-10", stars: 2, range: [69, 76], multiFormat: true, pool: () => withReview(diversify(a2ExpEval()), a2Log), example: { problem: "Evaluate 2⁴", steps: ["2⁴ means 2 multiplied by itself 4 times", "2×2 = 4, ×2 = 8, ×2 = 16", "Not 2×4 — a power is repeated multiplication"], answer: "16" } },
     { id: "a-expsolve", label: "Solve exponential equations", objective: "Student solves bˣ = bᵏ", grade: "Grade 11", stars: 4, range: [77, 84], multiFormat: true, pool: () => withReview(diversify(a2ExpSolve()), a2ExpEval), example: { problem: "Solve 3ˣ = 81", steps: ["Make both sides a power of the SAME base", "81 = 3⁴, so the equation is 3ˣ = 3⁴", "Same base → the exponents must match: x = 4"], answer: "4" } },
-    { id: "a-poweri", label: "Powers of i", objective: "Student simplifies powers of i", grade: "Grade 11", stars: 4, range: [85, 92], multiFormat: true, pool: () => withReview(diversify(a2PowersOfI()), a2ExpSolve), example: { problem: "Simplify i³", steps: ["The definition: i² = -1", "i³ = i² × i = (-1) × i", "So i³ = -i (the powers cycle: i, -1, -i, 1)"], answer: "-i" } },
+    { id: "a-poweri", label: "Powers of i", objective: "Student simplifies powers of i", grade: "Grade 11", stars: 4, range: [85, 92], multiFormat: true, pool: () => withReview(diversify(a2PowersOfI()), a2ExpSolve), example: { problem: "Simplify i³", steps: ["The definition: i² = -1", "i³ = i² × i = (-1) × i", "So i³ = -i (the powers cycle every 4: i¹ = i, i² = -1, i³ = -i, i⁴ = 1, then i⁵ = i again)", "For a big exponent, divide by 4 and keep the REMAINDER: i¹⁰ → 10 ÷ 4 = 2 remainder 2, so i¹⁰ = i² = -1 (remainder 0 means 1)"], answer: "-i" } },
     { id: "a-complex", label: "Add complex numbers", objective: "Student adds complex numbers", grade: "Grade 11-12", stars: 5, range: [93, 100], multiFormat: true, pool: () => withReview(diversify(a2ComplexAdd()), a2PowersOfI), example: { problem: "Add: (2 + 3i) + (1 + i)", steps: ["Keep the parts separate — real with real, imaginary with imaginary", "Real: 2 + 1 = 3 · Imaginary: 3i + i = 4i", "Combine: 3 + 4i"], answer: "3 + 4i" } },
   ],
   M17: [
-    { id: "p-conics", label: "Parabolas & conics", objective: "Student graphs parabolas by vertex and matches equations to graphs", grade: "Grade 11", stars: 3, range: [1, 12], multiFormat: true, pool: () => pcConics(), example: { problem: "Drag the vertex of the parabola to the point (2, 1).", steps: ["The vertex of y = (x − 2)² + 1 is (2, 1)", "Move the vertex there"], answer: "2,1" } },
+    { id: "p-conics", label: "Parabolas & conics", objective: "Student graphs parabolas by vertex and matches equations to graphs", grade: "Grade 11", stars: 3, range: [1, 12], multiFormat: true, pool: () => pcConics(), example: { problem: "What is the vertex of y = (x + 1)² + 3?", steps: ["Vertex form: y = (x − h)² + k has its vertex at (h, k) and its axis of symmetry at x = h", "The bracket (x + 1) is (x − (−1)), so h = −1 — the OPPOSITE sign of what you see; k = +3 is read as written", "Vertex (−1, 3): type it as -1,3. Axis of symmetry: x = -1", "On a graph, y = x² + 2 is the plain parabola lifted to vertex (0, 2)"], answer: "-1,3" } },
     { id: "p-anth", label: "Arithmetic sequences", objective: "Student finds the nth term", grade: "Grade 10-11", stars: 3, range: [13, 28], multiFormat: true, pool: () => diversify(pcArithNth()), example: { problem: "First term 3, common difference 2. Find term 5", steps: ["Term 5 is 4 JUMPS after term 1", "Each jump adds the common difference 2: 4 × 2 = 8", "Term 5 = 3 + 8 = 11"], answer: "11" } },
     { id: "p-asum", label: "Arithmetic series", objective: "Student sums an arithmetic series", grade: "Grade 11", stars: 4, range: [29, 44], multiFormat: true, pool: () => withReview(diversify(pcArithSum()), pcArithNth), example: { problem: "Sum of the first 4 terms: first term 2, common difference 3", steps: ["Sum formula: (number of terms ÷ 2) × (first + last)", "Last term = 2 + 3×3 = 11, so first + last = 2 + 11 = 13", "Sum = 4/2 × 13 = 26"], answer: "26" } },
     { id: "p-geo", label: "Geometric sequences", objective: "Student finds a geometric term", grade: "Grade 11", stars: 4, range: [45, 58], multiFormat: true, pool: () => withReview(diversify(pcGeoNth()), pcArithSum), example: { problem: "First term 2, ratio 3. Find term 3", steps: ["Geometric: each term MULTIPLIES by the ratio", "Term 3 is 2 jumps after term 1: multiply by 3 twice → 3² = 9", "Term 3 = 2 × 9 = 18"], answer: "18" } },
     { id: "p-limpoly", label: "Limits of polynomials", objective: "Student evaluates limits by substitution", grade: "Grade 12", stars: 4, range: [59, 72], multiFormat: true, pool: () => withReview(diversify(pcLimitPoly()), pcGeoNth), example: { problem: "lim(x→2) (x² + 3x + 1)", steps: ["Polynomials are smooth — the limit is just the value", "Substitute x = 2: (2)² + 3(2) + 1", "4 + 6 + 1 = 11"], answer: "11" } },
-    { id: "p-limfac", label: "Limits by factoring", objective: "Student resolves 0/0 limits", grade: "Grade 12", stars: 5, range: [73, 86], multiFormat: true, pool: () => withReview(diversify(pcLimitFactor()), pcLimitPoly), example: { problem: "lim(x→3) (x² - 9)/(x - 3)", steps: ["Factor → (x + 3)", "Substitute 3"], answer: "6" } },
-    { id: "p-vec", label: "Vectors", objective: "Student finds vector magnitude and sums", grade: "Grade 12", stars: 5, range: [87, 100], multiFormat: true, pool: () => withReview(diversify([...pcVectorMag(), ...pcVectorAdd()]), pcLimitFactor), example: { problem: "Magnitude of (3, 4)", steps: ["Magnitude = the vector's length (Pythagorean theorem)", "|v| = √(3² + 4²) = √(9 + 16) = √25", "|v| = 5"], answer: "5" } },
+    { id: "p-limfac", label: "Limits by factoring", objective: "Student resolves 0/0 limits", grade: "Grade 12", stars: 5, range: [73, 86], multiFormat: true, pool: () => withReview(diversify(pcLimitFactor()), pcLimitPoly), example: { problem: "lim(x→3) (x² - 9)/(x - 3)", steps: ["Try substituting x = 3: (9 − 9)/(3 − 3) = 0/0 — not a number, so simplify first", "Factor the top (difference of squares): x² − 9 = (x − 3)(x + 3)", "Cancel the common factor (x − 3) top and bottom, leaving x + 3", "Now substitute: 3 + 3 = 6"], answer: "6" } },
+    { id: "p-vec", label: "Vectors", objective: "Student finds vector magnitude and sums", grade: "Grade 12", stars: 5, range: [87, 100], multiFormat: true, pool: () => withReview(diversify([...pcVectorMag(), ...pcVectorAdd()]), pcLimitFactor), example: { problem: "Magnitude of (3, 4)", steps: ["A vector (x, y) has two components: x across, y up. Magnitude = its length (Pythagorean theorem)", "|v| = √(3² + 4²) = √(9 + 16) = √25 = 5", "To ADD vectors, add matching components: (1, 2) + (3, 1) = (1 + 3, 2 + 1) = (4, 3) — the x-component of the sum is 4", "Type a vector with brackets and a comma: (4, 3)"], answer: "5" } },
   ],
   M18: [
-    { id: "c-dpow", label: "Power rule", objective: "Student differentiates xⁿ", grade: "Grade 12", stars: 3, range: [1, 16], multiFormat: true, pool: () => caDerivPower(), example: { problem: "d/dx x³", steps: ["Power rule: the exponent comes DOWN in front as a multiplier", "Then the exponent drops by 1: 3 → 2", "d/dx x³ = 3x²"], answer: "3x²" } },
+    { id: "c-dpow", label: "Power rule", objective: "Student differentiates xⁿ", grade: "Grade 12", stars: 3, range: [1, 16], multiFormat: true, pool: () => caDerivPower(), example: { problem: "d/dx x³", steps: ["d/dx means: how fast the function changes — its slope at each x", "Power rule: the exponent comes DOWN in front as a multiplier, then drops by 1: d/dx x³ = 3x²", "The exponent-1 case: d/dx x = 1·x⁰ = 1 (a straight line with slope 1)", "A constant never changes, so its slope is 0: d/dx 7 = 0"], answer: "3x²" } },
     { id: "c-dmono", label: "Differentiate monomials", objective: "Student differentiates axⁿ", grade: "Grade 12", stars: 4, range: [17, 36], multiFormat: true, pool: () => withReview(caDerivMono(), caDerivPower), example: { problem: "d/dx 3x²", steps: ["Multiply the coefficient by the exponent: 3 × 2 = 6", "Reduce the exponent by 1: x² → x¹", "d/dx 3x² = 6x"], answer: "6x" } },
-    { id: "c-deval", label: "Evaluate a derivative", objective: "Student evaluates f'(x) at a point", grade: "Grade 12", stars: 4, range: [37, 56], multiFormat: true, pool: () => withReview(diversify(caDerivEval()), caDerivMono), example: { problem: "f(x) = x² + 2x + 1. Find f'(3)", steps: ["f'(x) = 2x + 2", "2(3) + 2"], answer: "8" } },
-    { id: "c-ipow", label: "Integrate powers", objective: "Student integrates xⁿ", grade: "Grade 12", stars: 4, range: [57, 76], multiFormat: true, pool: () => withReview(caIntegralPower(), caDerivMono), example: { problem: "∫ x² dx", steps: ["Raise power, divide", "x³/3 + C"], answer: "x³/3 + C" } },
-    { id: "c-idef", label: "Definite integrals", objective: "Student evaluates a definite integral", grade: "Grade 12", stars: 5, range: [77, 90], multiFormat: true, pool: () => withReview(diversify(caIntegralDef()), caIntegralPower), example: { problem: "∫₀^4 x dx", steps: ["x²/2 from 0 to 4", "16/2"], answer: "8" } },
+    { id: "c-deval", label: "Evaluate a derivative", objective: "Student evaluates f'(x) at a point", grade: "Grade 12", stars: 4, range: [37, 56], multiFormat: true, pool: () => withReview(diversify(caDerivEval()), caDerivMono), example: { problem: "f(x) = x² + 2x + 1. Find f'(3)", steps: ["Differentiate term by term: x² → 2x, 2x → 2, and the constant 1 → 0 (a constant never changes)", "So f'(x) = 2x + 2", "Now substitute x = 3: f'(3) = 2(3) + 2 = 8", "f'(3) is the slope of the tangent line to the curve at x = 3 — 'slope of the tangent at x = a' means f'(a)"], answer: "8" } },
+    { id: "c-ipow", label: "Integrate powers", objective: "Student integrates xⁿ", grade: "Grade 12", stars: 4, range: [57, 76], multiFormat: true, pool: () => withReview(caIntegralPower(), caDerivMono), example: { problem: "∫ x² dx", steps: ["∫ means integrate — UNDO differentiation. An antiderivative of x² is a function whose derivative is x²", "Raise the power by one: 2 → 3, then divide by the new power: x³/3", "Check by differentiating: d/dx (x³/3) = 3x²/3 = x² ✓ — so x³ is an antiderivative of 3x²", "Add + C: any constant differentiates to 0, so one could have been there. Type the answer as x³/3 + C"], answer: "x³/3 + C" } },
+    { id: "c-idef", label: "Definite integrals", objective: "Student evaluates a definite integral", grade: "Grade 12", stars: 5, range: [77, 90], multiFormat: true, pool: () => withReview(diversify(caIntegralDef()), caIntegralPower), example: { problem: "∫₀^4 x dx", steps: ["Integrate first: an antiderivative of x is x²/2 (no + C needed — it cancels)", "Top limit minus bottom limit: F(4) − F(0) = 4²/2 − 0²/2 = 16/2 − 0 = 8", "The answer is the AREA under y = x between x = 0 and x = 4", "A coefficient rides along: ∫₀² 2x dx = [x²] from 0 to 2 = 2² − 0² = 4"], answer: "8" } },
     { id: "c-slope", label: "Slope as a derivative", objective: "Student finds the slope of a curve", grade: "Grade 12", stars: 5, range: [91, 100], multiFormat: true, pool: () => withReview(diversify(caSlope()), caDerivEval), example: { problem: "Slope of y = x² at x = 5", steps: ["The slope of a curve at a point IS its derivative there", "Differentiate: dy/dx of x² is 2x", "At x = 5: slope = 2 × 5 = 10"], answer: "10" } },
   ],
 };
@@ -1401,14 +1511,57 @@ export { CODE_LABEL as HIGHER_MATH_LABELS };
 // The tutorial a student sees must teach the micro-skill they're about to
 // practice (council rule: the worked example must match the first question's
 // type). These big ideas pair with each M13 unit's objective + worked example.
-const M13_BIGIDEA: Record<string, string> = {
+const BIGIDEA: Record<string, string> = {
+  "q-meet": "A parabola is the U-shaped graph of y = x²; its lowest (or highest) point is the vertex.",
   "q-recognize": "A perfect square is a whole number times itself; its square root is that number.",
   "q-solve-perfect": "If x² = k, then x = ±√k — every positive number has TWO square roots, one positive and one negative.",
   "q-larger": "Pull out the largest perfect-square factor to simplify a root; estimate by finding the nearest perfect squares.",
   "q-zero": "If two factors multiply to zero, at least one of them must be zero.",
-  "q-factor": "Factor the quadratic into two binomials, then set each factor equal to zero.",
+  "q-factor": "Factor the quadratic into two binomials (two numbers that multiply to the constant and add to the middle coefficient — watch the signs), then set each factor equal to zero.",
   "q-disc": "The discriminant b² − 4ac reveals the number of real solutions: positive → 2, zero → 1, negative → 0.",
-  "q-evalaxis": "A parabola is symmetric about the vertical line x = −b/2a.",
+  "q-evalaxis": "To evaluate, substitute the x-value and compute. A parabola y = x² + bx is symmetric about the vertical line x = −b/2.",
+  // M14
+  "f-lin": "f(4) means 'put 4 in for x': multiply by m first, then add b.",
+  "f-quad": "f(k) for x² + c: square k first (a negative squares to a positive), then add c.",
+  "f-compose": "f(g(x)) is two machines in a row: do the INSIDE one (g) first, then feed its output to f. Order matters — g(f(x)) is usually different.",
+  "f-domain": "The domain is every x that does not break the function; a denominator of zero breaks it, so exclude the x that makes it zero.",
+  "f-range": "x² is never below 0, so x² + c is never below c: the range is y ≥ c. Lines like x + 3 or 3x have no floor.",
+  "f-inverse": "f⁻¹ undoes f: if f adds 5, f⁻¹ subtracts 5 — so f⁻¹(f(x)) always gives x back.",
+  // M15
+  "t-hyp": "In a right triangle a² + b² = c² (c is the hypotenuse). Add and root for the hypotenuse; subtract and root for a leg.",
+  "t-ratio": "SOH-CAH-TOA: sin = opposite/hypotenuse, cos = adjacent/hypotenuse, tan = opposite/adjacent — label the sides from the angle first.",
+  "t-unit": "The special triangles (30-60-90: 1, √3, 2 and 45-45-90: 1, 1, √2) give sin, cos, tan of 30°, 45°, 60°; the unit-circle point (cos θ, sin θ) gives 0° and 90°.",
+  "t-rad": "π radians = 180°. Degrees → radians: × π/180. Radians → degrees: × 180/π.",
+  "t-ident": "sin²θ + cos²θ = 1 for every angle, so knowing one of sin or cos gives the other; then tan θ = sin θ ÷ cos θ.",
+  // M16
+  "a-endbehav": "Far out, only the leading term matters. Even degree: both ends go the same way (up if the lead is +). Odd degree: the ends go opposite ways (right end up if the lead is +).",
+  "a-yint": "The y-intercept is f(0): every x-term vanishes, leaving the constant term.",
+  "a-xint": "In factored form each factor gives a root: (x − r) → x = r, and a root r comes from the factor (x − r) — the sign flips.",
+  "a-mult": "Even multiplicity → the graph bounces (touches) the x-axis; odd multiplicity → it crosses.",
+  "a-turning": "A degree-n polynomial has AT MOST n − 1 turning points (a degree-2 parabola always has exactly one).",
+  "a-fta": "A degree-n polynomial has exactly n roots counting repeats; roots that are not real numbers still count.",
+  "a-synthetic": "Remainder Theorem: dividing by (x − k) leaves remainder f(k). For (x + 1), k = −1.",
+  "a-rrt": "Rational Root Theorem: candidates are ± (divisor of the constant) ÷ (divisor of the leading coefficient).",
+  "a-log": "log_b(y) asks 'b to what power gives y?' — log_2(8) = 3 because 2³ = 8.",
+  "a-exp": "A power is repeated multiplication: 2⁴ = 2×2×2×2 = 16, not 2×4.",
+  "a-expsolve": "Write both sides as powers of the same base; then the exponents must be equal.",
+  "a-poweri": "i² = −1, and the powers of i cycle every 4 (i, −1, −i, 1): divide the exponent by 4 and use the remainder.",
+  "a-complex": "Add complex numbers part by part: real with real, imaginary with imaginary.",
+  // M17
+  "p-conics": "Vertex form y = (x − h)² + k has vertex (h, k) and axis x = h — the sign inside the bracket flips.",
+  "p-anth": "An arithmetic sequence adds the same difference each step: term n = first + (n − 1) × difference.",
+  "p-asum": "The sum of an arithmetic series is (number of terms ÷ 2) × (first + last).",
+  "p-geo": "A geometric sequence multiplies by the same ratio each step: term n = first × ratio^(n − 1).",
+  "p-limpoly": "A polynomial is smooth, so its limit at a point is just its value there — substitute.",
+  "p-limfac": "If substituting gives 0/0, factor, cancel the common factor, then substitute again.",
+  "p-vec": "A vector (x, y) has components; its magnitude is √(x² + y²), and vectors add component by component.",
+  // M18
+  "c-dpow": "d/dx means the rate of change (slope). Power rule: d/dx xⁿ = n·xⁿ⁻¹; d/dx x = 1; a constant's derivative is 0.",
+  "c-dmono": "For a·xⁿ, multiply the coefficient by the exponent, then reduce the exponent by 1.",
+  "c-deval": "Differentiate term by term to get f'(x), then substitute the x-value: f'(a) is the slope of the tangent line at x = a.",
+  "c-ipow": "Integration undoes differentiation: raise the power by 1, divide by the new power, and add + C.",
+  "c-idef": "A definite integral is F(top) − F(bottom), where F is an antiderivative — it measures the area under the curve.",
+  "c-slope": "The slope of a curve at a point is its derivative evaluated there.",
 };
 
 export interface MicroLesson {
@@ -1427,7 +1580,7 @@ export function getHigherMathMicroLesson(code: string, label: string): MicroLess
   if (!u) return null;
   return {
     goal: u.objective.replace(/^Student /, "").replace(/^./, (c) => c.toUpperCase()),
-    bigIdea: M13_BIGIDEA[u.id] ?? u.objective,
+    bigIdea: BIGIDEA[u.id] ?? u.objective,
     example: u.example,
     umbrella: CODE_LABEL[code] ?? code,
   };

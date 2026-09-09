@@ -62,15 +62,30 @@ function placeValue(lo: number, hi: number, part: "tens" | "ones"): EP[] {
 // shapes are the SAME skill (spot the constant step) entered from elsewhere,
 // and a blank in the middle is the one that proves a child sees the step
 // rather than just adding to whatever number came last.
-function skipCount(step: number, startLo: number, startHi: number): EP[] {
+//
+// The shapes are BANDED (transition audit, Sep 2026): the lesson shows one
+// forward sequence with the blank at the end, and the opening sheet used to
+// open with "___, 37, 39, 41" — a leading blank on an odd run, read backwards,
+// before the child had continued a single forward one. So:
+//   forward, blank last  →  blank in the middle  →  leading blank  →  counting
+//   down — each band exhausted before the next arrives, on-pattern starts
+//   (even numbers for the 2s, as the lesson shows) before off-pattern ones,
+//   and any sequence that passes `cap` waits for the late sheets: numbers
+//   past 100 have not been named yet when the 5s begin.
+// `startBy` lets the 2s start on every number (even AND odd runs); the 5s and
+// 10s start on their own multiples.
+function skipCount(step: number, startLo: number, startHi: number, opts: { startBy?: number; cap?: number } = {}): EP[] {
+  const startBy = opts.startBy ?? step;
+  const cap = opts.cap ?? Infinity;
   const out: EP[] = [];
-  for (let s = startLo; s <= startHi; s += step) {
+  for (let s = startLo; s <= startHi; s += startBy) {
     const a = s, b = s + step, c = s + 2 * step, d = s + 3 * step;
-    out.push({ q: `${a}, ${b}, ${c}, ___`, a: String(d), diff: s + step * 3, key: `sk${step}:${s}` });
-    out.push({ q: `${a}, ___, ${c}, ${d}`, a: String(b), diff: s + step * 3 + 0.1, key: `skm${step}:${s}` });
-    out.push({ q: `___, ${b}, ${c}, ${d}`, a: String(a), diff: s + step * 3 + 0.2, key: `skf${step}:${s}` });
+    const base = (d > cap ? 900 : 0) + (s % step !== 0 ? 100 : 0) + d;
+    out.push({ q: `${a}, ${b}, ${c}, ___`, a: String(d), diff: base, key: `sk${step}:${s}` });
+    out.push({ q: `${a}, ___, ${c}, ${d}`, a: String(b), diff: base + 200, key: `skm${step}:${s}` });
+    out.push({ q: `___, ${b}, ${c}, ${d}`, a: String(a), diff: base + 400, key: `skf${step}:${s}` });
     // Counting DOWN by the same step — the pattern read right to left.
-    out.push({ q: `${d}, ${c}, ${b}, ___`, a: String(a), diff: s + step * 3 + 0.3, key: `skb${step}:${s}` });
+    out.push({ q: `${d}, ${c}, ${b}, ___`, a: String(a), diff: base + 600, key: `skb${step}:${s}` });
   }
   return out;
 }
@@ -85,7 +100,7 @@ const CURRICULA: Record<string, Unit[]> = {
   M1: [
     { id:"after-20", label:"Counting on — what comes next", objective:"Student names the number that comes after a given number", grade:"Kindergarten", stars:1, range:[1,18], pool:()=>numberAfter(1,60), example:{ problem:"What number comes after 7?", steps:["Count on by one: 7 → 8"], answer:"8" } },
     { id:"before-20", label:"Counting back — what comes before", objective:"Student names the number that comes before a given number", grade:"Kindergarten", stars:1, range:[19,34], pool:()=>numberBefore(2,60), example:{ problem:"What number comes before 12?", steps:["Count back by one: 12 → 11"], answer:"11" } },
-    { id:"missing", label:"Missing number in a sequence", objective:"Student fills the missing number between two numbers", grade:"Kindergarten", stars:2, range:[35,50], pool:()=>missingMiddle(1,58), example:{ problem:"6, ___, 8", steps:["The number between 6 and 8 is 7"], answer:"7" } },
+    { id:"missing", label:"Missing number in a sequence", objective:"Student fills the missing number between two numbers", grade:"Kindergarten", stars:2, range:[35,50], pool:()=>missingMiddle(1,58), example:{ problem:"6, ___, 8", steps:["Count on one from 6: 7","Check: 7 is one before 8"], answer:"7" } },
     { id:"greater", label:"Which is greater?", objective:"Student identifies the greater of two numbers", grade:"Kindergarten", stars:2, range:[51,66], pool:()=>compare(1,30,"greater"), example:{ problem:"Which is greater: 4 or 7?", steps:["7 is further along when counting"], answer:"7" } },
     { id:"less", label:"Which is less?", objective:"Student identifies the smaller of two numbers", grade:"Kindergarten", stars:2, range:[67,80], pool:()=>compare(1,30,"less"), example:{ problem:"Which is less: 4 or 7?", steps:["4 comes first when counting"], answer:"4" } },
     { id:"count-on-3", label:"Continue the count", objective:"Student continues a counting sequence", grade:"Grade 1", stars:3, range:[81,92], pool:()=>countOn(1,57), example:{ problem:"5, 6, 7, ___", steps:["Keep counting on by one: 7 → 8"], answer:"8" } },
@@ -94,13 +109,19 @@ const CURRICULA: Record<string, Unit[]> = {
 
   M2: [
     { id:"after-100", label:"Numbers after — to 100", objective:"Student names the number after, crossing tens", grade:"Grade 1", stars:2, range:[1,14], pool:()=>numberAfter(20,99), example:{ problem:"What number comes after 19?", steps:["19 → 20 (a new ten)"], answer:"20" } },
-    { id:"before-100", label:"Numbers before — to 100", objective:"Student names the number before, crossing tens", grade:"Grade 1", stars:2, range:[15,28], pool:()=>numberBefore(21,100), example:{ problem:"What number comes before 40?", steps:["40 → 39"], answer:"39" } },
+    { id:"before-100", label:"Numbers before — to 100", objective:"Student names the number before, crossing tens", grade:"Grade 1", stars:2, range:[15,28], pool:()=>numberBefore(21,100), example:{ problem:"What number comes before 40?", steps:["40 is 4 tens; one less is 3 tens and 9 ones: 39","A round ten goes back to the previous ten's 9: before 70 is 69"], answer:"39" } },
     { id:"tens", label:"Place value — tens", objective:"Student identifies the tens digit", grade:"Grade 1", stars:3, range:[29,42], pool:()=>placeValue(10,99,"tens"), example:{ problem:"How many tens in 47?", steps:["47 = 4 tens and 7 ones"], answer:"4" } },
     { id:"ones", label:"Place value — ones", objective:"Student identifies the ones digit", grade:"Grade 1", stars:3, range:[43,56], pool:()=>placeValue(10,99,"ones"), example:{ problem:"How many ones in 47?", steps:["47 = 4 tens and 7 ones"], answer:"7" } },
-    { id:"skip-2", label:"Skip counting by 2", objective:"Student continues a count-by-2 pattern", grade:"Grade 1", stars:3, range:[57,68], pool:()=>skipCount(2,1,60), example:{ problem:"2, 4, 6, ___", steps:["Add 2 each time: 6 + 2 = 8"], answer:"8" } },
-    { id:"skip-5", label:"Skip counting by 5", objective:"Student continues a count-by-5 pattern", grade:"Grade 1-2", stars:4, range:[69,80], pool:()=>skipCount(5,5,150), example:{ problem:"5, 10, 15, ___", steps:["Add 5 each time: 15 + 5 = 20"], answer:"20" } },
-    { id:"skip-10", label:"Skip counting by 10", objective:"Student continues a count-by-10 pattern", grade:"Grade 1-2", stars:4, range:[81,90], pool:()=>skipCount(10,10,300), example:{ problem:"10, 20, 30, ___", steps:["Add 10 each time: 30 + 10 = 40"], answer:"40" } },
-    { id:"compare-2d", label:"Compare two-digit numbers", objective:"Student compares two-digit numbers", grade:"Grade 2", stars:4, range:[91,100], pool:()=>compare(10,99,"greater"), example:{ problem:"Which is greater: 35 or 53?", steps:["Compare tens: 5 tens > 3 tens"], answer:"53" } },
+    // Addition is not taught until M3, so the steps count on / count back (M1)
+    // rather than "6 + 2 = 8". Even runs first (as the lesson shows), the
+    // odd runs and the other shapes arrive over the unit; the counting-down
+    // shape is modelled here because it needs "count back", not "count on".
+    { id:"skip-2", label:"Skip counting by 2", objective:"Student continues a count-by-2 pattern", grade:"Grade 1", stars:3, range:[57,68], pool:()=>skipCount(2,1,60,{ startBy:1 }), example:{ problem:"2, 4, 6, ___", steps:["Count on two from 6: 7, 8 — so the next number is 8","Every number is 2 more than the one before: 2, 4, 6, 8","Counting down by 2 (20, 18, 16, ___): count back two from 16: 15, 14 — so 14"], answer:"8" } },
+    // Numbers past 100 have not been named or written yet (place value was
+    // tens and ones only), so runs that pass 100 wait for the late sheets.
+    { id:"skip-5", label:"Skip counting by 5", objective:"Student continues a count-by-5 pattern", grade:"Grade 1-2", stars:4, range:[69,80], pool:()=>skipCount(5,5,150,{ cap:100 }), example:{ problem:"5, 10, 15, ___", steps:["Count on five from 15: 16, 17, 18, 19, 20 — so the next number is 20","Counting by 5, every number ends in 5 or 0: 5, 10, 15, 20","Counting down by 5 (30, 25, 20, ___): count back five from 20: 19, 18, 17, 16, 15 — so 15"], answer:"20" } },
+    { id:"skip-10", label:"Skip counting by 10", objective:"Student continues a count-by-10 pattern", grade:"Grade 1-2", stars:4, range:[81,90], pool:()=>skipCount(10,10,300,{ cap:150 }), example:{ problem:"10, 20, 30, ___", steps:["Counting by 10, the tens digit goes up by one each time: 1 ten, 2 tens, 3 tens, so 4 tens = 40","Crossing 100 (80, 90, 100, ___): after 10 tens comes 11 tens, which is 110"], answer:"40" } },
+    { id:"compare-2d", label:"Compare two-digit numbers", objective:"Student compares two-digit numbers", grade:"Grade 2", stars:4, range:[91,100], pool:()=>compare(10,99,"greater"), example:{ problem:"Which is greater: 35 or 53?", steps:["Compare tens first: 5 tens > 3 tens, so 53 is greater","If the tens are the same (66 or 62), compare the ones: 6 ones > 2 ones, so 66"], answer:"53" } },
   ],
 };
 
@@ -154,7 +175,13 @@ function selectProblems(pool: EP[], t: number, count: number, seed: number): EP[
   const uniq = pool.filter(p => (seen.has(p.q) ? false : (seen.add(p.q), true)));
   const sorted = uniq.sort((a, b) => a.diff - b.diff || (a.key < b.key ? -1 : 1));
   const N = sorted.length;
-  const W = Math.min(N, Math.max(count, Math.round(N * 0.7)));
+  // The window OPENS as the unit progresses (20% of the pool on day one, 70%
+  // by the last sheet — the same ramp as the arithmetic engine). A flat 70%
+  // let the first skip-counting sheet draw leading-blank and counting-down
+  // runs the lesson had not shown; the banded pools above only hold if the
+  // opening sheet stays inside the easiest band.
+  const tc = Math.min(1, Math.max(0, t));
+  const W = Math.min(N, Math.max(count, Math.round(N * (0.2 + 0.5 * tc))));
   const start = N <= count ? 0 : Math.round(t * (N - W));
   const win = N <= count ? sorted : sorted.slice(start, start + W);
   const bag = shuffle(win.length ? win : sorted, rng);

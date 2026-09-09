@@ -46,7 +46,12 @@ const trimZero = (s: string) => s.replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$
 
 const DENOMS = [2, 3, 4, 5, 6, 8, 10, 12];          // mixed everywhere
 
-interface XP { q: string; a: string; diff: number; form: string; key: string; viz?: boolean; }
+// `band` (default 0) marks items whose SHAPE the unit's worked example does not
+// teach on day one (the reverse direction, a second method, a bigger product).
+// A unit's OPENING sheet draws only band-0 items, so the first day is the
+// taught form; banded items also carry a difficulty bump so they arrive on the
+// later sheets in order. See selectProblems / poolForSheet.
+interface XP { q: string; a: string; diff: number; form: string; key: string; viz?: boolean; band?: number; }
 
 // ── Form builders ─────────────────────────────────────────────────────────────
 // Each returns the FULL enumerated set of problems for that form; difficulty is
@@ -123,7 +128,21 @@ const equivFillNum: Builder = () => {
 const equivFillDen: Builder = () => {
   const out: XP[] = [];
   for (const [n, d] of fracPairs([2, 3, 4, 5, 6])) for (const k of [2, 3, 4]) {
-    out.push({ q: `${F(n, d)} = ${BS}frac{${n * k}}{?}`, a: String(d * k), diff: d * k, form: "eq-den", key: `eqd:${n}/${d}:${k}` });
+    // The ?-on-the-bottom direction is the example's further step, not its
+    // main case: off the opening sheet so day one is pictures + missing top.
+    out.push({ q: `${F(n, d)} = ${BS}frac{${n * k}}{?}`, a: String(d * k), diff: d * k, form: "eq-den", key: `eqd:${n}/${d}:${k}`, band: 1 });
+  }
+  return out;
+};
+// Picture-backed equivalence — the bridge from "name the fraction in the
+// picture" (the day before) to the bare-number rule. Two bars shade the SAME
+// amount; the child reads the missing number off the second bar. Lowest
+// difficulty in the unit so these open sheet 10 before the bare symbols.
+const equivViz: Builder = () => {
+  const out: XP[] = [];
+  for (const [n, d] of fracPairs([2, 3, 4, 5, 6])) for (const k of [2, 3, 4]) {
+    if (d * k > 12) continue;
+    out.push({ q: `[[viz cmp ${n} ${d} ${n * k} ${d * k}]] ${F(n, d)} = ${BS}frac{?}{${d * k}}`, a: String(n * k), diff: d * k - 12, form: "eq-viz", key: `eqv:${n}/${d}:${k}`, viz: true });
   }
   return out;
 };
@@ -153,7 +172,16 @@ const cmpSymbol: Builder = () => {
     // instruction once at the top, so the per-problem prompt is just the two
     // fractions and the blank (matches this unit's `example`). Repeating the full
     // instruction here overflowed the narrow problem cell and rendered mangled.
-    out.push({ q: `${F(n1, d1)} ___ ${F(n2, d2)}`, a: sym, diff: tier * 14 + Math.max(d1, d2), form: "cmp-sym", key: `cmps:${n1}/${d1}:${n2}/${d2}` });
+    // Tiers 0–1 need no common-denominator search (rewrite ONE fraction at
+    // most); tiers 2–3 need a denominator both can reach, which the lesson
+    // shows as a further step — so they wait for sheet 17+.
+    // fracPairs enumerates same-denominator pairs with n1 < n2, so without a
+    // flip every like-denominator item (the whole opening sheet) reads "<".
+    // Alternate orientation deterministically so roughly half read ">".
+    const flip = (n1 * 3 + n2 * 5 + d1 + d2) % 2 === 1;
+    const q = flip ? `${F(n2, d2)} ___ ${F(n1, d1)}` : `${F(n1, d1)} ___ ${F(n2, d2)}`;
+    const a = flip ? (sym === ">" ? "<" : sym === "<" ? ">" : "=") : sym;
+    out.push({ q, a, diff: tier * 14 + Math.max(d1, d2), form: "cmp-sym", key: `cmps:${n1}/${d1}:${n2}/${d2}`, band: tier >= 2 ? 1 : 0 });
   }
   return out;
 };
@@ -204,7 +232,12 @@ function simplifyForm(_verb: string, formId: string): Builder {
 
 const toMixed: Builder = () => {
   const out: XP[] = [];
+  // The fraction part is always already in lowest terms (gcd 1): the day before
+  // was "write it in simplest form", and a key of "1 2/4" would either mark a
+  // child who writes 1 1/2 wrong or train them to unlearn yesterday. Grading is
+  // an exact match on the stored key, so the key must be the only right answer.
   for (const d of [2, 3, 4, 5, 6, 8]) for (let w = 1; w <= 4; w++) for (let n = 1; n < d; n++) {
+    if (gcd(n, d) !== 1) continue;
     const imp = w * d + n;
     out.push({ q: `Write ${F(imp, d)} as a mixed number.`, a: `${w} ${F(n, d)}`, diff: d + w * 2, form: "to-mixed", key: `mx:${imp}/${d}` });
   }
@@ -212,8 +245,12 @@ const toMixed: Builder = () => {
 };
 const toImproper: Builder = () => {
   const out: XP[] = [];
+  // Same rule as toMixed: only mixed numbers whose fraction part is in lowest
+  // terms, so "1 2/4 → 6/4 (not 3/2)" never comes up. The question names the
+  // task — a bare "1 1/3" did not say what to do with it.
   for (const d of [2, 3, 4, 5, 6, 8]) for (let w = 1; w <= 4; w++) for (let n = 1; n < d; n++) {
-    out.push({ q: `${w} ${F(n, d)}`, a: F(w * d + n, d), diff: d + w * 2, form: "to-improper", key: `im:${w}_${n}/${d}` });
+    if (gcd(n, d) !== 1) continue;
+    out.push({ q: `Write ${w} ${F(n, d)} as an improper fraction.`, a: F(w * d + n, d), diff: d + w * 2, form: "to-improper", key: `im:${w}_${n}/${d}` });
   }
   return out;
 };
@@ -271,7 +308,10 @@ function fracOp(op: "+" | "-", formId: string): Builder {
       const an = op === "+" ? n1 * (L / d1) + n2 * (L / d2) : n1 * (L / d1) - n2 * (L / d2);
       if (op === "-" && an <= 0) continue;
       const tier = d1 === d2 ? 0 : (d1 % d2 === 0 || d2 % d1 === 0) ? 1 : 2;
-      out.push({ q: `${FRAC_VERB[op]} the fractions:  ${F(n1, d1)} ${op} ${F(n2, d2)}`, a: reduced(an, L), diff: tier * 100 + Math.max(d1, d2) * 2 + Math.log2(L), form: formId, key: `${formId}:${n1}/${d1}:${n2}/${d2}` });
+      // Opening sheet: same denominator only ("add the tops, keep the bottom,
+      // simplify") — the form the worked example teaches. Related and unrelated
+      // denominators follow on the later sheets.
+      out.push({ q: `${FRAC_VERB[op]} the fractions:  ${F(n1, d1)} ${op} ${F(n2, d2)}`, a: reduced(an, L), diff: tier * 100 + Math.max(d1, d2) * 2 + Math.log2(L), form: formId, key: `${formId}:${n1}/${d1}:${n2}/${d2}`, band: tier > 0 ? 1 : 0 });
     }
     return out;
   };
@@ -288,16 +328,30 @@ const decPlaceValue: Builder = () => {
   }
   for (let i = 1; i <= 99; i++) {
     const tenths = Math.floor(i / 10);
-    out.push({ q: `${r2(i / 100)} — tenths`, a: String(tenths), diff: i / 10, form: "pv-tenths", key: `pvt:${i}` });
+    // Ordered by the hundredths digit first so a sheet sorted by difficulty does
+    // not run "0.80, 0.81 … 0.89 → 8" ten times: consecutive items ask for
+    // different tenths digits.
+    out.push({ q: `${r2(i / 100)} — tenths`, a: String(tenths), diff: (i % 10) * 10 + tenths, form: "pv-tenths", key: `pvt:${i}` });
   }
   void places;
   return out;
 };
 const decCompare: Builder = () => {
   const out: XP[] = [];
+  // The smaller value used to sit on the left every time, so every answer was
+  // "<" and a child could clear the unit without reading a number. Orientation
+  // now alternates deterministically (about half ">"), and 0.5 ___ 0.50 pairs
+  // give the "=" outcome the lesson shows.
   for (let a = 1; a <= 99; a++) for (let b = a + 1; b <= 99; b += 7) {
     const va = a / 100, vb = b / 100;
-    out.push({ q: `${trimZero(r2(va))} ___ ${trimZero(r2(vb))}`, a: va > vb ? ">" : va < vb ? "<" : "=", diff: Math.max(a, b), form: "dec-cmp", key: `dc:${a}:${b}` });
+    const flip = (a * 7 + b) % 2 === 1;
+    const [l, r] = flip ? [vb, va] : [va, vb];
+    out.push({ q: `${trimZero(r2(l))} ___ ${trimZero(r2(r))}`, a: l > r ? ">" : "<", diff: Math.max(a, b), form: "dec-cmp", key: `dc:${a}:${b}` });
+  }
+  for (let a = 10; a <= 90; a += 10) {
+    const short = r1(a / 100), long = r2(a / 100);
+    const flip = (a / 10) % 2 === 0;
+    out.push({ q: flip ? `${long} ___ ${short}` : `${short} ___ ${long}`, a: "=", diff: a, form: "dec-cmp", key: `dceq:${a}` });
   }
   return out;
 };
@@ -306,11 +360,16 @@ const decRound: Builder = () => {
   for (let i = 5; i <= 995; i += 1) {
     if (i % 7 !== 0) continue;
     const v = i / 100;
-    out.push({ q: `${r2(v)} → nearest tenth`, a: trimZero((Math.round(v * 10) / 10).toFixed(1)), diff: i / 10, form: "round-t", key: `rt:${i}` });
+    // Key keeps the tenths place ("6.0", not "6") so it reads as a tenth; the
+    // grader is numeric, so a child who writes 6 is also right.
+    out.push({ q: `${r2(v)} → nearest tenth`, a: (Math.round(v * 10) / 10).toFixed(1), diff: i / 10, form: "round-t", key: `rt:${i}` });
   }
+  // Nearest WHOLE is a second shape (the tenths digit decides): held off the
+  // opening sheet and ranked above every nearest-tenth item so it arrives on
+  // sheet 60+ after the example's "later sheets" step.
   for (let i = 5; i <= 99; i++) {
     const v = i / 10;
-    out.push({ q: `${r1(v)} → nearest whole`, a: String(Math.round(v)), diff: i, form: "round-w", key: `rw:${i}` });
+    out.push({ q: `${r1(v)} → nearest whole`, a: String(Math.round(v)), diff: 100 + i, form: "round-w", key: `rw:${i}`, band: 1 });
   }
   return out;
 };
@@ -322,18 +381,28 @@ function decAdd(op: "+" | "-", formId: string): Builder {
       if (op === "-" && va < vb) continue;
       // Reasoning tier: problems WITHOUT regrouping come first, then carrying/borrowing.
       const regroup = op === "+" ? addCarries(a, b) : subBorrows(a, b);
-      out.push({ q: `${trimZero(r2(va))} ${op} ${trimZero(r2(vb))}`, a: trimZero(r2(op === "+" ? va + vb : va - vb)), diff: (regroup ? 200 : 0) + a + b, form: formId, key: `${formId}:${a}:${b}` });
+      // A whole tenth prints short (0.4, not 0.40): the child must pad it to
+      // 0.40 before adding — the single most common decimal error, and a
+      // second shape the example teaches as a further step. Off the opening
+      // sheet; ranked between the no-regroup and regroup tiers.
+      const mixedLen = a % 10 === 0 || b % 10 === 0;
+      out.push({ q: `${trimZero(r2(va))} ${op} ${trimZero(r2(vb))}`, a: trimZero(r2(op === "+" ? va + vb : va - vb)), diff: (regroup ? 200 : 0) + (mixedLen ? 100 : 0) + a + b, form: formId, key: `${formId}:${a}:${b}`, band: mixedLen ? 1 : 0 });
     }
     return out;
   };
 }
 const decMul: Builder = () => {
   const out: XP[] = [];
+  // Opening sheet: single-digit products only (0.5 × 3, 0.9 × 0.2) — the
+  // rule "count the places" is the whole lesson, so the whole-number product
+  // must be a known fact. Two-digit factors (1.9 × 7, 1.2 × 1.2) are band 1.
   for (let a = 1; a <= 19; a++) for (let b = 1; b <= 19; b++) {
-    out.push({ q: `${r1(a / 10)} × ${r1(b / 10)}`, a: trimZero(r2((a / 10) * (b / 10))), diff: a + b + 6, form: "dec-mul-dd", key: `dmdd:${a}:${b}` });
+    const big = a > 9 || b > 9;
+    out.push({ q: `${r1(a / 10)} × ${r1(b / 10)}`, a: trimZero(r2((a / 10) * (b / 10))), diff: (big ? 30 : 0) + a + b + 6, form: "dec-mul-dd", key: `dmdd:${a}:${b}`, band: big ? 1 : 0 });
   }
   for (let a = 1; a <= 95; a += 2) for (let b = 2; b <= 9; b++) {
-    out.push({ q: `${r1(a / 10)} × ${b}`, a: trimZero(r2((a / 10) * b)), diff: a / 2 + b, form: "dec-mul-dw", key: `dmdw:${a}:${b}` });
+    const big = a > 9;
+    out.push({ q: `${r1(a / 10)} × ${b}`, a: trimZero(r2((a / 10) * b)), diff: (big ? 30 : 0) + a / 2 + b, form: "dec-mul-dw", key: `dmdw:${a}:${b}`, band: big ? 1 : 0 });
   }
   return out;
 };
@@ -341,7 +410,10 @@ const decDiv: Builder = () => {
   const out: XP[] = [];
   for (let q = 1; q <= 30; q++) for (let b = 2; b <= 9; b++) {
     const a = (q * b) / 10;
-    out.push({ q: `${r1(a)} ÷ ${b}`, a: trimZero(r1(q / 10)), diff: q + b, form: "dec-div", key: `dd:${q}:${b}` });
+    // Dividends of 10.0 and up mean a three-digit whole-number division
+    // (104 ÷ 8) — beyond the two-digit work of M6, so off the opening sheet.
+    const big = a >= 10;
+    out.push({ q: `${r1(a)} ÷ ${b}`, a: trimZero(r1(q / 10)), diff: (big ? 40 : 0) + q + b, form: "dec-div", key: `dd:${q}:${b}`, band: big ? 1 : 0 });
   }
   return out;
 };
@@ -384,7 +456,10 @@ const decToPct: Builder = () => {
 };
 const pctToDec: Builder = () => {
   const out: XP[] = [];
-  for (let p = 1; p <= 99; p++) out.push({ q: `${p}% → decimal`, a: trimZero(r2(p / 100)), diff: p, form: "pct-dec", key: `pd:${p}` });
+  // +0.5 so each percent → decimal item sorts right AFTER the decimal → percent
+  // item of the same value: the two directions interleave on every sheet
+  // instead of the reverse direction opening the unit eleven items in a row.
+  for (let p = 1; p <= 99; p++) out.push({ q: `${p}% → decimal`, a: trimZero(r2(p / 100)), diff: p + 0.5, form: "pct-dec", key: `pd:${p}` });
   return out;
 };
 const pctOf: Builder = () => {
@@ -392,7 +467,11 @@ const pctOf: Builder = () => {
   for (const p of [5, 10, 20, 25, 50, 75]) for (let n = 4; n <= 80; n += 2) {
     const v = (p / 100) * n;
     if (!Number.isInteger(v)) continue;
-    out.push({ q: `${p}% of ${n}`, a: String(v), diff: p * 0.3 + n, form: "pct-of", key: `po:${p}:${n}` });
+    // Opening sheet: the unit-fraction percents the example teaches directly
+    // (50% = 1/2, 25% = 1/4, 10% = 1/10 → divide once). 75% (divide, then × 3),
+    // 20% and 5% follow on sheet 88+.
+    const later = p === 75 || p === 20 || p === 5;
+    out.push({ q: `${p}% of ${n}`, a: String(v), diff: (later ? 100 : 0) + p * 0.3 + n, form: "pct-of", key: `po:${p}:${n}`, band: later ? 1 : 0 });
   }
   return out;
 };
@@ -412,6 +491,10 @@ function pctChange(dir: "Increase" | "Decrease", formId: string): Builder {
 interface Unit {
   id: string; label: string; objective: string; grade: string; stars: number;
   range: [number, number]; count?: number; forms: Builder[]; example: WorkedExample;
+  // The one idea the lesson turns on, in a child's words. Falls back to the
+  // goal when absent (the older units); every unit touched by the transition
+  // audit carries a real one.
+  bigIdea?: string;
   // Shown ONCE at the top of the sheet (e.g. "Compare. Write >, <, or =.") so the
   // instruction isn't repeated before every problem; the problems are bare stems.
   directive?: string;
@@ -437,33 +520,33 @@ const CURRICULUM: Unit[] = [
 
   // ── FRACTION SKILLS ──
   { id: "fr-identify", label: "Identify fractions", objective: "Student writes a fraction from words or a picture", directive: "Write each as a fraction.", grade: "Grade 3", stars: 2, range: [6, 9], forms: [idText, idVizSmall], example: { problem: "3 out of 4", steps: ["Shaded over total"], answer: F(3, 4) } },
-  { id: "fr-equiv", label: "Equivalent fractions", objective: "Student finds equivalent fractions", directive: "Find the missing number.", grade: "Grade 4", stars: 3, range: [10, 15], forms: [equivFillNum, equivFillDen], example: { problem: `${F(2, 3)} = ${BS}frac{?}{12}`, steps: ["Bottom: 3 became 12, that is × 4", "Do the same on top: 2 × 4 = 8", "If the ? is on the bottom (1/2 = 2/?): top 1 became 2, that is × 2, so bottom 2 × 2 = 4"], answer: "8" } },
-  { id: "fr-compare", label: "Compare fractions", objective: "Student compares two fractions", directive: "Compare. Write >, <, or =.", grade: "Grade 4", stars: 3, range: [16, 20], forms: [cmpSymbol], example: { problem: `${F(2, 3)} ___ ${F(3, 5)}`, steps: ["Common denominator 15: 10/15 vs 9/15"], answer: ">" } },
-  { id: "fr-order", label: "Order fractions", objective: "Student orders fractions from least to greatest", directive: "Order each from least to greatest.", grade: "Grade 4", stars: 4, range: [21, 24], forms: [orderLeast], example: { problem: `${F(1, 2)}, ${F(1, 4)}, ${F(2, 3)}`, steps: ["Common denominator 12"], answer: `${F(1, 4)} < ${F(1, 2)} < ${F(2, 3)}` } },
+  { id: "fr-equiv", label: "Equivalent fractions", objective: "Student finds equivalent fractions", bigIdea: "Two fractions can name the SAME amount: cut every part into smaller equal pieces and the picture does not change", directive: "Find the missing number.", grade: "Grade 4", stars: 3, range: [10, 15], forms: [equivViz, equivFillNum, equivFillDen], example: { problem: `[[viz cmp 2 3 8 12]] ${F(2, 3)} = ${BS}frac{?}{12}`, steps: ["Look at the two bars: 2 of 3 and 8 of 12 shade the SAME amount — they are equivalent", "Bottom: 3 became 12, that is × 4", "Do the same on top: 2 × 4 = 8", "If the ? is on the bottom (1/2 = 2/?): top 1 became 2, that is × 2, so bottom 2 × 2 = 4"], answer: "8" } },
+  { id: "fr-compare", label: "Compare fractions", objective: "Student compares two fractions", bigIdea: "You can only compare tops when the bottoms are the same — so first make the bottoms the same", directive: "Compare. Write >, <, or =.", grade: "Grade 4", stars: 3, range: [16, 20], forms: [cmpSymbol], example: { problem: `${F(3, 4)} ___ ${F(5, 8)}`, steps: ["Same bottoms already (2/6 and 5/6)? Just compare the tops: 2 < 5, so 2/6 < 5/6", "Here the bottoms differ, but 8 is 4 × 2 — so rewrite 3/4 in eighths: 3/4 = 6/8", "Now the bottoms match: 6 > 5, so 3/4 > 5/8", "If the tops come out equal (1/2 = 3/6, and 3/6 is 3/6) write =", "Later sheets — neither bottom fits into the other (2/3 vs 3/5): multiply the bottoms, 3 × 5 = 15, then 2/3 = 10/15 and 3/5 = 9/15, so 2/3 > 3/5"], answer: ">" } },
+  { id: "fr-order", label: "Order fractions", objective: "Student orders fractions from least to greatest", bigIdea: "Give every fraction the same bottom, then line up the tops from smallest to biggest", directive: "Order each from least to greatest.", grade: "Grade 4", stars: 4, range: [21, 24], forms: [orderLeast], example: { problem: `${F(1, 2)}, ${F(1, 4)}, ${F(2, 3)}`, steps: ["Find a bottom that 2, 4 and 3 all fit into — list multiples of 4: 4, 8, 12 … 12 works for all three", "Rewrite each: 1/2 = 6/12, 1/4 = 3/12, 2/3 = 8/12", "Smallest top first: 3/12 < 6/12 < 8/12", "Write them back in their original form: 1/4 < 1/2 < 2/3"], answer: `${F(1, 4)} < ${F(1, 2)} < ${F(2, 3)}` } },
   { id: "fr-simplify", label: "Simplify fractions", objective: "Student writes a fraction in simplest form", directive: "Write each fraction in simplest form.", grade: "Grade 4-5", stars: 3, range: [25, 30], forms: [simplifyForm("", "simp")], example: { problem: `${F(4, 8)}`, steps: ["Find the biggest number that divides EVENLY into both 4 and 8 — it's 4", "Divide both by it: 4 ÷ 4 = 1 and 8 ÷ 4 = 2", "Check: nothing bigger than 1 divides both 1 and 2, so 1/2 is the simplest form"], answer: F(1, 2) } },
-  { id: "fr-mixed", label: "Mixed numbers", objective: "Student converts improper fractions to mixed numbers", directive: "Write each as a mixed number.", grade: "Grade 5", stars: 3, range: [31, 34], forms: [toMixed], example: { problem: `${F(7, 3)}`, steps: ["7 ÷ 3 = 2 remainder 1"], answer: `2 ${F(1, 3)}` } },
-  { id: "fr-improper", label: "Improper fractions", objective: "Student converts mixed numbers to improper fractions", directive: "Write each as an improper fraction.", grade: "Grade 5", stars: 3, range: [35, 38], forms: [toImproper], example: { problem: `2 ${F(1, 3)}`, steps: ["2 × 3 + 1 = 7"], answer: F(7, 3) } },
-  { id: "fr-add", label: "Add fractions", objective: "Student adds fractions (like and unlike denominators)", directive: "Add. Simplify if possible.", grade: "Grade 5", stars: 4, range: [39, 41], forms: [fracOp("+", "frac-add")], example: { problem: `${F(1, 3)} + ${F(1, 4)}`, steps: ["LCM 12: 4/12 + 3/12"], answer: F(7, 12) } },
-  { id: "fr-sub", label: "Subtract fractions", objective: "Student subtracts fractions", directive: "Subtract. Simplify if possible.", grade: "Grade 5", stars: 4, range: [42, 44], forms: [fracOp("-", "frac-sub")], example: { problem: `${F(3, 4) } - ${F(1, 2)}`, steps: ["LCM 4: 3/4 − 2/4"], answer: F(1, 4) } },
+  { id: "fr-mixed", label: "Mixed numbers", objective: "Student converts improper fractions to mixed numbers", directive: "Write each as a mixed number.", grade: "Grade 5", stars: 3, range: [31, 34], bigIdea: "A top bigger than the bottom means more than one whole: divide to find how many wholes, the remainder is the fraction left over", forms: [toMixed], example: { problem: `Write ${F(7, 3)} as a mixed number.`, steps: ["7 ÷ 3 = 2 remainder 1", "The 2 is the whole number; the remainder 1 goes back over the same bottom: 1/3", "So 7/3 = 2 1/3. The fraction part must be in simplest form — 1/3 already is"], answer: `2 ${F(1, 3)}` } },
+  { id: "fr-improper", label: "Improper fractions", objective: "Student converts mixed numbers to improper fractions", directive: "Write each as an improper fraction.", grade: "Grade 5", stars: 3, range: [35, 38], bigIdea: "Each whole is worth a full set of thirds: multiply the wholes by the bottom, then add the top", forms: [toImproper], example: { problem: `Write 2 ${F(1, 3)} as an improper fraction.`, steps: ["Each whole is 3 thirds, so 2 wholes = 2 × 3 = 6 thirds", "Add the 1 third that is already there: 6 + 1 = 7 thirds", "Keep the same bottom: 7/3"], answer: F(7, 3) } },
+  { id: "fr-add", label: "Add fractions", objective: "Student adds fractions (like and unlike denominators)", directive: "Add. Simplify if possible.", grade: "Grade 5", stars: 4, range: [39, 41], bigIdea: "Same bottom: add the tops and keep the bottom. Different bottoms: make them the same first", forms: [fracOp("+", "frac-add")], example: { problem: `${F(3, 8)} + ${F(3, 8)}`, steps: ["Same bottom, so add only the tops: 3 + 3 = 6, and keep the 8: 6/8", "Write the answer in simplest form: 6 and 8 both divide by 2 → 3/4", "If the tops add up to the bottom (1/5 + 4/5 = 5/5) that is 1 whole — write 1", "If the top ends up bigger than the bottom (6/8 + 6/8 = 12/8 = 3/2) leave it as a fraction: 3/2", "Later sheets — different bottoms (1/4 + 3/8): 8 is 4 × 2, so 1/4 = 2/8, then 2/8 + 3/8 = 5/8"], answer: F(3, 4) } },
+  { id: "fr-sub", label: "Subtract fractions", objective: "Student subtracts fractions", directive: "Subtract. Simplify if possible.", grade: "Grade 5", stars: 4, range: [42, 44], bigIdea: "Same bottom: subtract the tops and keep the bottom. Different bottoms: make them the same first", forms: [fracOp("-", "frac-sub")], example: { problem: `${F(5, 6)} - ${F(1, 6)}`, steps: ["Same bottom, so subtract only the tops: 5 − 1 = 4, and keep the 6: 4/6", "Write the answer in simplest form: 4 and 6 both divide by 2 → 2/3", "Later sheets — different bottoms (3/4 − 1/2): 4 is 2 × 2, so 1/2 = 2/4, then 3/4 − 2/4 = 1/4"], answer: F(2, 3) } },
   { id: "fr-mul", label: "Multiply fractions", objective: "Student multiplies fractions", directive: "Multiply. Simplify if possible.", grade: "Grade 5-6", stars: 4, range: [45, 47], forms: [binUnlike("×", "mul")], example: { problem: `${F(2, 3)} × ${F(3, 4)}`, steps: ["2×3=6, 3×4=12, simplify"], answer: F(1, 2) } },
-  { id: "fr-div", label: "Divide fractions", objective: "Student divides fractions using the reciprocal", directive: "Divide. Simplify if possible.", grade: "Grade 6", stars: 5, range: [48, 49], forms: [binUnlike("÷", "div")], example: { problem: `${F(1, 2)} ÷ ${F(1, 4)}`, steps: ["Flip and multiply: 1/2 × 4/1"], answer: "2" } },
+  { id: "fr-div", label: "Divide fractions", objective: "Student divides fractions using the reciprocal", directive: "Divide. Simplify if possible.", grade: "Grade 6", stars: 5, range: [48, 49], bigIdea: "Dividing by a fraction is the same as multiplying by it flipped over (its reciprocal)", forms: [binUnlike("÷", "div")], example: { problem: `${F(1, 2)} ÷ ${F(2, 3)}`, steps: ["Flip the second fraction over: 2/3 becomes 3/2 (this is called its reciprocal)", "Change ÷ to × and multiply across: 1/2 × 3/2 = 3/4 (tops 1 × 3, bottoms 2 × 2)", "Simplify if you can — 3/4 already is. If the top is bigger than the bottom, leave it as a fraction (e.g. 5/2)"], answer: F(3, 4) } },
   { id: "fr-mastery", label: "Fraction mastery", objective: "Student works fluently across all fraction operations", grade: "Grade 6", stars: 5, range: [50, 50], forms: [addSame, binUnlike("+", "add-unlike"), binUnlike("×", "mul"), simplifyForm("Simplify", "simp")], example: { problem: `${F(2, 3)} × ${F(3, 5)}`, steps: ["Multiply across, simplify"], answer: F(2, 5) } },
 
   // ── DECIMALS ──
-  { id: "dec-place", label: "Decimal place value", objective: "Student identifies decimal place values", directive: "Write the digit in the named place.", grade: "Grade 5", stars: 2, range: [51, 54], forms: [decPlaceValue], example: { problem: "3.47 — hundredths", steps: ["Tenths = 4, hundredths = 7"], answer: "7" } },
-  { id: "dec-compare", label: "Compare decimals", objective: "Student compares decimals", directive: "Compare. Write >, <, or =.", grade: "Grade 5", stars: 3, range: [55, 58], forms: [decCompare], example: { problem: "0.7 ___ 0.65", steps: ["0.70 vs 0.65"], answer: ">" } },
-  { id: "dec-round", label: "Round decimals", objective: "Student rounds decimals", directive: "Round each to the place shown.", grade: "Grade 5", stars: 3, range: [59, 62], forms: [decRound], example: { problem: "3.47 → nearest tenth", steps: ["7 rounds up: 3.5"], answer: "3.5" } },
-  { id: "dec-add", label: "Add & subtract decimals", objective: "Student adds and subtracts decimals", directive: "Add or subtract.", grade: "Grade 5", stars: 3, range: [63, 67], forms: [decAdd("+", "dec-add"), decAdd("-", "dec-sub")], example: { problem: "0.45 + 0.36", steps: ["Line up points: 45 + 36 = 81 hundredths"], answer: "0.81" } },
-  { id: "dec-mul", label: "Multiply decimals", objective: "Student multiplies decimals", directive: "Multiply.", grade: "Grade 6", stars: 4, range: [68, 72], forms: [decMul], example: { problem: "0.3 × 0.4", steps: ["3×4=12, two decimal places"], answer: "0.12" } },
+  { id: "dec-place", label: "Decimal place value", objective: "Student identifies decimal place values", directive: "Write the digit in the named place.", grade: "Grade 5", stars: 2, range: [51, 54], bigIdea: "The point separates wholes from parts: the first place after it is tenths (like 4/10), the second is hundredths (like 7/100)", forms: [decPlaceValue], example: { problem: "3.47 — hundredths", steps: ["The point separates wholes from parts: 3 is the wholes, .47 is the part", "First place after the point is TENTHS: the 4 means 4 tenths = 4/10", "Second place after the point is HUNDREDTHS: the 7 means 7 hundredths = 7/100", "So the digit in the hundredths place is 7 (asked for tenths, it would be 4)"], answer: "7" } },
+  { id: "dec-compare", label: "Compare decimals", objective: "Student compares decimals", directive: "Compare. Write >, <, or =.", grade: "Grade 5", stars: 3, range: [55, 58], bigIdea: "Give both decimals the same number of places, then compare them like whole numbers", forms: [decCompare], example: { problem: "0.7 ___ 0.65", steps: ["Give both the same number of places: 0.7 = 0.70 (adding a zero on the end changes nothing)", "Now compare like whole numbers: 70 hundredths vs 65 hundredths — 70 > 65", "So 0.7 > 0.65. If the bigger one is on the right, write <", "If they come out the same (0.5 and 0.50 are both 50 hundredths) write ="], answer: ">" } },
+  { id: "dec-round", label: "Round decimals", objective: "Student rounds decimals", directive: "Round each to the place shown.", grade: "Grade 5", stars: 3, range: [59, 62], bigIdea: "Look at the digit just AFTER the place you are rounding to: 5 or more rounds up, 4 or less stays", forms: [decRound], example: { problem: "3.47 → nearest tenth", steps: ["Rounding to tenths, so look at the digit AFTER the tenths place: the hundredths digit, 7", "Rule: 5 or more rounds up, 4 or less stays the same", "7 is 5 or more, so the 4 tenths become 5 tenths: 3.5", "Rounding down: 0.14 → the 4 is less than 5, so the 1 stays: 0.1", "Later sheets — nearest WHOLE: the tenths digit decides. 2.9 → 9 rounds up → 3; 4.3 → 3 stays → 4"], answer: "3.5" } },
+  { id: "dec-add", label: "Add & subtract decimals", objective: "Student adds and subtracts decimals", directive: "Add or subtract.", grade: "Grade 5", stars: 3, range: [63, 67], bigIdea: "Line up the points so tenths sit under tenths and hundredths under hundredths — then add or subtract like whole numbers", forms: [decAdd("+", "dec-add"), decAdd("-", "dec-sub")], example: { problem: "0.45 + 0.36", steps: ["Line up the points: 0.45 over 0.36, so hundredths sit under hundredths", "Add like whole numbers: 45 + 36 = 81 hundredths, then put the point back: 0.81", "Subtracting works the same way: 0.55 − 0.13 → 55 − 13 = 42 hundredths → 0.42", "Later sheets — different lengths (0.23 + 0.4): write 0.4 as 0.40 first, then 23 + 40 = 63 hundredths → 0.63 (NOT 23 + 4)"], answer: "0.81" } },
+  { id: "dec-mul", label: "Multiply decimals", objective: "Student multiplies decimals", directive: "Multiply.", grade: "Grade 6", stars: 4, range: [68, 72], bigIdea: "Multiply as whole numbers, then count the digits after the points in the question — the answer gets that many", forms: [decMul], example: { problem: "0.3 × 0.4", steps: ["Multiply as whole numbers: 3 × 4 = 12", "Count the digits after the points in the QUESTION: 0.3 has 1, 0.4 has 1 — that is 2", "Put 2 digits after the point in the answer: 0.12", "Decimal × whole number (0.5 × 3): 5 × 3 = 15, only 1 digit after a point in the question → 1.5", "A zero on the end can be dropped: 0.5 × 0.6 → 30, two places → 0.30 = 0.3"], answer: "0.12" } },
   { id: "dec-div", label: "Divide decimals", objective: "Student divides decimals by whole numbers", directive: "Divide.", grade: "Grade 6", stars: 4, range: [73, 74], forms: [decDiv], example: { problem: "1.2 ÷ 3", steps: ["12 ÷ 3 = 4, one decimal place"], answer: "0.4" } },
   { id: "dec-mastery", label: "Decimal mastery", objective: "Student works fluently across decimal operations", directive: "Solve.", grade: "Grade 6", stars: 5, range: [75, 75], forms: [decAdd("+", "dec-add"), decMul, decRound], example: { problem: "0.5 × 0.6", steps: ["5×6=30, two places → 0.30 = 0.3"], answer: "0.3" } },
 
   // ── PERCENTS & CONVERSIONS ──
-  { id: "pct-understand", label: "Understand percent", objective: "Student reads percent as parts out of 100", directive: "Write the percent shaded, or the percent as a fraction.", grade: "Grade 6", stars: 2, range: [76, 78], forms: [pctGridViz, pctAsFraction], example: { problem: "[[viz grid 25 100]]", steps: ["25 of 100 squares"], answer: "25%" } },
-  { id: "pct-frac", label: "Fractions ↔ percents", objective: "Student converts between fractions and percents", directive: "Convert each.", grade: "Grade 6", stars: 3, range: [79, 82], forms: [fracToPct, pctToFrac], example: { problem: `45% → fraction`, steps: ["Percent means out of 100: 45/100", "Write it in simplest form: divide top and bottom by 5 → 9/20", "The other way (1/4 → percent): 1 ÷ 4 = 0.25, and 0.25 is 25 out of 100 = 25%"], answer: `${F(9, 20)}` } },
-  { id: "pct-dec", label: "Decimals ↔ percents", objective: "Student converts between decimals and percents", directive: "Convert each.", grade: "Grade 6", stars: 3, range: [83, 86], forms: [decToPct, pctToDec], example: { problem: "0.25 → percent", steps: ["Move the point two places: 25%"], answer: "25%" } },
-  { id: "pct-of", label: "Percent of a number", objective: "Student finds a percent of a number", directive: "Find the percent of each number.", grade: "Grade 6-7", stars: 4, range: [87, 90], forms: [pctOf], example: { problem: "25% of 80", steps: ["25% = 1/4, 80 ÷ 4 = 20"], answer: "20" } },
-  { id: "pct-change", label: "Percent increase & decrease", objective: "Student increases and decreases a number by a percent", directive: "Increase or decrease as shown.", grade: "Grade 7", stars: 5, range: [91, 94], forms: [pctChange("Increase", "inc"), pctChange("Decrease", "dec")], example: { problem: "80 − 25%", steps: ["25% of 80 = 20, 80 − 20 = 60"], answer: "60" } },
+  { id: "pct-understand", label: "Understand percent", objective: "Student reads percent as parts out of 100", directive: "Write the percent shaded, or the percent as a fraction.", grade: "Grade 6", stars: 2, range: [76, 78], bigIdea: "Percent means 'out of 100': 25% is 25 of 100 squares, and 25/100 as a fraction", forms: [pctGridViz, pctAsFraction], example: { problem: "[[viz grid 25 100]]", steps: ["The grid has 100 squares; 25 of them are shaded", "Percent means out of 100, so 25 out of 100 = 25%", "The other way round: 25% as a fraction of 100 is 25/100"], answer: "25%" } },
+  { id: "pct-frac", label: "Fractions ↔ percents", objective: "Student converts between fractions and percents", directive: "Convert each.", grade: "Grade 6", stars: 3, range: [79, 82], bigIdea: "A percent is a fraction with 100 on the bottom — so make the bottom 100 and read the top", forms: [fracToPct, pctToFrac], example: { problem: `45% → fraction`, steps: ["Percent means out of 100: 45/100", "Write it in simplest form: divide top and bottom by 5 → 9/20", "The other way (7/20 → percent): make the bottom 100 with an equivalent fraction — 20 × 5 = 100, so 7 × 5 = 35: 7/20 = 35/100 = 35%", "Same trick for 1/4 (× 25 → 25/100 = 25%), 1/50 (× 2 → 2/100 = 2%) and 1/25 (× 4 → 4/100 = 4%)"], answer: `${F(9, 20)}` } },
+  { id: "pct-dec", label: "Decimals ↔ percents", objective: "Student converts between decimals and percents", directive: "Convert each.", grade: "Grade 6", stars: 3, range: [83, 86], bigIdea: "Percent is hundredths: read the decimal as hundredths and you have the percent (point moves 2 places RIGHT for %, 2 places LEFT for decimal)", forms: [decToPct, pctToDec], example: { problem: "0.25 → percent", steps: ["Read the decimal as hundredths: 0.25 = 25 hundredths = 25/100", "25 out of 100 is 25% — the point moved 2 places to the RIGHT", "One place only (0.3 → percent)? Pad it to hundredths first: 0.3 = 0.30 = 30 hundredths = 30%", "The other way (5% → decimal): 5 out of 100 = 5 hundredths = 0.05 — the point moves 2 places LEFT, so write the 0 in the tenths place"], answer: "25%" } },
+  { id: "pct-of", label: "Percent of a number", objective: "Student finds a percent of a number", directive: "Find the percent of each number.", grade: "Grade 6-7", stars: 4, range: [87, 90], bigIdea: "Turn the percent into a simple fraction, then take that fraction of the number", forms: [pctOf], example: { problem: "25% of 80", steps: ["25% = 25/100 = 1/4 in simplest form", "1/4 of 80 means 80 shared into 4 equal parts: 80 ÷ 4 = 20", "The ones to know: 50% = 1/2 (÷ 2), 25% = 1/4 (÷ 4), 10% = 1/10 (÷ 10), 20% = 1/5 (÷ 5), 5% = 1/20 (÷ 20)", "Later sheets — 75% = 3/4: find 1/4 first, then × 3. 75% of 12: 12 ÷ 4 = 3, 3 × 3 = 9"], answer: "20" } },
+  { id: "pct-change", label: "Percent increase & decrease", objective: "Student increases and decreases a number by a percent", directive: "Increase or decrease as shown.", grade: "Grade 7", stars: 5, range: [91, 94], bigIdea: "Find the percent of the number first, then add it on (+) or take it off (−)", forms: [pctChange("Increase", "inc"), pctChange("Decrease", "dec")], example: { problem: "80 − 25%", steps: ["First find the percent of the number: 25% = 1/4, so 25% of 80 = 80 ÷ 4 = 20", "The sign says what to do with it: − means take it off, 80 − 20 = 60", "Increase (20 + 50%): 50% of 20 = 10, then add it on: 20 + 10 = 30"], answer: "60" } },
   { id: "pct-convert", label: "Convert fractions, decimals & percents", objective: "Student converts fluently between all three forms", directive: "Convert each.", grade: "Grade 7", stars: 5, range: [95, 98], forms: [fracToPct, decToPct, pctToFrac, pctToDec], example: { problem: `${F(3, 5)} → percent`, steps: ["3 ÷ 5 = 0.6 = 60%"], answer: "60%" } },
   { id: "pct-mastery", label: "Percent mastery", objective: "Student works fluently across percents and conversions", directive: "Solve.", grade: "Grade 7", stars: 5, range: [99, 100], forms: [pctOf, fracToPct, pctChange("Increase", "inc"), decToPct], example: { problem: "20% of 45", steps: ["20% = 1/5, 45 ÷ 5 = 9"], answer: "9" } },
 ];
@@ -482,6 +565,18 @@ function buildScoredPool(ui: number): XP[] {
   const span = hi - lo || 1;
   const base = ui * GPI_STEP;
   return raw.map(p => ({ ...p, diff: base + ((p.diff - lo) / span) * GPI_BAND }));
+}
+// The pool a given sheet draws from. On a unit's OPENING sheet (the day the
+// micro-lesson fires) only band-0 items — the shape the worked example
+// teaches — are offered, provided that still fills the sheet. Difficulty is
+// normalised over the WHOLE unit so the opening sheet's GPI stays comparable.
+function poolForSheet(ui: number, t: number, span: number, count: number): XP[] {
+  const pool = buildScoredPool(ui);
+  if (span > 0 && t === 0) {
+    const open = pool.filter(p => !p.band);
+    if (open.length >= count) return open;
+  }
+  return pool;
 }
 
 // Pick `count` problems: ascending difficulty, window slides up per sheet, and
@@ -525,8 +620,12 @@ function selectProblems(pool: XP[], t: number, count: number, seed = 0): XP[] {
   const off = Math.floor(rng() * W);
   const usedIdx = new Set<number>();
   const chosenIdx: number[] = [];
+  // A seeded ±1 jitter on each pick: when two forms alternate in the sorted
+  // pool (decimal → percent, percent → decimal), an even stride would land on
+  // the same form every time and the sheet would open with one direction
+  // eleven items in a row. Jitter mixes the parity, so the forms interleave.
   for (let i = 0; i < count; i++) {
-    let idx = (Math.round((i * (W - 1)) / (count - 1)) + off) % W;
+    let idx = (Math.round((i * (W - 1)) / (count - 1)) + off + (rng() < 0.5 ? 0 : 1)) % W;
     while (usedIdx.has(idx)) idx = (idx + 1) % W;
     usedIdx.add(idx);
     chosenIdx.push(idx);
@@ -544,21 +643,27 @@ function selectProblems(pool: XP[], t: number, count: number, seed = 0): XP[] {
     const over = Object.entries(fc).find(([, c]) => c > cap);
     if (!over) break;
     const [overForm] = over;
-    // nearest unused slot whose form is under cap
-    let swapIn = -1;
-    for (let r = 1; r < W; r++) {
-      for (const j of [r, -r]) {
-        const cand = (chosenIdx[0] + j + W * 4) % W;
-        if (!usedIdx.has(cand) && (fc[win[cand].form] ?? 0) < cap) { swapIn = cand; break; }
+    // Swap an over-form pick for the nearest unused under-cap slot around ITS
+    // OWN position, so the forms stay interleaved along the difficulty ramp.
+    // (Measuring "nearest" from the first pick clumped every replacement at
+    // the low end: the Decimals ↔ percents opening sheet began with eleven
+    // percent → decimal items in a row.)
+    let done = false;
+    for (let pi = chosenIdx.length - 1; pi >= 0 && !done; pi--) {
+      if (win[chosenIdx[pi]].form !== overForm) continue;
+      for (let r = 1; r < W && !done; r++) {
+        for (const j of [r, -r]) {
+          const cand = chosenIdx[pi] + j;
+          if (cand < 0 || cand >= W || usedIdx.has(cand) || (fc[win[cand].form] ?? 0) >= cap) continue;
+          usedIdx.delete(chosenIdx[pi]);
+          usedIdx.add(cand);
+          chosenIdx[pi] = cand;
+          done = true;
+          break;
+        }
       }
-      if (swapIn >= 0) break;
     }
-    if (swapIn < 0) break; // no feasible swap — accept current distribution
-    // drop one over-form pick (prefer the densest cluster: any will do post-sort)
-    const dropAt = chosenIdx.findIndex(idx => win[idx].form === overForm);
-    usedIdx.delete(chosenIdx[dropAt]);
-    usedIdx.add(swapIn);
-    chosenIdx[dropAt] = swapIn;
+    if (!done) break; // no feasible swap — accept current distribution
   }
 
   return chosenIdx.map(idx => win[idx]).sort((a, b) => a.diff - b.diff);
@@ -573,7 +678,7 @@ export function getFdpMicroLesson(label: string): FdpMicroLesson | null {
   const u = CURRICULUM.find((x) => x.label === label) ?? CURRICULUM.find((x) => label.includes(x.label));
   if (!u) return null;
   const goal = u.objective.replace(/^Student /, "").replace(/^./, (c) => c.toUpperCase());
-  return { goal, bigIdea: goal, example: u.example, umbrella: "Fractions" };
+  return { goal, bigIdea: u.bigIdea ?? goal, example: u.example, umbrella: "Fractions" };
 }
 
 // Ordered skill map (real content units) for M7 (fractions → decimals → percents).
@@ -589,7 +694,7 @@ export function generateFdpSheet(sheetNumber: number, totalSheets: number, probl
   const span = unit.range[1] - unit.range[0];
   const t = span === 0 ? 0.5 : (sheetNumber - unit.range[0]) / span;
 
-  const selected = selectProblems(buildScoredPool(ui), t, count, fdpHash(`fdp:${sheetNumber}`));
+  const selected = selectProblems(poolForSheet(ui, t, span, count), t, count, fdpHash(`fdp:${sheetNumber}`));
   const problems = selected.map((p, i) => ({
     id: nanoid(8),
     type: "arithmetic" as const,
@@ -641,7 +746,7 @@ export function validateFdpPack(totalSheets = 100): { ok: boolean; issues: strin
     const count = unit.count ?? 30;
     const span = unit.range[1] - unit.range[0];
     const t = span === 0 ? 0.5 : (s - unit.range[0]) / span;
-    const sel = selectProblems(buildScoredPool(ui), t, count);
+    const sel = selectProblems(poolForSheet(ui, t, span, count), t, count);
 
     const dupes = sel.length - new Set(sel.map(p => p.q)).size;
     if (dupes > 0 && poolOf(unit).length >= count) issues.push(`Sheet ${s}: ${dupes} duplicate(s)`);

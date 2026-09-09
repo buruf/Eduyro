@@ -15,7 +15,12 @@
 import { nanoid } from "nanoid";
 import type { WorksheetData, WorkedExample, ShopSkill } from "./progressive-generator";
 
-interface AProblem { q: string; a: string; diff: number; key: string; type?: "arithmetic" | "multiple_choice" | "true_false"; options?: string[]; strat?: string; }
+// `late`: keep this item off the OPENING sheet of its unit. Difficulty bands
+// cannot do that for a small fact unit — a sheet is as long as the distinct
+// pool, so the window is the whole pool and every fact lands on day one. The
+// square facts are the case: 6 × 6 … 9 × 9 and 11 × 11 arrived on the first
+// squares sheet, before ×6–×9 exist, as eight facts to memorise cold.
+interface AProblem { q: string; a: string; diff: number; key: string; type?: "arithmetic" | "multiple_choice" | "true_false"; options?: string[]; strat?: string; late?: boolean; }
 
 // ── Difficulty helpers ────────────────────────────────────────────────────────
 const digits = (n: number) => String(Math.abs(n)).length;
@@ -236,22 +241,26 @@ function sBridge(): Fact[] { const o: Fact[] = []; for (let a = 11; a <= 18; a++
 function sFactFamily(): Fact[] { const o: Fact[] = []; for (let a = 2; a <= 18; a++) for (let b = 1; b < a && a - b <= 9 && b <= 9; b++) o.push({ a, b, diff: a + 5, strat: "fact-family" }); return o; }
 
 // ── Multiplication strategy fact sets + format wrapper ──
-type MFact = { a: number; b: number; diff: number; strat: string };
+type MFact = { a: number; b: number; diff: number; strat: string; late?: boolean };
 function mTables(tables: number[], strat: string): MFact[] { const o: MFact[] = []; for (const t of tables) for (let b = 1; b <= 12; b++) o.push({ a: t, b, diff: t * b * 0.4 + Math.max(t, b), strat }); return o; }
-function mSquares(): MFact[] { const o: MFact[] = []; for (let n = 1; n <= 12; n++) o.push({ a: n, b: n, diff: n * n * 0.4, strat: "squares" }); return o; }
+// Squares come third in the level, after ×2/×5/×10 and ×1/×0 only. The ones a
+// child can build from those (1–5, 10) open the unit; 6 × 6 … 9 × 9, 11 × 11
+// and 12 × 12 arrive from the second sheet, once the fives strategy in the
+// lesson has been used on the small ones.
+function mSquares(): MFact[] { const o: MFact[] = []; for (let n = 1; n <= 12; n++) o.push({ a: n, b: n, diff: n * n * 0.4, strat: "squares", late: n >= 6 && n !== 10 }); return o; }
 function mAll(): MFact[] { const o: MFact[] = []; for (let a = 2; a <= 12; a++) for (let b = 2; b <= 12; b++) o.push({ a, b, diff: a * b * 0.4, strat: "fact-family" }); return o; }
 function mulFormats(items: MFact[]): AProblem[] {
   const out: AProblem[] = [];
-  for (const { a, b, diff, strat } of items) {
+  for (const { a, b, diff, strat, late } of items) {
     const p = a * b;
-    out.push({ q: `${a} × ${b}`, a: String(p), diff, key: `d:${strat}:${a}x${b}`, strat });
+    out.push({ q: `${a} × ${b}`, a: String(p), diff, key: `d:${strat}:${a}x${b}`, strat, late });
     // Missing-factor is only well-posed when the KNOWN factor is non-zero:
     // "0 × ___ = 0" has infinitely many solutions, so never emit it (a!==0),
     // and "a × ___ = 0" would force the blank to 0 ambiguously (b!==0).
-    if (b !== 0 && a !== 0) out.push({ q: `${a} × ___ = ${p}`, a: String(b), diff: diff + 0.3, key: `mf:${strat}:${a}_${p}_${b}`, strat });
+    if (b !== 0 && a !== 0) out.push({ q: `${a} × ___ = ${p}`, a: String(b), diff: diff + 0.3, key: `mf:${strat}:${a}_${p}_${b}`, strat, late });
     if ((a + b) % 3 === 0) {
       const opts = shuffle([String(p), String(p + a), String(Math.max(0, p - a)), String(p + Math.max(1, b))], mulberry32(hashStr(`mc*${strat}${a}_${b}`)));
-      if (new Set(opts).size === 4) out.push({ q: `${a} × ${b} = ?`, a: String(p), diff: diff + 0.2, key: `mc:${strat}:${a}x${b}`, type: "multiple_choice", options: opts, strat });
+      if (new Set(opts).size === 4) out.push({ q: `${a} × ${b} = ?`, a: String(p), diff: diff + 0.2, key: `mc:${strat}:${a}x${b}`, type: "multiple_choice", options: opts, strat, late });
     }
     // (True/False removed — see addFormats.)
   }
@@ -259,15 +268,23 @@ function mulFormats(items: MFact[]): AProblem[] {
 }
 // ── Division strategy fact sets + format wrapper (inverse of multiplication) ──
 type DFact = { dividend: number; divisor: number; q: number; diff: number; strat: string };
-function dTables(divisors: number[], strat: string): DFact[] { const o: DFact[] = []; for (const d of divisors) for (let q = 1; q <= 12; q++) o.push({ dividend: d * q, divisor: d, q, diff: d * q * 0.35 + d, strat }); return o; }
+// Ordered by QUOTIENT first, divisor second, so a unit that teaches several
+// tables opens with the small facts of EVERY table (10 ÷ 5, 20 ÷ 10, 6 ÷ 2).
+// Ordered by dividend, the "÷2, ÷5, ÷10" opening sheet was ÷2 with three ÷5
+// and no ÷10 at all — the ÷10 facts all have big dividends.
+function dTables(divisors: number[], strat: string): DFact[] { const o: DFact[] = []; for (const d of divisors) for (let q = 1; q <= 12; q++) o.push({ dividend: d * q, divisor: d, q, diff: q * 2 + d * 0.5, strat }); return o; }
 function dIdentity(): DFact[] { const o: DFact[] = []; for (let n = 1; n <= 12; n++) { o.push({ dividend: n, divisor: 1, q: n, diff: n + 1, strat: "identity" }); o.push({ dividend: n, divisor: n, q: 1, diff: n + 1.1, strat: "identity" }); } return o; }
 function dSquares(): DFact[] { const o: DFact[] = []; for (let n = 1; n <= 12; n++) o.push({ dividend: n * n, divisor: n, q: n, diff: n * n * 0.35, strat: "squares" }); return o; }
 function dAll(): DFact[] { const o: DFact[] = []; for (let d = 2; d <= 12; d++) for (let q = 2; q <= 12; q++) o.push({ dividend: d * q, divisor: d, q, diff: d * q * 0.35, strat: "fact-family" }); return o; }
-function divFormats(items: DFact[]): AProblem[] {
+// `withDividend` adds the missing-DIVIDEND form ("___ ÷ 6 = 7"), the shape the
+// fact-family lesson teaches; without it that lesson's sheets held only the
+// missing divisor and the dividend form appeared cold on the level's review.
+function divFormats(items: DFact[], withDividend = false): AProblem[] {
   const out: AProblem[] = [];
   for (const { dividend, divisor, q, diff, strat } of items) {
     out.push({ q: `${dividend} ÷ ${divisor}`, a: String(q), diff, key: `d:${strat}:${dividend}/${divisor}`, strat });
     out.push({ q: `${dividend} ÷ ___ = ${q}`, a: String(divisor), diff: diff + 0.3, key: `md:${strat}:${dividend}_${q}_${divisor}`, strat });
+    if (withDividend) out.push({ q: `___ ÷ ${divisor} = ${q}`, a: String(dividend), diff: diff + 0.4, key: `mdd:${strat}:${divisor}_${q}`, strat });
     if ((divisor + q) % 3 === 0) {
       const opts = shuffle([String(q), String(q + 1), String(Math.max(0, q - 1)), String(q + 2)], mulberry32(hashStr(`mc/${strat}${dividend}_${divisor}`)));
       if (new Set(opts).size === 4) out.push({ q: `${dividend} ÷ ${divisor} = ?`, a: String(q), diff: diff + 0.2, key: `mc:${strat}:${dividend}/${divisor}`, type: "multiple_choice", options: opts, strat });
@@ -436,14 +453,17 @@ const CURRICULA: Record<string, Unit[]> = {
   // derivation that reuses the prior, with ~70/25/5 spiral review interleaved.
   ADDITION: [
     { id:"add-count-on", label:"Adding by counting on (+1, +2, +3)", objective:"Student adds by counting on from the larger number", grade:"Grade 1", stars:1, range:[1,5], pool:()=>addFormats(fCountOn()), example:{ problem:"7 + 2 =", steps:["Start at 7, count on 2: 8, 9"], answer:"9" } },
-    { id:"add-doubles", label:"Doubles (1+1 … 9+9)", objective:"Student recalls the doubles facts", grade:"Grade 1", stars:1, range:[6,8], pool:()=>spiral(addFormats(fDoubles()), addFormats(fCountOn()), [], "ad2"), example:{ problem:"6 + 6 =", steps:["Double 6 is 12"], answer:"12" } },
-    { id:"add-zero-comm", label:"Adding zero & turnarounds", objective:"Student uses +0 and that order doesn't change the sum", grade:"Grade 1", stars:1, range:[9,11], pool:()=>spiral(addFormats(fZeroComm()), addFormats(fDoubles()), addFormats(fCountOn()), "ad3"), example:{ problem:"3 + 5 = 5 + ___", steps:["Order doesn't change the sum","3 + 5 = 8, so the blank is 3"], answer:"3" } },
+    { id:"add-doubles", label:"Doubles (1+1 … 9+9)", objective:"Student recalls the doubles facts", grade:"Grade 1", stars:1, range:[6,8], pool:()=>spiral(addFormats(fDoubles()), addFormats(fCountOn()), [], "ad2"), example:{ problem:"6 + 6 =", steps:["Think 5 + 5 = 10, then 2 more: 11, 12","Double 6 is 12"], answer:"12" } },
+    // The sheet is +0 facts and turnaround pairs (4 + 2 / 2 + 4); the missing-
+    // number shape is off every sheet until Fact families, so the example
+    // teaches the two things the sheet asks for and nothing the sheet lacks.
+    { id:"add-zero-comm", label:"Adding zero & turnarounds", objective:"Student uses +0 and that order doesn't change the sum", grade:"Grade 1", stars:1, range:[9,11], pool:()=>spiral(addFormats(fZeroComm()), addFormats(fDoubles()), addFormats(fCountOn()), "ad3"), example:{ problem:"4 + 0 =", steps:["Adding 0 is adding nothing, so the number stays the same: 4","0 + 4 is the same: still 4","Turnaround: 2 + 4 and 4 + 2 give the same answer — start at the bigger number and count on: 4, then 5, 6"], answer:"4" } },
     { id:"add-near-doubles", label:"Near-doubles (use the double you know)", objective:"Student adds near-doubles using a known double", grade:"Grade 1-2", stars:2, range:[12,15], pool:()=>spiral(addFormats(fNearDoubles()), addFormats(fDoubles()), addFormats(fZeroComm()), "ad4"), example:{ problem:"6 + 7 =", steps:["6 + 6 = 12","12 + 1 = 13"], answer:"13" } },
     { id:"add-make-ten", label:"Make ten & bridging through 10", objective:"Student makes ten first, then adding the rest (8+5 = 8+2+3)", grade:"Grade 2", stars:2, range:[16,20], pool:()=>spiral(addFormats(fMakeTen()), addFormats(fNearDoubles()), addFormats(fDoubles()), "ad5"), example:{ problem:"8 + 5 =", steps:["8 + 2 = 10","10 + 3 = 13"], answer:"13" } },
     { id:"add-fact-family", label:"Fact families to 18", objective:"Student uses the add/subtract inverse and missing addends", grade:"Grade 2", stars:3, range:[21,28], pool:()=>spiral(addFormats(fFactFamily()), addFormats(fMakeTen()), addFormats(fNearDoubles()), "ad6"), example:{ problem:"7 + ___ = 12", steps:["12 - 7 = 5"], answer:"5" } },
     { id:"add-2d-noregroup", label:"2-digit addition (no regrouping)", objective:"Student adds tens and ones separately", grade:"Grade 2-3", stars:3, range:[29,44], pool:()=>[...enumAddClean(11,88,11,88), ...det(enumMissingAdd(11,77,11,22,false), 60, "ad7m"), ...det(addFormats(fFactFamily()), 20, "ad7p")], example:{ problem:"34 + 25 =", steps:["Ones: 4 + 5 = 9","Tens: 3 + 2 = 5","Answer: 59"], answer:"59" } },
     { id:"add-2d-regroup", label:"2-digit addition (regrouping)", objective:"Student carries the ten when ones reach 10", grade:"Grade 3", stars:4, range:[45,64], pool:()=>[...enumAddRegroup(), ...det(enumMissingAdd(30,99,20,70), 60, "ad8m"), ...det(addFormats(fMakeTen()), 20, "ad8p")], example:{ problem:"37 + 45 =", steps:["Ones: 7 + 5 = 12 → write 2, carry 1","Tens: 3 + 4 + 1 = 8","Answer: 82"], answer:"82" } },
-    { id:"add-3d-three", label:"3-digit addition & three addends", objective:"Student adds across columns, chaining three numbers", grade:"Grade 3-4", stars:4, range:[65,84], pool:()=>[...enumAdd(100,999,100,999), ...enumMissingAdd(100,999,50,500), ...enumThreeAdd(15,99)], example:{ problem:"248 + 167 =", steps:["Ones: 8+7=15 → 5 carry 1","Tens: 4+6+1=11 → 1 carry 1","Hundreds: 2+1+1=4","Answer: 415","Three numbers (15 + 34 + 15): add the first two, then add the third: 49 + 15 = 64"], answer:"415" } },
+    { id:"add-3d-three", label:"3-digit addition & three addends", objective:"Student adds across columns, chaining three numbers", grade:"Grade 3-4", stars:4, range:[65,84], pool:()=>[...enumAdd(100,999,100,999), ...enumMissingAdd(100,999,50,500), ...enumThreeAdd(15,99)], example:{ problem:"248 + 167 =", steps:["Ones: 8+7=15 → 5 carry 1","Tens: 4+6+1=11 → 1 carry 1","Hundreds: 2+1+1=4","Answer: 415","Three numbers (15 + 34 + 15): add the first two, then add the third: 49 + 15 = 64","Later sheets pass 1000 (746 + 304): Hundreds: 7 + 3 = 10 → write 0, carry 1 into a new thousands place: 1050"], answer:"415" } },
     { id:"add-missing-review", label:"Missing addend & mixed review", objective:"Student solves for the unknown, reviewing every addition type", grade:"Grade 4", stars:5, range:[85,100], pool:()=>[...enumMissingAdd(10,99,10,99), ...enumAdd(100,999,100,999), ...enumAdd(10,99,10,99,true)], example:{ problem:"___ + 25 = 61", steps:["Count up from 25 to 61","25 + 30 = 55, then 55 + 6 = 61","You added 30 + 6 = 36"], answer:"36" } },
   ],
 
@@ -464,11 +484,13 @@ const CURRICULA: Record<string, Unit[]> = {
   // → hard facts → fact families → big tables → multi-digit, with spiral review.
   MULTIPLICATION: [
     { id:"mul-skip", label:"×2, ×5, ×10 (skip counting)", objective:"Student multiplies by 2, 5 and 10 using skip counting", grade:"Grade 3", stars:2, range:[1,6], pool:()=>mulFormats(mTables([2,5,10],"skip-count")), example:{ problem:"5 × 6 =", steps:["Skip-count by 5: 5,10,15,20,25,30"], answer:"30" } },
-    { id:"mul-identity", label:"×1 and ×0", objective:"Student multiplies by 1 (identity) and 0", grade:"Grade 3", stars:1, range:[7,9], pool:()=>mulFormats(mTables([0,1],"identity")), example:{ problem:"7 × 1 =", steps:["Any number times 1 is itself"], answer:"7" } },
-    { id:"mul-squares", label:"Square facts (n × n)", objective:"Student recalls the square facts", grade:"Grade 3", stars:2, range:[10,12], pool:()=>spiral(mulFormats(mSquares()), mulFormats(mTables([2,5,10],"skip-count")), [], "m3"), example:{ problem:"6 × 6 =", steps:["6 sixes = 36"], answer:"36" } },
+    { id:"mul-identity", label:"×1 and ×0", objective:"Student multiplies by 1 (identity) and 0", grade:"Grade 3", stars:1, range:[7,9], pool:()=>mulFormats(mTables([0,1],"identity")), example:{ problem:"7 × 1 =", steps:["1 group of 7 is just 7 — any number times 1 is itself","0 × 7 = 0: zero groups of 7 is nothing at all, so 0 (not 7)"], answer:"7" } },
+    // ×3/×4 and ×6–×9 come later, so a square is built from a five the child
+    // knows (×5 was lesson 1) plus one more of the number — not recalled cold.
+    { id:"mul-squares", label:"Square facts (n × n)", objective:"Student recalls the square facts", grade:"Grade 3", stars:2, range:[10,12], pool:()=>spiral(mulFormats(mSquares()), mulFormats(mTables([2,5,10],"skip-count")), [], "m3"), example:{ problem:"6 × 6 =", steps:["Use the five you know: 6 × 5 = 30","One more six: 30 + 6 = 36","Same for 4 × 4: 4 × 5 = 20, take one four away: 16"], answer:"36" } },
     { id:"mul-3-4", label:"×3 and ×4 (build from ×2)", objective:"Student multiplies by 3 and 4 building on doubles", grade:"Grade 3-4", stars:3, range:[13,22], pool:()=>spiral(mulFormats(mTables([3,4],"build-up")), mulFormats(mSquares()), mulFormats(mTables([2,5,10],"skip-count")), "m4"), example:{ problem:"4 × 7 =", steps:["Double 7 is 14","Double again: 28"], answer:"28" } },
     { id:"mul-6-9", label:"×6, ×7, ×8, ×9 (the hard facts)", objective:"Student recalls the 6–9 times tables", grade:"Grade 4", stars:4, range:[23,36], pool:()=>spiral(mulFormats(mTables([6,7,8,9],"hard-facts")), mulFormats(mTables([3,4],"build-up")), mulFormats(mSquares()), "m5"), example:{ problem:"7 × 8 =", steps:["Use a five you already know: 8 × 5 = 40.","That leaves 3 more eights: 8 × 3 = 24.","Put them together: 40 + 24 = 56."], answer:"56" } },
-    { id:"mul-fact-family", label:"Fact families & missing factor", objective:"Student uses the ×/÷ inverse to find missing factors", grade:"Grade 4", stars:4, range:[37,48], pool:()=>spiral(mulFormats(mAll()), mulFormats(mTables([6,7,8,9],"hard-facts")), mulFormats(mTables([3,4],"build-up")), "m6"), example:{ problem:"6 × ___ = 48", steps:["48 ÷ 6 = 8"], answer:"8" } },
+    { id:"mul-fact-family", label:"Fact families & missing factor", objective:"Student uses the ×/÷ inverse to find missing factors", grade:"Grade 4", stars:4, range:[37,48], pool:()=>spiral(mulFormats(mAll()), mulFormats(mTables([6,7,8,9],"hard-facts")), mulFormats(mTables([3,4],"build-up")), "m6"), example:{ problem:"6 × ___ = 48", steps:["Ask: which number times 6 makes 48?","Count sixes until you reach 48: 6, 12, 18, 24, 30, 36, 42, 48","That took 8 sixes, so 6 × 8 = 48 and the blank is 8"], answer:"8" } },
     // ×11/×12 demoted 10→4 sheets (expert: ~4 sheets of value, and 3 days of
     // low-value drill sat right before the level's hardest transition).
     { id:"mul-10-12", label:"×10, ×11, ×12", objective:"Student recalls the 10, 11 and 12 times tables", grade:"Grade 4", stars:3, range:[49,52], pool:()=>spiral(mulFormats(mTables([10,11,12],"big-tables")), mulFormats(mAll()), [], "m7"), example:{ problem:"12 × 7 =", steps:["Split the 12 into 10 + 2.","7 × 10 = 70, and 7 × 2 = 14.","Add the two parts: 70 + 14 = 84."], answer:"84" } },
@@ -487,15 +509,15 @@ const CURRICULA: Record<string, Unit[]> = {
   // ÷3/4 → ÷6-9 → fact families → ÷10-12 → remainders → larger, with spiral.
   DIVISION: [
     { id:"div-skip", label:"÷2, ÷5, ÷10", objective:"Student divides by 2, 5 and 10 using known facts", grade:"Grade 3", stars:2, range:[1,6], pool:()=>divFormats(dTables([2,5,10],"skip-count")), example:{ problem:"30 ÷ 5 =", steps:["5 × 6 = 30","So 30 ÷ 5 = 6"], answer:"6" } },
-    { id:"div-identity", label:"÷1 and dividing a number by itself", objective:"Student divides by 1 and a number by itself", grade:"Grade 3", stars:1, range:[7,9], pool:()=>divFormats(dIdentity()), example:{ problem:"8 ÷ 8 =", steps:["A number divided by itself is 1"], answer:"1" } },
+    { id:"div-identity", label:"÷1 and dividing a number by itself", objective:"Student divides by 1 and a number by itself", grade:"Grade 3", stars:1, range:[7,9], pool:()=>divFormats(dIdentity()), example:{ problem:"8 ÷ 8 =", steps:["8 shared into groups of 8 makes 1 group — a number divided by itself is 1","5 ÷ 1 = 5: groups of 1 give 5 groups — any number divided by 1 is itself"], answer:"1" } },
     { id:"div-squares", label:"Square-root facts (n² ÷ n)", objective:"Student divides square numbers", grade:"Grade 3", stars:2, range:[10,12], pool:()=>spiral(divFormats(dSquares()), divFormats(dTables([2,5,10],"skip-count")), [], "d3"), example:{ problem:"36 ÷ 6 =", steps:["6 × 6 = 36","So 36 ÷ 6 = 6"], answer:"6" } },
     { id:"div-3-4", label:"÷3 and ÷4", objective:"Student divides by 3 and 4", grade:"Grade 3-4", stars:3, range:[13,22], pool:()=>spiral(divFormats(dTables([3,4],"build-up")), divFormats(dSquares()), divFormats(dTables([2,5,10],"skip-count")), "d4"), example:{ problem:"28 ÷ 4 =", steps:["4 × 7 = 28","So 28 ÷ 4 = 7"], answer:"7" } },
     { id:"div-6-9", label:"÷6, ÷7, ÷8, ÷9", objective:"Student divides by 6–9", grade:"Grade 4", stars:4, range:[23,36], pool:()=>spiral(divFormats(dTables([6,7,8,9],"hard-facts")), divFormats(dTables([3,4],"build-up")), divFormats(dSquares()), "d5"), example:{ problem:"56 ÷ 7 =", steps:["7 × 8 = 56","So 56 ÷ 7 = 8"], answer:"8" } },
-    { id:"div-fact-family", label:"Fact families & missing dividend", objective:"Student uses the ÷/× inverse to find the missing number", grade:"Grade 4", stars:4, range:[37,48], pool:()=>spiral(divFormats(dAll()), divFormats(dTables([6,7,8,9],"hard-facts")), divFormats(dTables([3,4],"build-up")), "d6"), example:{ problem:"___ ÷ 6 = 7", steps:["6 × 7 = 42"], answer:"42" } },
+    { id:"div-fact-family", label:"Fact families & missing dividend", objective:"Student uses the ÷/× inverse to find the missing number", grade:"Grade 4", stars:4, range:[37,48], pool:()=>spiral(divFormats(dAll(), true), divFormats(dTables([6,7,8,9],"hard-facts")), divFormats(dTables([3,4],"build-up")), "d6"), example:{ problem:"___ ÷ 6 = 7", steps:["Some number split into 6 groups gives 7 in each — so it is 6 groups of 7","6 × 7 = 42, so the blank is 42","Missing divisor (12 ÷ ___ = 4): what times 4 makes 12? 3 × 4 = 12, so 3"], answer:"42" } },
     { id:"div-10-12", label:"÷10, ÷11, ÷12", objective:"Student divides by 10, 11 and 12", grade:"Grade 4", stars:3, range:[49,58], pool:()=>spiral(divFormats(dTables([10,11,12],"big-tables")), divFormats(dAll()), [], "d7"), example:{ problem:"84 ÷ 12 =", steps:["12 × 7 = 84","So 84 ÷ 12 = 7"], answer:"7" } },
     { id:"div-remainder", label:"Division with remainders", objective:"Student divides with remainders", grade:"Grade 4-5", stars:5, range:[59,76], pool:()=>[...enumDivRemainder(2,9,10,99), ...det(divFormats(dAll()), 20, "d8p")], example:{ problem:"29 ÷ 4 =", steps:["4 × 7 = 28","29 - 28 = 1","Answer: 7 r 1"], answer:"7 r 1" } },
     { id:"div-larger", label:"2-digit & 3-digit ÷ 1-digit", objective:"Student divides larger numbers by 1 digit", grade:"Grade 5", stars:5, range:[77,92], pool:()=>[...enumDivExact(3,9,5,15), ...enumDivExact(3,9,15,33), ...det(enumDivExact(3,9,34,99), 160, "d9p")], example:{ problem:"96 ÷ 6 =", steps:["Split 96 into pieces that divide by 6: 60 + 36","60 ÷ 6 = 10 and 36 ÷ 6 = 6","10 + 6 = 16"], answer:"16" } },
-    { id:"div-review", label:"Mixed review", objective:"Student divides fluently across all types", grade:"Grade 5", stars:5, range:[93,100], pool:()=>[...enumDivExact(2,12,2,12), ...enumDivRemainder(2,9,10,99), ...enumMissingDividend(2,12,2,12)], example:{ problem:"175 ÷ 7 =", steps:["Split 175 into 140 + 35 (both divide by 7)","140 ÷ 7 = 20 and 35 ÷ 7 = 5","20 + 5 = 25"], answer:"25" } },
+    { id:"div-review", label:"Mixed review", objective:"Student divides fluently across all types", grade:"Grade 5", stars:5, range:[93,100], pool:()=>[...enumDivExact(2,12,2,12), ...enumDivRemainder(2,9,10,99), ...enumMissingDividend(2,12,2,12)], example:{ problem:"73 ÷ 4 =", steps:["Split 73 into 40 + 33: 40 ÷ 4 = 10","33 ÷ 4: 4 × 8 = 32, and 33 - 32 = 1 left over → 8 r 1","10 + 8 = 18, remainder 1 — check: 4 × 18 = 72, 73 - 72 = 1","Missing dividend (___ ÷ 3 = 2): 3 × 2 = 6, so the blank is 6"], answer:"18 r 1" } },
   ],
 };
 
@@ -654,7 +676,9 @@ export function allowsMissingForms(skill: string, unitIndex: number, sheetNumber
   return sheetNumber !== unit.range[0];
 }
 function poolForSheet(skill: string, unitIndex: number, sheetNumber: number): AProblem[] {
-  const pool = buildScoredPool(skill, unitIndex);
+  const unit = CURRICULA[skill][unitIndex];
+  let pool = buildScoredPool(skill, unitIndex);
+  if (sheetNumber === unit.range[0]) pool = pool.filter((p) => !p.late);
   return allowsMissingForms(skill, unitIndex, sheetNumber) ? pool : pool.filter((p) => !/___/.test(p.q));
 }
 
