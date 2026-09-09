@@ -104,7 +104,12 @@ const CURRICULA: Record<string, Unit[]> = {
     { id:"greater", label:"Which is greater?", objective:"Student identifies the greater of two numbers", grade:"Kindergarten", stars:2, range:[51,66], pool:()=>compare(1,30,"greater"), example:{ problem:"Which is greater: 4 or 7?", steps:["7 is further along when counting"], answer:"7" } },
     { id:"less", label:"Which is less?", objective:"Student identifies the smaller of two numbers", grade:"Kindergarten", stars:2, range:[67,80], pool:()=>compare(1,30,"less"), example:{ problem:"Which is less: 4 or 7?", steps:["4 comes first when counting"], answer:"4" } },
     { id:"count-on-3", label:"Continue the count", objective:"Student continues a counting sequence", grade:"Grade 1", stars:3, range:[81,92], pool:()=>countOn(1,57), example:{ problem:"5, 6, 7, ___", steps:["Keep counting on by one: 7 → 8"], answer:"8" } },
-    { id:"review", label:"Counting — mixed review", objective:"Student counts on, counts back and compares fluently", grade:"Grade 1", stars:3, range:[93,100], pool:()=>[...numberAfter(1,60),...numberBefore(2,60),...compare(1,30,"greater")], example:{ problem:"What number comes after 28?", steps:["Count on by one: 28 → 29"], answer:"29" } },
+    // A review of the whole level: all five shapes, in roughly equal shares.
+    // The "greater" pairs alone are 435 items against 60 "after" and 59
+    // "before", so unsampled they were 32 of 36 questions on the first review
+    // sheet — a second "Which is greater" lesson, not a review. Each compare
+    // set is thinned to ~70 pairs (deterministic hash, so sheets stay stable).
+    { id:"review", label:"Counting — mixed review", objective:"Student counts on, counts back and compares fluently", grade:"Grade 1", stars:3, range:[93,100], pool:()=>[...numberAfter(1,60),...numberBefore(2,60),...missingMiddle(1,58),...countOn(1,57),...compare(1,30,"greater").filter(p=>hashStr(p.key)%6===0),...compare(1,30,"less").filter(p=>hashStr(p.key)%6===0)], example:{ problem:"What number comes after 28?", steps:["Count on by one: 28 → 29","Before is the other way — count back by one: before 28 is 27","Missing number (27, ___, 29): count on one from 27: 28","Which is greater, 28 or 31? 31 is further along when counting, so 31 is greater and 28 is less"], answer:"29" } },
   ],
 
   M2: [

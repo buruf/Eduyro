@@ -42,6 +42,11 @@ interface XP {
   type?: "short_answer" | "multiple_choice" | "true_false";
   options?: string[];
   fmt?: string; // human label for the format (variety accounting / debugging)
+  // Authored distractors for the multiple-choice variant diversify() builds
+  // from a plain typed item — the errors a student actually makes (legs 3, 4:
+  // 7 = added the legs, 25 = forgot the root). When absent, diversify picks
+  // the NEAREST sibling answers instead.
+  alt?: string[];
   // Interactive graphing items (answerType "point"): the answer is the snapped
   // "x,y" string; `interactive` tells the client what plane/curve to render.
   answerType?: string;
@@ -115,6 +120,7 @@ function diversify(base: XP[]): XP[] {
   }
   const posInFmt = new Map<string, number>();
   for (const [, list] of byFmt) list.forEach((p, i) => posInFmt.set(p.key, i));
+  const isNum = (s: string) => /^-?\d+(\.\d+)?$/.test(s);
   let n = 0;
   return base.map((b) => {
     if (!isPlainTyped(b)) return b;
@@ -125,10 +131,26 @@ function diversify(base: XP[]): XP[] {
       const siblings = byFmt.get(b.fmt ?? "_") ?? [];
       const i = posInFmt.get(b.key) ?? 0;
       const near: string[] = [];
-      for (const d of [1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6]) {
-        const j = i + d;
-        if (j >= 0 && j < siblings.length) { const a = siblings[j].a; if (a !== b.a && !near.includes(a)) near.push(a); }
-        if (near.length >= 3) break;
+      if (b.alt) {
+        for (const a of b.alt) if (a !== b.a && !near.includes(a)) near.push(a);
+      } else if (isNum(b.a) && siblings.every((s) => isNum(s.a))) {
+        // Numeric template: the distractors are the answers NEAREST in value,
+        // not nearest in array position. Array neighbours sit across a loop
+        // boundary — "f(g(1)) = 4" was offering 47 (the last item of the
+        // previous a-loop) and "term 3 = 4" was offering 43 — which makes the
+        // item a giveaway rather than a check.
+        const target = Number(b.a);
+        const ranked = siblings
+          .map((s, j) => ({ a: s.a, dv: Math.abs(Number(s.a) - target), di: Math.abs(j - i) }))
+          .filter((s) => s.a !== b.a)
+          .sort((p, q) => p.dv - q.dv || p.di - q.di);
+        for (const s of ranked) { if (!near.includes(s.a)) near.push(s.a); if (near.length >= 3) break; }
+      } else {
+        for (const d of [1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6]) {
+          const j = i + d;
+          if (j >= 0 && j < siblings.length) { const a = siblings[j].a; if (a !== b.a && !near.includes(a)) near.push(a); }
+          if (near.length >= 3) break;
+        }
       }
       const mc = mcXP(`${b.key}:mc`, "multiple-choice", b.q, b.a, near, b.diff);
       if (mc) return mc;
@@ -208,8 +230,11 @@ function qSolvePerfect(): XP[] {
   for (let n = 1; n <= 12; n++) {
     const k = n * n;
     const d = 2 + n * 0.12;
-    out.push({ q: `Solve x² = ${k}`, a: `±${n}`, diff: d, key: `sp:dir:${n}`, type: "short_answer", fmt: "direct" });
+    // The scaffolded "x = ±___" form (a plain integer) leads; the typed "±7"
+    // form — which needs the ± sign entered — sits just above it, so the
+    // opening sheet's first solve is one the lesson's keyboard note covers.
     out.push({ q: `Solve x² = ${k}. Fill in the missing value:  x = ±___`, a: `${n}`, diff: d, key: `sp:miss:${n}`, type: "short_answer", fmt: "missing-value" });
+    out.push({ q: `Solve x² = ${k}`, a: `±${n}`, diff: d + 0.2, key: `sp:dir:${n}`, type: "short_answer", fmt: "direct" });
     const mc = mcXP(`sp:mc:${n}`, "multiple-choice", `Solve x² = ${k}. Which is correct?`,
       `±${n}`, [`${n}`, `-${n}`, `±${2 * n}`], d + 0.4);
     if (mc) out.push(mc);
@@ -267,7 +292,10 @@ function qZeroProduct(): XP[] {
   const out: XP[] = [];
   for (let a = 1; a <= 9; a++) for (let b = a; b <= 9; b++) {
     const ans = a === b ? `${a}` : `${a}, ${b}`, d = 6 + (a + b) * 0.1;
-    out.push({ q: `Solve (x - ${a})(x - ${b}) = 0`, a: ans, diff: d, key: `zp:dir:${a}_${b}`, type: "short_answer", fmt: "direct" });
+    // A repeated factor gives ONE answer — a special case the lesson mentions
+    // but does not work, so it is banded above the distinct-root solves and
+    // never opens the unit ("(x - 1)(x - 1) = 0" was the first item).
+    out.push({ q: `Solve (x - ${a})(x - ${b}) = 0`, a: ans, diff: a === b ? d + 1.2 : d, key: `zp:dir:${a}_${b}`, type: "short_answer", fmt: "direct" });
     if (a !== b) {
       const mc = mcXP(`zp:mc:${a}_${b}`, "multiple-choice", `Solve (x - ${a})(x - ${b}) = 0. Which is correct?`,
         `${a}, ${b}`, [`${-a}, ${-b}`, `${a}, ${-b}`, `${a + b}`], d + 0.3);
@@ -544,16 +572,21 @@ function fInverseLinear(): XP[] {
 const TRIPLES: [number, number, number][] = [[3, 4, 5], [5, 12, 13], [8, 15, 17], [7, 24, 25], [20, 21, 29], [9, 40, 41]];
 function tHypotenuse(): XP[] {
   const out: XP[] = [];
+  // Multiple-choice distractors are the errors students make, not other
+  // triples: added the legs (3 + 4 = 7), forgot the root (9 + 16 = 25), took
+  // the longer leg for the hypotenuse.
+  const hypAlt = (a: number, b: number) => [`${a + b}`, `${a * a + b * b}`, `${b}`];
   for (const [a, b, c] of TRIPLES) for (let k = 1; k <= 6; k++)
-    out.push({ q: `Right triangle with legs ${a * k} and ${b * k}. Find the hypotenuse`, a: `${c * k}`, diff: c * k, key: `th:${a}_${k}`, fmt: "hypotenuse" });
+    out.push({ q: `Right triangle with legs ${a * k} and ${b * k}. Find the hypotenuse`, a: `${c * k}`, diff: c * k, key: `th:${a}_${k}`, fmt: "hypotenuse", alt: hypAlt(a * k, b * k) });
   // Missing LEG — the theorem run backwards (subtract, then root). Banded
   // above every opening-sheet hypotenuse so the lesson's extra step has been
-  // seen before the sheet asks for it.
+  // seen before the sheet asks for it. Distractors: added instead of
+  // subtracting, forgot the root, repeated the hypotenuse.
   for (const [a, b, c] of TRIPLES) for (const k of [1, 2, 3])
-    out.push({ q: `Right triangle: hypotenuse ${c * k}, one leg ${a * k}. Find the other leg`, a: `${b * k}`, diff: c * k + 60, key: `th:l${a}_${k}`, fmt: "leg" });
+    out.push({ q: `Right triangle: hypotenuse ${c * k}, one leg ${a * k}. Find the other leg`, a: `${b * k}`, diff: c * k + 60, key: `th:l${a}_${k}`, fmt: "leg", alt: [`${c * k + a * k}`, `${(c * c - a * a) * k * k}`, `${c * k}`] });
   // Real-world: the ladder against the wall.
   for (const [a, b, c] of TRIPLES) for (const k of [1, 2])
-    out.push({ q: `A ladder's foot stands ${a * k} m from a wall and its top reaches ${b * k} m up the wall. How long is the ladder (m)?`, a: `${c * k}`, diff: c * k + 3, key: `th:w${a}_${k}`, fmt: "word" });
+    out.push({ q: `A ladder's foot stands ${a * k} m from a wall and its top reaches ${b * k} m up the wall. How long is the ladder (m)?`, a: `${c * k}`, diff: c * k + 3, key: `th:w${a}_${k}`, fmt: "word", alt: hypAlt(a * k, b * k) });
   // The rule as true/false.
   for (let i = 1; i <= 8; i++) {
     const truth = i % 2 === 1;
@@ -797,8 +830,15 @@ function a2EndBehavior(): XP[] {
 // y-intercept = f(0) = the constant term.
 function a2YIntercept(): XP[] {
   const out: XP[] = [];
-  for (const a of [1, 2, 3]) for (const b of [2, -3, 4, -5]) for (const c of [1, -3, 5, -7, 6, -8])
-    out.push({ q: `Find the y-intercept of f(x) = ${jPoly([{ c: a, n: 2 }, { c: b, n: 1 }, { c, n: 0 }])}. Give the y-value.`, a: `${c}`, diff: Math.abs(c) + a, key: `yi:${a}_${b}_${c}` });
+  // Reading the constant term is one uniform act, so the difficulty is
+  // scattered by key rather than ordered by |c|: ordered, a sheet's typed
+  // items were ALL −3 and its multiple-choice items ALL 1, and a child could
+  // pattern-guess the whole sheet after two items. c = 0 (no constant term
+  // written) is the case students miss most.
+  for (const a of [1, 2, 3]) for (const b of [2, -3, 4, -5]) for (const c of [1, -3, 5, -7, 6, -8, 0]) {
+    const key = `yi:${a}_${b}_${c}`;
+    out.push({ q: `Find the y-intercept of f(x) = ${jPoly([{ c: a, n: 2 }, { c: b, n: 1 }, { c, n: 0 }])}. Give the y-value.`, a: `${c}`, diff: scatterDiff(key), key });
+  }
   return out;
 }
 // x-intercepts from factored form: (x − r1)(x + r2) → roots r1 and −r2.
@@ -1227,9 +1267,9 @@ const CURRICULA: Record<string, Unit[]> = {
   M13: [
     { id: "q-meet", label: "Meet the parabola", objective: "Student explores a parabola by dragging its vertex on a coordinate plane", grade: "Grade 9", stars: 1, range: [1, 4], multiFormat: true, pool: qMeetParabola, example: { problem: "Drag the vertex to the point (2, 1).", steps: ["The vertex is the turning point of the parabola", "Move it to x = 2, y = 1"], answer: "2,1" } },
     { id: "q-recognize", label: "Perfect squares & square roots", objective: "Student recognizes perfect squares and their square roots", grade: "Grade 9", stars: 1, range: [5, 16], multiFormat: true, pool: qRecognize, example: { problem: "Is 49 a perfect square?", steps: ["7 × 7 = 49, so yes", "√49 = 7"], answer: "True" } },
-    { id: "q-solve-perfect", label: "Solve x² = k (perfect squares)", objective: "Student solves x² = k, finding BOTH the positive and negative root", grade: "Grade 9", stars: 2, range: [17, 32], multiFormat: true, pool: qSolvePerfect, example: { problem: "Solve x² = 49", steps: ["Take the square root of both sides", "Remember both signs", "x = ±7"], answer: "±7" } },
-    { id: "q-larger", label: "Larger, estimate & simplify roots", objective: "Student solves larger squares and estimates/simplifies non-perfect roots", grade: "Grade 9-10", stars: 3, range: [33, 48], multiFormat: true, pool: qLargerNonPerfect, example: { problem: "Simplify the square root of 50.", steps: ["50 = 25 × 2", "√25 × √2 = 5√2"], answer: "5√2" } },
-    { id: "q-zero", label: "Zero-product property", objective: "Student solves factored quadratics", grade: "Grade 9", stars: 3, range: [49, 62], multiFormat: true, pool: qZeroProduct, example: { problem: "Solve (x - 2)(x - 5) = 0", steps: ["Set each factor to 0", "x = 2 or x = 5"], answer: "2, 5" } },
+    { id: "q-solve-perfect", label: "Solve x² = k (perfect squares)", objective: "Student solves x² = k, finding BOTH the positive and negative root", grade: "Grade 9", stars: 2, range: [17, 32], multiFormat: true, pool: qSolvePerfect, example: { problem: "Solve x² = 49", steps: ["Take the square root of both sides: √49 = 7", "Remember both signs — 7 × 7 = 49 AND (−7) × (−7) = 49, so both work", "x = ±7 (read '7 or −7')", "Typing it: for 'x = ±___' just type the number, 7. For 'Solve x² = 49' type both roots as ±7 — the ± sign is on the symbols page of the keyboard"], answer: "±7" } },
+    { id: "q-larger", label: "Larger, estimate & simplify roots", objective: "Student solves larger squares and estimates/simplifies non-perfect roots", grade: "Grade 9-10", stars: 3, range: [33, 48], multiFormat: true, pool: qLargerNonPerfect, example: { problem: "Simplify the square root of 50.", steps: ["Look for the BIGGEST perfect square that divides in: 50 = 25 × 2", "Split the root: √50 = √25 × √2 = 5√2 — the perfect square comes out as a whole number, the rest stays under the root", "Another: √12 — the biggest perfect square inside 12 is 4, so √12 = √4 × √3 = 2√3 (not 2√6 from 12 = 2 × 6: 2 is not a perfect square)", "Type the answer as the number, then the √ sign, then what stays inside: 5√2. Larger squares work as before: x² = 169 → x = ±13"], answer: "5√2" } },
+    { id: "q-zero", label: "Zero-product property", objective: "Student solves factored quadratics", grade: "Grade 9", stars: 3, range: [49, 62], multiFormat: true, pool: qZeroProduct, example: { problem: "Solve (x - 2)(x - 5) = 0", steps: ["Two things multiply to 0, so one of them must BE 0: set each factor to 0", "x − 2 = 0 → x = 2, or x − 5 = 0 → x = 5", "Type both answers separated by a comma, smaller first: 2, 5", "If both factors are the same, (x − 3)(x − 3) = 0, there is just one answer: 3"], answer: "2, 5" } },
     { id: "q-factor", label: "Solve by factoring", objective: "Student solves x² - Sx + P = 0 by factoring", grade: "Grade 9-10", stars: 4, range: [63, 76], multiFormat: true, pool: qFactor, example: { problem: "Solve x² - 7x + 12 = 0", steps: ["Find two numbers that multiply to +12 and ADD to −7: they are −3 and −4 (both negative — their product is positive, their sum negative)", "So the quadratic factors: (x − 3)(x − 4) = 0", "Zero-product property (yesterday's lesson): x − 3 = 0 or x − 4 = 0", "x = 3 or x = 4 — type both, separated by a comma: 3, 4. If both factors are the same, there is just one answer"], answer: "3, 4" } },
     { id: "q-disc", label: "Discriminant & # of solutions", objective: "Student computes b² - 4ac and reads its sign", grade: "Grade 10", stars: 4, range: [77, 90], multiFormat: true, pool: qDiscriminant, example: { problem: "How many real solutions? x² + 2x + 5 = 0", steps: ["b² - 4ac = 4 - 20 = -16", "Negative → no real solutions"], answer: "0" } },
     { id: "q-evalaxis", label: "Evaluate & axis of symmetry", objective: "Student evaluates quadratics, finding the axis x = -b/2a", grade: "Grade 10", stars: 5, range: [91, 100], multiFormat: true, pool: () => [...qEvaluateAxis(), ...qSelectQuadratics()], example: { problem: "Axis of symmetry of y = x² + 6x", steps: ["A parabola is symmetric — the axis runs through its vertex", "For y = x² + bx the axis is x = -b/2", "Here b = 6: x = -6/2 = -3 — type it as x = -3", "To EVALUATE a quadratic, substitute: x² + 6x at x = 2 is 2² + 6·2 = 4 + 12 = 16"], answer: "x = -3" } },
@@ -1237,10 +1277,10 @@ const CURRICULA: Record<string, Unit[]> = {
   M14: [
     { id: "f-lin", label: "Evaluate f(x) = mx + b", objective: "Student evaluates a linear function", grade: "Grade 8-9", stars: 2, range: [1, 16], multiFormat: true, pool: () => [...diversify(fEvalLinear()), ...fGraphLinear()], example: { problem: "f(x) = 2x + 3. Find f(4)", steps: ["f(4) means: replace every x with 4", "f(4) = 2(4) + 3", "Multiply first: 8, then add 3"], answer: "11" } },
     { id: "f-quad", label: "Evaluate a quadratic function", objective: "Student evaluates f(x) = x² + c", grade: "Grade 9", stars: 3, range: [17, 32], multiFormat: true, pool: () => withReviewShare(0.1, [...diversify(fEvalQuad()), ...fVertexDrag()], fEvalLinear), example: { problem: "f(x) = x² + 5. Find f(3)", steps: ["f(3) means: replace x with 3", "f(3) = (3)² + 5", "Square first: 9, then add 5 → 14", "A negative input works the same way: f(−3) = (−3)² + 5 = 9 + 5 = 14 — squaring removes the sign, so f(−3) = f(3)"], answer: "14" } },
-    { id: "f-compose", label: "Composition of functions", objective: "Student evaluates f(g(x))", grade: "Grade 10", stars: 4, range: [33, 50], multiFormat: true, pool: () => withReview(diversify(fCompose()), fEvalQuad), example: { problem: "f(x) = x + 1, g(x) = 2x. Find f(g(3))", steps: ["g(3) = 6", "f(6) = 7"], answer: "7" } },
-    { id: "f-domain", label: "Domain of a rational function", objective: "Student finds excluded x-values", grade: "Grade 10", stars: 4, range: [51, 68], multiFormat: true, pool: () => withReview(diversify(fDomain()), fCompose), example: { problem: "Domain of f(x) = 1/(x - 4)", steps: ["Ask: what x would BREAK this function?", "Dividing by zero is impossible, so the denominator can't be 0", "x - 4 ≠ 0 → x ≠ 4; every other x is allowed"], answer: "x ≠ 4" } },
-    { id: "f-range", label: "Range of a quadratic", objective: "Student finds the minimum of x² + c", grade: "Grade 10", stars: 4, range: [69, 84], multiFormat: true, pool: () => withReview(diversify(fRange()), fDomain), example: { problem: "Range of f(x) = x² + 2", steps: ["x² is never negative — its smallest value is 0 (at x = 0)", "So the smallest output is 0 + 2 = 2", "Every larger output happens too: y ≥ 2"], answer: "y ≥ 2" } },
-    { id: "f-inverse", label: "Inverse functions", objective: "Student evaluates an inverse function", grade: "Grade 10-11", stars: 5, range: [85, 100], multiFormat: true, pool: () => withReview(diversify(fInverseLinear()), fRange), example: { problem: "f(x) = x + 5. Find f⁻¹(12)", steps: ["Inverse undoes +5", "12 - 5"], answer: "7" } },
+    { id: "f-compose", label: "Composition of functions", objective: "Student evaluates f(g(x))", grade: "Grade 10", stars: 4, range: [33, 50], multiFormat: true, pool: () => withReview(diversify(fCompose()), fEvalQuad), example: { problem: "f(x) = x + 1, g(x) = 2x. Find f(g(3))", steps: ["Work from the INSIDE out: the inner machine g goes first", "g(3) = 2 × 3 = 6", "Feed that output to f: f(6) = 6 + 1 = 7", "Order matters — g(f(3)) runs f first: f(3) = 4, then g(4) = 2 × 4 = 8, not 7. f(g(x)) and g(f(x)) are usually different"], answer: "7" } },
+    { id: "f-domain", label: "Domain of a rational function", objective: "Student finds excluded x-values", grade: "Grade 10", stars: 4, range: [51, 68], multiFormat: true, pool: () => withReview(diversify(fDomain()), fCompose), example: { problem: "Domain of f(x) = 1/(x - 4)", steps: ["Ask: what x would BREAK this function?", "Dividing by zero is impossible, so the denominator can't be 0", "x - 4 ≠ 0 → x ≠ 4; every other x is allowed", "Type the answer as x ≠ 4 (the ≠ sign is on the symbols page of the keyboard). Asked 'which x is NOT allowed?', the answer is just that number: 4"], answer: "x ≠ 4" } },
+    { id: "f-range", label: "Range of a quadratic", objective: "Student finds the minimum of x² + c", grade: "Grade 10", stars: 4, range: [69, 84], multiFormat: true, pool: () => withReview(diversify(fRange()), fDomain), example: { problem: "Range of f(x) = x² + 2", steps: ["x² is never negative — its smallest value is 0 (at x = 0)", "So the smallest output is 0 + 2 = 2", "Every larger output happens too: y ≥ 2 — type it as y ≥ 2 (the ≥ sign is on the symbols page of the keyboard)", "With a minus, the floor is negative: x² − 3 has range y ≥ -3. And only x² has a floor — x + 3 or 3x can be ANY number, so they have no smallest value"], answer: "y ≥ 2" } },
+    { id: "f-inverse", label: "Inverse functions", objective: "Student evaluates an inverse function", grade: "Grade 10-11", stars: 5, range: [85, 100], multiFormat: true, pool: () => withReview(diversify(fInverseLinear()), fRange), example: { problem: "f(x) = x + 5. Find f⁻¹(12)", steps: ["f⁻¹ is the inverse: it UNDOES what f did. f adds 5, so f⁻¹ subtracts 5", "f⁻¹(12) = 12 − 5 = 7 (check: f(7) = 7 + 5 = 12 ✓)", "Undoing what f did always returns the start: f⁻¹(f(5)) = f⁻¹(10) = 5 — f⁻¹(f(x)) = x for every x"], answer: "7" } },
   ],
   M15: [
     { id: "t-hyp", label: "Pythagorean theorem", objective: "Student finds a hypotenuse", grade: "Grade 9", stars: 2, range: [1, 16], multiFormat: true, pool: () => diversify(tHypotenuse()), example: { problem: "Legs 3 and 4. Find the hypotenuse", steps: ["The hypotenuse is the longest side: a² + b² = c²", "3² + 4² = 9 + 16 = 25, so c² = 25", "Square root at the end: c = √25 = 5", "To find a LEG instead, subtract: hypotenuse 5 and leg 3 → b² = 5² − 3² = 25 − 9 = 16, so b = 4"], answer: "5" } },
@@ -1256,7 +1296,7 @@ const CURRICULA: Record<string, Unit[]> = {
     // ── Polynomial graph analysis + advanced solving (Tier 3) — each a
     // single-task unit so a sheet states its instruction once. ──
     { id: "a-endbehav", label: "End behavior", objective: "Student determines end behavior from degree and leading coefficient", grade: "Grade 10", stars: 3, range: [1, 8], multiFormat: true, pool: () => a2EndBehavior(), example: { problem: "As x → −∞, f(x) = -x³ + 2x - 1 → ?", steps: ["Far out, only the leading term matters: −x³", "Put in a big negative x: (−big)³ is negative (odd power keeps the sign); (−big)² or (−big)⁴ would be positive (even power)", "The lead's sign then applies: −(negative) = positive, so the left end rises → +∞", "All four cases as x → −∞ — even degree, + lead: +∞ · even degree, − lead: −∞ · odd degree, + lead: −∞ · odd degree, − lead: +∞"], answer: "+∞" } },
-    { id: "a-yint", label: "y-intercept of a polynomial", objective: "Student finds the y-intercept (the constant term)", grade: "Grade 10", stars: 2, range: [9, 15], multiFormat: true, pool: () => withReview(diversify(a2YIntercept()), a2EndBehavior), example: { problem: "y-intercept of f(x) = 2x² + 3x - 5", steps: ["Set x = 0 → f(0) = the constant term", "y = -5"], answer: "-5" } },
+    { id: "a-yint", label: "y-intercept of a polynomial", objective: "Student finds the y-intercept (the constant term)", grade: "Grade 10", stars: 2, range: [9, 15], multiFormat: true, pool: () => withReview(diversify(a2YIntercept()), a2EndBehavior), example: { problem: "y-intercept of f(x) = 2x² + 3x - 5", steps: ["The graph crosses the y-axis where x = 0, so find f(0)", "Every x-term vanishes: 2(0)² + 3(0) − 5 = 0 + 0 − 5 — only the constant term survives", "y = -5 (a positive constant gives a positive intercept: x² + 4x + 1 → 1)", "If no constant is written, it is 0: f(x) = x² + 4x has y-intercept 0"], answer: "-5" } },
     { id: "a-xint", label: "x-intercepts (roots)", objective: "Student finds x-intercepts from factored form", grade: "Grade 10", stars: 3, range: [16, 23], multiFormat: true, pool: () => withReview(diversify(a2XIntercepts()), a2YIntercept), example: { problem: "f(x) = (x − 2)(x + 3) crosses the x-axis at x = 2 and x = ?", steps: ["The graph crosses the x-axis where f(x) = 0, so set each factor to 0: x + 3 = 0", "x = -3", "The rule runs both ways: a root at x = r means a factor (x − r) — the sign flips. Root 2 → factor (x − 2); root −3 → factor (x + 3)", "So a function crossing at x = 1 and x = −4 is (x − 1)(x + 4)"], answer: "-3" } },
     { id: "a-mult", label: "Multiplicity — cross or bounce", objective: "Student uses root multiplicity to decide cross vs. bounce", grade: "Grade 10-11", stars: 4, range: [24, 31], multiFormat: true, pool: () => withReview(a2Multiplicity(), a2XIntercepts), example: { problem: "For f(x) = (x − 2)²(x + 1), at x = 2 the graph ___ the x-axis.", steps: ["The multiplicity of a root is the power on its factor: (x − 2)² has multiplicity 2", "EVEN multiplicity (2, 4…) → the graph is tangent: it bounces (touches) and turns back", "ODD multiplicity (1, 3…) → the graph crosses the x-axis", "Here multiplicity 2 is even, so at x = 2 it bounces (touches)"], answer: "bounces (touches)" } },
     { id: "a-turning", label: "Turning points", objective: "Student finds the maximum number of turning points", grade: "Grade 10-11", stars: 4, range: [32, 38], multiFormat: true, pool: () => withReview(diversify(a2TurningPoints()), a2Multiplicity), example: { problem: "A polynomial of degree 5 has at most how many turning points?", steps: ["A degree-n polynomial has at most n − 1 turning points", "5 − 1 = 4"], answer: "4" } },
@@ -1272,16 +1312,16 @@ const CURRICULA: Record<string, Unit[]> = {
   ],
   M17: [
     { id: "p-conics", label: "Parabolas & conics", objective: "Student graphs parabolas by vertex and matches equations to graphs", grade: "Grade 11", stars: 3, range: [1, 12], multiFormat: true, pool: () => pcConics(), example: { problem: "What is the vertex of y = (x + 1)² + 3?", steps: ["Vertex form: y = (x − h)² + k has its vertex at (h, k) and its axis of symmetry at x = h", "The bracket (x + 1) is (x − (−1)), so h = −1 — the OPPOSITE sign of what you see; k = +3 is read as written", "Vertex (−1, 3): type it as -1,3. Axis of symmetry: x = -1", "On a graph, y = x² + 2 is the plain parabola lifted to vertex (0, 2)"], answer: "-1,3" } },
-    { id: "p-anth", label: "Arithmetic sequences", objective: "Student finds the nth term", grade: "Grade 10-11", stars: 3, range: [13, 28], multiFormat: true, pool: () => diversify(pcArithNth()), example: { problem: "First term 3, common difference 2. Find term 5", steps: ["Term 5 is 4 JUMPS after term 1", "Each jump adds the common difference 2: 4 × 2 = 8", "Term 5 = 3 + 8 = 11"], answer: "11" } },
+    { id: "p-anth", label: "Arithmetic sequences", objective: "Student finds the nth term", grade: "Grade 10-11", stars: 3, range: [13, 28], multiFormat: true, pool: () => diversify(pcArithNth()), example: { problem: "First term 3, common difference 2. Find term 5", steps: ["Term 5 is 4 JUMPS after term 1", "Each jump adds the common difference 2: 4 × 2 = 8", "Term 5 = 3 + 8 = 11", "Reading a list instead: 1, 3, 5, … — each term is 2 more than the one before, so the common difference is 2 (subtract any term from the next)"], answer: "11" } },
     { id: "p-asum", label: "Arithmetic series", objective: "Student sums an arithmetic series", grade: "Grade 11", stars: 4, range: [29, 44], multiFormat: true, pool: () => withReview(diversify(pcArithSum()), pcArithNth), example: { problem: "Sum of the first 4 terms: first term 2, common difference 3", steps: ["Sum formula: (number of terms ÷ 2) × (first + last)", "Last term = 2 + 3×3 = 11, so first + last = 2 + 11 = 13", "Sum = 4/2 × 13 = 26"], answer: "26" } },
-    { id: "p-geo", label: "Geometric sequences", objective: "Student finds a geometric term", grade: "Grade 11", stars: 4, range: [45, 58], multiFormat: true, pool: () => withReview(diversify(pcGeoNth()), pcArithSum), example: { problem: "First term 2, ratio 3. Find term 3", steps: ["Geometric: each term MULTIPLIES by the ratio", "Term 3 is 2 jumps after term 1: multiply by 3 twice → 3² = 9", "Term 3 = 2 × 9 = 18"], answer: "18" } },
+    { id: "p-geo", label: "Geometric sequences", objective: "Student finds a geometric term", grade: "Grade 11", stars: 4, range: [45, 58], multiFormat: true, pool: () => withReview(diversify(pcGeoNth()), pcArithSum), example: { problem: "First term 2, ratio 3. Find term 3", steps: ["Geometric: each term MULTIPLIES by the ratio", "Term 3 is 2 jumps after term 1: multiply by 3 twice → 3² = 9", "Term 3 = 2 × 9 = 18", "Reading a list instead: 1, 2, 4, … — each term is the one before × 2, so the ratio is 2 (divide any term by the one before it)"], answer: "18" } },
     { id: "p-limpoly", label: "Limits of polynomials", objective: "Student evaluates limits by substitution", grade: "Grade 12", stars: 4, range: [59, 72], multiFormat: true, pool: () => withReview(diversify(pcLimitPoly()), pcGeoNth), example: { problem: "lim(x→2) (x² + 3x + 1)", steps: ["Polynomials are smooth — the limit is just the value", "Substitute x = 2: (2)² + 3(2) + 1", "4 + 6 + 1 = 11"], answer: "11" } },
     { id: "p-limfac", label: "Limits by factoring", objective: "Student resolves 0/0 limits", grade: "Grade 12", stars: 5, range: [73, 86], multiFormat: true, pool: () => withReview(diversify(pcLimitFactor()), pcLimitPoly), example: { problem: "lim(x→3) (x² - 9)/(x - 3)", steps: ["Try substituting x = 3: (9 − 9)/(3 − 3) = 0/0 — not a number, so simplify first", "Factor the top (difference of squares): x² − 9 = (x − 3)(x + 3)", "Cancel the common factor (x − 3) top and bottom, leaving x + 3", "Now substitute: 3 + 3 = 6"], answer: "6" } },
     { id: "p-vec", label: "Vectors", objective: "Student finds vector magnitude and sums", grade: "Grade 12", stars: 5, range: [87, 100], multiFormat: true, pool: () => withReview(diversify([...pcVectorMag(), ...pcVectorAdd()]), pcLimitFactor), example: { problem: "Magnitude of (3, 4)", steps: ["A vector (x, y) has two components: x across, y up. Magnitude = its length (Pythagorean theorem)", "|v| = √(3² + 4²) = √(9 + 16) = √25 = 5", "To ADD vectors, add matching components: (1, 2) + (3, 1) = (1 + 3, 2 + 1) = (4, 3) — the x-component of the sum is 4", "Type a vector with brackets and a comma: (4, 3)"], answer: "5" } },
   ],
   M18: [
-    { id: "c-dpow", label: "Power rule", objective: "Student differentiates xⁿ", grade: "Grade 12", stars: 3, range: [1, 16], multiFormat: true, pool: () => caDerivPower(), example: { problem: "d/dx x³", steps: ["d/dx means: how fast the function changes — its slope at each x", "Power rule: the exponent comes DOWN in front as a multiplier, then drops by 1: d/dx x³ = 3x²", "The exponent-1 case: d/dx x = 1·x⁰ = 1 (a straight line with slope 1)", "A constant never changes, so its slope is 0: d/dx 7 = 0"], answer: "3x²" } },
-    { id: "c-dmono", label: "Differentiate monomials", objective: "Student differentiates axⁿ", grade: "Grade 12", stars: 4, range: [17, 36], multiFormat: true, pool: () => withReview(caDerivMono(), caDerivPower), example: { problem: "d/dx 3x²", steps: ["Multiply the coefficient by the exponent: 3 × 2 = 6", "Reduce the exponent by 1: x² → x¹", "d/dx 3x² = 6x"], answer: "6x" } },
+    { id: "c-dpow", label: "Power rule", objective: "Student differentiates xⁿ", grade: "Grade 12", stars: 3, range: [1, 16], multiFormat: true, pool: () => caDerivPower(), example: { problem: "d/dx x³", steps: ["d/dx means: how fast the function changes — its slope at each x", "Power rule: the exponent comes DOWN in front as a multiplier, then drops by 1: d/dx x³ = 3x²", "The exponent-1 case: d/dx x = 1·x⁰ = 1 (a straight line with slope 1)", "A constant never changes, so its slope is 0: d/dx 7 = 0", "Going BACKWARDS ('which function has derivative 6x⁵?'): differentiate each candidate and keep the one that gives 6x⁵ — d/dx x⁶ = 6x⁵ ✓"], answer: "3x²" } },
+    { id: "c-dmono", label: "Differentiate monomials", objective: "Student differentiates axⁿ", grade: "Grade 12", stars: 4, range: [17, 36], multiFormat: true, pool: () => withReview(caDerivMono(), caDerivPower), example: { problem: "d/dx 3x²", steps: ["Multiply the coefficient by the exponent: 3 × 2 = 6", "Reduce the exponent by 1: x² → x¹", "d/dx 3x² = 6x", "Going BACKWARDS ('which function has derivative 12x?'): differentiate each candidate and keep the one that works — d/dx 6x² = 12x ✓, but d/dx 12x² = 24x ✗"], answer: "6x" } },
     { id: "c-deval", label: "Evaluate a derivative", objective: "Student evaluates f'(x) at a point", grade: "Grade 12", stars: 4, range: [37, 56], multiFormat: true, pool: () => withReview(diversify(caDerivEval()), caDerivMono), example: { problem: "f(x) = x² + 2x + 1. Find f'(3)", steps: ["Differentiate term by term: x² → 2x, 2x → 2, and the constant 1 → 0 (a constant never changes)", "So f'(x) = 2x + 2", "Now substitute x = 3: f'(3) = 2(3) + 2 = 8", "f'(3) is the slope of the tangent line to the curve at x = 3 — 'slope of the tangent at x = a' means f'(a)"], answer: "8" } },
     { id: "c-ipow", label: "Integrate powers", objective: "Student integrates xⁿ", grade: "Grade 12", stars: 4, range: [57, 76], multiFormat: true, pool: () => withReview(caIntegralPower(), caDerivMono), example: { problem: "∫ x² dx", steps: ["∫ means integrate — UNDO differentiation. An antiderivative of x² is a function whose derivative is x²", "Raise the power by one: 2 → 3, then divide by the new power: x³/3", "Check by differentiating: d/dx (x³/3) = 3x²/3 = x² ✓ — so x³ is an antiderivative of 3x²", "Add + C: any constant differentiates to 0, so one could have been there. Type the answer as x³/3 + C"], answer: "x³/3 + C" } },
     { id: "c-idef", label: "Definite integrals", objective: "Student evaluates a definite integral", grade: "Grade 12", stars: 5, range: [77, 90], multiFormat: true, pool: () => withReview(diversify(caIntegralDef()), caIntegralPower), example: { problem: "∫₀^4 x dx", steps: ["Integrate first: an antiderivative of x is x²/2 (no + C needed — it cancels)", "Top limit minus bottom limit: F(4) − F(0) = 4²/2 − 0²/2 = 16/2 − 0 = 8", "The answer is the AREA under y = x between x = 0 and x = 4", "A coefficient rides along: ∫₀² 2x dx = [x²] from 0 to 2 = 2² − 0² = 4"], answer: "8" } },
@@ -1535,7 +1575,7 @@ const BIGIDEA: Record<string, string> = {
   "t-ident": "sin²θ + cos²θ = 1 for every angle, so knowing one of sin or cos gives the other; then tan θ = sin θ ÷ cos θ.",
   // M16
   "a-endbehav": "Far out, only the leading term matters. Even degree: both ends go the same way (up if the lead is +). Odd degree: the ends go opposite ways (right end up if the lead is +).",
-  "a-yint": "The y-intercept is f(0): every x-term vanishes, leaving the constant term.",
+  "a-yint": "The y-intercept is f(0): every x-term vanishes, leaving the constant term (no constant written → 0).",
   "a-xint": "In factored form each factor gives a root: (x − r) → x = r, and a root r comes from the factor (x − r) — the sign flips.",
   "a-mult": "Even multiplicity → the graph bounces (touches) the x-axis; odd multiplicity → it crosses.",
   "a-turning": "A degree-n polynomial has AT MOST n − 1 turning points (a degree-2 parabola always has exactly one).",

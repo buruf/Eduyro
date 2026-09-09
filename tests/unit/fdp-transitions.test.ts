@@ -2,7 +2,7 @@
 // M7 (fractions · decimals · percents) lesson boundaries — the majors from the
 // Sep 2026 transition audit. Each test pins what a child meets on the OPENING
 // sheet of a unit (the day its micro-lesson fires) so the fixes cannot drift.
-import { generateFdpSheet, validateFdpPack, getFdpMicroLesson } from "@/lib/shop/fdp-engine";
+import { generateFdpSheet, validateFdpPack, getFdpMicroLesson, fdpUnits } from "@/lib/shop/fdp-engine";
 
 const sheet = (n: number) => generateFdpSheet(n, 100, 30);
 const qs = (n: number) => sheet(n).problems.map((p) => String(p.question));
@@ -213,5 +213,51 @@ describe("Percents (sheets 79, 83, 87)", () => {
     const steps = getFdpMicroLesson("Percent of a number")!.example.steps.join(" ");
     expect(steps).toMatch(/75% = 3\/4/);
     expect(steps).toMatch(/20% = 1\/5/);
+  });
+});
+
+// ── Minors pass (Sep 9 2026) ─────────────────────────────────────────────────
+describe("M7 minors: every unit carries a real big idea and a method, not a restated answer", () => {
+  it("no M7 unit falls back to its goal as the big idea; every example has ≥3 steps", () => {
+    for (const u of fdpUnits()) {
+      const l = getFdpMicroLesson(u.label)!;
+      expect(l).not.toBeNull();
+      expect(l.bigIdea).not.toBe(l.goal);
+      expect(l.example.steps.length).toBeGreaterThanOrEqual(3);
+    }
+  });
+});
+
+describe("Part of a whole (sheet 1) vs Writing fractions from pictures (sheet 4)", () => {
+  it("lesson 4 is grids only, lesson 1 is single shapes, and the two sheets share no picture", () => {
+    const s1 = qs(1), s4 = qs(4);
+    expect(s4.every((q) => /^\[\[viz grid \d+ \d+\]\]$/.test(q))).toBe(true);
+    expect(s1.every((q) => !q.startsWith("[[viz grid"))).toBe(true);
+    expect(s4.filter((q) => s1.includes(q))).toEqual([]);
+  });
+  it("every lesson-4 grid is a clean rectangle the child can count as rows × columns", () => {
+    for (const q of qs(4)) {
+      const [, n, d] = q.match(/\[\[viz grid (\d+) (\d+)\]\]/)!.map(Number);
+      const cols = Math.ceil(Math.sqrt(d));
+      expect(d % cols).toBe(0);
+      expect(n).toBeLessThan(d);
+    }
+  });
+  it("lesson 4's example is a small grid with shaded-over-total steps, not a 100-square ÷", () => {
+    const ex = getFdpMicroLesson("Writing fractions from pictures")!.example;
+    expect(ex.problem).toBe("[[viz grid 5 12]]");
+    expect(ex.answer).toBe("\\frac{5}{12}");
+    expect(ex.steps.join(" ")).toMatch(/4 × 3 = 12/);
+    expect(ex.steps.join(" ")).not.toMatch(/÷/);
+  });
+});
+
+describe("Divide decimals (sheet 73) lesson", () => {
+  it("teaches the cover-the-point method, the place count, a check and the whole-number case", () => {
+    const steps = getFdpMicroLesson("Divide decimals")!.example.steps.join(" ");
+    expect(steps).toMatch(/12 ÷ 3 = 4/);
+    expect(steps).toMatch(/ONE digit after the point/);
+    expect(steps).toMatch(/0\.4 × 3 = 1\.2/);
+    expect(steps).toMatch(/2 or 2\.0/);
   });
 });

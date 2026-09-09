@@ -9,7 +9,7 @@ import { uploadToS3, getSignedDownloadUrl } from "@/lib/pdf/generator";
 import { writeFileSync, existsSync, mkdirSync, statSync } from "fs";
 import { join } from "path";
 
-const CACHE_VERSION = "v120"; // v120: second transition pass - 62 majors fixed across M2-M18 (opening sheets serve only the taught shape, worked examples cover every case the sheet asks, same-template distractors).
+const CACHE_VERSION = "v121"; // v121: third transition pass - 73 minors addressed (review sheets mix every lesson type, one format per fact per sheet, same-value distractors, input forms stated).
 const CACHE_PREFIX  = `shop-packs/${CACHE_VERSION}`;
 const SAMPLE_PREFIX = `shop-samples/${CACHE_VERSION}`;
 

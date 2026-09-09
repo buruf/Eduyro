@@ -126,3 +126,96 @@ describe("M6 division", () => {
     for (const p of generateArithmeticSheet("DIVISION" as any, 93, 100, 30).problems) expect(String(p.answer)).toMatch(/^\d+( r \d+)?$/);
   });
 });
+
+// ── Minors pass (transition audit, M1–M6) ────────────────────────────────────
+describe("M1 mixed review reviews all five shapes", () => {
+  it("sheet 93 holds after, before, missing, continue and greater/less, and the lesson previews them", () => {
+    const qs = early("M1", 93);
+    const shape = (q: string) => /after/.test(q) ? "after" : /before/.test(q) ? "before" : /greater/.test(q) ? "greater" : /less/.test(q) ? "less" : /^\d+, ___, \d+$/.test(q) ? "missing" : "continue";
+    const counts: Record<string, number> = {};
+    for (const q of qs) counts[shape(q)] = (counts[shape(q)] ?? 0) + 1;
+    for (const s of ["after", "before", "greater", "less", "missing", "continue"]) expect(counts[s] ?? 0).toBeGreaterThanOrEqual(3);
+    expect(Math.max(...Object.values(counts))).toBeLessThanOrEqual(12);
+    const steps = getEarlyMathMicroLesson("Counting — mixed review")!.example.steps.join(" ");
+    expect(steps).toMatch(/before/); expect(steps).toMatch(/greater/); expect(steps).toMatch(/___/);
+  });
+});
+
+describe("one fact, one format per sheet", () => {
+  it("no M3–M6 sheet asks a fact typed and as multiple choice", () => {
+    for (const skill of ["ADDITION", "SUBTRACTION", "MULTIPLICATION", "DIVISION"]) {
+      for (let n = 1; n <= 100; n++) {
+        const facts = arith(skill, n).map((q) => q.replace(/ = \?$/, ""));
+        expect(new Set(facts).size).toBe(facts.length);
+      }
+    }
+  });
+});
+
+describe("M3 minors", () => {
+  it("doubles open with 1+1 … 9+9; 10+10 and up wait for the second sheet", () => {
+    expect(arith("ADDITION", 6).some((q) => /^(10|11|12) \+ (10|11|12)/.test(q))).toBe(false);
+    expect([...arith("ADDITION", 7), ...arith("ADDITION", 8)].some((q) => /^(10|11|12) \+ (10|11|12)/.test(q))).toBe(true);
+    const steps = getArithmeticMicroLesson("Doubles (1+1 … 9+9)", "M3")!.example.steps;
+    expect(steps.some((s) => /5 \+ 5 = 10/.test(s))).toBe(true);
+    expect(steps).not.toContain("Double 6 is 12");
+  });
+
+  it("fact families open on the sums of the title and the lesson counts up (no subtraction yet)", () => {
+    const ex = getArithmeticMicroLesson("Fact families to 18", "M3")!.example;
+    expect(ex.steps.join(" ")).not.toMatch(/\d+ - \d+/);
+    expect(ex.steps.join(" ")).toMatch(/count up/i);
+    const sums = arith("ADDITION", 21).map((q) => { const m = /^(\d+) \+ (\d+)$/.exec(q); if (m) return Number(m[1]) + Number(m[2]); const mm = /^\d+ \+ ___ = (\d+)$/.exec(q); return mm ? Number(mm[1]) : null; }).filter((s): s is number => s !== null);
+    expect(sums.filter((s) => s >= 10).length).toBeGreaterThan(sums.length / 2);
+  });
+
+  it("2-digit lessons teach the missing-number shape and the write-0-carry-1 case", () => {
+    expect(getArithmeticMicroLesson("2-digit addition (no regrouping)", "M3")!.example.steps.join(" ")).toMatch(/___ \+ 14 = 25/);
+    expect(getArithmeticMicroLesson("2-digit addition (regrouping)", "M3")!.example.steps.join(" ")).toMatch(/write 0, carry 1/);
+  });
+});
+
+describe("M4 minors", () => {
+  it("halves lesson shows a near-half", () => {
+    expect(getArithmeticMicroLesson("Halving & near-halves (using doubles)", "M4")!.example.steps.join(" ")).toMatch(/13 - 6/);
+  });
+
+  it("fact families practise the add form of the family", () => {
+    expect(arith("SUBTRACTION", 33).filter((q) => /^\d+ \+ ___ = \d+$/.test(q)).length).toBeGreaterThanOrEqual(2);
+    expect(getArithmeticMicroLesson("Fact families to 18", "M4")!.example.steps.join(" ")).toMatch(/Count up/);
+  });
+
+  it("the mixed review opens mixed: 2-digit direct, 3-digit direct and missing numbers", () => {
+    const qs = arith("SUBTRACTION", 89);
+    expect(qs.filter((q) => /^\d{2} - \d+$/.test(q)).length).toBeGreaterThanOrEqual(3);
+    expect(qs.filter((q) => /^\d{3} - \d+$/.test(q)).length).toBeGreaterThanOrEqual(3);
+    expect(qs.filter((q) => /___/.test(q)).length).toBeGreaterThanOrEqual(3);
+    expect(qs.filter((q) => /___/.test(q)).length).toBeLessThan(qs.length * 0.8);
+    expect(getArithmeticMicroLesson("Missing number & mixed review", "M4")!.example.steps.join(" ")).toMatch(/taken away/);
+  });
+});
+
+describe("M5 minors", () => {
+  it("×3/×4 lesson shows a ×3 method too", () => {
+    expect(getArithmeticMicroLesson("×3 and ×4 (build from ×2)", "M5")!.example.steps.join(" ")).toMatch(/3 × 6/);
+  });
+
+  it("×6–×9 sheets review the ×3/×4 tables and squares only to ×10 (×11/×12 are taught later)", () => {
+    for (const n of [23, 24, 25, 30]) for (const q of arith("MULTIPLICATION", n)) {
+      const m = /^(\d+) × (\d+)/.exec(q);
+      if (!m) continue;
+      const a = Number(m[1]), b = Number(m[2]);
+      if (a === 3 || a === 4 || a === b) expect(b).toBeLessThanOrEqual(10);
+    }
+  });
+
+  it("carrying opens with the write-and-carry move and bare column items beside the scaffold", () => {
+    const first = [...arith("MULTIPLICATION", 69), ...arith("MULTIPLICATION", 70), ...arith("MULTIPLICATION", 71)];
+    expect(first.filter((q) => /→ write \d, carry$/.test(q)).length).toBeGreaterThanOrEqual(1);
+    expect(first.filter((q) => /^\d{2} × \d$/.test(q)).length).toBeGreaterThanOrEqual(3);
+    for (const p of generateArithmeticSheet("MULTIPLICATION" as any, 69, 100, 30).problems) {
+      const m = /^(\d{2}) × (\d)   Ones: \d × \d = (\d+) → write \d, carry$/.exec(String(p.question));
+      if (m) expect(Number(p.answer)).toBe(Math.floor(Number(m[3]) / 10));
+    }
+  });
+});

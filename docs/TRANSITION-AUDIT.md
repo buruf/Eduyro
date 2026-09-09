@@ -9,7 +9,7 @@
 | findings | 148 |
 | blockers (child cannot do the first sheet from the lesson alone) | 13 |
 | majors | 62 — all addressed in the second pass (Sep 9 2026): 57 fixed, 5 already resolved by 93dfc72 |
-| minors | 73 |
+| minors | 73 — all addressed in the third pass (Sep 9 2026); two need a unit reorder and are mitigated instead |
 
 ## Root causes found in the engine (fixed, now gated by `scripts/audit-transitions.ts`)
 
@@ -488,439 +488,439 @@
 ### Minors (73)
 
 #### M1:Counting back — what comes before → M1:Missing number in a sequence
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — count-on step and check present
 - Evidence: big idea: 'Fills the missing number between two numbers' (= goal). Worked example step: 'The number between 6 and 8 is 7'.
 - Why the child is lost: The only step restates the answer; no method (count on one from the first number, or check it is one before the last). Most children will still cope because they just finished counting on/back.
 - Suggested fix: Step should read 'Count on one from 6: 7. Check: 7 is one before 8.' Big idea: 'The middle number is one more than the first and one less than the last.'
 
 #### M1:Continue the count → M1:Counting — mixed review
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **fixed** — M1 review draws all six shapes (was 32 of 36 greater); example previews them
 - Evidence: Titled 'mixed review' but sheet 93 is 32 of 36 'Which is greater: 25 or 16?', with 1 'What number comes before 6?' and 3 'What number comes after 28?'; no 'Which is less', no missing-number, no continue-the-count. Worked example is a single 'What number comes after 28?'; lesson video: NONE.
 - Why the child is lost: Not a wall (all shapes were taught) but the review does not review: it is a second 'Which is greater' lesson, and the micro-lesson previews only one of the five shapes.
 - Suggested fix: Balance the mixed sheet across all five M1 shapes (roughly 7 each) and show one example per shape, or at least one 'greater/less' and one 'before/after' example.
 
 #### M2:Numbers after — to 100 → M2:Numbers before — to 100
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — tens method + crossing-ten case
 - Evidence: Worked example 'What number comes before 40? → 39' with the single step '40 → 39'. Sheet 15 includes the crossing-tens cases the lesson exists for: 'before 30 → 29', 'before 50 → 49', 'before 70 → 69', 'before 51 → 50', 'before 71 → 70'.
 - Why the child is lost: The step is the answer restated; the new idea (a round ten goes back to the previous ten's 9) is never said. Children who cleared M1 counting back to 57 will mostly manage, but the 40→39 and 30→29 cases are exactly where they stall.
 - Suggested fix: Step: 'One less than 4 tens is 3 tens and 9 ones: 39.' Add a second example crossing a ten (e.g. before 70 → 69).
 
 #### M2:Skip counting by 5 → M2:Skip counting by 10
-- **cliff** · open
+- **cliff** · **already resolved** — sheet 81 ≤ 150
 - Evidence: A tops out at '140, 145, 150, ___ → 155'. B: '___, 220, 230, 240 → 210', '240, 230, 220, ___ → 210', '230, 220, 210, ___ → 200'. Lesson example: '10, 20, 30, ___ → 40'.
 - Why the child is lost: Three-digit numbers above 160 and the 200s appear for the first time with no place-value support (place value taught only for tens/ones). Counting by ten is easy enough that most children ride the pattern, but the 190→200→210 boundary is untaught.
 - Suggested fix: First sheet in 0–150; include one example crossing 100 ('80, 90, 100, ___ → 110').
 
 #### M2:Skip counting by 10 → M2:Compare two-digit numbers
-- **untaught-shape** · open
+- **untaught-shape** · **already resolved** — same-tens step present
 - Evidence: Lesson: 'Which is greater: 35 or 53? → 53 — Compare tens: 5 tens > 3 tens'. Sheet 91 includes same-tens pairs: '66 or 62', '28 or 29', '87 or 83', '71 or 72', '38 or 30'.
 - Why the child is lost: The single rule taught ('compare tens') gives no answer when the tens are equal; the child needs 'then compare ones', which is never stated. Most fall back to M1 counting, so not a wall.
 - Suggested fix: Add a second step/example: 'If the tens are the same, compare the ones: 66 or 62 → 6 ones > 2 ones, so 66.'
 
 #### M2:Compare two-digit numbers → M3:Adding by counting on (+1, +2, +3)
-- **broken** · open
+- **broken** · **fixed** — one format per fact per sheet across M3–M6; validateArithmetic flags fact-in-two-formats
 - Evidence: Sheet 1 repeats the same fact as typed and multiple-choice: '4 + 2' and '4 + 2 = ? [5|7|6|8]', '3 + 3' and '3 + 3 = ? [5|6|7|8]', '1 + 2' twice, '2 + 1' twice, '5 + 1' twice. Same pattern on the Doubles first sheet ('9 + 9', '6 + 6', '3 + 3' each twice) and the Adding-zero first sheet ('3 + 3', '6 + 6' twice).
 - Why the child is lost: Not a wall, but 5 of 30 questions are duplicates so the sheet measures 25 distinct facts; the uniqueness guard does not treat arithmetic and MC variants of one fact as the same item.
 - Suggested fix: Dedupe by fact (a, b) across formats when building a sheet.
 
 #### M3:Adding by counting on (+1, +2, +3) → M3:Doubles (1+1 … 9+9)
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **fixed** — 10+10..12+12 late; two doubles methods replace the restated step
 - Evidence: Lesson: '6 + 6 = → 12 — Double 6 is 12' (step restates the answer). Sheet 6 asks '7 + ___ = 14', '9 + ___ = 18', '8 + ___ = 16', '10 + ___ = 20', '6 + ___ = 12' (missing-addend doubles, not shown) and '10 + 10 → 20' (outside the 1+1…9+9 title). The lesson's last sheet (seen in the next transition's A) goes to '12 + 12 → 24' and '11 + ___ = 22'.
 - Why the child is lost: Doubles are a recall fact, so children largely cope, but the only step gives no way to derive a double (e.g. 6+6 as 5+5+2, or fingers/dice), and a third of the sheet is the missing-addend shape the lesson never shows.
 - Suggested fix: Step: 'Think 5 + 5 = 10, then 2 more: 12', or a dot-pair picture. Keep the first sheet to plain doubles 1+1…9+9; introduce '7 + ___ = 14' on sheet 2+.
 
 #### M3:Adding zero & turnarounds → M3:Near-doubles (use the double you know)
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — sheet 12 is near-doubles only
 - Evidence: Lesson: '6 + 7 = → 13 — 6 + 6 = 12, 12 + 1 = 13'. Sheet 12's near-doubles are all tiny: '5 + 4', '3 + 4', '4 + 3', '4 + 5', '2 + 1', '1 + 2', '3 + 2', '2 + 3'; the rest is '1 + ___ = 2', '2 + ___ = 3', '0 + ___ = 2', '12 + ___ = 24', '11 + ___ = 22', '10 + 10'. A's last sheet was harder ('8 + 4 → 12', '5 + 6 → 11', '9 + ___ = 12').
 - Why the child is lost: No one is lost — the sheet is a step backwards from the previous day (sums to 9 after sums to 12), and the taught strategy is never needed because every item is countable on fingers. The strategy goes unpractised on day one.
 - Suggested fix: First near-doubles sheet should contain 5+6, 6+7, 7+8, 8+9 and their turnarounds, with missing addends like '6 + ___ = 13' only after the plain facts.
 
 #### M3:Make ten & bridging through 10 → M3:Fact families to 18
-- **prereq-gap** · open
+- **prereq-gap** · **fixed** — fact-family lesson counts up, no subtraction; unit facts are sums 10–18
 - Evidence: Lesson: '7 + ___ = 12 → 5 — 12 - 7 = 5'. Subtraction has never been taught (no '−' anywhere in M1–M3 before this). Sheet 21 has no subtraction and no sum above 9: '1 + 8', '6 + ___ = 8', '2 + ___ = 7', '5 + 3', '1 + 7'. A's last sheet was '8 + 9 → 17', '8 + ___ = 17', '8 + ___ = 15'.
 - Why the child is lost: The only method offered uses an untaught operation, so the lesson explains nothing to this child; luckily the sheet is a large step DOWN (sums to 9, which the child has been doing since lesson 1), so nobody is stuck — but 'fact families to 18' is not practised and the '−' symbol appears once with no introduction.
 - Suggested fix: Either teach the count-up method here ('7, then 8 9 10 11 12 — five jumps') or move this lesson after subtraction. Make the first sheet actually use sums 10–18 as the title says.
 
 #### M3:2-digit addition (no regrouping) → M3:2-digit addition (regrouping)
-- **untaught-shape** · open
+- **untaught-shape** · **fixed** — regroup example carries 25 + 25; no-regroup example teaches its missing-number shape
 - Evidence: Lesson: '37 + 45 — Ones: 7 + 5 = 12 → write 2, carry 1'. Sheet 45 (only 10 items) has three where the ones make exactly ten: '22 + 28 → 50', '37 + 13 → 50', '25 + 25 → 50'.
 - Why the child is lost: The 'write 0, carry 1' case is a known stumbling point (children write 10 or leave the ones blank) and is not modelled. Also, A's last sheet used '___ + 14 = 25' missing-addend items that the no-regroup lesson never taught.
 - Suggested fix: Add a second example with ones summing to exactly 10 ('25 + 25: 5 + 5 = 10 → write 0, carry 1'). Keep '___ + 14 = 25' out of the no-regroup lesson or teach it there.
 
 #### M4:Find the difference (count up) → M4:Halving & near-halves (using doubles)
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **fixed** — near-half steps added
 - Evidence: Goal: 'Subtracts using known doubles (12−6, 13−6)'. Worked example only shows the exact half '12 - 6 = 6 — 6 + 6 = 12'. Sheet has near-halves '11 - 5 → 6', '9 - 4 → 5', '9 - ___ = 5 → 4', '7 - 3 → 4' with no near-half step shown.
 - Why the child is lost: The child can still count back or count up (both taught), so not lost, but the lesson's own advertised near-half trick (13−6 = 12−6 + 1) is never demonstrated, so the sheet does not actually build the doubles strategy.
 - Suggested fix: Add a second step or example: '11 - 5: 10 - 5 = 5, and 11 is one more, so 6' (or '13 - 6: 12 - 6 = 6, one more → 7').
 
 #### M4:Bridging down through 10 → M4:Fact families to 18
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **fixed** — family add form on sheets; count-up family example
 - Evidence: Goal: 'Uses the add/subtract inverse and missing addends'. Worked example: '7 + ___ = 12 → 5 — 12 - 7 = 5'. Sheet 33 contains zero '+ ___' questions; it is 30 plain subtractions/missing subtrahends already covered ('6 - 4', '13 - 7', '2 - ___ = 1', '18 - 9 = ?').
 - Why the child is lost: Child is not lost (everything on the sheet was practised on earlier days), but the one thing the lesson teaches — a missing addend — never appears, so the fact-family idea is not exercised.
 - Suggested fix: Put missing-addend items ('7 + ___ = 12', '9 + ___ = 16') and paired triples (13 - 7 next to 7 + 6) on sheet 33.
 
 #### M4:3-digit subtraction (regrouping) → M4:Missing number & mixed review
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **fixed** — mixed review mixes 2-digit, 3-digit and missing shapes (was 30 identical)
 - Evidence: Goal: 'Solves for the unknown, reviewing every subtraction type'. Sheet 89: all 30 are the same shape, 2-digit missing subtrahend: '40 - ___ = 23', '84 - ___ = 51', '54 - ___ = 53', '50 - ___ = 11'. No 3-digit, no direct subtraction, no facts.
 - Why the child is lost: Child can do it (this exact shape was already forced on them in the borrowing lesson), but a 'mixed review' that is 30 identical items reviews nothing, and the lesson step '45 - 18 = 27' never says WHY you subtract the two known numbers.
 - Suggested fix: Mix facts to 18, 2-digit direct, 3-digit direct and missing numbers on sheet 89; add one sentence to the lesson: 'The missing number is what is left after taking 18 from 45, so subtract.'
 
 #### M5:Square facts (n × n) → M5:×3 and ×4 (build from ×2)
-- **prereq-gap** · open
+- **prereq-gap** · **fixed** — ×3 method (double, then one more)
 - Evidence: Sheet 13 contains '12 × 12 → 144'. The squares sheets seen so far stop at '11 × 11'; ×12 is taught in lesson 7 ('×10, ×11, ×12').
 - Why the child is lost: A single fact the child has no way to know or derive appears in the middle of a ×3/×4 sheet; also the worked example shows only the ×4 double-double ('Double 7 is 14, double again: 28') and never a ×3 method, while 3× items are half the sheet ('3 × 6 = ?', '3 × ___ = 15').
 - Suggested fix: Drop 12 × 12 from sheet 13; add a ×3 step to the lesson ('3 × 6: double 6 is 12, one more 6 is 18').
 
 #### M5:×3 and ×4 (build from ×2) → M5:×6, ×7, ×8, ×9 (the hard facts)
-- **prereq-gap** · open
+- **prereq-gap** · **fixed** — review tables capped at ×10 on ×6–×9 sheets
 - Evidence: Sheet 23 contains '4 × 11 → 44' and '12 × 12 → 144'; ×11 and ×12 are lesson 7. Otherwise the sheet is well graded ('9 × 2', '6 × 3', '7 × 3', '8 × 4', '6 × 5') and the lesson's 5s-plus strategy fits.
 - Why the child is lost: Two stray facts from a later lesson; the child can skip-count 11 four times so it is not a wall, just out of order.
 - Suggested fix: Filter review items on ×6–×9 sheets to factors ≤ 10 until lesson 7 is cleared.
 
 #### M5:Break apart to multiply (no carrying) → M5:Carrying in multiplication
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **fixed (partly)** — write/carry scaffold items in the lesson language; bare items in the opening band
 - Evidence: Lesson teaches the column algorithm: '27 × 4: Ones: 7 × 4 = 28 → write 8, carry 2; Tens: 2 × 4 = 8 — multiply FIRST; THEN add the carry'. Sheet 69 is entirely break-apart: '6 × 2 = 12 and 10 × 2 = 20. So 16 × 2 = → 32', '16 × 5 Tens: 10 × 5 = → 50', '19 × 5 Ones first: 9 × 5 = → 45'. No item ever asks the child to write a digit and carry.
 - Why the child is lost: Child is not lost (yesterday's break-apart method solves every item), but the whole 'carry' procedure the lesson spent its one showing on is never practised, so it will not stick and the next lesson ('2-digit × 1-digit') assumes it.
 - Suggested fix: Either rename this lesson 'Break apart with regrouping' and teach break-apart, or put 3-4 genuine column items on sheet 69 ('27 × 4', '18 × 6') with the ones/tens scaffold matching the lesson.
 
 #### M5:Carrying in multiplication → M5:2-digit × 1-digit
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — sheet 79 genuine 2-digit × 1-digit
 - Evidence: Worked example '47 × 6 = 282' with carrying. Sheet 79 (10 items): 7 are single-digit missing factor ('5 × ___ = 25', '9 × ___ = 54', '2 × ___ = 16'); only 3 match the lesson ('14 × 6 → 84', '25 × 4 → 100', '23 × 7 → 161').
 - Why the child is lost: Not a wall, but 70% of the first sheet is review of a much earlier lesson, so the child gets three attempts at the new skill before the day 'clears'.
 - Suggested fix: Make sheet 79 at least 7 of 10 genuine 2-digit × 1-digit with carrying.
 
 #### M6:÷2, ÷5, ÷10 → M6:÷1 and dividing a number by itself
-- **untaught-shape** · open
+- **untaught-shape** · **already resolved** — ÷1 example present
 - Evidence: Worked example only: '8 ÷ 8 = 1 — A number divided by itself is 1'. Sheet 7 opens '1 ÷ 1', '5 ÷ 1 → 5', '3 ÷ 1', '2 ÷ 1', '4 ÷ 1' and has '4 ÷ ___ = 1 → 4', '3 ÷ ___ = 3 → 1'.
 - Why the child is lost: ÷1 is half the sheet and is only named in the goal, never shown; most children will get it by 'how many 1s in 5', but the lesson does not do its job.
 - Suggested fix: Add a second example: '5 ÷ 1 = 5 — sharing into groups of 1 gives 5 groups; any number ÷ 1 is itself.'
 
 #### M6:÷6, ÷7, ÷8, ÷9 → M6:Fact families & missing dividend
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — sheet 37 has missing-dividend items
 - Evidence: Worked example: '___ ÷ 6 = 7 → 42 — 6 × 7 = 42' (missing dividend). Sheet 37 (24 items) has zero '___ ÷' items; every question is direct ('20 ÷ 10', '24 ÷ 2', '15 ÷ 5') or missing divisor ('25 ÷ ___ = 5', '12 ÷ ___ = 4').
 - Why the child is lost: Child is not lost — the sheet is all already-practised shapes — but the missing-dividend shape the lesson introduces is never practised here and then appears cold on the level's Mixed review sheet ('___ ÷ 3 = 2', '___ ÷ 2 = 6').
 - Suggested fix: Put 8-10 missing-dividend items ('___ ÷ 6 = 7', '___ ÷ 4 = 5') on sheet 37.
 
 #### M6:Mixed review → M7:Part of a whole
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **fixed** — every M7 unit now carries a real big idea and a ≥3-step method
 - Evidence: goal: Names the fraction shaded in a picture / big idea: Names the fraction shaded in a picture. SYSTEMIC: all 31 micro-lessons in this level have big idea identical to goal (e.g. 'Compares decimals' / 'Compares decimals', 'Finds equivalent fractions' / 'Finds equivalent fractions').
 - Why the child is lost: The 'big idea' slot never carries an idea, so the only teaching a child gets is whatever the worked-example steps happen to say; where those steps are thin (see findings below) the lesson teaches nothing.
 - Suggested fix: Write a real big idea per lesson (here: 'The bottom number counts equal parts; the top number counts the shaded ones') and stop auto-copying the goal into the big-idea field.
 
 #### M7:Understanding the denominator → M7:Writing fractions from pictures
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **fixed** — lesson 1 draws single shapes, lesson 4 draws rectangular grids (rows × columns) — no reorder needed
 - Evidence: worked example: [[viz grid 30 100]] → 30/100, step 'Shaded ÷ total = 30/100'; sheet 4 is [[viz pie 1 6]] → 1/6, [[viz vbar 4 5]] → 4/5, [[viz penta 4 6]] → 4/6 ... — the identical pictures and answers as sheet 1 of 'Part of a whole'.
 - Why the child is lost: Not a wall, but the example uses a 100-square grid the child has never seen and the '÷' symbol (fraction-as-division is not yet taught), while the sheet is a straight repeat of lesson 1. Lessons 1 and 4 are the same task.
 - Suggested fix: Use a small-shape example (e.g. penta 4/6) with 'shaded over total', and either drop lesson 4 or make it genuinely new (e.g. fractions of a set / number line).
 
 #### M7:Compare fractions → M7:Order fractions
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — 6/12, 3/12, 8/12 written out in the steps
 - Evidence: worked example: '1/2, 1/4, 2/3 → 1/4 < 1/2 < 2/3' with the single step 'Common denominator 12'.
 - Why the child is lost: The step names the answer without showing it (6/12, 3/12, 8/12 never appear), so a child who did not fully own common denominators yesterday gets no second chance to see the method.
 - Suggested fix: Expand steps: '12 works for 2, 4 and 3 → 6/12, 3/12, 8/12 → smallest top first: 3/12 < 6/12 < 8/12'.
 
 #### M7:Mixed numbers → M7:Improper fractions
-- **untaught-shape** · open
+- **untaught-shape** · **already resolved** — improper-fraction prompts carry the instruction; no reducible parts
 - Evidence: Sheet 35 questions are bare mixed numbers with no instruction: '1 1/3 → 4/3', '1 2/4 → 6/4', whereas the previous lesson's questions read 'Write 3/2 as a mixed number.'
 - Why the child is lost: A question that is just '1 1/3' does not say what to do; a child could reasonably simplify, draw, or leave it. Only the micro-lesson seen once that morning tells them the target form.
 - Suggested fix: Prefix every question with 'Write 1 1/3 as an improper fraction.' Also accept 3/2 for '1 2/4' as well as 6/4.
 
 #### M7:Multiply fractions → M7:Divide fractions
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — 1/2 ÷ 2/3 → 3/4 example names the reciprocal
 - Evidence: worked example '1/2 ÷ 1/4 → 2; Flip and multiply: 1/2 × 4/1'. Sheet answers are mostly fractions, many improper: '2/4 ÷ 1/5 → 5/2', '2/5 ÷ 1/6 → 12/5', '3/4 ÷ 2/6 → 9/4', '4/5 ÷ 5/6 → 24/25'. Goal says 'using the reciprocal' but the word is never defined.
 - Why the child is lost: The example's whole-number answer hides the form the sheet actually wants (a simplified fraction, left improper). A child who writes 2 1/2 for 5/2 may be marked wrong; the step also never says 'then simplify' (needed for 3/4 ÷ 2/6 → 18/8 → 9/4).
 - Suggested fix: Use an example with a fractional result, e.g. '1/2 ÷ 2/3: flip 2/3 to 3/2 (its reciprocal), 1/2 × 3/2 = 3/4, simplify if needed', and grade by value.
 
 #### M7:Multiply decimals → M7:Divide decimals
-- **prereq-gap** · open
+- **prereq-gap** · **fixed** — dividend cap already banded; lesson now has cover-the-point / place / check / whole-number steps
 - Evidence: Sheet 73 ends with '10.4 ÷ 8 → 1.3', '12.8 ÷ 8 → 1.6' (last sheet: '10.8 ÷ 9 → 1.2', '12.6 ÷ 7 → 1.8'); also '8.0 ÷ 8 → 1' and '4.0 ÷ 2 → 2'.
 - Why the child is lost: Following the lesson ('12 ÷ 3 = 4, one decimal place') means computing 104 ÷ 8 and 128 ÷ 8 — three-digit dividends, beyond the M6 two-digit-with-remainder work shown ('38 ÷ 8 → 4 r 6'). Most children can still do it, and the rest of the sheet is fine. '8.0 ÷ 8 → 1' should also accept 1.0.
 - Suggested fix: Cap first-sheet dividends at two digits (max 9.9) and accept 1.0 / 2.0.
 
 #### M7:Decimal mastery → M7:Understand percent
-- **untaught-shape** · open
+- **untaught-shape** · **already resolved** — 25% = 25/100 step present
 - Evidence: Lesson: '[[viz grid 25 100]] → 25%; 25 of 100 squares'. Sheet: '15% → fraction of 100 → 15/100', '45% → fraction of 100 → 45/100' (7 of 14 are this reverse form).
 - Why the child is lost: The reverse direction (percent → fraction over 100) is not shown, though it is a short step and the phrase 'fraction of 100' gives the form away. Polish only.
 - Suggested fix: Add a second step to the example: 'so 25% = 25/100'.
 
 #### M7:Percent of a number → M7:Percent increase & decrease
-- **untaught-shape** · open
+- **untaught-shape** · **already resolved** — increase example 20 + 50% present
 - Evidence: Lesson shows a decrease only: '80 − 25% → 60; 25% of 80 = 20, 80 − 20 = 60'. Sheet has 17 increases: '20 + 50% → 30', '48 + 25% → 60', '60 + 20% → 72', '80 + 20% → 96'.
 - Why the child is lost: The '+' direction follows by analogy and most children will get it, but with 17 of 30 items being increases the lesson should show one. The notation '20 − 20%' is also nonstandard (reads as a subtraction of a percent) — fine only because the lesson uses the same notation.
 - Suggested fix: Add an increase example ('20 + 50%: 50% of 20 = 10, 20 + 10 = 30') or word items 'Increase 20 by 50%' / 'Decrease 80 by 25%'.
 
 #### M7:Percent mastery → M8:Decimals — add (tenths)
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — Unit.idea on all M8–M11 units; added to the seven M12 units touched
 - Evidence: goal: Adds decimals to one place / big idea: Adds decimals to one place. This is true of EVERY micro-lesson in M8, M9, M10 and M11 (e.g. M10 'goal: Solves one-step inequalities / big idea: Solves one-step inequalities').
 - Why the child is lost: The 'big idea' slot never carries an idea; it repeats the goal verbatim, so the child gets the method only from the single worked example. Not a wall on its own, but it removes the one place a rule could be stated.
 - Suggested fix: Write a real one-sentence big idea per lesson (e.g. 'Tenths add like whole numbers as long as the decimal points are lined up'). Systemic: fix the content field, not each lesson by hand.
 
 #### M7:Percent mastery → M8:Decimals — add (tenths)
-- **broken** · open
+- **broken** · **already resolved** — unordered pairs in enumDecAdd
 - Evidence: Sheet 1 contains '0.3 + 2.4 → 2.7' and '2.4 + 0.3 → 2.7', and '2.0 + 2.4 → 4.4' and '2.4 + 2.0 → 4.4'.
 - Why the child is lost: Not a wall; commutative near-duplicates waste 4 of 30 slots on the first day.
 - Suggested fix: Dedupe by unordered operand pair in the add generators.
 
 #### M8:Decimals — add (tenths) → M8:Decimals — add (hundredths)
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — trailing-zero step; grader numeric-equal
 - Evidence: Worked example: 0.25 + 0.36 → 0.61 ('25 + 36 = 61 hundredths'). Sheet 11: '0.03 + 0.27 → 0.3', '0.36 + 0.10 → 0.46', '0.05 + 0.11 → 0.16'.
 - Why the child is lost: Following the taught rule the child writes 3 + 27 = 30 hundredths = 0.30, but the key is 0.3. If the grader is string-based the correct answer 0.30 is marked wrong; the lesson never says trailing zeros may be dropped.
 - Suggested fix: Either accept 0.30 and 0.3 as equal (numeric compare) or add a step to the example ('0.30 is the same as 0.3'). Same issue on subtract (hundredths) sheet 31 ('0.18 - 0.08 → 0.1', '0.44 - 0.14 → 0.3', '0.48 - 0.38 → 0.1').
 
 #### M8:Decimals — subtract (tenths) → M8:Decimals — subtract (hundredths)
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — same
 - Evidence: Worked example 0.72 - 0.45 → 0.27 ('72 - 45 = 27 hundredths'). Sheet 31: '0.18 - 0.08 → 0.1', '0.44 - 0.14 → 0.3', '0.34 - 0.34 → 0'.
 - Why the child is lost: Same trailing-zero ambiguity as add (hundredths): the method yields 0.10 / 0.30 / 0.00 but the key shows 0.1 / 0.3 / 0.
 - Suggested fix: Numeric-equality grading for decimal answers, or avoid results ending in 0 on the first sheet.
 
 #### M8:Decimals — subtract (hundredths) → M8:Decimals — multiply by a whole number
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — x.0 × n items banded so 1.0 × 4 no longer opens the sheet
 - Evidence: Worked example: 0.6 × 4 → 2.4 ('6 × 4 = 24, one decimal place → 2.4'). Sheet 41 opens with '1.0 × 4 → 4', then '2.8 × 3 → 8.4', '4.7 × 3 → 14.1', '4.4 × 7 → 30.8'.
 - Why the child is lost: The example is a single digit times a single digit; 27 of 30 sheet items are a two-digit decimal (e.g. 4.7 → 47 × 3) and the very first item's answer is a whole number (4, not 4.0) which the 'one decimal place' rule doesn't produce.
 - Suggested fix: Use a two-digit example (2.8 × 3: 28 × 3 = 84 → 8.4) and note '4.0 = 4'; start the sheet with 0.6 × 6-type items before x.y × n.
 
 #### M8:Decimals — multiply by a whole number → M8:Decimals — multiply two decimals
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — 0.10 = 0.1 step present
 - Evidence: Worked example 0.3 × 0.4 → 0.12 ('two decimal places → 0.12'). Sheet 53: '0.5 × 0.2 → 0.1', '0.5 × 0.8 → 0.4', '0.4 × 1.5 → 0.6', '0.9 × 1.0 → 0.9'.
 - Why the child is lost: Applying the rule gives 0.10, 0.40, 0.60, 0.90; the key drops the zero. The '0.30 = 0.3' step exists only in the mixed-review example ten lessons later.
 - Suggested fix: Add the '0.10 = 0.1' step to this example (as the mixed-review example already does) and/or grade numerically.
 
 #### M8:Decimals — divide by a whole number → M8:Percentages of a number
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — 40% of 35 via the 10% method
 - Evidence: Worked example: 25% of 40 → 10 ('25% = 1/4, 40 ÷ 4 = 10'). Sheet 73: '40% of 35 → 14', '60% of 15 → 9', '5% of 40 → 2', '70% of 40 → 28', '90% of 50 → 45'.
 - Why the child is lost: The only method shown (convert to a unit fraction) does not work for 40%, 60%, 5%, 70%, 90%. The child survives only because M7 'Percent mastery' already drilled this (A shows '75% of 28 → 21'), so M8 lesson 8 is effectively a repeat of M7.
 - Suggested fix: Show the 10% method in the example ('10% of 35 = 3.5, so 40% = 4 × 3.5 = 14') or make the example 40% of 35 to match the sheet.
 
 #### M8:Percentages of a number → M8:Convert fractions, decimals, percents
-- **cliff** · open
+- **cliff** · **already resolved** — denominator bands + opening window
 - Evidence: A (last sheet): '80% of 55 → 44', '90% of 50 → 45'. B (first sheet): 'Write 7/8 as a decimal → 0.875', 'Write 0.125 as a percent → 12.5%'.
 - Why the child is lost: The child goes from whole-number percent answers to thousandths and fractional percents on day one; 7/8 requires dividing to three decimal places, which no decimal-division sheet (all one-place results, e.g. '9.6 ÷ 6 → 1.6') prepared.
 - Suggested fix: Keep sheet 85 to denominators 2, 4, 5, 10, 20; introduce eighths after a sheet or two.
 
 #### M8:Convert fractions, decimals, percents → M8:Decimals — mixed review
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **fixed** — mixed review now draws 3–4 of every lesson type per sheet (reviewPool)
 - Evidence: goal: Works fluently across all decimal operations. Sheet 95 (26 items): 20 are hundredths addition ('0.03 + 0.32', '0.30 + 0.06', …), 4 are two-decimal products, 2 are percents ('90% of 60', '25% of 92'). Zero subtraction, zero division, zero conversion.
 - Why the child is lost: Not a wall (it is easier than what came before), but the review does not review; a child weak on subtraction/division clears it untested.
 - Suggested fix: Stratify the review generator: at least 3 items from each of the 9 preceding lessons.
 
 #### M9:Ratios — solve a proportion → M9:Ratios — scale up
-- **cliff** · open
+- **cliff** · **not fixable without reorder — mitigated** — equivalent-ratios example now teaches scaling both parts before lessons 3–4 need it; M9 mixed review also rebalanced
 - Evidence: A: 'Find the missing number: 5 : 9 = ___ : 36 → 20' (find the scale, then multiply). B: 'Write an equivalent ratio: scale 3 : 4 by 2 → 6 : 8' (the scale is given).
 - Why the child is lost: Reverse cliff: 'scale up' is the prerequisite for 'equivalent ratios' and 'solve a proportion' yet comes after both. Nobody gets lost, but the sequence teaches the hard skill before the easy one.
 - Suggested fix: Reorder M9 to: simplify → scale up → equivalent ratios → solve a proportion → mixed review.
 
 #### M10:Expressions · Evaluate (×) → M10:Simplify · Combine like terms
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — 1x in example
 - Evidence: Worked example: '2x + 3x → 5x: Add coefficients: 2 + 3 = 5'. Sheet 26: 'Simplify 2x + x → 3x', 'Simplify x + 5x → 6x', 'Simplify 7x + x → 8x' (8 of 30 items).
 - Why the child is lost: The example never says a bare x means 1x; a child adding 'coefficients' sees none on x and may answer 2x or 7x.
 - Suggested fix: Add a second example line: 'x + 4x: x means 1x, so 1 + 4 = 5x'.
 
 #### M10:Simplify · Combine like terms → M10:Simplify · Distributive property
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — minus-inside in example
 - Evidence: Worked example: '3(x + 4) → 3x + 12'. Sheet 38 item 4: 'Expand 2(x - 2) → 2x - 4', plus 'Expand 3(x - 5) → 3x - 15', 'Expand 6(x - 5) → 6x - 30' (12 of 30 items subtract inside the bracket).
 - Why the child is lost: The minus case is not shown; children commonly write 2x + 4. Most will infer it, so minor.
 - Suggested fix: Add a second line to the example: '2(x − 5) → 2x − 10 (the sign stays with the number)'.
 
 #### M10:Simplify · Order of operations → M10:Equations · One-step (+/−)
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — add-to-both-sides in example
 - Evidence: Worked example: 'x + 5 = 12 → 7: Subtract 5 on BOTH sides'. Sheet 51 item 1: 'Solve for x: x - 3 = 2 → 5', also 'x - 14 = 2 → 16', 'x - 12 = 4 → 16' (12 of 30 are x − b = c).
 - Why the child is lost: The only move taught is 'subtract'; the first question needs 'add 3 to both sides'. A literal child subtracts 3 from 2 and, per the previous transition, cannot even compute that.
 - Suggested fix: Two-line example: 'x + 5 = 12 → subtract 5' and 'x − 3 = 2 → add 3 to BOTH sides → x = 5', or order sheet 51 so the first 8 items are all x + b = c.
 
 #### M10:Equations · Integer add & subtract → M10:Equations · One-step inequalities
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — > form in example
 - Evidence: Worked example: 'x + 3 < 8 → x < 5'. Sheet 77 item 3: 'Solve for x: x - 1 > 4 → x > 5'; 17 of 30 items are x − b > c.
 - Why the child is lost: Neither the '>' symbol nor the 'add to both sides' move appears in the example; the answer must be typed as an inequality ('x > 5'), a new answer shape shown only for '<'. Most children will manage from the one-step equations lesson, so minor.
 - Suggested fix: Two-line example covering both 'x + 3 < 8 → x < 5' and 'x − 2 > 6 → x > 8', with a note that the symbol is copied through.
 
 #### M10:Coordinate Plane · Plot points → M10:Coordinate Plane · Patterns & intro to slope
-- **untaught-shape** · open
+- **untaught-shape** · **already resolved** — step-question line and points in example
 - Evidence: Worked example: 'Find the next number: 2, 5, 8, 11, ___ → 14'. Sheet 93 item 3: 'Each step grows by the same amount (the "slope"). What is the step for: 1, 3, 5, 7? → 2' (9 of 19 items).
 - Why the child is lost: The 'what is the step' form is not in the example, but the question text explains itself, and the sequences are trivial. No connection is made to the coordinate plane despite the title, so the word 'slope' arrives with no graph behind it.
 - Suggested fix: Add a second example line for the step question and, ideally, show the pattern as points (1,2),(2,5),(3,8) on the grid the child just learned to plot on.
 
 #### M10:Coordinate Plane · Patterns & intro to slope → M11:Plot points on the coordinate plane
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **already resolved** — example bridges to where a line crosses the y-axis
 - Evidence: M11 lesson 1 micro-lesson ('Plot the point (3, 2) → From the origin, move right 3… Then move up 2') and sheet ('Plot the point (-3, -3)', 'Plot the y-intercept of the line y = x − 2 → 0,-2') are the same lesson as M10 lesson 11 'Coordinate Plane · Plot points' (sheet 81) with identical item types.
 - Why the child is lost: Nobody gets lost (they cleared it 2 days ago), but the first day of M11 is a repeat, and the y-intercept items are still untaught here (the M10 example never explained them either).
 - Suggested fix: Replace M11 lesson 1 with a genuine bridge: 'y-intercept and slope on the grid' (plot (0, b), then step up m right 1), which is exactly what 'Graph a line' needs the next day.
 
 #### M11:Plot points on the coordinate plane → M11:Graph a line
-- **untaught-shape** · open
+- **untaught-shape** · **already resolved** — builder banded after positive lines
 - Evidence: Sheet 5 item 22: 'What is the equation of the line shown? Build it with the slope and intercept. → 1,-3' (also appears on the last sheet of the lesson).
 - Why the child is lost: This is the reverse task (read slope and intercept off a drawn line) and is not in the micro-lesson; it is one item so it will not fail the day, but the child meets it cold.
 - Suggested fix: Either drop it from sheet 5 or add an example line 'reading a line: where it crosses the y-axis is b; count up/right for m'.
 
 #### M11:Equations with distribution → M11:Variables on both sides
-- **broken** · open
+- **broken** · **already resolved** — term() renders x, never 1x
 - Evidence: 'Solve for x: 5x + 1 = 1x + 5', '3x + 5 = 1x + 15', '6x + 4 = 1x + 24', '4x + 9 = 1x + 36' (and on the last sheet '7x + 7 = 1x + 49').
 - Why the child is lost: '1x' is never written in mathematics and never appears in any lesson; it reads as a rendering bug and confuses a child who was told bare x means 1x.
 - Suggested fix: Format coefficient 1 as 'x' in the equation renderer.
 
 #### M11:Equations with a fraction → M11:Linear equations — mixed review
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **fixed** — mixed review serves 6 of each equation type per sheet
 - Evidence: goal: Solves linear equations of every type. Sheet 87 (30 items): 29 are two-step ax ± b = c, 1 is distribution ('3(x + 5) = 18'); zero variables-on-both-sides, zero x/d = q, zero graphing.
 - Why the child is lost: Not a wall; the review is a two-step drill and never re-tests the harder lessons 7–8 just completed.
 - Suggested fix: Stratify the review across all equation types (at least 3 items each of distribution, both-sides, fraction).
 
 #### M12:Write in standard form → M12:Leading coefficient
-- **untaught-shape** · open
+- **untaught-shape** · **fixed** — negative leading coefficients banded after positive; example and directive say the sign is included
 - Evidence: Micro-lesson example is '4x³ + x - 7 → 4'. First sheet item 6: 'What is the leading coefficient of -3x² + x + 7? → -3' (9 of 24 items negative).
 - Why the child is lost: Negative leading coefficients are never shown; some students will answer 3.
 - Suggested fix: Add a second example with a negative leading term.
 
 #### M12:Evaluate polynomials → M12:Combine like terms (x²)
-- **untaught-shape** · open
+- **untaught-shape** · **fixed** — subtraction banded after sums; example teaches bare x² = 1x² and the typed form x²
 - Evidence: Micro-lesson: '3x² + 2x² → 5x² — Add coefficients'. Sheet item 4: 'Simplify 3x² - 2x² → x²', item 10: 'Simplify 6x² - x² → 5x²'.
 - Why the child is lost: Subtraction and the implicit coefficient 1 (x² not 1x²) are not shown; the grader may or may not accept '1x²'.
 - Suggested fix: Add 'x² means 1x²' and one subtraction step; accept 1x².
 
 #### M12:Multiply monomials → M12:Distribute a monomial
-- **untaught-shape** · open
+- **untaught-shape** · **fixed** — minus-inside items banded; example adds 2x(x − 1) = 2x² − 2x
 - Evidence: Micro-lesson: '2x(x + 3) → 2x² + 6x'. Sheet item 1: 'Expand 2x(x - 1) → 2x² - 2x'.
 - Why the child is lost: The very first item has a minus inside the bracket, which the example never shows.
 - Suggested fix: Start the sheet with plus items or add a minus example.
 
 #### M12:Distribute a monomial → M12:Multiply binomials (FOIL)
-- **lesson-mismatch** · open
+- **lesson-mismatch** · **fixed** — Outer/Inner steps and the new-step callout vs distribution
 - Evidence: Worked example steps: 'First x·x = x²; Outer+Inner = 5x; Last 2·3 = 6'.
 - Why the child is lost: The middle step just states the answer 5x without showing 3x + 2x, which is the whole new idea versus yesterday's distribution.
 - Suggested fix: Write 'Outer x·3 = 3x, Inner 2·x = 2x, together 5x'.
 
 #### M12:Multiply binomials (FOIL) → M12:Partial products (box method)
-- **untaught-shape** · open
+- **untaught-shape** · **fixed** — box example describes the 2×2 grid in AreaModelInput order and ties back to FOIL
 - Evidence: Sheet: 'Fill in the area model for (x + 2)(x + 2) → x²,2x,2x,4' (interactive grid). Worked example is a bulleted list, not a box, and lists x·3 before 2·x while the key order is x²,2x,3x,6.
 - Why the child is lost: The student has never seen the box layout and must infer which cell is which; the lesson also goes backwards (they already FOIL these exact products).
 - Suggested fix: Show the 2×2 box in the worked example with labelled rows/columns, or fold this into the FOIL lesson.
 
 #### M12:Factor out the GCF → M12:Factor quadratic trinomials
-- **untaught-shape** · open
+- **untaught-shape** · **fixed** — typed factorizations practised before the a ≠ 1 lesson; directive states both input forms
 - Evidence: Sheet: 'Select all the factors of x² + 5x + 6. [options: (x + 2) | (x + 1) | (x + 3) | (x + 4)] → (x + 2),(x + 3)' — a select-two multiple choice; the worked example produces a typed product.
 - Why the child is lost: Multi-select is a new interaction (pick exactly two), and because the whole lesson is select-only the student never types a factorization before the a ≠ 1 lesson demands it.
 - Suggested fix: Make sheets 77–78 typed 'Factor x² + 5x + 6' so the input form is practised before lesson 20.
 
 #### M12:Difference of squares → M12:Perfect-square trinomials
-- **untaught-shape** · open
+- **untaught-shape** · **fixed** — minus case and (2x + 3)² in example; gcd-free (ax ± b)² items added; input form stated
 - Evidence: Micro-lesson: 'x² + 6x + 9 → (x + 3)²'. Sheet item 2: 'Factor x² - 2x + 1 → (x - 1)²' (half the sheet is the minus form). Key uses the ² notation.
 - Why the child is lost: The minus pattern and how to type '(x − 1)²' are not shown; a student who types (x - 1)(x - 1) may be rejected.
 - Suggested fix: Add a minus example and accept (a − b)(a − b) as equivalent.
 
 #### M13:Perfect squares & square roots → M13:Solve x² = k (perfect squares)
-- **untaught-shape** · open
+- **untaught-shape** · **fixed** — scaffolded x = ±___ leads the opening sheet; example shows both roots and the ± input form
 - Evidence: Sheet item 1: 'Solve x² = 1 → ±1' (typed).
 - Why the child is lost: The lesson never says how to enter '±' on a keyboard/number pad; the scaffolded variants (x = ±___) exist but the typed ± form comes first.
 - Suggested fix: Put the 'Fill in the missing value: x = ±___' item first, and show the accepted input ('type +-1 or 1,-1') in the lesson.
 
 #### M13:Solve x² = k (perfect squares) → M13:Larger, estimate & simplify roots
-- **cliff** · open
+- **cliff** · **fixed** — method (biggest perfect square that divides in), √12 = 2√3 example, input form 5√2
 - Evidence: A: 'Solve x² = 144 → ±12'. B item 1: 'Simplify the square root of 8 → 2√2' (typed with √), item 4: 'Which is larger: the square root of 26 or the square root of 37?'. Lesson: one example '50 = 25 × 2; √25 × √2 = 5√2'.
 - Why the child is lost: Simplifying radicals (finding the largest square factor, writing a√b) is a genuinely new concept given a single example, and how to type '2√2' is unstated.
 - Suggested fix: Add a second example (√12 = √4·√3 = 2√3) with the 'find the biggest perfect square inside' hint, and state the accepted input form.
 
 #### M13:Larger, estimate & simplify roots → M13:Zero-product property
-- **untaught-shape** · open
+- **untaught-shape** · **fixed** — repeated-factor items banded; example states comma format, smaller first
 - Evidence: Sheet item 1: 'Solve (x - 1)(x - 1) = 0 → 1'; item 4: 'Solve (x - 1)(x - 2) = 0 → 1, 2' (typed comma list). Lesson example has two distinct roots.
 - Why the child is lost: The repeated-factor case (answer is a single number) is the first item and is unshown; the comma-separated input form is unstated.
 - Suggested fix: Start with distinct roots; mention 'if both factors are the same, there is one answer'.
 
 #### M13:Evaluate & axis of symmetry → M14:Evaluate f(x) = mx + b
-- **broken** · open
+- **broken** · **already resolved** — parab:a,h,k options are drawn as curves by GraphChoice
 - Evidence: A (last M13 sheet): 'Which graph matches y = x² + 2? [options: parab:1,0,-2 | parab:1,-1,3 | parab:1,-2,0 | parab:1,0,2] → parab:1,0,2'.
 - Why the child is lost: If these option codes are not rendered as graphs client-side, the student sees raw 'parab:1,0,2' strings; verify rendering.
 - Suggested fix: Confirm the multiple-choice renderer draws the parabola for 'parab:a,h,k' options; otherwise replace with drawn options.
 
 #### M14:Evaluate a quadratic function → M14:Composition of functions
-- **broken** · open
+- **broken** · **fixed** — numeric distractors now nearest in value; g(f(3)) step added
 - Evidence: 'True or false: f(g(x)) = g(f(x)) for every pair of functions [options: False | 54 | True | 48]'; 'f(x) = x + 3, g(x) = x. Find f(g(1)) [options: 4 | 5 | 6 | 47]'.
 - Why the child is lost: Numeric junk distractors on a true/false item and a stray 47 make guessing easy and look broken; the conceptual 'usually DIFFERENT' claim is not in the lesson.
 - Suggested fix: Restrict distractors to the item's own template; add one line to the lesson: 'order matters — g(f(3)) = 2·4 = 8, not 7'.
 
 #### M14:Composition of functions → M14:Domain of a rational function
-- **broken** · open
+- **broken** · **already resolved** — pool clean; directive states x ≠ 4 input form
 - Evidence: 'Which x is NOT allowed for f(x) = 1/(x - 14)? [options: 12 | 16 | False | 14]'; 'Which x is NOT allowed for f(x) = 1/(x - 2)? [options: 4 | 6 | 2 | x ≠ 30]'; 'True or false: x = 1 is in the domain of f(x) = 1/(x - 1) [options: 16 | 14 | False | True]'.
 - Why the child is lost: Cross-template distractor leakage; content itself is fine and matches the lesson.
 - Suggested fix: Fix distractor pooling per template.
 
 #### M14:Domain of a rational function → M14:Range of a quadratic
-- **broken** · open
+- **broken** · **already resolved** — directive states y ≥ 2, negative case, only x² has a floor
 - Evidence: 'Range of f(x) = x² + (-15) [options: y ≥ -14 | y ≥ -15 | …] → y ≥ -15' (first item; lesson example is x² + 2); 'Range of f(x) = x² + (-14) → y ≥ -14' typed; 'Which function has range y ≥ 3? [options: x + 3 | x² + 3 | 3x | x² − 3]'; 'f(x) = x² + 1. What is the SMALLEST value f(x) can be? [options: 3 | 2 | x² + 9 | 1]'.
 - Why the child is lost: 'x² + (-15)' is unrendered generator output (should read x² − 15); the sheet runs from c = −15 upward so the hardest (negative) cases come first; typing '≥' is unstated; the 'which function' item needs to know linear functions have no minimum, which is untaught.
 - Suggested fix: Render x² − 15; order items from positive c to negative; state the input form ('type y>=-15'); add a lesson line 'x + 3 and 3x can be any number — only x² has a floor'.
 
 #### M14:Range of a quadratic → M14:Inverse functions
-- **untaught-shape** · open
+- **untaught-shape** · **already resolved** — f⁻¹(f(x)) = x step added
 - Evidence: Lesson: 'f(x) = x + 5. Find f⁻¹(12) → 7 — Inverse undoes +5; 12 - 5'. Sheet: 'True or false: f⁻¹(f(5)) = 6 for f(x) = x + 2 → False'; 'True or false: f⁻¹(f(6)) = 6 for f(x) = x + 3 [options: True | 5 | False]'.
 - Why the child is lost: Nested f⁻¹(f(x)) is a new form not in the lesson (student can work it out via 'undo' but the idea that f⁻¹(f(x)) = x always is never stated); stray '5' distractor on a true/false item.
 - Suggested fix: Add the line 'undoing what f did always returns the start: f⁻¹(f(5)) = 5' and fix the option pool.
 
 #### M14:Inverse functions → M15:Pythagorean theorem
-- **broken** · open
+- **broken** · **fixed** — authored distractors for hypotenuse/leg items (legs added, root forgotten, longer leg)
 - Evidence: 'hypotenuse 5, one leg 3. Find the other leg [options: 4 | 246 | 8 | 12]'; ladder 3,4 '[options: 120 | 5 | 13 | 10]'.
 - Why the child is lost: Nonsense distractors (246, 120) make the item guessable rather than diagnostic.
 - Suggested fix: Generate distractors from plausible errors (sqrt(25+9)≈5.8→ round, 5+3=8, 25−9=16).
 
 #### M15:Pythagorean theorem → M15:Right-triangle ratios
-- **broken** · open
+- **broken** · **already resolved** — options all ratios / all sentences
 - Evidence: 'Nora writes sin θ = adjacent/hypotenuse. What's wrong? [options: sin θ | 9/40 | sin uses the OPPOSITE side...]'; 'Find sin θ [options: 3/4 | 4/5 | 3/5 | sin θ]'.
 - Why the child is lost: Distractors 'sin θ' and '9/40' are not answers to the question; the item is trivially guessable.
 - Suggested fix: Fix the distractor pool for the misconception items so all options are plausible sentences/ratios.
 
 #### M15:Degrees to radians → M15:Pythagorean identity
-- **broken** · open
+- **broken** · **already resolved** — symbolic pool only
 - Evidence: 'Complete the identity: sin²θ + ___ = 1 [options: 9/40 | 1 | cos²θ | sin²θ]'; 'Simplify: 1 − sin²θ [options: 1 | cos²θ | sin²θ | 9/40]'.
 - Why the child is lost: '9/40' is a leaked distractor from another generator.
 - Suggested fix: Restrict distractors for identity items to trig expressions (tan²θ, 1, sin²θ, cos²θ).
 
 #### M16:End behavior → M16:y-intercept of a polynomial
-- **broken** · open
+- **broken** · **fixed** — y-intercept answers now vary (0, 6, −3, 1, −8, 5, −7); c = 0 case added
 - Evidence: Every typed item on sheet 9 has answer -3 and every MC item has answer 1 ('x² + 4x - 3 → -3', 'x² - 5x - 3 → -3', ... 'x² - 3x + 1 → 1', '2x² + 4x + 1 → 1').
 - Why the child is lost: The sheet is pattern-guessable after two items; it certifies nothing.
 - Suggested fix: Vary the constant term across the sheet (at least 6 distinct values, some positive/negative, some zero).
 
 #### M16:y-intercept of a polynomial → M16:x-intercepts (roots)
-- **broken** · open
+- **broken** · **already resolved** — T/F served as True/False
 - Evidence: 'True or false: x = 1 is an x-intercept of f(x) = (x − 1)(x + 2) [options: (x − 5)(x + 6) | -6 | False | True]'; 'f(x) = (x − 1)(x + 2) crosses the x-axis at x = 1 and x = ? [options: (x − 1)(x + 3) | (x − 1)(x + 2) | -2 | -3]'.
 - Why the child is lost: True/false items rendered as 4-option MC with factor-expression distractors; number items with expression distractors.
 - Suggested fix: Type the T/F items as true_false; restrict distractors for 'x = ?' items to numbers (±2, ±3).
 
 #### M16:x-intercepts (roots) → M16:Multiplicity — cross or bounce
-- **untaught-shape** · open
+- **untaught-shape** · **already resolved** — both halves of the multiplicity rule in lesson
 - Evidence: Lesson: 'Multiplicity 2 is even → the graph is tangent → bounces'. Sheet: 'For f(x) = (x − 1)³(x + 2), at x = 1 the graph ___ → crosses', '(x − 1)⁴(x + 3) → bounces'.
 - Why the child is lost: The odd → crosses half of the rule is only implied; binary MC keeps it survivable.
 - Suggested fix: State both halves in the lesson: even multiplicity bounces, odd multiplicity crosses.
 
 #### M16:Synthetic division → M16:Rational Root Theorem
-- **untaught-shape** · open
+- **untaught-shape** · **already resolved** — p/q line in RRT lesson
 - Evidence: Lesson: 'leading coefficient 1 ... ± divisors of the constant'. Sheet: 'For 2x² + x − 3, the possible rational roots are ± (divisors of 3) over (divisors of which number?) → 2'.
 - Why the child is lost: The p/q form for a non-1 leading coefficient is not in the lesson; the stem carries enough of the form that most will answer 2, but it is a new idea.
 - Suggested fix: Add one lesson line: 'if the leading coefficient is not 1, candidates are ± (divisor of constant)/(divisor of leading coefficient)'.
 
 #### M16:Evaluate logarithms → M16:Evaluate exponentials
-- **broken** · open
+- **broken** · **fixed (distractors); log/exp swap not fixable without reorder** — 243/3125 leaks gone; log example already carries the powers-of-2 method
 - Evidence: 'True or false: 3³ = 27 [options: 3 | True | 4 | False]'; '2 raised to what power gives 4? [options: 2 | 3 | 3125 | 4]'; 'Evaluate 4¹ [options: 243 | 16 | 4 | 64]'. Also the sequencing: logarithms (log_2 8 = 3) precede the far easier 'Evaluate 2³'.
 - Why the child is lost: Leaked distractors (3125, 243) and T/F rendered as 4-way MC. Ordering means the log lesson had to assume exponent fluency this lesson only certifies afterwards.
 - Suggested fix: Swap lessons 9 and 10 so exponentials precede logarithms; clean the distractor pools.
 
 #### M16:Evaluate exponentials → M16:Solve exponential equations
-- **broken** · open
+- **broken** · **already resolved** — T/F 2-option
 - Evidence: 'True or false: if 2^x = 2^3, then x = 4 [options: False | 5 | 4 | True]'.
 - Why the child is lost: Numeric distractors inside a true/false item.
 - Suggested fix: Type the item as true_false.
 
 #### M17:Parabolas & conics → M17:Arithmetic sequences
-- **broken** · open
+- **broken** · **fixed** — 43/44 leaks gone; common difference read off a list
 - Evidence: 'Arithmetic sequence: 1, 3, 5, … What is the common difference? [options: 31 | 2 | 4 | 3]'; 'first term 2, common difference 1. Find term 3 [options: 43 | 6 | 5 | 4]'; 'first term 3, common difference 1. Find term 3 [options: 44 | 6 | 5 | 7]'.
 - Why the child is lost: Leaked distractors (31, 43, 44); the 'common difference' item shape is not in the lesson but is trivial.
 - Suggested fix: Clean distractor generation for sequence items.
 
 #### M17:Arithmetic series → M17:Geometric sequences
-- **broken** · open
+- **broken** · **fixed** — 108/81/405 leaks gone; ratio read off a list
 - Evidence: 'Geometric sequence: 1, 2, 4, … What is the ratio? [options: 108 | 3 | 4 | 2]'; 'A colony starts with 1 cell and doubles every hour. How many cells after 2 hours? [options: 4 | 9 | 405 | 8]'.
 - Why the child is lost: Leaked distractors (108, 405).
 - Suggested fix: Clean distractor generation.
 
 #### M18:Power rule → M18:Differentiate monomials
-- **untaught-shape** · open
+- **untaught-shape** · **fixed** — reverse power-rule items taught: differentiate each candidate
 - Evidence: Sheet: 'Which function has derivative 15x²? [options: 15x³ | 5x² | 15x² | 5x³] → 5x³', 'Which function has derivative 12x? → 6x²' (6 of 30). Lesson only differentiates forward ('d/dx 3x² = 6x').
 - Why the child is lost: Working backwards from a derivative is antidifferentiation; multiple choice lets students test each option, so survivable, but it is not taught.
 - Suggested fix: Add a line 'to go backwards, check each candidate by differentiating it'.

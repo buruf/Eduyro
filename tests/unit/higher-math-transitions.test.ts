@@ -159,6 +159,67 @@ describe("Higher-math lesson transitions (M13–M18)", () => {
     expect(getHigherMathMicroLesson("M18", "Definite integrals")?.example.steps.join(" ")).toMatch(/F\(4\) − F\(0\)/);
   });
 
+  // ── Minors pass (Sep 2026) ──
+  describe("multiple-choice distractors are nearby values or authored errors, never loop-boundary leaks", () => {
+    const numOpts = (p: { options?: string[]; answer: string | number }) => (p.options ?? []).filter(isNumeric).map(Number);
+    it("M14 Composition opens without a stray 47; M17 sequences without 43/44/81/108", () => {
+      for (const p of opening("M14", "Composition of functions")) if (p.options && isNumeric(String(p.answer))) for (const o of numOpts(p)) expect(o).toBeLessThanOrEqual(30);
+      for (const label of ["Arithmetic sequences", "Arithmetic series", "Geometric sequences"])
+        for (const p of opening("M17", label)) if (p.options && isNumeric(String(p.answer))) for (const o of numOpts(p)) expect(Math.abs(o - Number(p.answer))).toBeLessThanOrEqual(30);
+    });
+    it("M16 Evaluate exponentials: 'Evaluate 4¹' never offers 243", () => {
+      const p = allSheets("M16").find((x) => x.question === "Evaluate 4¹" && x.options);
+      if (p) for (const o of numOpts(p)) expect(o).toBeLessThanOrEqual(16);
+    });
+    it("M15 Pythagorean theorem distractors are the classic errors (legs added, root forgotten)", () => {
+      const p = allSheets("M15").find((x) => /legs 3 and 4\. Find the hypotenuse/.test(x.question) && x.options);
+      expect(p?.options).toEqual(expect.arrayContaining(["7", "25"]));
+    });
+  });
+
+  it("M16 y-intercept: the opening sheet varies the constant (no all-−3 / all-1 sheet) and the lesson covers c = 0", () => {
+    const qs = opening("M16", "y-intercept of a polynomial").filter((p) => /y-intercept/.test(p.question));
+    const typed = new Set(qs.filter((p) => !p.options).map((p) => String(p.answer)));
+    const mc = new Set(qs.filter((p) => p.options).map((p) => String(p.answer)));
+    expect(typed.size).toBeGreaterThanOrEqual(3);
+    expect(mc.size).toBeGreaterThanOrEqual(3);
+    const all = [...typed, ...mc].map(Number);
+    expect(all.some((v) => v > 0) && all.some((v) => v < 0)).toBe(true);
+    expect(getHigherMathMicroLesson("M16", "y-intercept of a polynomial")?.example.steps.join(" ")).toMatch(/y-intercept 0/);
+  });
+
+  it("M13 Zero-product opens on distinct roots; the lesson states the comma form and the repeated-factor case", () => {
+    const qs = opening("M13", "Zero-product property");
+    const solves = qs.filter((p) => /^Solve \(x - \d\)\(x - \d\) = 0$/.test(p.question));
+    expect(solves.length).toBeGreaterThan(0);
+    expect(String(solves[0].answer)).toContain(",");
+    const steps = getHigherMathMicroLesson("M13", "Zero-product property")?.example.steps.join(" ") ?? "";
+    expect(steps).toMatch(/separated by a comma/);
+    expect(steps).toMatch(/just one answer/);
+  });
+
+  it("M13 Solve x² = k: the scaffolded 'x = ±___' form comes before the typed ±k form, and the lesson says how to type ±", () => {
+    const qs = opening("M13", "Solve x² = k (perfect squares)");
+    const firstTyped = qs.findIndex((p) => /^Solve x² = \d+$/.test(p.question));
+    const firstMissing = qs.findIndex((p) => /x = ±___/.test(p.question));
+    expect(firstMissing).toBeGreaterThanOrEqual(0);
+    if (firstTyped !== -1) expect(firstMissing).toBeLessThan(firstTyped);
+    expect(getHigherMathMicroLesson("M13", "Solve x² = k (perfect squares)")?.example.steps.join(" ")).toMatch(/type both roots as ±7/);
+  });
+
+  it("lessons carry the sheet's other shapes: simplify-a-root method, order of composition, reading d and r off a list, antidifferentiation by checking", () => {
+    const steps = (code: string, label: string) => getHigherMathMicroLesson(code, label)?.example.steps.join(" ") ?? "";
+    expect(steps("M13", "Larger, estimate & simplify roots")).toMatch(/BIGGEST perfect square/);
+    expect(steps("M13", "Larger, estimate & simplify roots")).toMatch(/√12 = √4 × √3 = 2√3/);
+    expect(steps("M14", "Composition of functions")).toMatch(/g\(f\(3\)\).*2 × 4 = 8, not 7/);
+    expect(steps("M14", "Range of a quadratic")).toMatch(/x \+ 3 or 3x can be ANY number/);
+    expect(steps("M14", "Inverse functions")).toMatch(/f⁻¹\(f\(5\)\) = f⁻¹\(10\) = 5/);
+    expect(steps("M17", "Arithmetic sequences")).toMatch(/common difference is 2/);
+    expect(steps("M17", "Geometric sequences")).toMatch(/ratio is 2/);
+    expect(steps("M18", "Power rule")).toMatch(/differentiate each candidate/i);
+    expect(steps("M18", "Differentiate monomials")).toMatch(/d\/dx 6x² = 12x ✓/);
+  });
+
   it("every M14–M18 unit has a big idea that is not its goal repeated", () => {
     for (const code of ["M14", "M15", "M16", "M17", "M18"]) for (const u of higherMathUnits(code)) {
       const l = getHigherMathMicroLesson(code, u.label);
