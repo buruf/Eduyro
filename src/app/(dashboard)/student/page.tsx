@@ -289,8 +289,11 @@ export default function StudentDashboardPage() {
   // Per-MICRO-SKILL tutorial key, so each micro-skill teaches once (council rule:
   // a fresh lesson fires when the student first reaches each micro-skill's sheets,
   // not once per whole level).
+  // The trailing version re-fires each micro-lesson ONCE after the Sep 2026
+  // transition passes rewrote most worked examples: a child mid-lesson sees
+  // the corrected lesson before the next sheet instead of never seeing it.
   const microKey = (levelCode: string | undefined, microSkillLabel: string) =>
-    `${levelCode ?? "?"}::${microSkillLabel}`;
+    `${levelCode ?? "?"}::${microSkillLabel}::2026-09`;
 
   function openPractice(sheet: TodaySheet) {
     if (sheet.status !== "IN_PROGRESS") return;

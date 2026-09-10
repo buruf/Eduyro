@@ -254,22 +254,31 @@ export async function buildTodayPacket(
     nextWorksheets.push(...minted);
   }
 
-  // SELF-HEAL stale math rows: some sheets were minted in an earlier window where
-  // the TITLE was written from the current lesson label but the CONTENT came from
-  // the raw running sheet number (→ the wrong unit — e.g. a "Missing number in a
-  // sequence" sheet that actually served "What number comes after 19?"). Content
-  // is deterministic from (level, contentSheet), so regenerate the expected
-  // problems for each served math row and, if the stored content is a different
-  // question TYPE than the title's lesson, re-mint it in place so the questions
-  // match the lesson. A correctly-minted row regenerates identically → no write.
+  // SELF-HEAL stale math rows. A row keeps the problems it was minted with,
+  // so a content fix that ships today reaches a child only if the rows already
+  // minted for them are re-minted. This used to re-mint only when the question
+  // SHAPE or the sheet LENGTH changed, and positioned the check by a modulo of
+  // the running sheet number - not the ladder the mint actually uses - so most
+  // fixes (an opening sheet that now serves the taught form, cleaner options,
+  // a corrected key) never reached a sheet that was minted before the deploy.
+  //
+  // Now: regenerate what the mint would produce for each pending row TODAY,
+  // positioned exactly as the mint positions it (first content sheet of the
+  // lesson + sheets already done in the lesson + place among the pending rows),
+  // and rewrite the row whenever what the child sees or is graded on differs -
+  // question, options or answer. A row that already matches regenerates
+  // identically and is not written. Attempted rows are never here: the query
+  // above excludes completed worksheets, so finished work is never rewritten.
   if (isMath && curMathSkill && nextWorksheets.length) {
-    const rangeSize = curMathSkill.range[1] - curMathSkill.range[0] + 1;
-    const formOf = (probs: any[]) =>
-      probs.slice(0, 3).map((p) => String(p?.question ?? "").replace(/-?\d+/g, "#")).join(" | ");
-    for (const ws of nextWorksheets) {
+    const fingerprint = (probs: any[], key: any[]) => {
+      const byId = new Map((key ?? []).map((k: any) => [k.id, String(k.answer)]));
+      return (probs ?? []).map((p: any) => `${p.question}|${(p.options ?? []).join("/")}|${byId.get(p.id) ?? p.answer}`).join("\n");
+    };
+    for (let idx = 0; idx < nextWorksheets.length; idx++) {
+      const ws = nextWorksheets[idx];
       const stored = Array.isArray(ws.problems) ? (ws.problems as any[]) : [];
       if (!stored.length) continue;
-      const contentSheet = curMathSkill.range[0] + ((ws.sheetNumber - 1) % rangeSize);
+      const contentSheet = contentSheetFor(curMathSkill.range, doneInCurrentLesson, idx);
       const expected = generateProblems({
         subjectSlug: progress.level?.subject?.slug ?? "MATH",
         levelCode: progress.level?.code ?? "M3",
@@ -279,16 +288,7 @@ export async function buildTodayPacket(
         sheetNumber: contentSheet,
         totalSheets: 100,
       });
-      // Re-mint when the stored content is the wrong LESSON (shape differs)
-      // OR the wrong LENGTH. The length case is the sheet-size cap: long
-      // multiplication moved to 10 problems, but the cap only applies when a
-      // row is generated, so rows minted before it kept 24 forever - and a
-      // failed sheet is re-served from its stored row, so a child could redo
-      // a 24-problem sheet indefinitely. Reported as "why is Ridwan still
-      // getting 24 questions" after his pending sheets were fixed by hand.
-      const sameLesson = formOf(stored) === formOf(expected.problems);
-      const sameLength = stored.length === expected.problems.length;
-      if (sameLesson && sameLength) continue;
+      if (fingerprint(stored, ws.answerKey as any[]) === fingerprint(expected.problems as any[], expected.answerKey as any[])) continue;
       await db.worksheet.update({
         where: { id: ws.id },
         data: {
