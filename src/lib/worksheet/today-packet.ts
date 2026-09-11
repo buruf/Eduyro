@@ -190,7 +190,10 @@ export async function buildTodayPacket(
         : (activeSkill ? { skillId: activeSkill.id } : {})),
     },
     include: { skill: true },
-    orderBy: [{ skill: { sortOrder: "asc" } }, { sheetNumber: "asc" }],
+    // id tie-break: rows can share a sheetNumber (concurrent mints before the
+    // advisory lock, or two sets under one label). Without it the serving order
+    // - and so the self-heal ladder below - flips between requests.
+    orderBy: [{ skill: { sortOrder: "asc" } }, { sheetNumber: "asc" }, { id: "asc" }],
     take: needed,
   });
 

@@ -37,7 +37,9 @@ async function main() {
     for (const lesson of skills) {
       const rows = await db.worksheet.findMany({
         where: { levelId: level.id, title: { startsWith: `${lesson.label} — ` } },
-        orderBy: { sheetNumber: "asc" },
+        // Tie-break on id: rows can share a sheetNumber, and an unstable order
+        // would hand the pair different ladder positions on different runs.
+        orderBy: [{ sheetNumber: "asc" }, { id: "asc" }],
         select: { id: true, sheetNumber: true, problems: true, answerKey: true },
       });
       if (!rows.length) continue;
