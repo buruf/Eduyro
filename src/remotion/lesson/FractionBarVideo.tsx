@@ -10,6 +10,14 @@
 //
 // The unequal-cut counterexample is deliberate: "equal parts" is the
 // load-bearing idea of fractions and the one most teaching skips past.
+//
+// Sync: every reveal that shows something the narrator says is timed with
+// `said(n, fallback, occurrence)` from the scene's clip alignment (timeline
+// `saidFor`). A fraction "3/4" is aligned on its two digits in order: the
+// bar's cuts land on the denominator, its shading on the numerator, the
+// comparison flag on the deciding mention, a sum on the answer. Reveals that
+// follow no spoken number keep their frames and are marked
+// `// not-speech-bound`.
 import {
   AbsoluteFill,
   Audio,
@@ -20,7 +28,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { fractionBarSceneTimings } from "./timeline";
+import { fractionBarSceneTimings, saidFor, type SaidFn } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
 import { Brand } from "./Brand";
 import { fractionBarUnitById, type FractionBarUnit } from "./units";
@@ -51,7 +59,35 @@ const BAR_X = (STAGE_W - BAR_W) / 2;
 interface SceneProps {
   dur: number;
   unit: FractionBarUnit;
+  /** Scene-local frame at which the narrator says a number (timeline `saidFor`).
+   *  The fallback is the old hand-picked frame, for clips without alignment. */
+  said: SaidFn;
 }
+
+/** How many times `n` is spoken BEFORE the mention we want, given the numbers
+ *  the line says ahead of it. */
+const before = (n: number, earlier: number[]) => earlier.filter((v) => v === n).length;
+
+/** The frames at which a line's numbers are said, in the order the line says
+ *  them (`order` mirrors `fractionBarLines` in script.ts word for word, so a
+ *  repeated digit — "4/8… a bar in 8 parts" — resolves to the right
+ *  occurrence). Every entry falls back to `fallback` for clips without
+ *  alignment. */
+const spokenAt = (said: SaidFn, order: number[], fallback: number) =>
+  order.map((n, k) => said(n, fallback, before(n, order.slice(0, k))));
+
+/** Frames at which `count` items appear one after another so that the LAST
+ *  lands on `landAt`; the first never earlier than `floor` and the gap never
+ *  wider than `maxGap` frames nor tighter than 2. With the old fallback frames
+ *  this reproduces the old even stagger exactly. */
+const landing = (landAt: number, count: number, floor: number, maxGap: number) => {
+  const gap = count > 1 ? Math.min(maxGap, Math.max(2, (landAt - floor) / (count - 1))) : 0;
+  return (i: number) => Math.round(landAt - (count - 1 - i) * gap);
+};
+/** A stagger whose last item lands on `landAt` (never starting before the
+ *  first few frames of the scene). */
+const stagger = (landAt: number, count: number, gap: number) =>
+  landing(landAt, count, Math.min(landAt, 10), gap);
 
 function useEnter(atFrame: number, durFrames = 14) {
   const frame = useCurrentFrame();
@@ -69,11 +105,44 @@ function useEnter(atFrame: number, durFrames = 14) {
   };
 }
 
+type TextPart = { text: string; at: number; colour?: string };
+
+/** One piece of a line of text, entering on its own frame. */
+function Part({ text, at, colour }: TextPart) {
+  const enter = useEnter(at);
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        whiteSpace: "pre",
+        color: colour,
+        opacity: enter.opacity,
+        translate: `0 ${enter.translateY}px`,
+      }}
+    >
+      {text}
+    </span>
+  );
+}
+
+/** A line of text whose pieces appear as the narrator reaches them. */
+function Parts({ parts, style }: { parts: TextPart[]; style: React.CSSProperties }) {
+  return (
+    <div style={style}>
+      {parts.map((p, i) => (
+        <Part key={`${i}-${p.text}`} {...p} />
+      ))}
+    </div>
+  );
+}
+
 /**
  * A bar cut into `parts`, with `shaded` of them filled (first `goldUpTo` in
  * gold, the rest of the shading in blue — used by the add mode to show the
  * arriving addend). `cutsShown` limits how many interior cuts are drawn, which
- * is what lets simplify ERASE cuts while the shading stays put.
+ * is what lets simplify ERASE cuts while the shading stays put. `cutAt(i)` and
+ * `shadeAt(i)` give the frame the i-th cut / shaded part appears (absent →
+ * there from the start).
  */
 function Bar({
   y,
@@ -81,8 +150,8 @@ function Bar({
   shaded,
   goldUpTo = Infinity,
   cutsShown = Infinity,
-  shadeRevealAt = -1,
-  shadeStagger = 8,
+  cutAt,
+  shadeAt,
   color = GOLD,
 }: {
   y: number;
@@ -90,8 +159,8 @@ function Bar({
   shaded: number;
   goldUpTo?: number;
   cutsShown?: number;
-  shadeRevealAt?: number;
-  shadeStagger?: number;
+  cutAt?: (i: number) => number;
+  shadeAt?: (i: number) => number;
   color?: string;
 }) {
   const frame = useCurrentFrame();
@@ -112,8 +181,7 @@ function Bar({
       />
       {/* shading */}
       {Array.from({ length: shaded }, (_, i) => {
-        const revealed =
-          shadeRevealAt < 0 || frame >= shadeRevealAt + i * shadeStagger;
+        const at = shadeAt ? shadeAt(i) : undefined;
         return (
           <div
             key={i}
@@ -125,16 +193,13 @@ function Bar({
               height: BAR_H - 8,
               borderRadius: 8,
               backgroundColor: i < goldUpTo ? color : BLUE,
-              opacity: revealed
-                ? interpolate(
-                    frame,
-                    [shadeRevealAt + i * shadeStagger, shadeRevealAt + i * shadeStagger + 8],
-                    [0, 1],
-                    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-                  )
-                : shadeRevealAt < 0
+              opacity:
+                at === undefined
                   ? 1
-                  : 0,
+                  : interpolate(frame, [at, at + 8], [0, 1], {
+                      extrapolateLeft: "clamp",
+                      extrapolateRight: "clamp",
+                    }),
             }}
           />
         );
@@ -150,8 +215,7 @@ function Bar({
             width: 4,
             height: BAR_H,
             backgroundColor: EDGE,
-            opacity: i < cutsShown ? 1 : 0,
-            transition: undefined,
+            opacity: i < cutsShown && (!cutAt || frame >= cutAt(i)) ? 1 : 0,
           }}
         />
       ))}
@@ -179,8 +243,27 @@ function Title({ text, enter }: { text: string; enter: { opacity: number; transl
   );
 }
 
-/** Big fraction, drawn as an actual stack — a child should see the BAR in it. */
-function Frac({ n, d, size = 150, color = INK }: { n: number; d: number; size?: number; color?: string }) {
+/** Big fraction, drawn as an actual stack — a child should see the BAR in it.
+ *  `nAt` / `dAt` are the frames the numerator and denominator enter (the
+ *  narrator says "3/4" as "three… quarters", so the two digits land
+ *  separately); absent → on screen from the start. */
+function Frac({
+  n,
+  d,
+  size = 150,
+  color = INK,
+  nAt,
+  dAt,
+}: {
+  n: number;
+  d: number;
+  size?: number;
+  color?: string;
+  nAt?: number;
+  dAt?: number;
+}) {
+  const nIn = useEnter(nAt ?? -20);
+  const dIn = useEnter(dAt ?? -20);
   return (
     <span
       style={{
@@ -194,17 +277,45 @@ function Frac({ n, d, size = 150, color = INK }: { n: number; d: number; size?: 
         verticalAlign: "middle",
       }}
     >
-      <span>{n}</span>
-      <span style={{ width: size * 0.5, height: Math.max(6, size * 0.045), backgroundColor: color, borderRadius: 4 }} />
-      <span>{d}</span>
+      <span style={{ opacity: nIn.opacity, translate: `0 ${nIn.translateY}px` }}>{n}</span>
+      <span
+        style={{
+          width: size * 0.5,
+          height: Math.max(6, size * 0.045),
+          backgroundColor: color,
+          borderRadius: 4,
+          opacity: nIn.opacity,
+        }}
+      />
+      <span style={{ opacity: dIn.opacity, translate: `0 ${dIn.translateY}px` }}>{d}</span>
+    </span>
+  );
+}
+
+/** A big operator sign that enters with the number after it. */
+function Sign({ text, at, color = INK, size = 140 }: { text: string; at: number; color?: string; size?: number }) {
+  const enter = useEnter(at);
+  return (
+    <span style={{ fontSize: size, fontWeight: 800, color, opacity: enter.opacity, translate: `0 ${enter.translateY}px` }}>
+      {text}
     </span>
   );
 }
 
 // ---- Scene 1: the question -----------------------------------------------
-function SceneAsk({ unit }: SceneProps) {
-  const a = useEnter(6);
-  const b = useEnter(40);
+function SceneAsk({ unit, said }: SceneProps) {
+  const b = useEnter(40); // not-speech-bound: the question names no number
+  const n2 = unit.n2 ?? 1;
+  const d2 = unit.d2 ?? 2;
+  // "What does 3/4 mean?" / "Which is bigger… 3/4, or 2/3?" / "3/8 plus 2/8"
+  // / "4/8… can we say that more simply?" — each digit lands on its word.
+  const order =
+    unit.mode === "compare"
+      ? [unit.n, unit.d, n2, d2]
+      : unit.mode === "add"
+        ? [unit.n, unit.d, n2, unit.d]
+        : [unit.n, unit.d];
+  const at = spokenAt(said, order, 6);
   const ask =
     unit.mode === "compare"
       ? "Which is bigger?"
@@ -215,18 +326,18 @@ function SceneAsk({ unit }: SceneProps) {
           : "What does this mean?";
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 44 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 40, opacity: a.opacity, translate: `0 ${a.translateY}px` }}>
-        <Frac n={unit.n} d={unit.d} size={220} />
+      <div style={{ display: "flex", alignItems: "center", gap: 40 }}>
+        <Frac n={unit.n} d={unit.d} size={220} nAt={at[0]} dAt={at[1]} />
         {unit.mode === "compare" && (
           <>
-            <span style={{ fontSize: 120, fontWeight: 800, color: MUTED }}>vs</span>
-            <Frac n={unit.n2 ?? 1} d={unit.d2 ?? 2} size={220} />
+            <Sign text="vs" at={at[2]} color={MUTED} size={120} />
+            <Frac n={n2} d={d2} size={220} nAt={at[2]} dAt={at[3]} />
           </>
         )}
         {unit.mode === "add" && (
           <>
-            <span style={{ fontSize: 140, fontWeight: 800, color: INK }}>+</span>
-            <Frac n={unit.n2 ?? 1} d={unit.d} size={220} />
+            <Sign text="+" at={at[2]} />
+            <Frac n={n2} d={unit.d} size={220} nAt={at[2]} dAt={at[3]} />
           </>
         )}
       </div>
@@ -238,54 +349,84 @@ function SceneAsk({ unit }: SceneProps) {
 }
 
 // ---- Scene 2: the parts ---------------------------------------------------
-function SceneParts({ dur, unit }: SceneProps) {
+function SceneParts({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
-  const title = useEnter(4);
-  const cutAt = Math.round(dur * 0.2);
+  const title = useEnter(4); // not-speech-bound: the count in the title enters on its word below
+  const cutAt = Math.round(dur * 0.2); // not-speech-bound: only for clips without alignment
   const cutStagger = 10;
-  const cutsShown = Math.max(0, Math.floor((frame - cutAt) / cutStagger));
-  const wrongAt = Math.round(dur * 0.62);
+  const wrongAt = Math.round(dur * 0.62); // not-speech-bound: "if the parts aren't equal" names no number
+  const titleStyle: React.CSSProperties = { fontSize: 84, fontWeight: 700, color: INK };
 
   if (unit.mode === "compare") {
-    const shadeAt = Math.round(dur * 0.3);
+    const n2 = unit.n2 ?? 1;
+    const d2 = unit.d2 ?? 2;
+    const shadeAt = Math.round(dur * 0.3); // not-speech-bound: only for clips without alignment
+    // "Cut the first into 4… and shade 3. Cut the second into 3… and shade 2."
+    // — each bar's last cut lands on its denominator, its last shaded part on
+    // its numerator.
+    const at = spokenAt(said, [unit.d, unit.n, d2, n2], Number.NaN);
+    const fb = (k: number, fallback: number) => (Number.isNaN(at[k]) ? fallback : at[k]);
+    const cutsA = stagger(fb(0, cutAt + (unit.d - 1) * cutStagger), unit.d - 1, cutStagger);
+    const shadeA = stagger(fb(1, shadeAt + (unit.n - 1) * 8), unit.n, 8);
+    const cutsB = stagger(fb(2, cutAt + (d2 - 1) * cutStagger), d2 - 1, cutStagger);
+    const shadeB = stagger(fb(3, shadeAt + 40 + (n2 - 1) * 8), n2, 8);
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 20 }}>
         <Title text="Two bars, the same length" enter={title} />
         <Stage>
-          <Bar y={70} parts={unit.d} shaded={unit.n} cutsShown={cutsShown} shadeRevealAt={shadeAt} />
-          <Bar
-            y={300}
-            parts={unit.d2 ?? 2}
-            shaded={unit.n2 ?? 1}
-            cutsShown={cutsShown}
-            shadeRevealAt={shadeAt + 40}
-            color={BLUE}
-            goldUpTo={0}
-          />
+          <Bar y={70} parts={unit.d} shaded={unit.n} cutAt={cutsA} shadeAt={shadeA} />
+          <Bar y={300} parts={d2} shaded={n2} cutAt={cutsB} shadeAt={shadeB} color={BLUE} goldUpTo={0} />
         </Stage>
       </AbsoluteFill>
     );
   }
 
+  // identify: "Cut it into 4 parts" — the last cut lands on "4".
+  // add:      "a bar cut into 8 equal parts, with 3 shaded" — cuts on "8",
+  //           shading on "3".
+  // simplify: "Here's 4/8 — a bar in 8 parts, 4 shaded" — cuts on the first
+  //           "8", the title's 8 on the second, shading on the second "4".
+  const order =
+    unit.mode === "identify" ? [unit.d] : unit.mode === "add" ? [unit.d, unit.n] : [unit.n, unit.d, unit.d, unit.n];
+  const at = spokenAt(said, order, Number.NaN);
+  const fb = (k: number, fallback: number) => (Number.isNaN(at[k]) ? fallback : at[k]);
+  const cutsLandFallback = cutAt + (unit.d - 1) * cutStagger;
+  const cuts = stagger(
+    unit.mode === "identify" ? fb(0, cutsLandFallback) : unit.mode === "add" ? fb(0, cutsLandFallback) : fb(1, cutsLandFallback),
+    unit.d - 1,
+    cutStagger,
+  );
+  const shadeFallback = Math.round(dur * 0.5) + (unit.n - 1) * 8; // not-speech-bound: only for clips without alignment
+  const shade = stagger(unit.mode === "add" ? fb(1, shadeFallback) : fb(3, shadeFallback), unit.n, 8);
+  const titleCountAt = unit.mode === "identify" ? fb(0, 4) : unit.mode === "add" ? fb(0, 4) : fb(2, 4);
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 20 }}>
-      <Title
-        text={
-          unit.mode === "identify"
-            ? `Cut it into ${unit.d} EQUAL parts`
-            : `A bar in ${unit.d} equal parts`
-        }
-        enter={title}
-      />
+      {unit.mode === "identify" ? (
+        <Parts
+          style={titleStyle}
+          parts={[
+            { text: "Cut it into ", at: 4 }, // not-speech-bound: said before the number
+            { text: `${unit.d} EQUAL parts`, at: titleCountAt },
+          ]}
+        />
+      ) : (
+        <Parts
+          style={titleStyle}
+          parts={[
+            { text: "A bar in ", at: 4 }, // not-speech-bound: said before the number
+            { text: `${unit.d} equal parts`, at: titleCountAt },
+          ]}
+        />
+      )}
       <Stage>
         <Bar
           y={60}
           parts={unit.d}
           shaded={unit.mode === "identify" ? 0 : unit.n}
-          cutsShown={cutsShown}
-          shadeRevealAt={unit.mode === "identify" ? -1 : Math.round(dur * 0.5)}
+          cutAt={cuts}
+          shadeAt={unit.mode === "identify" ? undefined : shade}
         />
-        {/* The counterexample: unequal parts crossed out. */}
+        {/* The counterexample: unequal parts crossed out. not-speech-bound */}
         {unit.mode === "identify" && frame >= wrongAt && (
           <>
             <div
@@ -340,31 +481,48 @@ function SceneParts({ dur, unit }: SceneProps) {
 }
 
 // ---- Scene 3: the action --------------------------------------------------
-function SceneAction({ dur, unit }: SceneProps) {
+function SceneAction({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
-  const title = useEnter(4);
+  const title = useEnter(4); // not-speech-bound: titles whose number enters on its word are split below
+  const titleStyle: React.CSSProperties = { fontSize: 84, fontWeight: 700, color: INK };
 
   if (unit.mode === "identify") {
-    const shadeAt = Math.round(dur * 0.25);
+    const shadeAt = Math.round(dur * 0.25); // not-speech-bound: only for clips without alignment
+    // "Now shade 3 of them. One… two… three. 3 out of 4." — the title's 3 on
+    // the first "3"; the counted words carry no digits, so the parts are
+    // spread so the LAST lands on the second "3" ("3 out of 4"); "of 4" on "4".
+    const at = spokenAt(said, [unit.n, unit.n, unit.d], Number.NaN);
+    const fb = (k: number, fallback: number) => (Number.isNaN(at[k]) ? fallback : at[k]);
+    const shade = stagger(fb(1, shadeAt + (unit.n - 1) * 26), unit.n, 26);
+    const shadedSoFar = Array.from({ length: unit.n }, (_, i) => shade(i)).filter((f) => frame >= f).length;
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 20 }}>
-        <Title text={`Shade ${unit.n} of them`} enter={title} />
+        <Parts
+          style={titleStyle}
+          parts={[
+            { text: "Shade ", at: 4 }, // not-speech-bound: said before the number
+            { text: `${unit.n} of them`, at: fb(0, 4) },
+          ]}
+        />
         <Stage>
-          <Bar y={130} parts={unit.d} shaded={unit.n} shadeRevealAt={shadeAt} shadeStagger={26} />
+          <Bar y={130} parts={unit.d} shaded={unit.n} shadeAt={shade} />
         </Stage>
-        <div style={{ fontSize: 64, fontWeight: 800, color: GOLD }}>
-          {Math.max(
-            0,
-            Math.min(unit.n, Math.floor((frame - shadeAt) / 26) + 1),
-          )}{" "}
-          of {unit.d}
-        </div>
+        <Parts
+          style={{ fontSize: 64, fontWeight: 800, color: GOLD }}
+          parts={[
+            { text: `${shadedSoFar}`, at: shade(0) }, // counts with the shading above
+            { text: ` of ${unit.d}`, at: fb(2, 0) },
+          ]}
+        />
       </AbsoluteFill>
     );
   }
 
   if (unit.mode === "compare") {
-    const markAt = Math.round(dur * 0.4);
+    const markAt = Math.round(dur * 0.4); // not-speech-bound: "where the shading ends" names no number
+    // "The top bar reaches further. 3/4 is bigger." — the winner flag lands
+    // on the deciding mention, the numerator of the bigger fraction.
+    const flagAt = said(unit.n, markAt + 10);
     const aEnd = BAR_X + (unit.n / unit.d) * BAR_W;
     const bEnd = BAR_X + ((unit.n2 ?? 1) / (unit.d2 ?? 2)) * BAR_W;
     return (
@@ -373,48 +531,61 @@ function SceneAction({ dur, unit }: SceneProps) {
         <Stage>
           <Bar y={70} parts={unit.d} shaded={unit.n} />
           <Bar y={300} parts={unit.d2 ?? 2} shaded={unit.n2 ?? 1} color={BLUE} goldUpTo={0} />
-          {/* drop lines from each shading edge, then the winner flag */}
+          {/* drop lines from each shading edge (not-speech-bound), then the winner flag */}
           {frame >= markAt && (
             <>
               <div style={{ position: "absolute", left: aEnd - 3, top: 50, width: 6, height: 400, backgroundColor: GREEN, opacity: 0.85 }} />
               <div style={{ position: "absolute", left: bEnd - 3, top: 280, width: 6, height: 170, backgroundColor: MUTED, opacity: 0.6 }} />
-              <div
-                style={{
-                  position: "absolute",
-                  left: Math.min(aEnd + 24, STAGE_W - 320),
-                  top: 96,
-                  fontSize: 60,
-                  fontWeight: 800,
-                  color: GREEN,
-                  opacity: interpolate(frame, [markAt + 10, markAt + 24], [0, 1], {
-                    extrapolateLeft: "clamp",
-                    extrapolateRight: "clamp",
-                  }),
-                }}
-              >
-                further →
-              </div>
             </>
           )}
+          <div
+            style={{
+              position: "absolute",
+              left: Math.min(aEnd + 24, STAGE_W - 320),
+              top: 96,
+              fontSize: 60,
+              fontWeight: 800,
+              color: GREEN,
+              opacity: interpolate(frame, [flagAt, flagAt + 14], [0, 1], {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+              }),
+            }}
+          >
+            further →
+          </div>
         </Stage>
       </AbsoluteFill>
     );
   }
 
   if (unit.mode === "add") {
-    const addAt = Math.round(dur * 0.3);
-    const total = unit.n + (unit.n2 ?? 0);
-    const arrived = Math.max(0, Math.min(unit.n2 ?? 0, Math.floor((frame - addAt) / 24) + 1));
+    const addAt = Math.round(dur * 0.3); // not-speech-bound: only for clips without alignment
+    const n2 = unit.n2 ?? 0;
+    const total = unit.n + n2;
+    // "Now add 2 more parts… watch them slide in. Count the shading: 5 parts."
+    // — the title's 2 on "2"; the new parts slide in one by one so the LAST
+    // lands on the total "5".
+    const at = spokenAt(said, [n2, total], Number.NaN);
+    const fb = (k: number, fallback: number) => (Number.isNaN(at[k]) ? fallback : at[k]);
+    const arrive = stagger(fb(1, addAt + (n2 - 1) * 24), n2, 24);
+    const arrived = Array.from({ length: n2 }, (_, i) => arrive(i)).filter((f) => frame >= f).length;
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 20 }}>
-        <Title text={`Add ${unit.n2} more`} enter={title} />
+        <Parts
+          style={titleStyle}
+          parts={[
+            { text: "Add ", at: 4 }, // not-speech-bound: said before the number
+            { text: `${n2} more`, at: fb(0, 4) },
+          ]}
+        />
         <Stage>
           <Bar
             y={130}
             parts={unit.d}
             shaded={unit.n + arrived}
             goldUpTo={unit.n}
-            shadeRevealAt={-1}
+            shadeAt={(i) => (i < unit.n ? 0 : arrive(i - unit.n))}
           />
         </Stage>
         <div style={{ fontSize: 64, fontWeight: 800, color: INK }}>
@@ -426,8 +597,13 @@ function SceneAction({ dur, unit }: SceneProps) {
   }
 
   // simplify: cuts erased in stages, shading untouched.
-  const stage1At = Math.round(dur * 0.3); // 8 parts -> 4
-  const stage2At = Math.round(dur * 0.68); // 4 parts -> 2
+  // "Erase every second cut… now it's 2 out of 4. Erase again… 1 out of 2."
+  // — each erase lands on the numerator it produces, and the equation grows
+  // one fraction at a time as she names it.
+  const at = spokenAt(said, [unit.n / 2, unit.d / 2, unit.n / 4, unit.d / 4], Number.NaN);
+  const fb = (k: number, fallback: number) => (Number.isNaN(at[k]) ? fallback : at[k]);
+  const stage1At = fb(0, Math.round(dur * 0.3)); // not-speech-bound: fallback only — 8 parts -> 4
+  const stage2At = fb(2, Math.round(dur * 0.68)); // not-speech-bound: fallback only — 4 parts -> 2
   const stage = frame >= stage2At ? 2 : frame >= stage1At ? 1 : 0;
   const parts = stage === 0 ? unit.d : stage === 1 ? unit.d / 2 : unit.d / 4;
   const shaded = stage === 0 ? unit.n : stage === 1 ? unit.n / 2 : unit.n / 4;
@@ -439,46 +615,63 @@ function SceneAction({ dur, unit }: SceneProps) {
       </Stage>
       <div style={{ fontSize: 64, fontWeight: 800, color: INK, display: "flex", gap: 22, alignItems: "center" }}>
         <Frac n={unit.n} d={unit.d} size={86} color={stage === 0 ? INK : MUTED} />
-        <span style={{ color: MUTED }}>=</span>
-        <Frac n={unit.n / 2} d={unit.d / 2} size={86} color={stage === 1 ? INK : MUTED} />
-        <span style={{ color: MUTED }}>=</span>
-        <Frac n={unit.n / 4} d={unit.d / 4} size={86} color={stage === 2 ? INK : MUTED} />
+        <Sign text="=" at={fb(0, 0)} color={MUTED} size={64} />
+        <Frac n={unit.n / 2} d={unit.d / 2} size={86} color={stage === 1 ? INK : MUTED} nAt={fb(0, 0)} dAt={fb(1, 0)} />
+        <Sign text="=" at={fb(2, 0)} color={MUTED} size={64} />
+        <Frac n={unit.n / 4} d={unit.d / 4} size={86} color={stage === 2 ? INK : MUTED} nAt={fb(2, 0)} dAt={fb(3, 0)} />
       </div>
     </AbsoluteFill>
   );
 }
 
 // ---- Scene 4: the record --------------------------------------------------
-function SceneRecord({ dur, unit }: SceneProps) {
+function SceneRecord({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
-  const title = useEnter(4);
-  const tipAt = Math.round(dur * 0.55);
+  const title = useEnter(4); // not-speech-bound: "The fraction" names no number
+  const tipAt = Math.round(dur * 0.55); // not-speech-bound: no tip names a number
+  const n2 = unit.n2 ?? 1;
+  const d2 = unit.d2 ?? 2;
+  const total = unit.n + (unit.n2 ?? 0);
+  // Every record line reads its fractions digit by digit, in this order:
+  //   compare  "So 3/4 is greater than 2/3"     → n d n2 d2
+  //   add      "3/8 plus 2/8 is 5/8"            → n d n2 d total d
+  //   simplify "4/8, 2/4 and 1/2 are the SAME"  → n d n/2 d/2 n/4 d/4
+  //   identify names no digits (fallback 4, as before)
+  const order =
+    unit.mode === "compare"
+      ? [unit.n, unit.d, n2, d2]
+      : unit.mode === "add"
+        ? [unit.n, unit.d, n2, unit.d, total, unit.d]
+        : unit.mode === "simplify"
+          ? [unit.n, unit.d, unit.n / 2, unit.d / 2, unit.n / 4, unit.d / 4]
+          : [unit.n, unit.d];
+  const at = spokenAt(said, order, 4);
   const main =
     unit.mode === "compare" ? (
       <div style={{ display: "flex", alignItems: "center", gap: 36 }}>
-        <Frac n={unit.n} d={unit.d} size={190} />
-        <span style={{ fontSize: 140, fontWeight: 800, color: GREEN }}>&gt;</span>
-        <Frac n={unit.n2 ?? 1} d={unit.d2 ?? 2} size={190} />
+        <Frac n={unit.n} d={unit.d} size={190} nAt={at[0]} dAt={at[1]} />
+        <Sign text=">" at={at[2]} color={GREEN} />
+        <Frac n={n2} d={d2} size={190} nAt={at[2]} dAt={at[3]} />
       </div>
     ) : unit.mode === "add" ? (
       <div style={{ display: "flex", alignItems: "center", gap: 30 }}>
-        <Frac n={unit.n} d={unit.d} size={170} />
-        <span style={{ fontSize: 120, fontWeight: 800 }}>+</span>
-        <Frac n={unit.n2 ?? 0} d={unit.d} size={170} />
-        <span style={{ fontSize: 120, fontWeight: 800 }}>=</span>
-        <Frac n={unit.n + (unit.n2 ?? 0)} d={unit.d} size={170} color={GREEN} />
+        <Frac n={unit.n} d={unit.d} size={170} nAt={at[0]} dAt={at[1]} />
+        <Sign text="+" at={at[2]} size={120} />
+        <Frac n={n2} d={unit.d} size={170} nAt={at[2]} dAt={at[3]} />
+        <Sign text="=" at={at[4]} size={120} />
+        <Frac n={total} d={unit.d} size={170} color={GREEN} nAt={at[4]} dAt={at[5]} />
       </div>
     ) : unit.mode === "simplify" ? (
       <div style={{ display: "flex", alignItems: "center", gap: 30 }}>
-        <Frac n={unit.n} d={unit.d} size={170} />
-        <span style={{ fontSize: 120, fontWeight: 800 }}>=</span>
-        <Frac n={unit.n / 2} d={unit.d / 2} size={170} />
-        <span style={{ fontSize: 120, fontWeight: 800 }}>=</span>
-        <Frac n={unit.n / 4} d={unit.d / 4} size={170} color={GREEN} />
+        <Frac n={unit.n} d={unit.d} size={170} nAt={at[0]} dAt={at[1]} />
+        <Sign text="=" at={at[2]} size={120} />
+        <Frac n={unit.n / 2} d={unit.d / 2} size={170} nAt={at[2]} dAt={at[3]} />
+        <Sign text="=" at={at[4]} size={120} />
+        <Frac n={unit.n / 4} d={unit.d / 4} size={170} color={GREEN} nAt={at[4]} dAt={at[5]} />
       </div>
     ) : (
       <div style={{ display: "flex", alignItems: "center", gap: 44 }}>
-        <Frac n={unit.n} d={unit.d} size={230} />
+        <Frac n={unit.n} d={unit.d} size={230} nAt={at[0]} dAt={at[1]} />
         <div style={{ textAlign: "left", fontSize: 52, fontWeight: 700, color: MUTED, lineHeight: 1.5 }}>
           <div>
             <span style={{ color: GOLD }}>top</span> — shaded parts
@@ -534,10 +727,11 @@ export const FractionBarVideo: React.FC<FractionBarProps> = ({
     >
       {scenes.map((scene) => {
         const Body = SCENE_BODIES[scene.id];
+        const said = saidFor(unit.id, voice, scene.id);
         return (
           <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
             {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-            <Body dur={scene.dur} unit={unit} />
+            <Body dur={scene.dur} unit={unit} said={said} />
           </Sequence>
         );
       })}
