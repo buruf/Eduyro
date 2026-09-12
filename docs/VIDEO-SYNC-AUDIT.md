@@ -47,7 +47,7 @@
 | Compare | 19 | ✔ Sep 12 — each number lands on its word, each row of dots starts landing on its count, the extras ring on the difference, record line in two halves; 3 units verified by stills. Before: both numbers up at frame 6, blue row absent while she named it |
 | FractionBar | 17 | ✔ Sep 12 — cuts land on the denominator, shaded parts on the numerator, each fraction digit separately, simplify erases on the result digit; 3 modes verified by stills. Before: the second bar in compare was fully shaded 2.9 s before she said "2" |
 | Balance | 14 | ✔ Sep 12 — equation enters number by number, weights land on their count, lift off on the take-away, the split on its factor, the answer on its value; 3 units verified by stills. Also fixed: the answer box rendered at the top-left corner in every Balance video; ghost copies of leaving weights |
-| Area | 14 | |
+| Area | 14 | ✔ Sep 12 — rectangle grows on the factor, cut lands on the split, each region lights and labels on its partial product in narration order, sum terms one per number; 3 units verified by stills. Before: both region labels up at once, record scene empty. Follow-up: bottom-row labels overflow the 26% minimum strip in 2d×2d |
 | NumberLine | 13 | ✔ Sep 12 — sequence cards land one per word, the dot rests on each hop number (arc shortens when words come fast), tip on its number; 4 units verified by stills. Before: whole sequence and question on screen at 0 s |
 | FactFamily | 12 | |
 | PolyOps | 11 | |
