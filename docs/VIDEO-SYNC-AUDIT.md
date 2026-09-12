@@ -51,7 +51,7 @@
 | NumberLine | 13 | ✔ Sep 12 — sequence cards land one per word, the dot rests on each hop number (arc shortens when words come fast), tip on its number; 4 units verified by stills. Before: whole sequence and question on screen at 0 s |
 | FactFamily | 12 | ✔ Sep 12 — the three numbers land one per word, the whole bar then each part on its number, each of the four facts enters number by number and lights on its first; build titles now read in narration order; 3 units verified by stills |
 | PolyOps | 11 | |
-| FractionOps | 8 | |
+| FractionOps | 8 | ✔ Sep 12 — every fraction digit lands on its word, cuts on the denominator, shading on the numerator, pieces leave/survive on their count, mixed and improper bars fill to their number; 3 modes verified by stills. Note: counted fits ("one, two, three") and the whole-number "one" are words, not aligned |
 | PreAlg | 7 | |
 | PlaceValue | 5 | ✔ Sep 12 — rods land on their count, digits on their place word, expanded-form terms on their values, compare marks on the deciding digit; 5 units verified by stills. Also: the ones unit showed an un-narrated loose pile — removed; "10 more" ring and the 61 marker are new visuals on their words |
 | FunctionMachine | 5 | |
