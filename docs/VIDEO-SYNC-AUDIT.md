@@ -42,7 +42,7 @@
 | HundredGrid | 26 | |
 | Dealing | 26 | |
 | RatioTable | 22 | |
-| Count | 20 | |
+| Count | 20 | ✔ Sep 12 — dots land on their counted number (target said up front = last occurrence), decade rows on their decade, "one full ten" ring on the word (was 2.3 s late); 2 units verified by stills |
 | EqualGroups | 19 | ✔ Sep 12 — before-stills showed 4 groups out at "one group of 4" and the trick caption absent; after: each still shows the group being spoken |
 | Compare | 19 | |
 | FractionBar | 17 | |

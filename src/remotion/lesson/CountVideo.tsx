@@ -18,7 +18,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { countSceneTimings, spokenNumberFrame } from "./timeline";
+import { countSceneTimings, saidFor, type SaidFn } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
 import { Brand } from "./Brand";
 import { countUnitById, type CountUnit } from "./units-early";
@@ -45,6 +45,10 @@ interface SceneProps {
   dur: number;
   unit: CountUnit;
   voice: string;
+  /** Scene-local frame at which the narrator says a number (timeline.ts
+   *  `saidFor`). Every reveal that shows something she counts or names is
+   *  timed with this, never with a fraction of the scene. */
+  said: SaidFn;
 }
 
 function useEnter(atFrame: number, durFrames = 14) {
@@ -147,9 +151,13 @@ function Stage({ children }: { children: React.ReactNode }) {
 }
 
 // ---- Scene 1: the question ------------------------------------------------
-function SceneAsk({ unit }: SceneProps) {
-  const a = useEnter(6);
-  const b = useEnter(40);
+function SceneAsk({ unit, said }: SceneProps) {
+  // "Let's count to 10…" / "Counting to 50 sounds like a lot…" / "This is 7."
+  // — the big number lands the first time she says it.
+  const a = useEnter(said(unit.upTo, 6));
+  // Recognition: "But what does 7 actually mean?" — the question lands on the
+  // second 7. The counting lines' subtitles name no number.
+  const b = useEnter(unit.mode === "recognise" ? said(unit.upTo, 40, -1) : 40); // not-speech-bound (count modes)
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 40 }}>
       <div
@@ -175,24 +183,21 @@ function SceneAsk({ unit }: SceneProps) {
 }
 
 // ---- Scene 2: count the first ten, one at a time --------------------------
-function SceneCount({ dur, unit, voice }: SceneProps) {
+function SceneCount({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
-  const title = useEnter(4);
+  const title = useEnter(4); // "Count with me" — not-speech-bound
   const n = Math.min(unit.upTo, 10);
   const size = dotSize(unit.upTo);
   // Each dot lands the moment the narrator SAYS its number — real word
   // timestamps from the voice build. Even spacing was the old behaviour and
   // it drifted badly (user-caught: dot 7 landing on "five"); it survives only
   // as the fallback for clips that predate timestamp capture.
-  const firstAt = Math.round(dur * 0.16);
-  const lastAt = Math.round(dur * 0.86);
+  const firstAt = Math.round(dur * 0.16); // not-speech-bound: fallback only
+  const lastAt = Math.round(dur * 0.86); // not-speech-bound: fallback only
   const stepF = (lastAt - firstAt) / Math.max(1, n - 1);
-  // Last occurrence: the line may SAY the target early ("counting to 10.
-  // 1… 2…"), and the counted number is always the later mention.
-  const dotAt = Array.from(
-    { length: n },
-    (_, i) => spokenNumberFrame(unit.id, voice, "count", i + 1, -1) ?? firstAt + i * stepF,
-  );
+  // LAST occurrence: the line SAYS the target early ("The first row is just
+  // counting to 10. 1… 2…"), and the counted number is always the later mention.
+  const dotAt = Array.from({ length: n }, (_, i) => said(i + 1, firstAt + i * stepF, -1));
   const appeared = dotAt.filter((t) => frame >= t).length;
   const lastTick = appeared > 0 ? dotAt[appeared - 1] : null;
   return (
@@ -219,10 +224,19 @@ function SceneCount({ dur, unit, voice }: SceneProps) {
 }
 
 // ---- Scene 3: the structure ----------------------------------------------
-function SceneRows({ dur, unit, voice }: SceneProps) {
+function SceneRows({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
-  const title = useEnter(4);
   const size = dotSize(unit.upTo);
+  // Scene titles ("Two ways to write the same thing", "Every row is another
+  // ten") name nothing she counts — not-speech-bound. The 10-unit's title IS
+  // the number ("10 fills a whole row"), so it waits for "10".
+  const title = useEnter(unit.upTo === 10 && unit.mode === "count" ? said(unit.upTo, 4) : 4);
+  // Recognition: "The numeral 7… and 7 things." — the numeral on the first 7,
+  // the things on the second. Both were on screen from frame 0 before, which
+  // stays the fallback for clips without alignment. (Hooks run for every
+  // mode; only the recognise branch reads them.)
+  const numeral = useEnter(said(unit.upTo, 0, 0));
+  const things = useEnter(said(unit.upTo, 0, -1));
 
   if (unit.mode === "recognise") {
     // Numeral and quantity side by side — the two spellings of one idea.
@@ -240,9 +254,28 @@ function SceneRows({ dur, unit, voice }: SceneProps) {
           Two ways to write the same thing
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 90 }}>
-          <div style={{ fontSize: 300, fontWeight: 800, color: BLUE }}>{unit.upTo}</div>
-          <div style={{ fontSize: 90, color: MUTED, fontWeight: 700 }}>=</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, width: 4 * (72 + 16) }}>
+          <div
+            style={{
+              fontSize: 300,
+              fontWeight: 800,
+              color: BLUE,
+              opacity: numeral.opacity,
+              translate: `0 ${numeral.translateY}px`,
+            }}
+          >
+            {unit.upTo}
+          </div>
+          <div style={{ fontSize: 90, color: MUTED, fontWeight: 700, opacity: things.opacity }}>=</div>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 16,
+              width: 4 * (72 + 16),
+              opacity: things.opacity,
+              translate: `0 ${things.translateY}px`,
+            }}
+          >
             {Array.from({ length: unit.upTo }, (_, i) => (
               <div
                 key={i}
@@ -256,8 +289,10 @@ function SceneRows({ dur, unit, voice }: SceneProps) {
   }
 
   if (unit.upTo === 10) {
-    // The full row IS the point: ten exactly fills it.
-    const ringAt = Math.round(dur * 0.4);
+    // The full row IS the point: ten exactly fills it. "And look — 10 of them
+    // fill a whole row, exactly." — the ring closes a beat after "10", once the
+    // title has landed on the same word.
+    const ringAt = said(unit.upTo, Math.round(dur * 0.4) - 6) + 6; // not-speech-bound: fallback only (unchanged)
     const ring = interpolate(frame, [ringAt, ringAt + 16], [0, 1], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
@@ -317,9 +352,10 @@ function SceneRows({ dur, unit, voice }: SceneProps) {
   // row lands when its decade is SPOKEN ("20… 30… 40…"), with the old even
   // spread as the no-timestamp fallback.
   const rows = unit.upTo / 10;
+  // "Every full row is another ten… 20… 30… 40… 50." — each decade is said
+  // once, so the first occurrence is the counted one.
   const rowAt = (r: number) =>
-    spokenNumberFrame(unit.id, voice, "rows", (r + 1) * 10) ??
-    Math.round(dur * (0.14 + (r - 1) * (0.7 / Math.max(1, rows - 1))));
+    said((r + 1) * 10, Math.round(dur * (0.14 + (r - 1) * (0.7 / Math.max(1, rows - 1))))); // not-speech-bound: fallback only
   const litRows = 1 + Array.from({ length: rows - 1 }, (_, r) => rowAt(r + 1)).filter((t) => frame >= t).length;
   const lastTick = litRows > 1 ? rowAt(litRows - 1) : null;
   return (
@@ -352,10 +388,22 @@ function SceneRows({ dur, unit, voice }: SceneProps) {
 }
 
 // ---- Scene 4: the record --------------------------------------------------
-function SceneRecord({ dur, unit }: SceneProps) {
+function SceneRecord({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
-  const title = useEnter(4);
-  const tipAt = Math.round(dur * 0.45);
+  // "And that's 50." / "You counted to 10." / "So that's 7." — the big
+  // numeral lands the first time she says it.
+  const title = useEnter(said(unit.upTo, 4, 0));
+  // The tip follows: "Count the rows of ten — 10, 20, 30…", "100 is just 10
+  // rows of ten". It lands on the FIRST number inside the tip — the second
+  // mention when that number is the target itself ("that's 100. 100 is…").
+  // Tips with no number ("The last number you say is how many there are")
+  // keep the old fixed moment.
+  const tipFallback = Math.round(dur * 0.45); // not-speech-bound: fallback only
+  const tipFirst = unit.tip.match(/\d+/)?.[0];
+  const tipAt =
+    tipFirst === undefined
+      ? tipFallback
+      : said(Number(tipFirst), tipFallback, Number(tipFirst) === unit.upTo ? 1 : 0);
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 44 }}>
       <div
@@ -407,10 +455,13 @@ export const CountVideo: React.FC<CountProps> = ({ unit: unitId, voice = DEFAULT
     >
       {scenes.map((scene) => {
         const Body = SCENE_BODIES[scene.id];
+        const said = saidFor(unit.id, voice, scene.id);
         return (
           <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
+            {/* Voice and picture share this Sequence's clock, so the line
+                always starts exactly when its scene does. */}
             {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-            <Body dur={scene.dur} unit={unit} voice={voice} />
+            <Body dur={scene.dur} unit={unit} voice={voice} said={said} />
           </Sequence>
         );
       })}
