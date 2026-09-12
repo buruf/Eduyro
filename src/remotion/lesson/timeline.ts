@@ -45,6 +45,27 @@ const MIN_SECONDS: Record<string, number> = {
 /** Silence after a line finishes, so scenes don't cut on the last syllable. */
 const TAIL_SECONDS = 0.8;
 
+/** A scene body's way to time a reveal to speech: `said(n, fallback)` is the
+ *  scene-local frame at which the narrator says `n`, or `fallback` when the
+ *  clip has no word alignment. Bound once per scene by the composition
+ *  (`saidFor`) and passed down as a prop, so a body never needs to know the
+ *  unit id, voice or scene id — only which number the picture belongs to.
+ *
+ *  This is the sync fix (Sep 2026): every template had hand-picked reveal
+ *  frames (`secondAt = round(dur * 0.52)`) while the narrator reached the
+ *  number wherever the recording put it. A reveal that shows a number must be
+ *  timed with `said`, never with a fraction of the scene. */
+export type SaidFn = (n: number, fallback: number, occurrence?: number) => number;
+export function saidFor(unitId: string, voiceKey: string, sceneId: string): SaidFn {
+  return (n, fallback, occurrence = 0) => spokenNumberFrame(unitId, voiceKey, sceneId, n, occurrence) ?? fallback;
+}
+/** Does this scene's clip carry word alignment at all? Bodies can use it to
+ *  choose between speech timing and their even-spacing fallback for a whole
+ *  sequence (e.g. one dot per count) rather than per number. */
+export function hasSpeechTiming(unitId: string, voiceKey: string, sceneId: string): boolean {
+  return !!CLIPS_BY_UNIT[unitId]?.[voiceKey]?.find((c) => c.id === sceneId)?.numberTimes?.length;
+}
+
 /** Frame (scene-local) at which the narrator says number `n` in a scene's
  *  line — the k-th time she says it, for lines that repeat a number. Null when
  *  the clip predates timestamp capture, so callers keep an even-spacing

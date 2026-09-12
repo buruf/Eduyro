@@ -24,11 +24,12 @@
 
 ## Status
 
-- [ ] deterministic audit run — results in `docs/video-sync/`
+- [x] deterministic audit run — results in `docs/video-sync/` (Sep 12: 10 stale manifests — clips re-recorded without their timestamps being rebuilt; 50 clips without alignment; 0 stale renders; 0 clips cut off)
 - [ ] stills rendered for 2 units per template and reviewed
-- [ ] `saidAt` helper + SceneProps
-- [ ] templates converted (26) — track per template below
-- [ ] 50 unaligned clips re-narrated
+- [x] helper: `saidFor(unitId, voice, sceneId)` → `said(n, fallback, occurrence)` and `hasSpeechTiming` in timeline.ts (`spokenNumberFrame` already existed, exported, never called by any template)
+- [x] gate written: `scripts/audit-video-reveals.ts` — baseline 26 templates, 170 issues (144 fraction-of-scene reveals), 0 use `said()`. Added to `audit:videos` once all templates are converted
+- [ ] templates converted (26) — track per template below; agents ≤2 at a time (5 parallel agents trip the session rate limit); each agent verifies with `render-sync-stills.ts` on two of its units and READS the stills
+- [ ] 55 units re-narrated (10 stale + 46 unaligned, list in docs/video-sync/renarrate-units.txt) — `build-lesson-voice` run started Sep 12; check the manifest diff, then re-run `audit-video-sync.ts` to confirm 0 hard failures / 0 unaligned
 - [ ] validator gate
 - [ ] re-render, audit:videos green, upload, Desktop export refreshed
 
