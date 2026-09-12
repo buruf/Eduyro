@@ -31,13 +31,14 @@
 - [ ] templates converted (26) — track per template below; agents ≤2 at a time (5 parallel agents trip the session rate limit); each agent verifies with `render-sync-stills.ts` on two of its units and READS the stills
 - [x] 55 units re-narrated Sep 12 (in hindsight unnecessary: the "unaligned" clips were lines that say no number, so there was nothing to align; the "stale" ones were the builder bug above). Fresh takes of the same text; harmless. Audit after re-measure: 0 stale manifests, 0 cut off, 0 lines with numbers lacking alignment; 42 stale renders pending the re-render step
 - [ ] validator gate
-- [ ] re-render, audit:videos green, upload, Desktop export refreshed
+- [ ] re-render every video, `npm run audit:videos` green, upload to Blob
+- [ ] USER REQUEST (Sep 12): delete the old videos in `Desktopeduyro-lesson-videos` and replace them with the corrected renders (`scripts/export-lesson-videos.ts` prunes stale files), give every video its correct description, and regenerate `YOUTUBE-METADATA.md` in that folder
 
 | template | reveal sites | converted |
 |---|---|---|
 | Column | 86 | |
 | Graph | 59 | |
-| TenFrame | 35 | |
+| TenFrame | 35 | ✔ Sep 12 — 21 reveals bound (make-ten fillers on the second "2", count-on dots land on their counted total, subtract batches leave on their number); 4 units verified by stills. Follow-up: "N added" label overlaps waiting dots in count-up (pre-existing layout) |
 | HundredGrid | 26 | |
 | Dealing | 26 | |
 | RatioTable | 22 | |
