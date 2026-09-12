@@ -49,7 +49,7 @@
 | Balance | 14 | ✔ Sep 12 — equation enters number by number, weights land on their count, lift off on the take-away, the split on its factor, the answer on its value; 3 units verified by stills. Also fixed: the answer box rendered at the top-left corner in every Balance video; ghost copies of leaving weights |
 | Area | 14 | ✔ Sep 12 — rectangle grows on the factor, cut lands on the split, each region lights and labels on its partial product in narration order, sum terms one per number; 3 units verified by stills. Before: both region labels up at once, record scene empty. Follow-up: bottom-row labels overflow the 26% minimum strip in 2d×2d |
 | NumberLine | 13 | ✔ Sep 12 — sequence cards land one per word, the dot rests on each hop number (arc shortens when words come fast), tip on its number; 4 units verified by stills. Before: whole sequence and question on screen at 0 s |
-| FactFamily | 12 | |
+| FactFamily | 12 | ✔ Sep 12 — the three numbers land one per word, the whole bar then each part on its number, each of the four facts enters number by number and lights on its first; build titles now read in narration order; 3 units verified by stills |
 | PolyOps | 11 | |
 | FractionOps | 8 | |
 | PreAlg | 7 | |
