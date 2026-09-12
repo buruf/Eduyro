@@ -17,6 +17,10 @@ import { homedir } from "os";
 import { ALL_LESSON_UNITS } from "../src/remotion/lesson/registry";
 import { getMathLevelSkills, getMathSheetMeta } from "../src/lib/worksheet/generator";
 import { ALL_LABEL_ALIASES, videoForSkillLabel } from "../src/remotion/lesson/units";
+import { lessonCatalog } from "../src/lib/lessons/catalog";
+
+/** video unit id → its /lessons/<slug> page (the same slugs the site serves). */
+const slugById = new Map(lessonCatalog().map((l) => [l.id, l.slug]));
 
 // SERVED label -> the curriculum's own grade string.
 const labelGrade = new Map<string, string>();
@@ -126,12 +130,16 @@ const rows = ALL_LESSON_UNITS.map((u) => {
     grade: grade ?? "—",
     title: title(u.label),
     tags: tags.join(", "),
+    // The description is the only text a viewer reads before deciding to
+    // click through, so it says what the lesson teaches and links to THIS
+    // lesson's page (video + practice), not just the homepage.
     description: [
       hook,
       "",
-      `A short animated lesson from Eduyro — mastery learning for Pre-K to Grade 12. Every skill gets a video like this one plus daily practice worksheets that adapt to how your child is doing.`,
+      `In this lesson: ${u.label}${grade ? ` (${grade})` : ""}. A short animated lesson from Eduyro — mastery learning for Pre-K to Grade 12. Every skill gets a video like this one plus daily practice worksheets that adapt to how your child is doing.`,
       "",
-      "Try it free: https://eduyro.com",
+      ...(slugById.get(u.id) ? [`Watch it again and practise this skill: https://eduyro.com/lessons/${slugById.get(u.id)}`] : []),
+      "Try Eduyro free: https://eduyro.com",
       "",
       `#math #${topic} #eduyro`,
     ].join("\n"),
