@@ -53,7 +53,7 @@
 | PolyOps | 11 | |
 | FractionOps | 8 | |
 | PreAlg | 7 | |
-| PlaceValue | 5 | |
+| PlaceValue | 5 | ✔ Sep 12 — rods land on their count, digits on their place word, expanded-form terms on their values, compare marks on the deciding digit; 5 units verified by stills. Also: the ones unit showed an un-narrated loose pile — removed; "10 more" ring and the 61 marker are new visuals on their words |
 | FunctionMachine | 5 | |
 | DecimalOps | 5 | |
 | Trig | 4 | |
