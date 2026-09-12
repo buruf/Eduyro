@@ -40,7 +40,7 @@
 | Graph | 59 | ✔ Sep 12 — points land on their y as it is said (x skipped, abs for negatives), intercept dot on "height of 1" (was 4.7 s early), each formula digit on its word, table rows on their y, headlines split per number; 3 units verified by stills |
 | TenFrame | 35 | ✔ Sep 12 — 21 reveals bound (make-ten fillers on the second "2", count-on dots land on their counted total, subtract batches leave on their number); 4 units verified by stills. Follow-up: "N added" label overlaps waiting dots in count-up (pre-existing layout) |
 | HundredGrid | 26 | ✔ Sep 12 — cells shade from the count she says and the last cell lands on the total; decimals bound on their leading 0; 5 units verified by stills. Also fixed: gold cells re-faded to invisible under "40 cells shaded", and frame 0 showed holes in the grid border |
-| Dealing | 26 | |
+| Dealing | 26 | ✔ Sep 12 — the last dealt dot lands on "N each", leftovers on the remainder, rings on their count, rods/cubes on their tens/ones, record and tip number by number; 3 units verified by stills. Before: the whole equation at 0 s and every plate full before she said the total |
 | RatioTable | 22 | |
 | Count | 20 | ✔ Sep 12 — dots land on their counted number (target said up front = last occurrence), decade rows on their decade, "one full ten" ring on the word (was 2.3 s late); 2 units verified by stills |
 | EqualGroups | 19 | ✔ Sep 12 — before-stills showed 4 groups out at "one group of 4" and the trick caption absent; after: each still shows the group being spoken |
