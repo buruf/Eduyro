@@ -36,13 +36,17 @@ describe("M8–M12 transition minors", () => {
     expect(steps("Decimals — mixed review")).toMatch(/every lesson of the level/);
   });
 
+  // Each lesson now has several shapes (equivalent: blank on the right, three
+  // parts, blank on the LEFT; proportion: a : b = ___ : kb, the fraction form,
+  // a non-whole visible scale; scale-up: "scale a : b by k", three parts, "so
+  // the first part becomes"), so a lesson is counted by the union of its shapes.
   test("M9 mixed review: simplify, equivalent, proportion and scale-up all on every sheet", () => {
     for (const n of [83, 88, 94, 100]) {
       const ps = sheet("RATIOS", n);
       expect(count(ps, /^Simplify the ratio/)).toBeGreaterThanOrEqual(6);
-      expect(count(ps, /= \d+ : ___$/)).toBeGreaterThanOrEqual(6);
-      expect(count(ps, /= ___ : \d+$/)).toBeGreaterThanOrEqual(6);
-      expect(count(ps, /^Write an equivalent ratio: scale/)).toBeGreaterThanOrEqual(6);
+      expect(count(ps, /= \d+ : ___( : \d+)?$|^Find the missing number:  ___ : \d+ = \d+ : \d+$/)).toBeGreaterThanOrEqual(6);
+      expect(count(ps, /^Find the missing number:  \d+ : \d+ = ___ : \d+$|frac\{___\}/)).toBeGreaterThanOrEqual(6);
+      expect(count(ps, /^Write an equivalent ratio: scale|^Scale \d+ : \d+ so/)).toBeGreaterThanOrEqual(6);
     }
     expect(directive("RATIOS", 83)).not.toMatch(/missing term/); // the sheet is no longer only that
   });
@@ -52,14 +56,17 @@ describe("M8–M12 transition minors", () => {
     expect(steps("Ratios — equivalent ratios")).toMatch(/2 : 3 scaled by 4 is 8 : 12/);
   });
 
+  // The distribution and fraction lessons each have three shapes now —
+  // k(x + b) = c, k(x − b) = c, k(x + b) + d = c; x/d = q, x/d + b = c,
+  // (x + b)/d = c — so a lesson is counted by the union of its shapes.
   test("M11 mixed review: 6 of each equation type on every sheet", () => {
     for (let n = 87; n <= 100; n++) {
       const ps = sheet("LINEAR_EQUATIONS", n);
       expect(count(ps, /^Solve for x:  \d+x \+ \d+ = \d+$/)).toBe(6);        // two-step (+)
       expect(count(ps, /^Solve for x:  \d+x - \d+ = \d+$/)).toBe(6);         // two-step (−)
-      expect(count(ps, /\(x \+ \d+\) = /)).toBe(6);                          // distribution
+      expect(count(ps, /\(x [+-] \d+\)( \+ \d+)? = /)).toBe(6);              // distribution
       expect(count(ps, /= \d*x( \+ \d+)?$/)).toBe(6);                        // variables on both sides
-      expect(count(ps, /frac\{x\}/)).toBe(6);                                // fraction
+      expect(count(ps, /frac\{x( \+ \d+)?\}/)).toBe(6);                      // fraction
     }
   });
 

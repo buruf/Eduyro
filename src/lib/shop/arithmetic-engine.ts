@@ -24,22 +24,50 @@ interface AProblem { q: string; a: string; diff: number; key: string; type?: "ar
 
 // ── Difficulty helpers ────────────────────────────────────────────────────────
 const digits = (n: number) => String(Math.abs(n)).length;
-const magnitude = (n: number) => Math.abs(n) % Math.pow(10, digits(n) - 1); // within-digit-class size
+// Size WITHIN the digit class, scaled 0–25 (a single digit is itself). It used
+// to be `n % 10^(digits−1)`, which for a 2-digit number is just its ONES digit:
+// every minuend or addend ending in 0 ranked easiest, so the opening borrowing
+// sheet was 22/24 "x0 − y" (10 − 7, 80 − 5, 70 − 55) and the opening no-
+// regrouping sheet was "50 + 44, 50 + 29, 50 + 11 …". The 30-per-digit-class
+// step in every enumerator stays larger than this, so classes keep their order.
+const magnitude = (n: number) => {
+  const v = Math.abs(n), d = digits(v);
+  if (d === 1) return v;
+  const lo = Math.pow(10, d - 1), hi = Math.pow(10, d) - 1;
+  return ((v - lo) / (hi - lo)) * 25;
+};
 const addCarry = (a: number, b: number) => (a % 10) + (b % 10) >= 10 ? 1 : 0;
 const subBorrow = (a: number, b: number) => (a % 10) < (b % 10) ? 1 : 0;
 
+// Cheap deterministic integer hash of a pair — used to THIN big spaces. Pure
+// integer math (no strings) so an 810,000-pair space costs a few milliseconds.
+const mix = (a: number, b: number) => {
+  let h = (Math.imul(a, 0x9e3779b1) ^ Math.imul(b + 0x7f4a7c15, 0x85ebca77)) >>> 0;
+  h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35) >>> 0; h ^= h >>> 16;
+  return h >>> 0;
+};
+
 // ── Bounded space iterator ────────────────────────────────────────────────────
-// Iterate a×b space; if it's huge, stride so we still get a dense, varied sample
-// (a few hundred problems) rather than enumerating millions.
+// Iterate a×b space; if it's huge, keep a hashed sample (a few hundred
+// problems) rather than enumerating millions. This used to STRIDE both axes,
+// which for a stride of 3 left only numbers ≡ 11 (mod 3) in a 2-digit pool —
+// 11, 14, 17, 20, 23, 26, 29, 32 … — so sixteen sheets of "2-digit addition"
+// were 41 + 23, 23 + 62, 32 + 41, 41 + 53 over and over, and every 3-digit
+// sheet was 712, 916, 814, 644 and 542. A hashed sample keeps every operand
+// value in play while the pool stays the same size.
 function eachPair(
   aLo: number, aHi: number, bLo: number, bHi: number,
   fn: (a: number, b: number) => void,
   cap = 700,
 ) {
   const total = (aHi - aLo + 1) * (bHi - bLo + 1);
-  const stride = total <= cap ? 1 : Math.max(1, Math.round(Math.sqrt(total / cap)));
-  for (let a = aLo; a <= aHi; a += stride)
-    for (let b = bLo; b <= bHi; b += stride) fn(a, b);
+  if (total <= cap) {
+    for (let a = aLo; a <= aHi; a++) for (let b = bLo; b <= bHi; b++) fn(a, b);
+    return;
+  }
+  const keep = Math.round((cap / total) * 4096);
+  for (let a = aLo; a <= aHi; a++)
+    for (let b = bLo; b <= bHi; b++) if ((mix(a, b) & 4095) < keep) fn(a, b);
 }
 
 // ── ADDITION enumerators ──────────────────────────────────────────────────────
@@ -55,14 +83,18 @@ function enumAdd(aLo: number, aHi: number, bLo: number, bHi: number, carry?: boo
 // True "no regrouping": 2-digit + 2-digit with NO carry in EITHER column (the
 // plain enumAdd `carry:false` only checks the ones column, so it lets tens-carry
 // problems like 70+79=149 leak onto "no regrouping" sheets).
-function enumAddClean(aLo: number, aHi: number, bLo: number, bHi: number): AProblem[] {
+// `cap` is raised for the unit's main pool: sixteen sheets drew from ~250
+// pairs and repeated 65 + 23 three times. A single-digit addend (23 + 4) ranks
+// a little ahead of a 2-digit one of the same size, so the unit ramps
+// 2-digit + 1-digit → 2-digit + 2-digit rather than opening flat.
+function enumAddClean(aLo: number, aHi: number, bLo: number, bHi: number, cap = 700): AProblem[] {
   const out: AProblem[] = [];
   eachPair(aLo, aHi, bLo, bHi, (a, b) => {
     if ((a % 10) + (b % 10) >= 10) return;                       // ones carry
     if (Math.floor(a / 10) + Math.floor(b / 10) >= 10) return;   // tens carry
-    const m = Math.max(a, b);
-    out.push({ q: `${a} + ${b}`, a: String(a + b), diff: (digits(m) - 1) * 30 + magnitude(m), key: `${a}+${b}` });
-  });
+    const m = Math.max(a, b), n = Math.min(a, b);
+    out.push({ q: `${a} + ${b}`, a: String(a + b), diff: (digits(m) - 1) * 30 + magnitude(m) + (digits(n) - 1) * 6, key: `${a}+${b}` });
+  }, cap);
   return out;
 }
 // ── "2-digit addition (regrouping)" — the ramp this unit never had ───────────
@@ -75,31 +107,33 @@ function enumAddClean(aLo: number, aHi: number, bLo: number, bHi: number): AProb
 // 94 + 97. The multiplication unit was given a staged ramp for exactly this
 // reason; addition was left with none.
 //
-// Two bands, ordered by `diff` so the sheet window walks them in order:
-//   band 1  ones carry, answer stays UNDER 100 (37 + 45 = 82) — the case the
-//           unit's own worked example teaches, and the only one it has taught
-//   band 2  answer crosses 100, so the tens column carries too — reached only
-//           after band 1 is exhausted, i.e. late in the unit
-// Band 2 is STRIDED, for the same reason the multiplication ramp strides its
-// hardest stage: selectProblems' difficulty window spans ~70% of the pool, so
-// ordering alone does not keep a band off the first sheet — it has to be a
-// small enough share of the pool. Un-strided, band 2 is 64% of the carrying
-// pairs and floods sheet one; at 1/4 it is ~22%, which sits below the window.
-const OVER_HUNDRED_STRIDE = 4;
-
+// The unit now holds ONLY the case its lesson teaches: a ones carry with the
+// answer under 100 (37 + 45 = 82). Sums over 100 used to sit in a late band
+// here, but a carry out of the tens column ("write 13") is a new move that
+// the printed page never showed — 58 + 49 = 107 arrived on sheet 58 cold. Those
+// sums now OPEN the 3-digit unit (enumAddOver100), whose lesson page models
+// them, right before 248 + 167.
 function enumAddRegroup(): AProblem[] {
   const out: AProblem[] = [];
-  let over = 0;
   eachPair(10, 99, 10, 99, (a, b) => {
     if (addCarry(a, b) !== 1) return;
     const sum = a + b;
+    if (sum >= 100) return;
     const m = Math.max(a, b);
-    if (sum < 100) {
-      out.push({ q: `${a} + ${b}`, a: String(sum), diff: magnitude(m) + (m >= 50 ? 40 : 0), key: `ar1-${a}+${b}` });
-    } else if (over++ % OVER_HUNDRED_STRIDE === 0) {
-      out.push({ q: `${a} + ${b}`, a: String(sum), diff: 900 + sum, key: `ar2-${a}+${b}` });
-    }
+    out.push({ q: `${a} + ${b}`, a: String(sum), diff: magnitude(m) + (m >= 50 ? 40 : 0), key: `ar1-${a}+${b}` });
   });
+  return out;
+}
+// 2-digit + 2-digit crossing 100 (64 + 67 = 131): the bridge from the
+// regrouping unit into 3-digit addition. Thinned to a bounded minority and
+// ranked below every 3-digit sum, so they open the 3-digit unit.
+function enumAddOver100(cap = 70): AProblem[] {
+  const out: AProblem[] = [];
+  eachPair(10, 99, 10, 99, (a, b) => {
+    const sum = a + b;
+    if (sum < 100) return;
+    out.push({ q: `${a} + ${b}`, a: String(sum), diff: magnitude(Math.max(a, b)) + (addCarry(a, b) ? 5 : 0), key: `ao-${a}+${b}` });
+  }, cap);
   return out;
 }
 
@@ -108,10 +142,13 @@ function enumAddRegroup(): AProblem[] {
 // a no-regrouping unit that subtraction was borrowing (___ + 25 = 61 needs
 // 61 - 25). Filtering on addCarry is sufficient: when a + b has no carry,
 // s's ones digit is a%10 + b%10, which is >= b%10, so s - b cannot borrow.
-function enumMissingAdd(aLo: number, aHi: number, bLo: number, bHi: number, carry?: boolean): AProblem[] {
+// `maxSum` keeps a 2-digit unit's blanks under 100: "___ + 32 = 122" is a
+// subtraction across the hundreds, which no addition lesson teaches.
+function enumMissingAdd(aLo: number, aHi: number, bLo: number, bHi: number, carry?: boolean, maxSum = Infinity): AProblem[] {
   const out: AProblem[] = [];
   eachPair(aLo, aHi, bLo, bHi, (a, b) => {
     if (carry !== undefined && addCarry(a, b) !== (carry ? 1 : 0)) return;
+    if (a + b > maxSum) return;
     // A total that crosses 100 makes this a subtraction across the hundreds
     // (___ + 66 = 130 means 130 − 66), which is a harder skill than the
     // 2-digit units teach. The old `digits × 30` term ranked it only ~30
@@ -123,6 +160,17 @@ function enumMissingAdd(aLo: number, aHi: number, bLo: number, bHi: number, carr
     const band = sum >= 100 ? 900 : 0;
     out.push({ q: `___ + ${b} = ${sum}`, a: String(a), diff: band + (digits(sum) - 1) * 30 + magnitude(sum) + addCarry(a, b) * 20 + 18, key: `m+${a}_${b}` });
   });
+  return out;
+}
+// The only 3-digit missing addend the addition packs can teach: the known
+// part is a whole number of hundreds ("___ + 200 = 438"), so the child counts
+// up in hundreds — no 3-digit subtraction, which is a later pack. The general
+// case (___ + 314 = 582) was 3-digit subtraction with regrouping and is gone.
+function enumMissingAddHundreds(): AProblem[] {
+  const out: AProblem[] = [];
+  for (let h = 100; h <= 500; h += 100)
+    for (let a = 100; a + h <= 999; a += 7)
+      out.push({ q: `___ + ${h} = ${a + h}`, a: String(a), diff: 60 + magnitude(a + h) + 18, key: `mh+${a}_${h}` });
   return out;
 }
 function enumThreeAdd(lo: number, hi: number, cap = 90): AProblem[] {
@@ -140,12 +188,16 @@ function enumThreeAdd(lo: number, hi: number, cap = 90): AProblem[] {
 }
 
 // ── SUBTRACTION enumerators ───────────────────────────────────────────────────
+// A 2-digit subtrahend ranks a little after a 1-digit one of the same
+// minuend (57 − 6 before 57 − 26), so a unit ramps x − a → ab − cd instead of
+// serving five sheets of "x − a single digit". n − n is skipped past the
+// facts: "43 − 43", "644 − 644" are the subtract-all fact, not a 2-digit skill.
 function enumSub(aLo: number, aHi: number, bLo: number, bHi: number, borrow?: boolean): AProblem[] {
   const out: AProblem[] = [];
   eachPair(aLo, aHi, bLo, bHi, (a, b) => {
-    if (b > a) return;
+    if (b > a || (b === a && a >= 10)) return;
     if (borrow !== undefined && subBorrow(a, b) !== (borrow ? 1 : 0)) return;
-    out.push({ q: `${a} - ${b}`, a: String(a - b), diff: (digits(a) - 1) * 30 + magnitude(a) + subBorrow(a, b) * 25 + (digits(a) >= 3 && /0/.test(String(a).slice(1)) ? 150 : 0), key: `${a}-${b}` });
+    out.push({ q: `${a} - ${b}`, a: String(a - b), diff: (digits(a) - 1) * 30 + magnitude(a) + (digits(b) - 1) * 8 + subBorrow(a, b) * 25 + (digits(a) >= 3 && /0/.test(String(a).slice(1)) ? 150 : 0), key: `${a}-${b}` });
   });
   return out;
 }
@@ -161,9 +213,9 @@ function enumSub(aLo: number, aHi: number, bLo: number, bHi: number, borrow?: bo
 function enumMissingSub(aLo: number, aHi: number, bLo: number, bHi: number, borrow?: boolean): AProblem[] {
   const out: AProblem[] = [];
   eachPair(aLo, aHi, bLo, bHi, (a, b) => {
-    if (b > a) return;
+    if (b > a || (b === a && a >= 10)) return;
     if (borrow !== undefined && subBorrow(a, b) !== (borrow ? 1 : 0)) return;
-    out.push({ q: `${a} - ___ = ${a - b}`, a: String(b), diff: (digits(a) - 1) * 30 + magnitude(a) + subBorrow(a, b) * 25 + 18, key: `${a}-m${b}` });
+    out.push({ q: `${a} - ___ = ${a - b}`, a: String(b), diff: (digits(a) - 1) * 30 + magnitude(a) + (digits(b) - 1) * 8 + subBorrow(a, b) * 25 + 18, key: `${a}-m${b}` });
   });
   return out;
 }
@@ -217,7 +269,11 @@ function subFormats(items: Fact[], withAddend = false): AProblem[] {
 // approximated by including those counts in the pool (the seeded sampler then
 // draws across them). Review facts keep their own keys so they're de-duped.
 function det<T>(arr: T[], k: number, seed: string): T[] { return shuffle(arr, mulberry32(hashStr(seed))).slice(0, Math.max(0, k)); }
-function spiral(current: AProblem[], prior: AProblem[], twoBack: AProblem[], tag: string): AProblem[] {
+// `priorShare` is the review percentage (default ~25%). A unit with very few
+// facts of its own — the ten square facts — raises it so the page is not a
+// dozen items: the review there is the ×2/×5/×10 facts the squares are built
+// from ("6 × 5 = 30, one more six"), so a fuller page is also a coherent one.
+function spiral(current: AProblem[], prior: AProblem[], twoBack: AProblem[], tag: string, priorShare = 25): AProblem[] {
   const n = current.length;
   let lo = Infinity, hi = -Infinity; for (const p of current) { lo = Math.min(lo, p.diff); hi = Math.max(hi, p.diff); }
   const span = (hi - lo) || 1;
@@ -225,7 +281,7 @@ function spiral(current: AProblem[], prior: AProblem[], twoBack: AProblem[], tag
   // per-sheet difficulty window mixes review throughout (not clustered on early
   // sheets). Review keeps its own keys/strat tag for the acceptance checker.
   const remap = (arr: AProblem[], k: number, seed: string) => det(arr, k, seed).map((p, i) => ({ ...p, diff: lo + ((i + 0.5) / Math.max(1, k)) * span }));
-  return [...current, ...remap(prior, Math.round((n * 25) / 70), tag + ":p"), ...remap(twoBack, Math.round((n * 5) / 70), tag + ":tb")];
+  return [...current, ...remap(prior, Math.round((n * priorShare) / 70), tag + ":p"), ...remap(twoBack, Math.round((n * 5) / 70), tag + ":tb")];
 }
 
 // A REVIEW unit mixes several shapes, each with its own difficulty scale. Left
@@ -233,23 +289,36 @@ function spiral(current: AProblem[], prior: AProblem[], twoBack: AProblem[], tag
 // alone: the subtraction review's first sheet was thirty "40 − ___ = 23"
 // items and nothing else. Rescale each list onto one 0–100 band so every
 // sheet's window cuts through all of them, easiest of each first.
+//
+// The band is assigned by RANK inside the list, not by value: a list whose
+// scores bunch at the bottom (3-digit subtraction, where a zero in the middle
+// adds +150 to a handful of items) used to squeeze all its ordinary items into
+// the first fifth of the band, while a list spread evenly (2-digit borrowing)
+// had only a fifth of its items there — so the opening review sheet held one
+// 2-digit subtraction next to twenty 3-digit ones. Ranked, every list puts the
+// same share of itself into every slice of the band.
 function mixBands(lists: AProblem[][]): AProblem[] {
   const out: AProblem[] = [];
   for (const list of lists) {
-    let lo = Infinity, hi = -Infinity; for (const p of list) { lo = Math.min(lo, p.diff); hi = Math.max(hi, p.diff); }
-    const span = (hi - lo) || 1;
-    for (const p of list) out.push({ ...p, diff: ((p.diff - lo) / span) * 100 });
+    const sorted = [...list].sort((a, b) => a.diff - b.diff || (a.key < b.key ? -1 : 1));
+    const n = Math.max(1, sorted.length - 1);
+    sorted.forEach((p, i) => out.push({ ...p, diff: (i / n) * 100 }));
   }
   return out;
 }
 
 // ── Addition strategy fact sets ──
 function fCountOn(): Fact[] { const o: Fact[] = []; for (let a = 1; a <= 9; a++) for (const b of [1, 2, 3]) if (a + b <= 10) { o.push({ a, b, diff: a + b, strat: "count-on" }); o.push({ a: b, b: a, diff: a + b + 0.1, strat: "count-on" }); } return o; }
-// The lesson is titled 1+1 … 9+9; 10+10, 11+11 and 12+12 stay in the unit but
-// off its opening sheet.
-function fDoubles(): Fact[] { const o: Fact[] = []; for (let n = 1; n <= 12; n++) o.push({ a: n, b: n, diff: 2 * n, strat: "doubles", late: n >= 10 }); return o; }
-function fZeroComm(): Fact[] { const o: Fact[] = []; for (let a = 0; a <= 9; a++) { o.push({ a, b: 0, diff: a + 1, strat: "zero-comm" }); o.push({ a: 0, b: a, diff: a + 1.1, strat: "zero-comm" }); } for (let a = 2; a <= 8; a++) for (let b = a + 1; b <= 9 && a + b <= 12; b++) { o.push({ a, b, diff: a + b, strat: "zero-comm" }); o.push({ a: b, b: a, diff: a + b + 0.1, strat: "zero-comm" }); } return o; }
-function fNearDoubles(): Fact[] { const o: Fact[] = []; for (let n = 1; n <= 8; n++) { o.push({ a: n, b: n + 1, diff: 2 * n + 1, strat: "near-doubles" }); o.push({ a: n + 1, b: n, diff: 2 * n + 1.1, strat: "near-doubles" }); } return o; }
+// The lesson is titled 1+1 … 9+9. 10 + 10 = 20 stays in the unit but off its
+// opening sheet; 11 + 11 and 12 + 12 are gone — a Grade 1 child who has
+// counted to 18 met 22 with no lesson. `minN` lets a later unit review only
+// the bigger doubles (1 + 1 on a make-ten sheet is padding).
+function fDoubles(maxN = 10, minN = 1): Fact[] { const o: Fact[] = []; for (let n = minN; n <= maxN; n++) o.push({ a: n, b: n, diff: 2 * n, strat: "doubles", late: n >= 10 }); return o; }
+// Turnaround pairs stay within 10: the child has +1/+2/+3, doubles and +0,
+// and bridging through ten is two lessons away (7 + 4, 2 + 9 were here).
+function fZeroComm(): Fact[] { const o: Fact[] = []; for (let a = 0; a <= 9; a++) { o.push({ a, b: 0, diff: a + 1, strat: "zero-comm" }); o.push({ a: 0, b: a, diff: a + 1.1, strat: "zero-comm" }); } for (let a = 2; a <= 8; a++) for (let b = a + 1; b <= 9 && a + b <= 10; b++) { o.push({ a, b, diff: a + b, strat: "zero-comm" }); o.push({ a: b, b: a, diff: a + b + 0.1, strat: "zero-comm" }); } return o; }
+// From 2 + 3 up: 1 + 2 is a counting-on fact, not a near-double anyone uses.
+function fNearDoubles(minN = 2): Fact[] { const o: Fact[] = []; for (let n = minN; n <= 8; n++) { o.push({ a: n, b: n + 1, diff: 2 * n + 1, strat: "near-doubles" }); o.push({ a: n + 1, b: n, diff: 2 * n + 1.1, strat: "near-doubles" }); } return o; }
 function fMakeTen(): Fact[] { const o: Fact[] = []; for (let a = 1; a <= 9; a++) o.push({ a, b: 10 - a, diff: 10, strat: "make-ten" }); for (let a = 5; a <= 9; a++) for (let b = 11 - a; b <= 9 && a + b >= 11 && a + b <= 18; b++) o.push({ a, b, diff: a + b + 2, strat: "make-ten" }); return o; }
 // `sumLo`/`sumHi` split the families: the unit's OWN facts are the sums 10–18
 // its title promises (the opening sheet used to be 1 + 6 and 2 + 2, a step
@@ -261,21 +330,30 @@ function fFactFamily(sumLo = 2, sumHi = 18): Fact[] { const o: Fact[] = []; for 
 function sCountBack(): Fact[] { const o: Fact[] = []; for (let a = 2; a <= 10; a++) for (const b of [1, 2, 3]) if (b <= a) o.push({ a, b, diff: a, strat: "count-back" }); return o; }
 function sZero(): Fact[] { const o: Fact[] = []; for (let a = 0; a <= 10; a++) { o.push({ a, b: 0, diff: a + 1, strat: "sub-zero" }); o.push({ a, b: a, diff: a + 1.1, strat: "sub-zero" }); } return o; }
 function sCountUp(): Fact[] { const o: Fact[] = []; for (let a = 4; a <= 10; a++) for (let b = 1; b < a; b++) if (a - b <= 4) o.push({ a, b, diff: a + 2, strat: "count-up" }); return o; }
-function sNearDoubles(): Fact[] { const o: Fact[] = []; for (let n = 1; n <= 9; n++) { o.push({ a: 2 * n, b: n, diff: 2 * n + 3, strat: "halves" }); if (2 * n + 1 <= 18) o.push({ a: 2 * n + 1, b: n, diff: 2 * n + 3.1, strat: "halves" }); } return o; }
+// Halves from 6 − 3 up: 2 − 1 and 4 − 2 are count-back facts, and with them
+// in the pool two-thirds of the opening halves sheet was within-5 review.
+function sNearDoubles(minN = 3): Fact[] { const o: Fact[] = []; for (let n = minN; n <= 9; n++) { o.push({ a: 2 * n, b: n, diff: 2 * n + 3, strat: "halves" }); if (2 * n + 1 <= 18) o.push({ a: 2 * n + 1, b: n, diff: 2 * n + 3.1, strat: "halves" }); } return o; }
 function sBridge(): Fact[] { const o: Fact[] = []; for (let a = 11; a <= 18; a++) for (let b = 2; b <= 9; b++) if (a - b >= 1 && (a % 10) < b) o.push({ a, b, diff: a + 4, strat: "bridge-down" }); return o; }
-function sFactFamily(): Fact[] { const o: Fact[] = []; for (let a = 2; a <= 18; a++) for (let b = 1; b < a && a - b <= 9 && b <= 9; b++) o.push({ a, b, diff: a + 5, strat: "fact-family" }); return o; }
+// `aLo`/`aHi` bound the minuend: the unit titled "to 18" opens on the 10–18
+// families (it used to open with 2 − 1 and 3 − ___ = 2, right after 17 − 8).
+// (The subtrahend starts at a − 9, not 1: with "a − b ≤ 9" as a loop CONDITION
+// the loop stopped at b = 1 for every minuend over 10, so "to 18" had only the
+// 10 − b facts.)
+function sFactFamily(aLo = 2, aHi = 18): Fact[] { const o: Fact[] = []; for (let a = aLo; a <= aHi; a++) for (let b = Math.max(1, a - 9); b < a && b <= 9; b++) o.push({ a, b, diff: a + 5, strat: "fact-family" }); return o; }
 
 // ── Multiplication strategy fact sets + format wrapper ──
 type MFact = { a: number; b: number; diff: number; strat: string; late?: boolean };
 // `maxB` caps the second factor when a table is REVIEW in a unit that comes
 // before ×11/×12 are taught (4 × 11 was on the first ×6–×9 sheet).
 function mTables(tables: number[], strat: string, maxB = 12): MFact[] { const o: MFact[] = []; for (const t of tables) for (let b = 1; b <= maxB; b++) o.push({ a: t, b, diff: t * b * 0.4 + Math.max(t, b), strat }); return o; }
-// Squares come third in the level, after ×2/×5/×10 and ×1/×0 only. The ones a
-// child can build from those (1–5, 10) open the unit; 6 × 6 … 9 × 9, 11 × 11
-// and 12 × 12 arrive from the second sheet, once the fives strategy in the
-// lesson has been used on the small ones.
-function mSquares(maxN = 12): MFact[] { const o: MFact[] = []; for (let n = 1; n <= maxN; n++) o.push({ a: n, b: n, diff: n * n * 0.4, strat: "squares", late: n >= 6 && n !== 10 }); return o; }
-function mAll(): MFact[] { const o: MFact[] = []; for (let a = 2; a <= 12; a++) for (let b = 2; b <= 12; b++) o.push({ a, b, diff: a * b * 0.4, strat: "fact-family" }); return o; }
+// Squares come third in the level, after ×2/×5/×10 and ×1/×0 only, so the
+// unit is 1² … 10²: every one of those is "the five you know plus more of the
+// number" (7 × 7 = 35 + 14), which the lesson works through. 11 × 11 and
+// 12 × 12 have no strategy at this point and wait for the ×10/×11/×12 unit.
+function mSquares(maxN = 10): MFact[] { const o: MFact[] = []; for (let n = 1; n <= maxN; n++) o.push({ a: n, b: n, diff: n * n * 0.4, strat: "squares" }); return o; }
+// `maxN` caps the tables when fact families are practised BEFORE ×11/×12 are
+// taught (the fact-family unit precedes the big-tables unit).
+function mAll(maxN = 12): MFact[] { const o: MFact[] = []; for (let a = 2; a <= maxN; a++) for (let b = 2; b <= maxN; b++) o.push({ a, b, diff: a * b * 0.4, strat: "fact-family" }); return o; }
 function mulFormats(items: MFact[]): AProblem[] {
   const out: AProblem[] = [];
   for (const { a, b, diff, strat, late } of items) {
@@ -299,9 +377,13 @@ type DFact = { dividend: number; divisor: number; q: number; diff: number; strat
 // tables opens with the small facts of EVERY table (10 ÷ 5, 20 ÷ 10, 6 ÷ 2).
 // Ordered by dividend, the "÷2, ÷5, ÷10" opening sheet was ÷2 with three ÷5
 // and no ÷10 at all — the ÷10 facts all have big dividends.
-function dTables(divisors: number[], strat: string): DFact[] { const o: DFact[] = []; for (const d of divisors) for (let q = 1; q <= 12; q++) o.push({ dividend: d * q, divisor: d, q, diff: q * 2 + d * 0.5, strat }); return o; }
+// Quotients start at 2: n ÷ n = 1 is the identity unit's fact, and as a table
+// entry it put "10 ÷ 10" at the head of the ÷10/÷11/÷12 lesson page.
+function dTables(divisors: number[], strat: string): DFact[] { const o: DFact[] = []; for (const d of divisors) for (let q = 2; q <= 12; q++) o.push({ dividend: d * q, divisor: d, q, diff: q * 2 + d * 0.5, strat }); return o; }
 function dIdentity(): DFact[] { const o: DFact[] = []; for (let n = 1; n <= 12; n++) { o.push({ dividend: n, divisor: 1, q: n, diff: n + 1, strat: "identity" }); o.push({ dividend: n, divisor: n, q: 1, diff: n + 1.1, strat: "identity" }); } return o; }
-function dSquares(): DFact[] { const o: DFact[] = []; for (let n = 1; n <= 12; n++) o.push({ dividend: n * n, divisor: n, q: n, diff: n * n * 0.35, strat: "squares" }); return o; }
+// 1² … 10² only, mirroring the multiplication squares unit: 121 ÷ 11 and
+// 144 ÷ 12 belong to the ÷10/÷11/÷12 unit.
+function dSquares(maxN = 10): DFact[] { const o: DFact[] = []; for (let n = 1; n <= maxN; n++) o.push({ dividend: n * n, divisor: n, q: n, diff: n * n * 0.35, strat: "squares" }); return o; }
 function dAll(): DFact[] { const o: DFact[] = []; for (let d = 2; d <= 12; d++) for (let q = 2; q <= 12; q++) o.push({ dividend: d * q, divisor: d, q, diff: d * q * 0.35, strat: "fact-family" }); return o; }
 // `withDividend` adds the missing-DIVIDEND form ("___ ÷ 6 = 7"), the shape the
 // fact-family lesson teaches; without it that lesson's sheets held only the
@@ -370,12 +452,16 @@ function enumMulTens(): AProblem[] {
     const tens = t * 10, prod = tens * b;
     // Stage 1 — the fact PAIRED with its ×10 partner (the key item type).
     out.push({ q: `${t} × ${b} = ${t * b}, so ${tens} × ${b} =`, a: String(prod), diff: t * b, key: `mt1-${t}x${b}`, strat: "mul-tens" });
-    // Stage 2 — bare, both operand orders.
-    out.push({ q: `${tens} × ${b} =`, a: String(prod), diff: 200 + t * b, key: `mt2-${t}x${b}`, strat: "mul-tens" });
-    out.push({ q: `${b} × ${tens} =`, a: String(prod), diff: 220 + t * b, key: `mt3-${t}x${b}`, strat: "mul-tens" });
-    // Stage 3 — reverse (missing factor) + hundreds.
-    out.push({ q: `___ × ${b} = ${prod}`, a: String(tens), diff: 400 + t * b, key: `mt4-${t}x${b}`, strat: "mul-tens" });
-    out.push({ q: `${t * 100} × ${b} =`, a: String(t * 100 * b), diff: 600 + t * b, key: `mt5-${t}x${b}`, strat: "mul-tens" });
+    // Stage 2 — bare, both operand orders. Ranked only a little behind the
+    // paired form so bare "30 × 4 =" items reach the opening sheet after the
+    // first paired ones: a sheet of thirty "7 × 2 = 14, so 70 × 2 =" gives the
+    // fact away on every line and leaves nothing to think about.
+    out.push({ q: `${tens} × ${b} =`, a: String(prod), diff: 30 + t * b, key: `mt2-${t}x${b}`, strat: "mul-tens" });
+    out.push({ q: `${b} × ${tens} =`, a: String(prod), diff: 34 + t * b, key: `mt3-${t}x${b}`, strat: "mul-tens" });
+    // Stage 3 — reverse (missing factor) + hundreds (the lesson page models
+    // "3 hundreds × 7 = 21 hundreds").
+    out.push({ q: `___ × ${b} = ${prod}`, a: String(tens), diff: 200 + t * b, key: `mt4-${t}x${b}`, strat: "mul-tens" });
+    out.push({ q: `${t * 100} × ${b} =`, a: String(t * 100 * b), diff: 400 + t * b, key: `mt5-${t}x${b}`, strat: "mul-tens" });
   }
   return out;
 }
@@ -420,13 +506,16 @@ function enumMulCarry(): AProblem[] {
         // behind its scaffold, so the opening sheet holds a few genuine column
         // items next to the steps that solve them — not only after sheet five.
         out.push({ q: `${a} × ${b}`, a: String(prod), diff: a + 3, key: `mc2-${a}x${b}`, strat: "mul-carry" });
-      } else if (prod >= 100 && (a + b) % 3 !== 0 && a % 2 === 1 && b % 2 === 0) {
-        // Stage 3: full regroup, 3-digit answers — strided to ~1/6, because
-        // unthinned this set dwarfs the gentle stages and the selector's wide
-        // window makes even the FIRST carrying sheet hard-dominant (caught by
-        // test-break-apart's carry-mix check). The stride tightened when sheets
-        // shrank to 10 problems: fewer picks per sheet meant the same ratio put
-        // 3-digit answers on the very first day of carrying.
+      } else if (prod >= 100 && prod < 200 && mix(a, b) % 3 === 0) {
+        // Stage 3: the tens column reaches 10–19, so a hundred is written in
+        // front (27 × 4 = 108) — exactly the lesson's own example, and CAPPED
+        // at products under 200. The unit used to run to 93 × 8 = 744 (two
+        // carries) on its last sheets, harder than anything in the "2-digit ×
+        // 1-digit" unit that follows, which then dropped back to 13 × 4. That
+        // unit owns the big products now. Thinned to ~1/3, because unthinned
+        // this set dwarfs the gentle stages and the selector's wide window
+        // makes even the FIRST carrying sheet hard-dominant (caught by
+        // test-break-apart's carry-mix check).
         out.push({ q: `${a} × ${b}`, a: String(prod), diff: 900 + a, key: `mc3-${a}x${b}`, strat: "mul-carry" });
       }
     }
@@ -442,6 +531,28 @@ function enumMul(aLo: number, aHi: number, bLo: number, bHi: number, carry?: boo
     const m = Math.max(a, b);
     out.push({ q: `${a} × ${b}`, a: String(a * b), diff: m * 3 + (digits(a) + digits(b) - 2) * 30 + (Math.min(a, b) >= 20 ? 300 : 0), key: `${a}x${b}` });
   });
+  return out;
+}
+// ── "2-digit × 2-digit" ──────────────────────────────────────────────────────
+// Banded so the opening sheet is the friendly cases and four-digit products
+// wait: the plain enumerator ranked by the bigger factor alone, so sheet one
+// opened with 83 × 14 = 1162 and 86 × 17 = 1462 while 11 × 80 sat at the
+// bottom. Bands, in order: a factor that is a whole ten (20 × 34) → ×11 →
+// teens × teens → a teen times a bigger number → everything else; any product
+// of 1000 or more goes behind all of them. Each band is thinned by hash to a
+// bounded share so the opening window cuts through the first three.
+function enumMul2d2d(): AProblem[] {
+  const out: AProblem[] = [];
+  const KEEP = [12, 2, 1, 4, 8]; // per band: keep 1 in N pairs
+  for (let a = 11; a <= 99; a++) for (let b = 11; b <= a; b++) {
+    const mn = b, mx = a, prod = a * b;
+    const tens = a % 10 === 0 || b % 10 === 0;
+    const band = tens ? 0 : mn === 11 ? 1 : mx < 20 ? 2 : mn < 20 ? 3 : 4;
+    const h = mix(a, b);
+    if (h % KEEP[band] !== 0) continue;
+    const [x, y] = (h >>> 8) % 2 ? [a, b] : [b, a];
+    out.push({ q: `${x} × ${y}`, a: String(prod), diff: (prod >= 1000 ? 500 : 0) + band * 100 + mx * 0.5, key: `${x}x${y}` });
+  }
   return out;
 }
 function enumMissingFactor(aLo: number, aHi: number, bLo: number, bHi: number): AProblem[] {
@@ -461,13 +572,19 @@ function enumDivExact(divLo: number, divHi: number, qLo: number, qHi: number): A
   });
   return out;
 }
-function enumDivRemainder(divLo: number, divHi: number, dividendLo: number, dividendHi: number): AProblem[] {
+// `maxQ` keeps the remainders unit to quotients a child can find from a
+// times-table fact ("the biggest multiple of 4 that fits in 29"). Without it
+// the unit drifted to 83 ÷ 2 = 41 r 1 — genuine 2-digit-quotient long division
+// AND a remainder, before either piece was taught.
+function enumDivRemainder(divLo: number, divHi: number, dividendLo: number, dividendHi: number, maxQ = Infinity): AProblem[] {
   const out: AProblem[] = [];
   eachPair(divLo, divHi, dividendLo, dividendHi, (d, dividend) => {
     if (d < 2 || dividend < d) return;
     const q = Math.floor(dividend / d), r = dividend % d;
-    if (r === 0) return; // remainder problems only
-    out.push({ q: `${dividend} ÷ ${d}`, a: `${q} r ${r}`, diff: d * 5 + (digits(dividend) - 1) * 100 + (q > 12 ? 300 : 0) + 20, key: `${dividend}/${d}r` });
+    if (r === 0 || q > maxQ) return; // remainder problems only
+    // `q * 3`: within a divisor the small quotients come first (29 ÷ 4 = 7 r 1
+    // before 50 ÷ 4 = 12 r 2), so the opening sheet is the lesson's own case.
+    out.push({ q: `${dividend} ÷ ${d}`, a: `${q} r ${r}`, diff: d * 5 + q * 3 + (digits(dividend) - 1) * 100 + (q > 12 ? 300 : 0) + 20, key: `${dividend}/${d}r` });
   });
   return out;
 }
@@ -496,14 +613,14 @@ const CURRICULA: Record<string, Unit[]> = {
     // teaches the two things the sheet asks for and nothing the sheet lacks.
     { id:"add-zero-comm", label:"Adding zero & turnarounds", objective:"Student uses +0 and that order doesn't change the sum", grade:"Grade 1", stars:1, range:[9,11], pool:()=>spiral(addFormats(fZeroComm()), addFormats(fDoubles()), addFormats(fCountOn()), "ad3"), example:{ problem:"4 + 0 =", steps:["Adding 0 is adding nothing, so the number stays the same: 4","0 + 4 is the same: still 4","Turnaround: 2 + 4 and 4 + 2 give the same answer — start at the bigger number and count on: 4, then 5, 6"], answer:"4" } },
     { id:"add-near-doubles", label:"Near-doubles (use the double you know)", objective:"Student adds near-doubles using a known double", grade:"Grade 1-2", stars:2, range:[12,15], pool:()=>spiral(addFormats(fNearDoubles()), addFormats(fDoubles()), addFormats(fZeroComm()), "ad4"), example:{ problem:"6 + 7 =", steps:["6 + 6 = 12","12 + 1 = 13"], answer:"13" } },
-    { id:"add-make-ten", label:"Make ten & bridging through 10", objective:"Student makes ten first, then adding the rest (8+5 = 8+2+3)", grade:"Grade 2", stars:2, range:[16,20], pool:()=>spiral(addFormats(fMakeTen()), addFormats(fNearDoubles()), addFormats(fDoubles()), "ad5"), example:{ problem:"8 + 5 =", steps:["8 + 2 = 10","10 + 3 = 13"], answer:"13" } },
+    { id:"add-make-ten", label:"Make ten & bridging through 10", objective:"Student makes ten first, then adding the rest (8+5 = 8+2+3)", grade:"Grade 2", stars:2, range:[16,20], pool:()=>spiral(addFormats(fMakeTen()), addFormats(fNearDoubles()), addFormats(fDoubles(10, 4)), "ad5"), example:{ problem:"8 + 5 =", steps:["8 + 2 = 10","10 + 3 = 13"], answer:"13" } },
     // Subtraction is not taught until M4, so the missing addend is found by
     // COUNTING UP (M1's skill), never by "12 − 7". The unit's own facts are
     // the sums 10–18 of its title; the small-sum families come as review.
     { id:"add-fact-family", label:"Fact families to 18", objective:"Student uses the add/subtract inverse and missing addends", grade:"Grade 2", stars:3, range:[21,28], pool:()=>spiral(addFormats(fFactFamily(10,18)), [...addFormats(fMakeTen()), ...addFormats(fFactFamily(2,9))], addFormats(fNearDoubles()), "ad6"), example:{ problem:"7 + ___ = 12", steps:["Start at 7 and count up to 12: 8, 9, 10, 11, 12 — that is 5 jumps","Check: 7 + 5 = 12","The same three numbers make a family: 7 + 5 = 12 and 5 + 7 = 12, so 5 + ___ = 12 is 7"], answer:"5" } },
     { id:"add-2d-noregroup", label:"2-digit addition (no regrouping)", objective:"Student adds tens and ones separately", grade:"Grade 2-3", stars:3, range:[29,44], pool:()=>[...enumAddClean(11,88,11,88), ...det(enumMissingAdd(11,77,11,22,false), 60, "ad7m"), ...det(addFormats(fFactFamily()), 20, "ad7p")], example:{ problem:"34 + 25 =", steps:["Ones: 4 + 5 = 9","Tens: 3 + 2 = 5","Answer: 59","Missing number (___ + 14 = 25): ones need 4 + ? = 5, so 1; tens need 1 + ? = 2, so 1 — the blank is 11"], answer:"59" } },
-    { id:"add-2d-regroup", label:"2-digit addition (regrouping)", objective:"Student carries the ten when ones reach 10", grade:"Grade 3", stars:4, range:[45,64], pool:()=>[...enumAddRegroup(), ...det(enumMissingAdd(30,99,20,70), 60, "ad8m"), ...det(addFormats(fMakeTen()), 20, "ad8p")], example:{ problem:"37 + 45 =", steps:["Ones: 7 + 5 = 12 → write 2, carry 1","Tens: 3 + 4 + 1 = 8","Answer: 82","When the ones make exactly 10 (25 + 25): 5 + 5 = 10 → write 0, carry 1; tens 2 + 2 + 1 = 5, so 50"], answer:"82" } },
-    { id:"add-3d-three", label:"3-digit addition & three addends", objective:"Student adds across columns, chaining three numbers", grade:"Grade 3-4", stars:4, range:[65,84], pool:()=>[...enumAdd(100,999,100,999), ...enumMissingAdd(100,999,50,500), ...enumThreeAdd(15,99)], example:{ problem:"248 + 167 =", steps:["Ones: 8+7=15 → 5 carry 1","Tens: 4+6+1=11 → 1 carry 1","Hundreds: 2+1+1=4","Answer: 415","Three numbers (15 + 34 + 15): add the first two, then add the third: 49 + 15 = 64","Later sheets pass 1000 (746 + 304): Hundreds: 7 + 3 = 10 → write 0, carry 1 into a new thousands place: 1050"], answer:"415" } },
+    { id:"add-2d-regroup", label:"2-digit addition (regrouping)", objective:"Student carries the ten when ones reach 10", grade:"Grade 3", stars:4, range:[45,64], pool:()=>[...enumAddRegroup(), ...det(enumMissingAdd(30,99,20,70,undefined,99), 60, "ad8m"), ...det(enumAddClean(11,88,11,88), 20, "ad8p")], example:{ problem:"37 + 45 =", steps:["Ones: 7 + 5 = 12 → write 2, carry 1","Tens: 3 + 4 + 1 = 8","Answer: 82","When the ones make exactly 10 (25 + 25): 5 + 5 = 10 → write 0, carry 1; tens 2 + 2 + 1 = 5, so 50"], answer:"82" } },
+    { id:"add-3d-three", label:"3-digit addition & three addends", objective:"Student adds across columns, chaining three numbers", grade:"Grade 3-4", stars:4, range:[65,84], pool:()=>[...enumAddOver100(), ...enumAdd(100,999,100,999), ...det(enumMissingAddHundreds(), 70, "ad9m"), ...enumThreeAdd(15,99)], example:{ problem:"248 + 167 =", steps:["Ones: 8+7=15 → 5 carry 1","Tens: 4+6+1=11 → 1 carry 1","Hundreds: 2+1+1=4","Answer: 415","The first sheets start with 2-digit sums that pass 100 (64 + 67): ones 4 + 7 = 11 → 1 carry 1; tens 6 + 6 + 1 = 13 — there is no column left, so write the whole 13: 131","Three numbers (15 + 34 + 15): add the first two, then add the third: 49 + 15 = 64","Missing number (___ + 200 = 438): count up in hundreds from 200 to 438 — that is 238","Later sheets pass 1000 (746 + 304): Hundreds: 7 + 3 = 10 → write 0, carry 1 into a new thousands place: 1050"], answer:"415" } },
     { id:"add-missing-review", label:"Missing addend & mixed review", objective:"Student solves for the unknown, reviewing every addition type", grade:"Grade 4", stars:5, range:[85,100], pool:()=>[...enumMissingAdd(10,99,10,99), ...enumAdd(100,999,100,999), ...enumAdd(10,99,10,99,true)], example:{ problem:"___ + 25 = 61", steps:["Count up from 25 to 61","25 + 30 = 55, then 55 + 6 = 61","You added 30 + 6 = 36"], answer:"36" } },
   ],
 
@@ -512,12 +629,12 @@ const CURRICULA: Record<string, Unit[]> = {
     { id:"sub-zero", label:"Subtract 0 and subtract all", objective:"Student subtracts 0 and a number from itself", grade:"Grade 1", stars:1, range:[7,10], pool:()=>spiral(subFormats(sZero()), subFormats(sCountBack()), [], "sb2"), example:{ problem:"8 - 8 =", steps:["Taking all away leaves 0"], answer:"0" } },
     { id:"sub-count-up", label:"Find the difference (count up)", objective:"Student counts up from the smaller to the larger number", grade:"Grade 1-2", stars:2, range:[11,18], pool:()=>spiral(subFormats(sCountUp()), subFormats(sCountBack()), subFormats(sZero()), "sb3"), example:{ problem:"9 - 6 =", steps:["Count up from 6 to 9: 7, 8, 9 = 3 steps"], answer:"3" } },
     { id:"sub-halves", label:"Halving & near-halves (using doubles)", objective:"Student subtracts using known doubles (12−6, 13−6)", grade:"Grade 2", stars:2, range:[19,24], pool:()=>spiral(subFormats(sNearDoubles()), subFormats(sCountUp()), subFormats(sCountBack()), "sb4"), example:{ problem:"12 - 6 =", steps:["6 + 6 = 12, so 12 - 6 = 6","Near-half (13 - 6): 12 - 6 = 6, and 13 is one more, so 7","Near-half (11 - 5): 10 - 5 = 5, and 11 is one more, so 6"], answer:"6" } },
-    { id:"sub-bridge", label:"Bridging down through 10", objective:"Student subtracts by going down to 10 first (15−7 = 15−5−2)", grade:"Grade 2", stars:3, range:[25,32], pool:()=>spiral(subFormats(sBridge()), subFormats(sNearDoubles()), subFormats(sCountUp()), "sb5"), example:{ problem:"15 - 7 =", steps:["15 - 5 = 10","10 - 2 = 8"], answer:"8" } },
-    { id:"sub-fact-family", label:"Fact families to 18", objective:"Student uses the subtract/add inverse", grade:"Grade 2-3", stars:3, range:[33,40], pool:()=>spiral(subFormats(sFactFamily(), true), subFormats(sBridge()), subFormats(sNearDoubles()), "sb6"), example:{ problem:"13 - ___ = 5", steps:["Think of the family: 5 + ___ = 13. Count up from 5 to 13: 6, 7, 8, 9, 10, 11, 12, 13 — 8 jumps","So 5 + 8 = 13, and 13 - 8 = 5: the blank is 8","The same family answers 8 + ___ = 13: the blank is 5"], answer:"8" } },
+    { id:"sub-bridge", label:"Bridging down through 10", objective:"Student subtracts by going down to 10 first (15−7 = 15−5−2)", grade:"Grade 2", stars:3, range:[25,32], pool:()=>spiral(subFormats(sBridge()), subFormats(sNearDoubles()), [], "sb5"), example:{ problem:"15 - 7 =", steps:["15 - 5 = 10","10 - 2 = 8"], answer:"8" } },
+    { id:"sub-fact-family", label:"Fact families to 18", objective:"Student uses the subtract/add inverse", grade:"Grade 2-3", stars:3, range:[33,40], pool:()=>spiral(subFormats(sFactFamily(10,18), true), subFormats(sBridge()), subFormats(sNearDoubles()), "sb6"), example:{ problem:"13 - ___ = 5", steps:["Think of the family: 5 + ___ = 13. Count up from 5 to 13: 6, 7, 8, 9, 10, 11, 12, 13 — 8 jumps","So 5 + 8 = 13, and 13 - 8 = 5: the blank is 8","The same family answers 8 + ___ = 13: the blank is 5"], answer:"8" } },
     { id:"sub-2d-noborrow", label:"2-digit subtraction (no borrowing)", objective:"Student subtracts tens and ones separately", grade:"Grade 2-3", stars:3, range:[41,54], pool:()=>[...enumSub(10,99,1,9,false), ...enumSub(10,99,10,99,false), ...enumMissingSub(10,99,1,9,false), ...enumMissingSub(10,99,1,40,false), ...det(subFormats(sFactFamily()), 20, "sb7p")], example:{ problem:"58 - 23 =", steps:["Ones: 8 - 3 = 5","Tens: 5 - 2 = 3","Answer: 35"], answer:"35" } },
-    { id:"sub-2d-borrow", label:"2-digit subtraction (borrowing)", objective:"Student borrows a ten when needed", grade:"Grade 3", stars:4, range:[55,72], pool:()=>[...enumSub(10,99,1,9,true), ...enumSub(10,99,10,99,true), ...enumMissingSub(20,99,1,50), ...det(subFormats(sBridge()), 20, "sb8p")], example:{ problem:"52 - 27 =", steps:["Ones: 2 - 7 borrow → 12 - 7 = 5","Tens: 4 - 2 = 2","Answer: 25"], answer:"25" } },
+    { id:"sub-2d-borrow", label:"2-digit subtraction (borrowing)", objective:"Student borrows a ten when needed", grade:"Grade 3", stars:4, range:[55,72], pool:()=>[...enumSub(20,99,1,9,true), ...enumSub(20,99,10,99,true), ...enumMissingSub(20,99,1,50), ...det(enumSub(10,99,10,99,false), 20, "sb8p")], example:{ problem:"52 - 27 =", steps:["Ones: 2 - 7 borrow → 12 - 7 = 5","Tens: 4 - 2 = 2","Answer: 25"], answer:"25" } },
     { id:"sub-3d", label:"3-digit subtraction (regrouping)", objective:"Student regroups across columns", grade:"Grade 3-4", stars:4, range:[73,88], pool:()=>[...enumSub(100,999,100,999), ...enumMissingSub(100,999,10,400), ...det(enumSub(10,99,10,99,true), 18, "sb9p")], example:{ problem:"542 - 372 =", steps:["Ones: 2 - 2 = 0","Tens: 4 - 7 can't → borrow a hundred: 14 - 7 = 7","Hundreds: 4 - 3 = 1","Answer: 170"], answer:"170" } },
-    { id:"sub-missing-review", label:"Missing number & mixed review", objective:"Student solves for the unknown, reviewing every subtraction type", grade:"Grade 4", stars:5, range:[89,100], pool:()=>mixBands([det(subFormats(sFactFamily()), 40, "sb10f"), enumMissingSub(20,99,1,40), enumSub(100,999,100,999), enumSub(10,99,10,99,true)]), example:{ problem:"45 - ___ = 18", steps:["The missing number is what was taken away: 45 with 18 left means 45 - 18 was taken","45 - 18: ones 5 - 8 can't → borrow: 15 - 8 = 7; tens 3 - 1 = 2, so 27","Check: 45 - 27 = 18"], answer:"27" } },
+    { id:"sub-missing-review", label:"Missing number & mixed review", objective:"Student solves for the unknown, reviewing every subtraction type", grade:"Grade 4", stars:5, range:[89,100], pool:()=>mixBands([det(subFormats(sFactFamily(10,18)), 40, "sb10f"), det(enumMissingSub(20,99,1,40), 200, "sb10m"), det(enumSub(100,999,100,999), 250, "sb10t"), enumSub(10,99,10,99,true)]), example:{ problem:"45 - ___ = 18", steps:["The missing number is what was taken away: 45 with 18 left means 45 - 18 was taken","45 - 18: ones 5 - 8 can't → borrow: 15 - 8 = 7; tens 3 - 1 = 2, so 27","Check: 45 - 27 = 18"], answer:"27" } },
   ],
 
   // Strategy-staged: skip-counting anchors → identity → squares → build-up tables
@@ -527,14 +644,14 @@ const CURRICULA: Record<string, Unit[]> = {
     { id:"mul-identity", label:"×1 and ×0", objective:"Student multiplies by 1 (identity) and 0", grade:"Grade 3", stars:1, range:[7,9], pool:()=>mulFormats(mTables([0,1],"identity")), example:{ problem:"7 × 1 =", steps:["1 group of 7 is just 7 — any number times 1 is itself","0 × 7 = 0: zero groups of 7 is nothing at all, so 0 (not 7)"], answer:"7" } },
     // ×3/×4 and ×6–×9 come later, so a square is built from a five the child
     // knows (×5 was lesson 1) plus one more of the number — not recalled cold.
-    { id:"mul-squares", label:"Square facts (n × n)", objective:"Student recalls the square facts", grade:"Grade 3", stars:2, range:[10,12], pool:()=>spiral(mulFormats(mSquares()), mulFormats(mTables([2,5,10],"skip-count")), [], "m3"), example:{ problem:"6 × 6 =", steps:["Use the five you know: 6 × 5 = 30","One more six: 30 + 6 = 36","Same for 4 × 4: 4 × 5 = 20, take one four away: 16"], answer:"36" } },
+    { id:"mul-squares", label:"Square facts (n × n)", objective:"Student recalls the square facts", grade:"Grade 3", stars:2, range:[10,12], pool:()=>spiral(mulFormats(mSquares()), mulFormats(mTables([2,5,10],"skip-count",10)), mulFormats(mTables([0,1],"identity",10)), "m3", 90), example:{ problem:"6 × 6 =", steps:["Use the five you know: 6 × 5 = 30","One more six: 30 + 6 = 36","Same for 4 × 4: 4 × 5 = 20, take one four away: 16","The big ones work the same way: 7 × 7 = 7 × 5 + 7 × 2 = 35 + 14 = 49, and 9 × 9 = 45 + 36 = 81"], answer:"36" } },
     { id:"mul-3-4", label:"×3 and ×4 (build from ×2)", objective:"Student multiplies by 3 and 4 building on doubles", grade:"Grade 3-4", stars:3, range:[13,22], pool:()=>spiral(mulFormats(mTables([3,4],"build-up")), mulFormats(mSquares()), mulFormats(mTables([2,5,10],"skip-count")), "m4"), example:{ problem:"4 × 7 =", steps:["×4 is double, then double again: double 7 is 14","Double 14: 28","×3 is double, then one more: 3 × 6 — double 6 is 12, one more 6 is 18"], answer:"28" } },
     // Review here is capped at ×10: ×11 and ×12 are taught two lessons later.
     { id:"mul-6-9", label:"×6, ×7, ×8, ×9 (the hard facts)", objective:"Student recalls the 6–9 times tables", grade:"Grade 4", stars:4, range:[23,36], pool:()=>spiral(mulFormats(mTables([6,7,8,9],"hard-facts")), mulFormats(mTables([3,4],"build-up",10)), mulFormats(mSquares(10)), "m5"), example:{ problem:"7 × 8 =", steps:["Use a five you already know: 8 × 5 = 40.","That leaves 3 more eights: 8 × 3 = 24.","Put them together: 40 + 24 = 56."], answer:"56" } },
     { id:"mul-fact-family", label:"Fact families & missing factor", objective:"Student uses the ×/÷ inverse to find missing factors", grade:"Grade 4", stars:4, range:[37,48], pool:()=>spiral(mulFormats(mAll()), mulFormats(mTables([6,7,8,9],"hard-facts")), mulFormats(mTables([3,4],"build-up")), "m6"), example:{ problem:"6 × ___ = 48", steps:["Ask: which number times 6 makes 48?","Count sixes until you reach 48: 6, 12, 18, 24, 30, 36, 42, 48","That took 8 sixes, so 6 × 8 = 48 and the blank is 8"], answer:"8" } },
     // ×11/×12 demoted 10→4 sheets (expert: ~4 sheets of value, and 3 days of
     // low-value drill sat right before the level's hardest transition).
-    { id:"mul-10-12", label:"×10, ×11, ×12", objective:"Student recalls the 10, 11 and 12 times tables", grade:"Grade 4", stars:3, range:[49,52], pool:()=>spiral(mulFormats(mTables([10,11,12],"big-tables")), mulFormats(mAll()), [], "m7"), example:{ problem:"12 × 7 =", steps:["Split the 12 into 10 + 2.","7 × 10 = 70, and 7 × 2 = 14.","Add the two parts: 70 + 14 = 84."], answer:"84" } },
+    { id:"mul-10-12", label:"×10, ×11, ×12", objective:"Student recalls the 10, 11 and 12 times tables", grade:"Grade 4", stars:3, range:[49,52], pool:()=>spiral(mulFormats(mTables([10,11,12],"big-tables")), mulFormats(mAll()), [], "m7"), example:{ problem:"12 × 7 =", steps:["Split the 12 into 10 + 2.","7 × 10 = 70, and 7 × 2 = 14.","Add the two parts: 70 + 14 = 84.","×10 is the number with a 0 on the end: 8 × 10 = 80.  ×11 is the digit written twice: 6 × 11 = 66 (6 tens and 6 ones)"], answer:"84" } },
     // THE BRIDGE SEQUENCE (expert-designed): multiplying tens → break apart →
     // carrying. "27 × 4" was the first question in the level that wasn't a fact
     // lookup; these three units teach the concept before the algorithm.
@@ -542,8 +659,11 @@ const CURRICULA: Record<string, Unit[]> = {
     { id:"mul-break-apart", label:"Break apart to multiply (no carrying)", objective:"Student splits a 2-digit number into tens and ones, multiplies each piece, and adds the two answers together", grade:"Grade 4", stars:4, range:[59,68], pool:()=>enumBreakApart(), example:{ problem:"23 × 3 =", steps:["Break 23 into 20 + 3","20 × 3 = 60","3 × 3 = 9","60 + 9 = 69"], answer:"69" } },
     { id:"mul-carry", label:"Carrying in multiplication", objective:"Student multiplies the ones, writes the ones digit and carries, then multiplies the tens and adds the carry AFTER multiplying", grade:"Grade 4-5", stars:5, range:[69,78], pool:()=>enumMulCarry(), example:{ problem:"27 × 4 =", steps:["Ones: 7 × 4 = 28 → write 8, carry 2","Tens: 2 × 4 = 8 — multiply FIRST","THEN add the carry: 8 + 2 = 10","Answer: 108"], answer:"108" } },
     { id:"mul-2d1d", label:"2-digit × 1-digit", objective:"Student multiplies a 2-digit number by 1 digit (with carrying)", grade:"Grade 4-5", stars:5, range:[79,84], pool:()=>[...enumMul(11,41,2,4,false), ...enumMul(12,99,2,9,true), ...enumMissingFactor(2,12,2,12)], example:{ problem:"47 × 6 =", steps:["6 × 7 = 42 → write 2 carry 4","6 × 4 = 24 + 4 = 28","Answer: 282"], answer:"282" } },
-    { id:"mul-2d2d", label:"2-digit × 2-digit", objective:"Student multiplies two 2-digit numbers", grade:"Grade 5", stars:5, range:[85,96], pool:()=>[...enumMul(11,99,11,99), ...det(mulFormats(mAll()), 20, "m9p")], example:{ problem:"23 × 14 =", steps:["23 × 4 = 92","23 × 10 = 230","92 + 230 = 322"], answer:"322" } },
-    { id:"mul-review", label:"Mixed review", objective:"Student multiplies fluently across all types", grade:"Grade 5", stars:5, range:[97,100], pool:()=>[...enumMul(2,12,2,12), ...enumMul(12,99,2,9), ...enumMissingFactor(2,12,2,12)], example:{ problem:"38 × 7 =", steps:["7 × 8 = 56 → 6 carry 5","7 × 3 = 21 + 5 = 26","Answer: 266"], answer:"266" } },
+    { id:"mul-2d2d", label:"2-digit × 2-digit", objective:"Student multiplies two 2-digit numbers", grade:"Grade 5", stars:5, range:[85,96], pool:()=>[...enumMul2d2d(), ...det(mulFormats(mAll()), 20, "m9p")], example:{ problem:"23 × 14 =", steps:["23 × 4 = 92","23 × 10 = 230","92 + 230 = 322"], answer:"322" } },
+    { id:"mul-review", label:"Mixed review", objective:"Student multiplies fluently across all types", grade:"Grade 5", stars:5, range:[97,100], // The review draws from EVERY unit of the level — facts, missing factors,
+    // tens × a digit, 2-digit × 1-digit and the 2-digit × 2-digit the child has
+    // just finished (it used to be facts and teen × digit only, a step back).
+    pool:()=>mixBands([enumMul(2,12,2,12), enumMissingFactor(2,12,2,12), enumMulTens().filter((p) => /^mt[23]-/.test(p.key)), det(enumMul(12,99,2,9), 150, "m10c"), det(enumMul2d2d(), 90, "m10p")]), example:{ problem:"38 × 7 =", steps:["7 × 8 = 56 → 6 carry 5","7 × 3 = 21 + 5 = 26","Answer: 266","This sheet mixes every lesson of the level: facts and missing factors, tens (40 × 6 = 240), 2-digit × 1-digit, and 2-digit × 2-digit (23 × 14: 23 × 4 = 92, 23 × 10 = 230, 92 + 230 = 322)"], answer:"266" } },
   ],
 
   // Strategy-staged (inverse of multiplication): ÷2/5/10 → identity → squares →
@@ -555,10 +675,14 @@ const CURRICULA: Record<string, Unit[]> = {
     { id:"div-3-4", label:"÷3 and ÷4", objective:"Student divides by 3 and 4", grade:"Grade 3-4", stars:3, range:[13,22], pool:()=>spiral(divFormats(dTables([3,4],"build-up")), divFormats(dSquares()), divFormats(dTables([2,5,10],"skip-count")), "d4"), example:{ problem:"28 ÷ 4 =", steps:["4 × 7 = 28","So 28 ÷ 4 = 7"], answer:"7" } },
     { id:"div-6-9", label:"÷6, ÷7, ÷8, ÷9", objective:"Student divides by 6–9", grade:"Grade 4", stars:4, range:[23,36], pool:()=>spiral(divFormats(dTables([6,7,8,9],"hard-facts")), divFormats(dTables([3,4],"build-up")), divFormats(dSquares()), "d5"), example:{ problem:"56 ÷ 7 =", steps:["7 × 8 = 56","So 56 ÷ 7 = 8"], answer:"8" } },
     { id:"div-fact-family", label:"Fact families & missing dividend", objective:"Student uses the ÷/× inverse to find the missing number", grade:"Grade 4", stars:4, range:[37,48], pool:()=>spiral(divFormats(dAll(), true), divFormats(dTables([6,7,8,9],"hard-facts")), divFormats(dTables([3,4],"build-up")), "d6"), example:{ problem:"___ ÷ 6 = 7", steps:["Some number split into 6 groups gives 7 in each — so it is 6 groups of 7","6 × 7 = 42, so the blank is 42","Missing divisor (12 ÷ ___ = 4): what times 4 makes 12? 3 × 4 = 12, so 3"], answer:"42" } },
-    { id:"div-10-12", label:"÷10, ÷11, ÷12", objective:"Student divides by 10, 11 and 12", grade:"Grade 4", stars:3, range:[49,58], pool:()=>spiral(divFormats(dTables([10,11,12],"big-tables")), divFormats(dAll()), [], "d7"), example:{ problem:"84 ÷ 12 =", steps:["12 × 7 = 84","So 84 ÷ 12 = 7"], answer:"7" } },
-    { id:"div-remainder", label:"Division with remainders", objective:"Student divides with remainders", grade:"Grade 4-5", stars:5, range:[59,76], pool:()=>[...enumDivRemainder(2,9,10,99), ...det(divFormats(dAll()), 20, "d8p")], example:{ problem:"29 ÷ 4 =", steps:["4 × 7 = 28","29 - 28 = 1","Answer: 7 r 1"], answer:"7 r 1" } },
-    { id:"div-larger", label:"2-digit & 3-digit ÷ 1-digit", objective:"Student divides larger numbers by 1 digit", grade:"Grade 5", stars:5, range:[77,92], pool:()=>[...enumDivExact(3,9,5,15), ...enumDivExact(3,9,15,33), ...det(enumDivExact(3,9,34,99), 160, "d9p")], example:{ problem:"96 ÷ 6 =", steps:["Split 96 into pieces that divide by 6: 60 + 36","60 ÷ 6 = 10 and 36 ÷ 6 = 6","10 + 6 = 16"], answer:"16" } },
-    { id:"div-review", label:"Mixed review", objective:"Student divides fluently across all types", grade:"Grade 5", stars:5, range:[93,100], pool:()=>[...enumDivExact(2,12,2,12), ...enumDivRemainder(2,9,10,99), ...enumMissingDividend(2,12,2,12)], example:{ problem:"73 ÷ 4 =", steps:["Split 73 into 40 + 33: 40 ÷ 4 = 10","33 ÷ 4: 4 × 8 = 32, and 33 - 32 = 1 left over → 8 r 1","10 + 8 = 18, remainder 1 — check: 4 × 18 = 72, 73 - 72 = 1","Missing dividend (___ ÷ 3 = 2): 3 × 2 = 6, so the blank is 6"], answer:"18 r 1" } },
+    { id:"div-10-12", label:"÷10, ÷11, ÷12", objective:"Student divides by 10, 11 and 12", grade:"Grade 4", stars:3, range:[49,58], pool:()=>spiral(divFormats(dTables([10,11,12],"big-tables")), divFormats(dAll()), [], "d7"), example:{ problem:"84 ÷ 12 =", steps:["Ask: 12 times what makes 84? 12 × 7 = 84","So 84 ÷ 12 = 7","÷10 takes the 0 off the end: 70 ÷ 10 = 7.  ÷11 of a doubled digit is that digit: 77 ÷ 11 = 7"], answer:"7" } },
+    { id:"div-remainder", label:"Division with remainders", objective:"Student divides with remainders", grade:"Grade 4-5", stars:5, range:[59,76], pool:()=>[...enumDivRemainder(2,9,10,99,12), ...det(divFormats(dAll()), 20, "d8p")], example:{ problem:"29 ÷ 4 =", steps:["Make groups of 4 from 29: the biggest multiple of 4 that fits is 4 × 7 = 28","29 - 28 = 1 is left over — that is the remainder","Write the answer as 7 r 1 (7 groups, remainder 1)"], answer:"7 r 1" } },
+    { id:"div-larger", label:"2-digit & 3-digit ÷ 1-digit", objective:"Student divides larger numbers by 1 digit", grade:"Grade 5", stars:5, range:[77,92], pool:()=>[...enumDivExact(3,9,5,15), ...enumDivExact(3,9,15,33), ...det(enumDivExact(3,9,34,99), 160, "d9p")], example:{ problem:"96 ÷ 6 =", steps:["Split 96 into pieces that divide by 6: 60 + 36","60 ÷ 6 = 10 and 36 ÷ 6 = 6","10 + 6 = 16","3-digit (252 ÷ 3): split into hundreds-friendly pieces: 240 + 12 → 240 ÷ 3 = 80 and 12 ÷ 3 = 4, so 84","When a piece is 0 (204 ÷ 4): 200 ÷ 4 = 50 and 4 ÷ 4 = 1, so 51 — the tens digit is 0"], answer:"16" } },
+    { id:"div-review", label:"Mixed review", objective:"Student divides fluently across all types", grade:"Grade 5", stars:5, range:[93,100], // The review draws from every unit of the level: facts (÷2 … ÷12), missing
+    // dividends, remainders — now including the 2-digit-quotient ones the
+    // remainders unit keeps out — and the 2-/3-digit ÷ 1-digit just finished
+    // (it used to be facts and remainders only, a second remainders unit).
+    pool:()=>mixBands([enumDivExact(2,12,2,12), enumMissingDividend(2,12,2,12), det(enumDivRemainder(2,9,10,99), 150, "d10r"), det(enumDivExact(3,9,15,99), 120, "d10p")]), example:{ problem:"73 ÷ 4 =", steps:["Split 73 into 40 + 33: 40 ÷ 4 = 10","33 ÷ 4: 4 × 8 = 32, and 33 - 32 = 1 left over → 8 r 1","10 + 8 = 18, remainder 1 — check: 4 × 18 = 72, 73 - 72 = 1","Missing dividend (___ ÷ 3 = 2): 3 × 2 = 6, so the blank is 6"], answer:"18 r 1" } },
   ],
 };
 
@@ -864,3 +988,5 @@ export function validateCurriculumStage(skill: string, totalSheets = 100): { ok:
   }
   return { ok: issues.length === 0, issues };
 }
+
+

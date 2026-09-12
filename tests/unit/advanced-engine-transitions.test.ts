@@ -79,9 +79,13 @@ describe("advanced-engine transitions (M8–M11)", () => {
     expect(lesson.example.steps.join(" ")).toMatch(/DOWN/);
   });
 
-  test("M11 Plot points keeps the y-intercept items and its lesson explains them", () => {
+  test("M11 Plot points keeps the y-intercept items, worded as the lesson words them, and its lesson explains them", () => {
     const all = [1, 2, 3, 4].flatMap((n) => first("LINEAR_EQUATIONS", n, 24));
-    expect(all.some((p) => /intercept/.test(p.question))).toBe(true);
+    // The item asks for "the point where the line … crosses the y-axis": the term
+    // "y-intercept" is first defined on the Graph-a-line lesson page (sheet 5), so
+    // the sheets before it never print the term itself (pack audit, M11 #26).
+    expect(all.some((p) => /crosses the y-axis/.test(p.question))).toBe(true);
+    expect(all.some((p) => /intercept/.test(p.question))).toBe(false);
     const lesson = getAdvancedMicroLesson("Plot points on the coordinate plane")!;
     // The example says WHERE a line crosses the y-axis (x = 0) in plain words — the
     // lesson-coherence audit reads the term "y-intercept" as a polynomial lesson, so

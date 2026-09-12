@@ -69,7 +69,12 @@ export function polyWorkedSteps(qRaw: string, ans: string): string[] | null {
   m = q.match(/^\(x\s*\+\s*(\d+)\)\(x\s*\+\s*(\d+)\)$/);
   if (m && /^x²\s*,/.test(ans)) {
     const A = +m[1], B = +m[2];
-    return [`Fill the 2×2 box — multiply each row by each column:`, `x · x = x²`, `x · ${B} = ${B}x`, `${A} · x = ${A}x`, `${A} · ${B} = ${A * B}`, `Four partial products:  x², ${A}x, ${B}x, ${A * B}`];
+    return [
+      `Fill the 2×2 box — multiply each row by each column:`,
+      `Row x:  x · x = x²   and   x · ${B} = ${B}x`,
+      `Row ${A}:  ${A} · x = ${A}x   and   ${A} · ${B} = ${A * B}`,
+      `Write the four cells in this order — x², the x-term from the ${A} row, the x-term from the ${B} column, the constant:  x², ${A}x, ${B}x, ${A * B}`,
+    ];
   }
   // (x + A)(x + B)  — FOIL
   m = q.match(/^\(x\s*\+\s*(\d+)\)\(x\s*\+\s*(\d+)\)$/);
@@ -106,7 +111,8 @@ export function polyWorkedSteps(qRaw: string, ans: string): string[] | null {
   mm = ans.match(/^\(x² \+ (\d+)\)\(x \+ (\d+)\)$/);
   if (mm) {
     const a = +mm[1], b = +mm[2];
-    return [`Group into pairs:  (x³ + ${b}x²) + (${a}x + ${a * b})`, `Factor each pair:  x²(x + ${b}) + ${a}(x + ${b})`, `Common factor (x + ${b}):  (x² + ${a})(x + ${b})`];
+    const bx2 = b === 1 ? "x²" : `${b}x²`, ax = a === 1 ? "x" : `${a}x`;
+    return [`Group into pairs:  (x³ + ${bx2}) + (${ax} + ${a * b})`, `Factor each pair:  x²(x + ${b}) + ${a}(x + ${b})`, `Both pairs share (x + ${b}) — pull it out. What is left, x² + ${a}, becomes the other bracket.`, `Write the x² bracket first:  (x² + ${a})(x + ${b})`];
   }
   // Trinomial with a ≠ 1 (ax² + bx + c) → use the AC method.
   mm = q.match(/^(\d+)x² \+ (\d+)x \+ (\d+)$/);
@@ -177,17 +183,35 @@ export function polyWorkedSteps(qRaw: string, ans: string): string[] | null {
       `Answer:  ${ans}`,
     ];
   }
-  // Divide by a binomial:  (x² + Sx + C) ÷ (x + a) — FACTOR-AND-CANCEL: these
-  // quadratics all factor exactly as (x + a)(x + b), so factor the top and
-  // cancel the common bracket (long division is the backup for messy cases).
-  m = q.match(/^Divide \((.+?)\) ÷ \(x \+ (\d+)\)$/);
+  // Divide by a binomial:  (x² + Sx + C) ÷ (x ± a). This used to print
+  // "factor the top, cancel the common bracket" — but the unit that asks this
+  // sits eight sheets BEFORE trinomial factoring is taught, so the printed
+  // lesson page handed a student a method they did not own (pack audit,
+  // Sep 2026). Teach the division the student can actually do: what times the
+  // divisor gives the x² term, what is left, what times the divisor gives
+  // that — and check by FOIL, the last skill they own.
+  m = q.match(/^Divide \((.+?)\) ÷ \(x ([+-]) (\d+)\)$/);
   if (m) {
-    const terms = rPoly(m[1]); const a = +m[2];
-    const S = terms.find((tt) => tt.p === 1)?.c ?? 0, b = S - a;
+    const terms = rPoly(m[1]);
+    const a = (m[2] === "-" ? -1 : 1) * +m[3];
+    const S = terms.find((tt) => tt.p === 1)?.c ?? 0;
+    const C = terms.find((tt) => tt.p === 0)?.c ?? 0;
+    const b = S - a;
+    if (a * b !== C) return null; // not an exact division of this shape — let the scaffold handle it
+    // Render signs from the numbers, never by splicing strings: "+ 3" / "− 3"
+    // inside an expression, "3x" / "−3x" as a leading term.
+    const sgn = (n: number) => (n < 0 ? `− ${-n}` : `+ ${n}`);
+    // An x-term inside an expression: "+ x", "− x", "+ 3x", "− 3x" (never "1x").
+    const sgnX = (n: number) => (n < 0 ? `− ${-n === 1 ? "" : -n}x` : `+ ${n === 1 ? "" : n}x`);
+    const lead = (n: number, v = "x") => (n < 0 ? `−${-n === 1 ? "" : -n}${v}` : `${n === 1 ? "" : n}${v}`);
+    const divisor = `(x ${sgn(a)})`;
+    // Subtracting x·(x + a) from the top leaves (S − a)x + C.
+    const takeAway = a < 0 ? `add ${lead(-a)} back` : `take away ${lead(a)}`;
     return [
-      `Factor the top: ${m[1]} = (x + ${a})(x + ${b})  (${a} × ${b} = ${a * b}, ${a} + ${b} = ${S}).`,
-      `Cancel the common (x + ${a}) top and bottom.`,
-      `Answer:  ${ans}`,
+      `Ask: ${divisor} × what = ${m[1]}? Start with x, because x · x = x².`,
+      `x · ${divisor} = x² ${sgnX(a)}. Left over after you ${takeAway}: ${lead(S)} ${sgnX(-a)} = ${lead(b)}, and the ${C}.`,
+      `${b} · ${divisor} = ${lead(b)} ${sgn(a * b)} — exactly what is left, so the answer is x ${sgn(b)}.`,
+      `Check with FOIL: ${divisor}(x ${sgn(b)}) = ${m[1]} ✓`,
     ];
   }
   // Monomial × trinomial (or any parenthesised sum):  Nx(…)   [verb already stripped]

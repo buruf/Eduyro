@@ -12,12 +12,14 @@ import { useEffect, useState } from "react";
 interface SamplePreviewModalProps {
   open: boolean;
   skill: string | null;
+  /** Sheets in this pack — most are 100, Fractions is 50. Shown honestly. */
+  totalSheets?: number;
   onClose: () => void;
 }
 
 const SAMPLE_SHEETS = [1, 2];
 
-export function SamplePreviewModal({ open, skill, onClose }: SamplePreviewModalProps) {
+export function SamplePreviewModal({ open, skill, totalSheets = 100, onClose }: SamplePreviewModalProps) {
   const [loadedCount, setLoadedCount] = useState(0);
 
   useEffect(() => {
@@ -64,7 +66,7 @@ export function SamplePreviewModal({ open, skill, onClose }: SamplePreviewModalP
             </h2>
             <p className="text-xs text-muted mt-1">
               These are the actual worksheets from the pack (watermarked).
-              Purchase to download all 100 sheets, clean and printable.
+              Purchase to download all {totalSheets} sheets, clean and printable.
             </p>
           </div>
           <button
@@ -93,7 +95,7 @@ export function SamplePreviewModal({ open, skill, onClose }: SamplePreviewModalP
             />
           ))}
           <div className="text-center text-sm text-muted py-2">
-            You&rsquo;re previewing {SAMPLE_SHEETS.length} of 100 sheets. The full
+            You&rsquo;re previewing {SAMPLE_SHEETS.length} of {totalSheets} sheets. The full
             pack includes every difficulty level plus a consolidated answer key.
           </div>
         </div>

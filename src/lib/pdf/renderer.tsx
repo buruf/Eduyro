@@ -12,7 +12,7 @@ import { PdfMathText } from "@/lib/math/pdf-math";
 import { parseColumnar, parseLongDivision, parseStack, type Columnar, type LongDivision, type Stack } from "@/lib/math/columnar";
 import { polygonSlicePaths, POLY_SIDES } from "@/lib/math/fraction-shapes";
 import { figureDiagram, isFigureKind } from "@/lib/math/angle-shapes";
-import { workedArithmeticSteps, workedDivisionSteps } from "@/lib/math/worked-steps";
+import { workedArithmeticSteps, workedDivisionSteps, partialProductSteps, additionFactSteps, subtractionFactSteps, multiplicationFactSteps, divisionFactSteps, remainderFactSteps, missingAddendSteps, missingFactorSteps, tensMultiplySteps, unitFactors, type FactUnit } from "@/lib/math/worked-steps";
 import { polyWorkedSteps } from "@/lib/math/poly-steps";
 import { buildScaffold } from "@/lib/tutor/scaffold";
 import { computeLayout } from "./layout-engine";
@@ -404,21 +404,31 @@ function parsePlotSolution(problem: string, answer?: string): PlotSolution | nul
   const q = problem.replace(/−/g, "-");
   const ans = (answer ?? "").replace(/−/g, "-").trim();
   const slopeOf = (s: string) => (s === "" || s === "+" ? 1 : s === "-" ? -1 : +s);
-  // Line — "Plot the line y = mx + b"
+  // Answers may be stored raw ("3,2", "1,-3") or already print-formatted by
+  // printNormalize / displayPlotAnswer ("(3, 2)", "y = x − 3", "slope 1, …").
+  const pair = ans.match(/^\(?(-?\d+),\s*(-?\d+)\)?$/) ?? ans.match(/^vertex \((-?\d+),\s*(-?\d+)\)$/);
+  // Line — "Plot the line y = mx + b" (the stored prompt ends with a period)
   let m = q.match(/Plot the line\s+y\s*=\s*(-?\d*)x\s*([+-])\s*(\d+)/i);
   if (m) return { line: { m: slopeOf(m[1]), b: (m[2] === "-" ? -1 : 1) * +m[3] } };
-  m = q.match(/Plot the line\s+y\s*=\s*(-?\d*)x\s*$/i);
+  m = q.match(/Plot the line\s+y\s*=\s*(-?\d*)x\s*\.?\s*$/i);
   if (m) return { line: { m: slopeOf(m[1]), b: 0 } };
-  // Line given by the answer "m,b" — equation-builder / "build its equation".
-  if (/equation of the line|build (its|the) equation|linear function[^]*shown/i.test(q)) { const a = ans.match(/^(-?\d+),(-?\d+)$/); if (a) return { line: { m: +a[1], b: +a[2] } }; }
+  // Line given by the answer — equation-builder / "build its equation": the
+  // stored "m,b", the print form "y = mx + b", or the lesson form "slope m, y-intercept b".
+  if (/equation of the line|build (its|the) equation|linear function[^]*shown/i.test(q)) {
+    if (pair) return { line: { m: +pair[1], b: +pair[2] } };
+    const eq = ans.match(/^y = (-?\d*)x(?:\s*([+-])\s*(\d+))?$/);
+    if (eq) return { line: { m: slopeOf(eq[1]), b: eq[2] ? (eq[2] === "-" ? -1 : 1) * +eq[3] : 0 } };
+    const sl = ans.match(/^slope (-?\d+), y-intercept (-?\d+)/);
+    if (sl) return { line: { m: +sl[1], b: +sl[2] } };
+  }
   // Parabola result of a transform (MC "which graph …") — answer "parab:a,h,k".
   const pm = ans.match(/^parab:(-?\d+),(-?\d+),(-?\d+)$/);
   if (pm) return { parab: { a: +pm[1], h: +pm[2], k: +pm[3] } };
   // Parabola vertex-drag → draw the parabola (a = 1) at the target vertex (h,k).
-  if (/parabola|vertex/i.test(q)) { const a = ans.match(/^(-?\d+),\s*(-?\d+)$/); if (a) return { parab: { a: 1, h: +a[1], k: +a[2] } }; }
-  // Triangle — answer is 3+ "x,y" pairs joined by ";"
+  if (/parabola|vertex/i.test(q)) { if (pair) return { parab: { a: 1, h: +pair[1], k: +pair[2] } }; }
+  // Triangle — answer is 3+ "x,y" pairs joined by ";" (or "(x, y), (x, y), …" once formatted)
   if (/triangle/i.test(q)) {
-    const pts = ans.split(";").map((p) => p.match(/^(-?\d+),(-?\d+)$/)).filter(Boolean).map((mm) => [+mm![1], +mm![2]] as [number, number]);
+    const pts = [...ans.matchAll(/\(?(-?\d+),\s*(-?\d+)\)?/g)].map((mm) => [+mm[1], +mm[2]] as [number, number]);
     if (pts.length >= 3) return { points: pts };
   }
   // Unit circle — "…θ = 30°" OR "…to the angle π/6 radians" (answer = degrees).
@@ -602,53 +612,342 @@ function m12DisplayPrompt(meta: WorksheetData["meta"] | undefined, q: string): s
     .replace(/^(Simplify|Expand|Multiply|Factor|Divide|Evaluate)\s+(?=[\d(x])/i, "");
 }
 
+// ── Print-fitness of step text ────────────────────────────────────────────────
+// Every printed step must be a method in complete sentences with no screen
+// verbs (type/click/select) and no reference to a picture that isn't drawn.
+export function cleanStepsForPrint(steps: string[], skill?: string): string[] {
+  const out: string[] = [];
+  for (let s of steps) {
+    s = s
+      .replace(/\bClick\b/g, "Mark").replace(/\bclick\b/g, "mark")
+      .replace(/\btyped as\b/g, "written as").replace(/\bType\b/g, "Write").replace(/\btype\b/g, "write")
+      .replace(/\bSelect\b/g, "Choose").replace(/\bselect\b/g, "choose")
+      .replace(/\s*—\s*the rows in the picture\./, ".")
+      .replace(/\bPicture 1 equal groups of (\d+)/, "Picture 1 group of $1")
+      .replace(/\s*Count the rows in the picture\./, "")
+      .replace(/, using the dots\./, ".").replace(/\s*—\s*use the dots\./, ".");
+    if (/^\d+, then \.$/.test(s)) continue; // an empty count list ("2, then .")
+    if (!s.trim()) continue;
+    if (skill === "PRE_ALGEBRA") s = s.replace(/ · /g, " × ");
+    out.push(s);
+  }
+  return out;
+}
+
+// A basic fact (the child recalls or uses a fact strategy) — never a column,
+// carry, borrow or bring-down ritual, on the page or in the stacked layout.
+export function isBasicFact(question: string): boolean {
+  const q = question.replace(/\s+/g, " ").replace(/\s*=\s*\??\s*$/, "").replace(/\.$/, "").trim();
+  let m = q.match(/^(\d+) \+ (\d+)$/);
+  if (m) return +m[1] + +m[2] <= 20;
+  m = q.match(/^(\d+) [-−] (\d+)$/);
+  if (m) return +m[1] <= 20;
+  m = q.match(/^(\d+) [×x] (\d+)$/);
+  if (m) return +m[1] <= 12 && +m[2] <= 12;
+  m = q.match(/^(\d+) ÷ (\d+)$/);
+  if (m) return +m[2] <= 12 && +m[1] <= 144 && +m[1] % +m[2] === 0 && +m[1] / +m[2] <= 12;
+  return false;
+}
+
+// Fact strategies + missing-number shapes. Returns null for multi-digit work.
+function factSteps(qRaw: string, unit: FactUnit): string[] | null {
+  const q = qRaw.replace(/\s+/g, " ").replace(/\s*=\s*\??\s*$/, "").replace(/\.$/, "").trim();
+  let m = q.match(/^(\d+) \+ (\d+)$/);
+  if (m) return additionFactSteps(+m[1], +m[2], unit);
+  m = q.match(/^(\d+) [-−] (\d+)$/);
+  if (m) return subtractionFactSteps(+m[1], +m[2], unit);
+  m = q.match(/^(\d+) [×x] (\d+)$/);
+  if (m) { const a = +m[1], b = +m[2]; return (a <= 12 && b <= 12) ? multiplicationFactSteps(a, b, unit) : tensMultiplySteps(a, b); }
+  m = q.match(/^(\d+) ÷ (\d+)$/);
+  if (m) { const a = +m[1], b = +m[2]; return a % b === 0 ? divisionFactSteps(a, b) : remainderFactSteps(a, b); }
+  m = q.match(/^(\d+) \+ ___ = (\d+)$/) ?? q.match(/^___ \+ (\d+) = (\d+)$/);
+  if (m) return missingAddendSteps(+m[1], +m[2]);
+  m = q.match(/^(\d+) [×x] ___ = (\d+)$/) ?? q.match(/^___ [×x] (\d+) = (\d+)$/);
+  if (m) return missingFactorSteps(+m[1], +m[2]);
+  return null;
+}
+
+// Item-specific templates the scaffold engine gets wrong on paper (wrong
+// operation for ratio scale-ups, "03 ÷ 3", "divide both sides by 1", answers
+// without working for percent / trig / comparison pictures).
+function specialSteps(qRaw: string, ans: string): string[] | null {
+  const q = qRaw.replace(/\s+/g, " ").trim();
+  let m: RegExpMatchArray | null;
+  // Ratios — scale up
+  m = q.match(/scale (\d+) : (\d+) by (\d+)/i);
+  if (m) { const a = +m[1], b = +m[2], k = +m[3]; return [`Scaling up multiplies BOTH parts of the ratio by ${k}.`, `${a} × ${k} = ${a * k} and ${b} × ${k} = ${b * k}.`, `Answer: ${a * k} : ${b * k}.`]; }
+  // Ratios — missing second / first part
+  m = q.match(/(\d+) : (\d+) = (\d+) : ___/);
+  if (m) {
+    const a = +m[1], b = +m[2], c = +m[3];
+    if (c % a === 0) { const k = c / a; return [`The first parts show the scale: ${a} became ${c}, that is × ${k}.`, `Do the same to the second part: ${b} × ${k} = ${b * k}.`, `Answer: ${b * k}.`]; }
+    if (a % c === 0) { const k = a / c; return [`The first parts show the scale: ${a} became ${c}, that is ÷ ${k}.`, `Do the same to the second part: ${b} ÷ ${k} = ${b / k}.`, `Answer: ${b / k}.`]; }
+  }
+  m = q.match(/(\d+) : (\d+) = ___ : (\d+)/);
+  if (m) {
+    const a = +m[1], b = +m[2], d = +m[3];
+    if (d % b === 0) { const k = d / b; return [`The second parts show the scale: ${b} became ${d}, that is × ${k}.`, `Do the same to the first part: ${a} × ${k} = ${a * k}.`, `Answer: ${a * k}.`]; }
+    if (b % d === 0) { const k = b / d; return [`The second parts show the scale: ${b} became ${d}, that is ÷ ${k}.`, `Do the same to the first part: ${a} ÷ ${k} = ${a / k}.`, `Answer: ${a / k}.`]; }
+  }
+  // Percent of a number — the 10% method the unit teaches
+  m = q.match(/^(\d+)% of (\d+)\s*=?\s*$/);
+  if (m) {
+    const p = +m[1], n = +m[2];
+    const fmt = (x: number) => String(Math.round(x * 100) / 100);
+    const ten = n / 10;
+    if (p === 50) return [`50% is one half.`, `${n} ÷ 2 = ${fmt(n / 2)}.`, `Answer: ${ans}.`];
+    if (p === 25) return [`25% is one quarter.`, `${n} ÷ 4 = ${fmt(n / 4)}.`, `Answer: ${ans}.`];
+    if (p === 75) return [`75% is three quarters: find one quarter first.`, `${n} ÷ 4 = ${fmt(n / 4)}, then 3 × ${fmt(n / 4)} = ${fmt(3 * n / 4)}.`, `Answer: ${ans}.`];
+    if (p === 10) return [`10% is one tenth.`, `${n} ÷ 10 = ${fmt(ten)}.`, `Answer: ${ans}.`];
+    if (p === 5) return [`Find 10% first: ${n} ÷ 10 = ${fmt(ten)}.`, `5% is half of 10%: ${fmt(ten)} ÷ 2 = ${fmt(ten / 2)}.`, `Answer: ${ans}.`];
+    if (p % 10 === 0) return [`Find 10% first: ${n} ÷ 10 = ${fmt(ten)}.`, `${p}% is ${p / 10} lots of 10%: ${p / 10} × ${fmt(ten)} = ${fmt(p / 10 * ten)}.`, `Answer: ${ans}.`];
+    if (p % 5 === 0) return [`Find 10% first: ${n} ÷ 10 = ${fmt(ten)}, so 5% is ${fmt(ten / 2)}.`, `${p}% is ${Math.floor(p / 10)} lots of 10% plus one 5%: ${Math.floor(p / 10)} × ${fmt(ten)} + ${fmt(ten / 2)} = ${fmt(p / 100 * n)}.`, `Answer: ${ans}.`];
+    return [`${p}% means ${p} out of 100: ${p}/100 = ${fmt(p / 100)}.`, `${fmt(p / 100)} × ${n} = ${fmt(p / 100 * n)}.`, `Answer: ${ans}.`];
+  }
+  // Decimal ÷ whole number — divide as whole numbers, keep the decimal places
+  m = q.match(/^(\d+\.\d+) ÷ (\d+)\s*=?\s*$/);
+  if (m) {
+    const dec = m[1], b = +m[2];
+    const dp = dec.split(".")[1].length;
+    const whole = parseInt(dec.replace(".", ""), 10);
+    if (whole % b === 0) return [
+      `Divide as whole numbers: ${whole} ÷ ${b} = ${whole / b}.`,
+      `${dec} has ${dp} decimal place${dp === 1 ? "" : "s"}, so the answer keeps ${dp}: ${ans}.`,
+      `Check: ${ans} × ${b} = ${dec}.`,
+    ];
+  }
+  // Linear — ax = x + c (coefficient-1 artefacts suppressed)
+  m = q.match(/^(?:Solve for x:\s*)?(\d*)x = x \+ (\d+)$/);
+  if (m) {
+    const a = m[1] === "" ? 1 : +m[1], c = +m[2], k = a - 1;
+    if (k === 1) return [`x is on both sides. Subtract x from BOTH sides so x is on one side only: 2x − x = x, so x = ${c}.`, `Check: 2 × ${c} = ${2 * c} and ${c} + ${c} = ${2 * c} ✓`];
+    if (k > 1 && c % k === 0) return [`x is on both sides. Subtract x from BOTH sides: ${a}x − x = ${k}x, so ${k}x = ${c}.`, `Divide BOTH sides by ${k}: x = ${c} ÷ ${k} = ${c / k}.`, `Check: ${a} × ${c / k} = ${a * (c / k)} and ${c / k} + ${c} = ${c / k + c} ✓`];
+  }
+  // Linear — ax + b = cx + d
+  m = q.match(/^(?:Solve for x:\s*)?(\d*)x \+ (\d+) = (\d*)x \+ (\d+)$/);
+  if (m) {
+    const a = m[1] === "" ? 1 : +m[1], b = +m[2], c = m[3] === "" ? 1 : +m[3], d = +m[4];
+    const hi = Math.max(a, c), lo = Math.min(a, c), k = hi - lo;
+    const bigB = a >= c ? b : d, smallB = a >= c ? d : b; // constants on the side with the bigger / smaller x-term
+    const rhs = smallB - bigB;
+    if (k > 0 && rhs % k === 0) {
+      const x = rhs / k;
+      const lx = lo === 1 ? "x" : `${lo}x`, kx = k === 1 ? "x" : `${k}x`;
+      return [
+        `x is on both sides. Subtract the smaller x-term (${lx}) from BOTH sides: ${kx} + ${bigB} = ${smallB}.`,
+        `Subtract ${bigB} from BOTH sides: ${kx} = ${smallB} − ${bigB} = ${rhs}.`,
+        k === 1 ? `So x = ${x}.` : `Divide BOTH sides by ${k}: x = ${rhs} ÷ ${k} = ${x}.`,
+        `Check: ${a} × ${x} + ${b} = ${a * x + b} and ${c} × ${x} + ${d} = ${c * x + d} ✓`,
+      ];
+    }
+  }
+  // Trig — find a side from a ratio
+  m = q.match(/^(sin|cos|tan) θ = (\d+)\/(\d+)\. The (hypotenuse|adjacent side|opposite side|side adjacent to θ|side opposite θ) is (\d+)\. Find the (side opposite θ|side adjacent to θ|hypotenuse)/i);
+  if (m) {
+    const fn = m[1].toLowerCase(), p = +m[2], qd = +m[3], known = +m[5];
+    const def = fn === "sin" ? "opposite / hypotenuse" : fn === "cos" ? "adjacent / hypotenuse" : "opposite / adjacent";
+    const [topName, botName] = def.split(" / ");
+    const knownIsBottom = new RegExp(botName, "i").test(m[4]);
+    const want = m[6].replace(/side (opposite|adjacent)( to)? θ/i, "$1").toLowerCase();
+    if (knownIsBottom && known % qd === 0) { const k = known / qd; return [`${fn} θ = ${def}, so ${topName} / ${known} = ${p}/${qd}.`, `The bottom went from ${qd} to ${known}: ${known} ÷ ${qd} = ${k}, so multiply the top by ${k} too.`, `${want} = ${p} × ${k} = ${p * k}.`]; }
+    if (!knownIsBottom && known % p === 0) { const k = known / p; return [`${fn} θ = ${def}, so ${known} / ${botName} = ${p}/${qd}.`, `The top went from ${p} to ${known}: ${known} ÷ ${p} = ${k}, so multiply the bottom by ${k} too.`, `${want} = ${qd} × ${k} = ${qd * k}.`]; }
+  }
+  // Fraction pictures — compare two strips, or read an equivalence off them
+  m = q.match(/^\[\[viz cmp (\d+) (\d+) (\d+) (\d+)\]\]\s*(.*)$/);
+  if (m) {
+    const a = +m[1], b = +m[2], c = +m[3], d = +m[4], rest = m[5].trim();
+    if (!rest) {
+      const topBigger = a / b > c / d;
+      const win = topBigger ? `${a}/${b}` : `${c}/${d}`;
+      return [
+        `Both strips are the same length, so they are the same whole.`,
+        `Top strip: ${a} of ${b} equal parts shaded. Bottom strip: ${c} of ${d} equal parts shaded.`,
+        a / b === c / d ? `The same amount is shaded on both — they are equal.` : `More of the strip is shaded on the ${topBigger ? "top" : "bottom"}, so ${win} is larger.`,
+      ];
+    }
+    let e = rest.match(/\\frac\{(\d+)\}\{(\d+)\} = \\frac\{\?\}\{(\d+)\}/);
+    if (e && +e[3] % +e[2] === 0) { const k = +e[3] / +e[2]; return [`The two bars shade the SAME amount — they are equivalent fractions.`, `Bottom: ${e[2]} became ${e[3]} — that is × ${k}.`, `Do the same on top: ${e[1]} × ${k} = ${+e[1] * k}.`]; }
+    e = rest.match(/\\frac\{(\d+)\}\{(\d+)\} = \\frac\{(\d+)\}\{\?\}/);
+    if (e && +e[3] % +e[1] === 0) { const k = +e[3] / +e[1]; return [`The two bars shade the SAME amount — they are equivalent fractions.`, `Top: ${e[1]} became ${e[3]} — that is × ${k}.`, `Do the same on the bottom: ${e[2]} × ${k} = ${+e[2] * k}.`]; }
+  }
+  return null;
+}
+
+// Is this problem an example of what THIS unit teaches? Auto-examples are
+// drawn from on-topic items first (a ÷3 item never headlines the ÷6–9 page).
+function onTopicFor(question: string, skill: string | undefined, label: string): boolean {
+  const L = label.toLowerCase();
+  const q = question.replace(/\s+/g, " ").replace(/\s*=\s*\?\s*$/, "").trim();
+  const blank = q.includes("___");
+  const two = (re: RegExp) => { const m = q.match(re); return m ? [+m[1], +m[2]] : null; };
+  if (skill === "ADDITION") {
+    const ab = two(/^(\d+) \+ (\d+)\s*=?$/);
+    if (/missing|mixed/.test(L)) return true;
+    if (/3-digit|three addends/.test(L)) return !ab || Math.max(...ab) >= 100 || /\+.*\+/.test(q);
+    if (/2-digit/.test(L)) { if (!ab) return false; const [a, b] = ab; if (a < 10 || b < 10 || a > 99 || b > 99) return false; const carry = a % 10 + b % 10 >= 10; return /regroup/.test(L) && !/no regroup/.test(L) ? carry : !carry; }
+    if (/fact famil/.test(L)) return blank;
+    if (!ab) return false;
+    const [a, b] = ab, sum = a + b, big = Math.max(a, b), small = Math.min(a, b);
+    if (/counting on/.test(L)) return small >= 1 && small <= 3;
+    if (/near/.test(L)) return Math.abs(a - b) === 1;
+    if (/double/.test(L)) return a === b;
+    if (/zero|turnaround/.test(L)) return small === 0 || a !== b;
+    if (/make ten|bridg/.test(L)) return sum > 10 && Math.abs(a - b) > 1 && small >= 2 && big < 10;
+    return true;
+  }
+  if (skill === "SUBTRACTION") {
+    const ab = two(/^(\d+) [-−] (\d+)\s*=?$/);
+    if (/missing|mixed/.test(L)) return true;
+    if (/3-digit/.test(L)) return !!ab && ab[0] >= 100;
+    if (/2-digit/.test(L)) { if (!ab) return false; const [a, b] = ab; if (a < 10 || a > 99) return false; const borrow = a % 10 < b % 10; return /no borrow/.test(L) ? !borrow : (borrow && a >= 20); }
+    if (/fact famil/.test(L)) return blank;
+    if (!ab) return false;
+    const [a, b] = ab;
+    if (/counting back/.test(L)) return b >= 1 && b <= 3;
+    if (/subtract 0|subtract all/.test(L)) return b === 0 || a === b;
+    if (/count up|difference/.test(L)) return b >= 1 && a !== b && a <= 20;
+    if (/halv|double/.test(L)) return b >= 2 && Math.abs(a - 2 * b) <= 2;
+    if (/bridg/.test(L)) return a > 10 && a < 20 && b > a - 10 && b < 10;
+    return true;
+  }
+  if (skill === "MULTIPLICATION") {
+    const ab = two(/^(\d+) [×x] (\d+)\s*=?$/);
+    const trivial = !!ab && (ab[0] <= 1 || ab[1] <= 1);
+    if (/×1 and ×0|×0/.test(L)) return trivial;
+    if (/fact famil|missing/.test(L)) return blank;
+    if (/mixed/.test(L)) return !trivial;
+    if (/square/.test(L)) return !!ab && ab[0] === ab[1] && ab[0] >= 3 && ab[0] !== 10;
+    if (/tens/.test(L)) return /\d0 [×x] \d\b|\bso\b/.test(q);
+    if (/2-digit × 2-digit/.test(L)) return !!ab && ab[0] >= 10 && ab[1] >= 10;
+    if (/2-digit × 1-digit|carrying|break apart/.test(L)) return !ab || (Math.max(...ab) >= 10 && Math.min(...ab) < 10);
+    const fs = unitFactors(label, "×");
+    if (fs.length && ab) return !trivial && fs.some((f) => ab[0] === f || ab[1] === f);
+    return !trivial;
+  }
+  if (skill === "DIVISION") {
+    const ab = two(/^(\d+) ÷ (\d+)\s*=?$/);
+    const trivial = !!ab && (ab[1] === 1 || ab[0] === ab[1]);
+    if (/÷1|itself/.test(L)) return trivial;
+    if (/fact famil|missing/.test(L)) return blank;
+    if (/mixed/.test(L)) return !trivial;
+    if (/square/.test(L)) return !!ab && ab[0] === ab[1] * ab[1] && ab[1] >= 3;
+    if (/remainder/.test(L)) return !!ab && ab[0] % ab[1] !== 0;
+    if (/2-digit|3-digit/.test(L)) return !!ab && Math.floor(ab[0] / ab[1]) >= 10;
+    const fs = unitFactors(label, "÷");
+    if (fs.length && ab) return !trivial && fs.includes(ab[1]);
+    return !trivial;
+  }
+  return true;
+}
+
+// Dedupe key: the same problem however it is worded ("Divide the fractions:
+// 1/2 ÷ 2/3" = "1/2 ÷ 2/3"; "3 + 4" = "4 + 3"; "Find the degree of P." = "… P").
+function canonicalKey(question: string): string {
+  let q = question.replace(/\s+/g, " ").replace(/\s*=\s*\??\s*$/, "").replace(/\.\s*$/, "").trim();
+  q = q.replace(/^[^:]{0,60}:\s*/, "").replace(/^(Find the degree of|Is this a polynomial\?|Expand|Simplify|Factor|Solve|Divide|Multiply)\s+/i, "");
+  const m = q.match(/^(\d+) ([+×x]) (\d+)$/);
+  if (m) { const [a, b] = [+m[1], +m[3]].sort((x, y) => x - y); q = `${a} ${m[2] === "+" ? "+" : "×"} ${b}`; }
+  return q.toLowerCase().replace(/[\s.]/g, "");
+}
+
+// Answers for plotting tasks are stored as "m,b" / "x,y" — never print those raw.
+function displayPlotAnswer(problem: string, answer: string): string {
+  const sol = parsePlotSolution(problem, answer);
+  if (!sol) return answer;
+  if (sol.line) return `slope ${sol.line.m}, y-intercept ${sol.line.b} — through (0, ${sol.line.b}) and (1, ${sol.line.m + sol.line.b})`;
+  if (sol.point) {
+    const pts = [...problem.replace(/−/g, "-").matchAll(/\((-?\d+),\s*(-?\d+)\)/g)].map((m) => `(${m[1]}, ${m[2]})`);
+    if (/^Plot the point/i.test(problem) && pts.length > 1) return pts.join(" and ");
+    return `(${sol.point[0]}, ${sol.point[1]})`;
+  }
+  if (sol.points) return sol.points.map(([x, y]) => `(${x}, ${y})`).join(", ");
+  if (sol.parab) return `vertex (${sol.parab.h}, ${sol.parab.k})`;
+  return answer;
+}
+
 // The curated unit example (best, hand-written steps) plus several more worked
-// from the sheet's own problems (spanning easy→hard) via the scaffold engine, so
-// a new skill opens with 4–5 fully-explained examples.
+// from the sheet's own problems via the fact-strategy / column / scaffold
+// templates, so a new skill opens with 4 fully-explained examples.
+//
+// RULES (from the pack review of all 128 unit boundaries):
+//  • curated steps WIN whenever they have ≥ 2 real steps; generated steps only
+//    fill in for terse ones (poly-steps used to overwrite a correct long-division
+//    example with a factor-and-cancel method the unit never taught);
+//  • a basic fact gets a fact strategy, never a column/carry/borrow/bring-down
+//    walk; a 2-digit multiplier gets partial products, never the 1-digit
+//    algorithm with "14" as a digit;
+//  • auto-examples are chosen ON TOPIC for the unit, one per distinct case,
+//    never repeating the curated example or each other, in sheet order;
+//  • every step is print-fit (no type/click/select, no "picture" that isn't
+//    drawn, no broken count lists) and no raw "m,b" answer is ever printed.
+/** A directive is written for the screen, where a list of choices may be
+ *  shown. On paper there is never a list — the print path strips options and
+ *  rewrites "Select all the factors" items to bare expressions — so the
+ *  directive must not tell a child to select from one. (Pack audit, Sep 2026:
+ *  Polynomials sheet 75 printed "Where a list is shown, select exactly the two
+ *  factors; otherwise write them as…".) */
+export function printDirective(directive: string): string {
+  return directive
+    .replace(/\s*Where a list is shown,\s*select exactly the two factors;\s*otherwise\s*(\w)/i, (_m, c: string) => ` ${c.toUpperCase()}`)
+    .replace(/\b(select|click|tap|drag)\b[^.;]*[.;]?\s*/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export function buildExamples(sheet: WorksheetData): WorkedExample[] {
   const { workedExample, problems } = sheet;
   const out: WorkedExample[] = [];
   const seen = new Set<string>();
-
-  // steps for ONE example: concrete column-method working for multi-digit
-  // arithmetic, otherwise the scaffold engine's step-by-step hints.
   const directive = sheet.meta.directive;
-  const stepsFor = (q: string, ans: string): string[] => {
+  const skill = sheet.meta.skill as string | undefined;
+  const label = sheet.meta.subSkillLabel ?? "";
+  const unit: FactUnit = { label, directive, objective: sheet.meta.learningObjective };
+
+  const stepsFor = (qIn: string, ans: string): string[] => {
+    const q = qIn.replace(/\s*→.*$/, "").trim(); // print-only "→ ___, ___" suffix
+    const fact = factSteps(q, unit);
+    if (fact) return fact;
     const col = parseColumnar(q);
-    // Trivial ×0/×1 facts must NOT get column-method steps ("Ones: 0 × 11 = 0.
-    // Write 0." teaches nothing) — the scaffold's groups/skip-count hints do.
-    if (col && !(col.op === "×" && (+col.top <= 1 || +col.bottom <= 1))) {
+    if (col) {
       const a = +col.top, b = +col.bottom;
       // Digit-by-digit column steps assume INTEGERS — feeding decimals produced
       // "Hundreds: NaN + NaN = NaN" on the Decimals lesson pages. Decimal
       // operands get decimal-appropriate steps instead.
-      if (Number.isInteger(a) && Number.isInteger(b)) return workedArithmeticSteps(a, col.op, b);
+      if (Number.isInteger(a) && Number.isInteger(b)) {
+        if (col.op === "×") {
+          const tens = tensMultiplySteps(a, b);
+          if (tens) return tens;
+          if (a >= 10 && b >= 10) return partialProductSteps(a, b);
+          if (b >= 10 && a < 10) return workedArithmeticSteps(b, "×", a); // 1-digit × 2-digit: the column method wants the 1-digit multiplier underneath
+        }
+        return workedArithmeticSteps(a, col.op, b);
+      }
       const dp = Math.max((col.top.split(".")[1] ?? "").length, (col.bottom.split(".")[1] ?? "").length);
       const s0 = Math.pow(10, dp);
       const ai = Math.round(a * s0), bi = Math.round(b * s0);
-      const unit = dp === 1 ? "tenths" : dp === 2 ? "hundredths" : `parts of 1/${s0}`;
+      const unitName = dp === 1 ? "tenths" : dp === 2 ? "hundredths" : `parts of 1/${s0}`;
       if (col.op === "×") {
         return [`Multiply as whole numbers: ${ai} × ${bi} = ${ai * bi}.`, `Count the decimal places in both numbers and place the point.`, `Answer: ${ans}.`];
       }
       const opW = col.op === "+" ? "Add" : "Subtract";
       return [
         `Line up the decimal points.`,
-        `${opW} in ${unit}: ${ai} ${col.op === "+" ? "+" : "−"} ${bi} = ${col.op === "+" ? ai + bi : ai - bi}.`,
+        `${opW} in ${unitName}: ${ai} ${col.op === "+" ? "+" : "−"} ${bi} = ${col.op === "+" ? ai + bi : ai - bi}.`,
         `Put the decimal point back: ${ans}.`,
       ];
     }
     const div = parseLongDivision(q);
-    // Digit-walk long division only helps for real multi-digit division —
-    // basic facts (8 ÷ 8, 9 ÷ 1) got a one-liner; scaffold teaches those better.
+    // Digit-walk long division only for real multi-digit division — facts and
+    // 1-digit-quotient remainders were handled by factSteps above.
     if (div && +div.dividend >= 10 && +div.divisor >= 2) return workedDivisionSteps(+div.dividend, +div.divisor);
-    // Angle diagrams: the measures live in the marker (which the scaffold strips),
-    // so build the geometric steps here from the marker numbers.
+    const special = specialSteps(q, ans);
+    if (special) return special;
     const poly = polyWorkedSteps(q, ans);
     if (poly) return poly;
     const plot = parsePlotSolution(q, ans);
     if (plot?.line) {
       const { m, b } = plot.line;
-      return [`Start at the y-intercept (0, ${b}).`, `Slope ${m}: from there go ${m >= 0 ? "up" : "down"} ${Math.abs(m)}, right 1.`, `Draw the straight line through the points.`];
+      return [`The number on its own is the y-intercept: ${b} → first point (0, ${b}).`, `The number in front of x is the slope: ${m} → from (0, ${b}) go ${m >= 0 ? "up" : "down"} ${Math.abs(m)} and right 1 → second point (1, ${m + b}).`, `Draw the straight line through the two points.`];
     }
     if (plot?.point) {
       // Transformation examples must STATE THE RULE first — "go left 4, down 2"
@@ -668,6 +967,14 @@ export function buildExamples(sheet: WorksheetData): WorkedExample[] {
     if (plot?.points) return [`Plot each vertex: ${plot.points.map(([x, y]) => `(${x}, ${y})`).join(", ")}.`, `Connect them in order to form the triangle.`];
     if (plot?.angleDeg !== undefined) return [`Start at the positive x-axis (0°).`, `Turn ${plot.angleDeg}° counter-clockwise.`, `Mark the point where the radius meets the circle.`];
     if (plot?.parab) return [`The parabola's vertex (turning point) is at (${plot.parab.h}, ${plot.parab.k}).`, `It opens ${plot.parab.a >= 0 ? "upward" : "downward"}.`, `Draw the U-shape symmetric about x = ${plot.parab.h}.`];
+    // Three angles on a straight line, written as text: "50° + 65° + x = 180°".
+    // No [[viz]] marker, so no figure template matches; without this the page
+    // printed one usable example (pack audit, Sep 2026).
+    const line3 = q.match(/^(\d+)°\s*\+\s*(\d+)°\s*\+\s*x\s*=\s*180°$/);
+    if (line3) {
+      const p = +line3[1], r = +line3[2];
+      return ["The angles on a straight line add to 180°.", `Add the two known angles: ${p} + ${r} = ${p + r}.`, `x = 180 − ${p + r} = ${ans}.`];
+    }
     const vza = parseViz(q);
     if (vza && isFigureKind(vza.viz.kind)) {
       const k = vza.viz.kind, [m, m2] = vza.viz.nums;
@@ -700,49 +1007,82 @@ export function buildExamples(sheet: WorksheetData): WorkedExample[] {
     return buildScaffold(q, ans, "", { subjectSlug: "MATH", directive }).hints;
   };
 
+  const finish = (problem: string, steps: string[], answer: string): WorkedExample => ({
+    problem,
+    steps: cleanStepsForPrint(steps, skill),
+    answer: displayPlotAnswer(problem, answer),
+  });
+
   if (workedExample) {
-    // Keep the curated (concise, hand-written) steps — except for column-method
-    // or long-division problems, where concrete digit-by-digit working is
-    // clearer, and for TOO-TERSE curated examples: a first-time learner needs
-    // every step explained, so anything with fewer than 2 steps is replaced by
-    // the generated full walkthrough (scaffold / poly-steps).
-    const isAlgo = parseColumnar(workedExample.problem) || parseLongDivision(workedExample.problem);
-    const poly = polyWorkedSteps(workedExample.problem, workedExample.answer);
-    const tooTerse = (workedExample.steps?.length ?? 0) < 2;
-    const generated = tooTerse ? stepsFor(workedExample.problem, workedExample.answer) : null;
-    const richer = generated && generated.length >= 2 && !/^The correct answer/.test(generated[0]);
-    out.push(
-      poly ? { ...workedExample, steps: poly }
-      : isAlgo ? { ...workedExample, steps: stepsFor(workedExample.problem, workedExample.answer) }
-      : richer ? { ...workedExample, steps: generated! }
-      : workedExample
-    );
-    seen.add(workedExample.problem.replace(/\s*=\s*$/, ""));
+    // Curated steps win. Only a TOO-TERSE curated example (fewer than 2 real
+    // steps) is replaced by the generated full walkthrough, and only when that
+    // walkthrough is itself a real method.
+    const curated = (workedExample.steps ?? []).filter((s) => s && s.trim());
+    const generated = curated.length < 2 ? stepsFor(workedExample.problem, workedExample.answer) : null;
+    const richer = !!generated && generated.length >= 2 && !/^The correct answer/.test(generated[0]);
+    out.push(finish(workedExample.problem, richer ? generated! : curated, workedExample.answer));
+    seen.add(canonicalKey(workedExample.problem));
   }
-  const n = problems.length;
+
   // Cap at 4 examples. Cards are 48% wide (2 per row), so 4 fills a clean 2×2
   // grid. A 5th card wraps to a lone third row that collides with the fixed
   // footer and drops its content — the empty "Example 5" bug. Keep it to 4.
   const TARGET = 4;
-  for (const idx of [0, Math.floor(n * 0.33), Math.floor(n * 0.66), n - 1]) {
-    if (out.length >= TARGET) break;
-    const p = problems[idx];
-    if (!p) continue;
-    const key = p.question.replace(/\s*=\s*$/, "");
-    if (seen.has(key)) continue;
-    seen.add(key);
+  type Cand = { problem: string; steps: string[]; answer: string; sig: string };
+  const build = (p: WorksheetProblem): Cand | null => {
+    const key = canonicalKey(p.question);
+    if (seen.has(key)) return null;
     const ans = String((p as any).answer ?? "");
-    const steps = stepsFor(p.question, ans);
+    let steps = stepsFor(p.question, ans);
     // Never show a step-less example — a lone "the correct answer is X" teaches
-    // nothing to a first-time learner. Skip; the other examples still teach.
-    if (steps.length === 1 && /^The correct answer/.test(steps[0])) continue;
+    // nothing to a first-time learner. The same goes for the on-screen
+    // multiple-choice fallback ("Rule out any choices…"): the printed page has
+    // no choices to rule out, so that text is not a method here either.
+    const teaches = steps.filter((s) => !/^The correct answer/.test(s) && !/^Rule out any choices/i.test(s));
+    if (teaches.length === 0) return null;
+    steps = teaches;
+    const qShown = p.question.replace(/\s*=\s*\?\s*$/, "").replace(/\s*→.*$/, "").trim();
     // Append "=" only to bare expressions, not to visual or instruction prompts.
-    const append = !parseViz(p.question) && !p.question.includes("=") && /^[\d(]/.test(p.question.trim());
-    out.push({
-      problem: append ? `${p.question} =` : p.question,
-      steps,
-      answer: ans,
-    });
+    const append = !parseViz(qShown) && !qShown.includes("=") && /^[\d(]/.test(qShown) && !/[.?]$/.test(qShown);
+    // Case signature: the step template with the numbers removed, plus the
+    // column-case flags a child must see separately (ones summing to exactly
+    // 10; a minuend ending in 0; a 1-digit subtrahend; an addend ending in 0).
+    let sig = steps.map((s) => s.replace(/-?\d+(\.\d+)?/g, "N")).join("|");
+    const col = parseColumnar(qShown);
+    if (col && Number.isInteger(+col.top) && Number.isInteger(+col.bottom)) {
+      const a = +col.top, b = +col.bottom;
+      if (col.op === "+" && a % 10 + b % 10 === 10) sig += "|ones10";
+      if (col.op === "+" && (a % 10 === 0 || b % 10 === 0)) sig += "|addend0";
+      if (col.op === "−" && a % 10 === 0) sig += "|top0";
+      if (col.op === "−" && b < 10) sig += "|1digit";
+    }
+    return { problem: append ? `${qShown} =` : qShown, steps, answer: ans, sig };
+  };
+
+  const topical = problems.filter((p) => onTopicFor(p.question, skill, label));
+  const pool = topical.length >= 1 ? topical : problems;
+  // One example per distinct case, in sheet order (easy → hard), then a second
+  // of each case if slots remain; never the same problem twice.
+  const groups = new Map<string, Cand[]>();
+  for (const p of pool) {
+    const c = build(p);
+    if (!c) continue;
+    if (seen.has(canonicalKey(c.problem))) continue;
+    seen.add(canonicalKey(c.problem));
+    const g = groups.get(c.sig) ?? [];
+    g.push(c); groups.set(c.sig, g);
+  }
+  const order = [...groups.values()];
+  for (let round = 0; out.length < TARGET; round++) {
+    let added = false;
+    for (const g of order) {
+      if (out.length >= TARGET) break;
+      const c = g[round];
+      if (!c) continue;
+      out.push(finish(c.problem, c.steps, c.answer));
+      added = true;
+    }
+    if (!added) break;
   }
   return out.slice(0, TARGET);
 }
@@ -992,7 +1332,7 @@ function WorksheetPage({ sheet, watermark }: { sheet: WorksheetData; watermark?:
       {/* ── Section directive (once) — falls back to the objective ── */}
       <View style={s.objectiveBox}>
         {meta.directive ? (
-          <Text style={[s.objectiveText, { fontFamily: "BodySans-Bold" }]}>{meta.directive}</Text>
+          <Text style={[s.objectiveText, { fontFamily: "BodySans-Bold" }]}>{printDirective(meta.directive)}</Text>
         ) : (
           <>
             <Text style={s.objectiveLabel}>Today I will:</Text>

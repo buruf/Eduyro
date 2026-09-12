@@ -191,7 +191,7 @@ export default function ShopPage() {
             Buy a printable PDF pack today.
           </h1>
           <p className="text-lg text-cream/65 mt-6 max-w-2xl mx-auto leading-relaxed text-muted">
-            100 worksheets per skill, instant download, no account required.
+            Up to 100 worksheets per skill, instant download, no account required.
           </p>
         </div>
 
@@ -394,6 +394,7 @@ className="w-full mt-3 bg-brand-blue text-white text-sm font-semibold px-4 py-2.
       <SamplePreviewModal
         open={previewSkill !== null}
         skill={previewSkill}
+        totalSheets={catalog.skills.find((s) => s.id === previewSkill)?.totalSheets}
         onClose={() => setPreviewSkill(null)}
       />
 
@@ -491,7 +492,7 @@ className="w-full mt-3 bg-brand-blue text-white text-sm font-semibold px-4 py-2.
 const FAQS = [
   {
     q: "What's included in each pack?",
-    a: "100 worksheets per skill (about 3,000 problems), organized by difficulty. PDFs you can print at home, paced like a Kumon program but a fraction of the price.",
+    a: "Up to 100 worksheets per skill (about 3,000 problems), organized by difficulty — the Fractions pack is 50 sheets, because decimals and percents are their own pack. PDFs you can print at home, paced like a Kumon program but a fraction of the price.",
   },
   {
     q: "Do I need an account?",

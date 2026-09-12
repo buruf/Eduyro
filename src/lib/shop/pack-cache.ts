@@ -9,7 +9,7 @@ import { uploadToS3, getSignedDownloadUrl } from "@/lib/pdf/generator";
 import { writeFileSync, existsSync, mkdirSync, statSync } from "fs";
 import { join } from "path";
 
-const CACHE_VERSION = "v121"; // v121: third transition pass - 73 minors addressed (review sheets mix every lesson type, one format per fact per sheet, same-value distractors, input forms stated).
+const CACHE_VERSION = "v122"; // v122: printed-pack audit - lesson pages teach the method the child owns (no column/long-division walks on facts, curated steps win, partial products for 2d x 2d), opening sheets vary, review sheets mix every unit, honest sheet counts.
 const CACHE_PREFIX  = `shop-packs/${CACHE_VERSION}`;
 const SAMPLE_PREFIX = `shop-samples/${CACHE_VERSION}`;
 

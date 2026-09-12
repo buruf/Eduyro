@@ -60,7 +60,7 @@ interface XP { q: string; a: string; diff: number; form: string; key: string; vi
 type Builder = () => XP[];
 
 // fractions n/d with 1<=n<d for a denominator pool
-function* fracPairs(denoms: number[]): Generator<[number, number]> {
+function* fracPairs(denoms: readonly number[]): Generator<[number, number]> {
   for (const d of denoms) for (let n = 1; n < d; n++) yield [n, d];
 }
 
@@ -73,12 +73,23 @@ const vizShapes = ["pie", "bar", "vbar", "penta", "hexa", "tri", "grid"] as cons
 // `shapes` narrows the picture set: lesson 1 ("Part of a whole") uses only the
 // single shapes so that grids are new when lesson 4 introduces them.
 const singleShapes = vizShapes.filter((s) => s !== "grid");
-function vizIdentify(_prompt?: string, shapes: readonly string[] = vizShapes): Builder {
+// `denoms` narrows the bottom numbers: lesson 1 stays on halves → sixths so
+// the pack's first four sheets climb (small shapes → count one number on
+// bigger shapes → count a grid) instead of sheet 4 repeating sheet 1.
+// `twoShapes` shows every fraction on TWO different shapes (a 3/4 pie and a
+// 3/4 strip) — the narrowed lesson-1 set has only 15 fractions, and the daily
+// 30-item sheet must not repeat a picture; seeing one fraction on two shapes
+// is also the point of the lesson (the fraction is not tied to the shape).
+function vizIdentify(_prompt?: string, shapes: readonly string[] = vizShapes, denoms: readonly number[] = DENOMS, twoShapes = false): Builder {
   return () => {
     const out: XP[] = [];
-    for (const [n, d] of fracPairs(DENOMS)) {
+    for (const [n, d] of fracPairs(denoms)) {
       const shape = shapes[(n + d) % shapes.length];
       out.push({ q: `[[viz ${shape} ${n} ${d}]]`, a: F(n, d), diff: d * 2 + n, form: `vid-${shape}`, key: `vid:${shape}:${n}/${d}` });
+      if (twoShapes) {
+        const alt = shapes[(n + d + 3) % shapes.length];
+        if (alt !== shape) out.push({ q: `[[viz ${alt} ${n} ${d}]]`, a: F(n, d), diff: d * 2 + n + 0.5, form: `vid-${alt}`, key: `vid:${alt}:${n}/${d}` });
+      }
     }
     return out;
   };
@@ -133,6 +144,21 @@ const idText: Builder = () => {
   return out;
 };
 const idVizSmall = vizIdentify("Write the fraction shown");
+// Fraction NAMES in words ("three quarters", "seven tenths") — the growth step
+// of the Identify unit: "n out of d" and pictures open the unit (band 0), the
+// word names arrive on the later sheets so four sheets are not one sheet
+// printed four times.
+const NUM_WORDS = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven"];
+const DEN_WORDS: Record<number, [string, string]> = { 2: ["half", "halves"], 3: ["third", "thirds"], 4: ["quarter", "quarters"], 5: ["fifth", "fifths"], 6: ["sixth", "sixths"], 8: ["eighth", "eighths"], 10: ["tenth", "tenths"], 12: ["twelfth", "twelfths"] };
+const idWords: Builder = () => {
+  const out: XP[] = [];
+  for (const [n, d] of fracPairs(DENOMS)) {
+    const w = DEN_WORDS[d];
+    if (!w) continue;
+    out.push({ q: `${NUM_WORDS[n]} ${n === 1 ? w[0] : w[1]}`, a: F(n, d), diff: d * 2 + n + 24, form: "id-words", key: `idw:${n}/${d}`, band: 1 });
+  }
+  return out;
+};
 
 const equivFillNum: Builder = () => {
   const out: XP[] = [];
@@ -234,6 +260,51 @@ const orderLeast: Builder = () => {
   }
   return out.slice(0, 400);
 };
+// Growth steps for the Order unit (band 1, so sheet 21 stays on the taught
+// {2,3,4,6} trios): fifths / eighths / tenths / twelfths the Compare unit
+// already used, and four-fraction lists. Each needs a common bottom no bigger
+// than 40 so the method (list multiples, rewrite, line up the tops) still fits
+// on paper.
+const orderTrio = (trio: [number, number][]): { q: string; a: string } | null => {
+  const vals = trio.map(([n, d]) => n / d);
+  if (new Set(vals).size < trio.length) return null;
+  const sorted = trio.map((p, idx) => ({ p, v: vals[idx] })).sort((a, b) => a.v - b.v);
+  return { q: trio.map(([n, d]) => F(n, d)).join(", "), a: sorted.map(({ p }) => F(p[0], p[1])).join(" < ") };
+};
+const orderWide: Builder = () => {
+  const out: XP[] = [];
+  const ps = [...fracPairs(DENOMS)];
+  let i0 = 0;
+  for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) for (let k = j + 1; k < ps.length; k++) {
+    const trio: [number, number][] = [ps[i], ps[j], ps[k]];
+    const ds = trio.map(([, d]) => d);
+    if (new Set(ds).size < 3 || !ds.some((d) => [5, 8, 10, 12].includes(d))) continue;
+    const L = ds.reduce((acc, d) => lcm(acc, d), 1);
+    if (L > 40) continue;
+    if (i0++ % 5 !== 0) continue;                    // thin the enumeration, keep variety
+    const t = orderTrio(trio);
+    if (!t) continue;
+    out.push({ ...t, diff: 60 + L / 2 + ds.reduce((s, d) => s + d, 0), form: "order-wide", key: `ordw:${trio.map((p) => p.join("/")).join(",")}`, band: 1 });
+  }
+  return out.slice(0, 300);
+};
+const orderFour: Builder = () => {
+  const out: XP[] = [];
+  const ps = [...fracPairs([2, 3, 4, 6, 8, 12])];
+  let i0 = 0;
+  for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) for (let k = j + 1; k < ps.length; k++) for (let m = k + 1; m < ps.length; m++) {
+    const quad: [number, number][] = [ps[i], ps[j], ps[k], ps[m]];
+    const ds = quad.map(([, d]) => d);
+    if (new Set(ds).size < 4) continue;
+    const L = ds.reduce((acc, d) => lcm(acc, d), 1);
+    if (L > 24) continue;
+    if (i0++ % 7 !== 0) continue;
+    const t = orderTrio(quad);
+    if (!t) continue;
+    out.push({ ...t, diff: 120 + L + ds.reduce((s, d) => s + d, 0), form: "order-four", key: `ord4:${quad.map((p) => p.join("/")).join(",")}`, band: 1 });
+  }
+  return out.slice(0, 300);
+};
 
 function simplifyForm(_verb: string, formId: string): Builder {
   return () => {
@@ -271,13 +342,6 @@ const toImproper: Builder = () => {
   return out;
 };
 
-const addSame: Builder = () => {
-  const out: XP[] = [];
-  for (const d of DENOMS) for (let a = 1; a < d; a++) for (let b = 1; b < d; b++) {
-    out.push({ q: `Add the fractions:  ${F(a, d)} + ${F(b, d)}`, a: reduced(a + b, d), diff: d * 2 + (a + b >= d ? 3 : 0), form: "add-same", key: `as:${a}/${d}+${b}/${d}` });
-  }
-  return out;
-};
 const subSame: Builder = () => {
   const out: XP[] = [];
   for (const d of DENOMS) for (let a = 2; a < d; a++) for (let b = 1; b < a; b++) {
@@ -300,8 +364,11 @@ function binUnlike(op: "+" | "-" | "×" | "÷", formId: string): Builder {
       // multiple of the other (rewrite ONE fraction) → fully unrelated (full LCM).
       // These sit ABOVE the same-denominator form (addSame/subSame, tier 0) so a
       // sheet never mixes "add the tops" with "find a common denominator".
-      const tier = isAddSub ? ((d1 % d2 === 0 || d2 % d1 === 0) ? 1 : 2) : 0;
-      out.push({ q: `${FRAC_VERB[op]} the fractions:  ${F(n1, d1)} ${op} ${F(n2, d2)}`, a: reduced(an, ad), diff: tier * 100 + Math.max(d1, d2) * 2 + (isAddSub ? Math.log2(lcm(d1, d2)) : 0), form: formId, key: `${formId}:${n1}/${d1}:${n2}/${d2}` });
+      // For ÷ the jump is the ANSWER's shape: a proper fraction (the worked
+      // example) on the opening sheet; quotients of 1 or more (5/2, 4) — which
+      // the lesson only mentions — arrive on the unit's second sheet.
+      const tier = isAddSub ? ((d1 % d2 === 0 || d2 % d1 === 0) ? 1 : 2) : op === "÷" ? (an >= ad ? 1 : 0) : 0;
+      out.push({ q: `${FRAC_VERB[op]} the fractions:  ${F(n1, d1)} ${op} ${F(n2, d2)}`, a: reduced(an, ad), diff: tier * 100 + Math.max(d1, d2) * 2 + (isAddSub ? Math.log2(lcm(d1, d2)) : 0), form: formId, key: `${formId}:${n1}/${d1}:${n2}/${d2}`, band: tier });
     }
     return out;
   };
@@ -319,15 +386,19 @@ function fracOp(op: "+" | "-", formId: string): Builder {
       [2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [5, 6], [3, 8], [3, 10], [4, 6], [5, 8], // tier 2: unrelated (full LCM)
     ];
     for (const [d1, d2] of pairs) for (let n1 = 1; n1 < d1; n1++) for (let n2 = 1; n2 < d2; n2++) {
-      if (d1 === d2 && n2 < n1) continue; // commutative — keep one of a+b / b+a
+      // Same bottom: addition keeps ONE of a+b / b+a (commutative); subtraction
+      // keeps only a − b with a > b. (The old shared `n2 < n1` skip threw away
+      // every like-denominator subtraction, so the Subtract unit had no items of
+      // the shape its lesson page teaches.)
+      if (d1 === d2 && (op === "+" ? n2 < n1 : n2 >= n1)) continue;
       const L = lcm(d1, d2);
       const an = op === "+" ? n1 * (L / d1) + n2 * (L / d2) : n1 * (L / d1) - n2 * (L / d2);
       if (op === "-" && an <= 0) continue;
       const tier = d1 === d2 ? 0 : (d1 % d2 === 0 || d2 % d1 === 0) ? 1 : 2;
-      // Opening sheet: same denominator only ("add the tops, keep the bottom,
-      // simplify") — the form the worked example teaches. Related and unrelated
-      // denominators follow on the later sheets.
-      out.push({ q: `${FRAC_VERB[op]} the fractions:  ${F(n1, d1)} ${op} ${F(n2, d2)}`, a: reduced(an, L), diff: tier * 100 + Math.max(d1, d2) * 2 + Math.log2(L), form: formId, key: `${formId}:${n1}/${d1}:${n2}/${d2}`, band: tier > 0 ? 1 : 0 });
+      // band = tier, and the unit is `bandRamp`, so its sheets climb one case
+      // per sheet: same bottom (the worked example) → one bottom fits into the
+      // other (rewrite one fraction) → neither fits (find a bottom both reach).
+      out.push({ q: `${FRAC_VERB[op]} the fractions:  ${F(n1, d1)} ${op} ${F(n2, d2)}`, a: reduced(an, L), diff: tier * 100 + Math.max(d1, d2) * 2 + Math.log2(L), form: formId, key: `${formId}:${n1}/${d1}:${n2}/${d2}`, band: tier });
     }
     return out;
   };
@@ -503,10 +574,49 @@ function pctChange(dir: "Increase" | "Decrease", formId: string): Builder {
   };
 }
 
+// ── Mastery groups ────────────────────────────────────────────────────────────
+// The Fraction mastery finale draws from EVERY fraction unit. Each group is one
+// earlier unit's builder(s) re-tagged with its own form id (so the round-robin
+// sampler can take a fixed share from each), a difficulty offset that sorts the
+// printed sheet in curriculum order. Stems stay EXACTLY as their home unit
+// prints them (a "?" to fill, a "___" to compare, a list to order): the
+// lesson-page step builder recognises the bare shapes, and a prefix such as
+// "Find the missing number: \frac…" made it fall back to simplify-steps. The
+// mastery sheet's directive names those three tasks once, at the top.
+function masteryGroup(form: string, order: number, builders: Builder[]): Builder {
+  return () => {
+    const out: XP[] = [];
+    for (const b of builders) for (const p of b()) {
+      out.push({ ...p, form, key: `${form}:${p.key}`, diff: order * 1000 + p.diff, band: 0 });
+    }
+    return out;
+  };
+}
+const MASTERY_FORMS: Builder[] = [
+  masteryGroup("m-equiv", 0, [equivFillNum, equivFillDen]),
+  masteryGroup("m-cmp", 1, [cmpSymbol]),
+  masteryGroup("m-order", 2, [orderLeast]),
+  masteryGroup("m-simp", 3, [simplifyForm("", "simp")]),
+  masteryGroup("m-mixed", 4, [toMixed, toImproper]),
+  masteryGroup("m-add", 5, [fracOp("+", "frac-add")]),
+  masteryGroup("m-sub", 6, [fracOp("-", "frac-sub")]),
+  masteryGroup("m-mul", 7, [binUnlike("×", "mul")]),
+  masteryGroup("m-div", 8, [binUnlike("÷", "div")]),
+];
+
 // ── Curriculum ────────────────────────────────────────────────────────────────
 interface Unit {
   id: string; label: string; objective: string; grade: string; stars: number;
   range: [number, number]; count?: number; forms: Builder[]; example: WorkedExample;
+  // Sheets climb one BAND per sheet (band 0 on the opening sheet, band 1 on the
+  // next …) instead of a sliding window over the whole pool — for units whose
+  // bands are distinct METHODS (like → related → unrelated denominators) that
+  // must not share a sheet before each has had its own.
+  bandRamp?: boolean;
+  // Round-robin sampling: an equal share of items from every form, each share
+  // spread across that form's difficulty — for the mastery finales, so every
+  // earlier unit is represented on the one sheet.
+  sampler?: "round-robin";
   // The one idea the lesson turns on, in a child's words. Falls back to the
   // goal when absent (the older units); every unit touched by the transition
   // audit carries a real one.
@@ -528,25 +638,25 @@ function poolOf(u: Unit): XP[] {
 
 const CURRICULUM: Unit[] = [
   // ── VISUAL FOUNDATIONS (8 Qs/sheet, big shapes) ──
-  { id: "vf-whole", label: "Part of a whole", objective: "Student names the fraction shaded in a picture", bigIdea: "The bottom number counts the equal parts the whole is cut into; the top number counts the shaded ones", directive: "Write the fraction each picture shows.", grade: "Grade 2-3", stars: 1, range: [1, 1], count: 8, forms: [vizIdentify(undefined, singleShapes)], example: { problem: "[[viz pie 3 4]]", steps: ["Count ALL the equal parts, shaded or not: 4 — that is the bottom number", "Count only the shaded parts: 3 — that is the top number", "Write shaded over total: 3/4 (say it 'three quarters' or 'three out of four')"], answer: F(3, 4) } },
+  { id: "vf-whole", label: "Part of a whole", objective: "Student names the fraction shaded in a picture", bigIdea: "The bottom number counts the equal parts the whole is cut into; the top number counts the shaded ones", directive: "Write the fraction each picture shows.", grade: "Grade 2-3", stars: 1, range: [1, 1], count: 8, forms: [vizIdentify(undefined, singleShapes, [2, 3, 4, 5, 6], true)], example: { problem: "[[viz pie 3 4]]", steps: ["Count ALL the equal parts, shaded or not: 4 — that is the bottom number", "Count only the shaded parts: 3 — that is the top number", "Write shaded over total: 3/4 (say it 'three quarters' or 'three out of four')"], answer: F(3, 4) } },
   { id: "vf-num", label: "Understanding the numerator", objective: "Student counts the shaded parts (the numerator)", bigIdea: "The top number (the numerator) tells how many parts are shaded — count only the coloured pieces", directive: "How many parts are shaded? Write the number.", grade: "Grade 2-3", stars: 1, range: [2, 2], count: 8, forms: [vizNumerator], example: { problem: "[[viz bar 2 5]]", steps: ["The strip is cut into 5 equal parts, but this question asks only about the SHADED ones", "Count the coloured parts one by one: 1, 2", "So the numerator (top number) of this fraction is 2 — the picture shows 2/5"], answer: "2" } },
   { id: "vf-den", label: "Understanding the denominator", objective: "Student counts the total equal parts (the denominator)", bigIdea: "The bottom number (the denominator) tells how many equal parts the whole is cut into — count every piece, shaded or not", directive: "Into how many equal parts is each divided? Write the number.", grade: "Grade 2-3", stars: 1, range: [3, 3], count: 8, forms: [vizDenominator], example: { problem: "[[viz pie 1 6]]", steps: ["This question asks about ALL the parts, not just the shaded one", "Count every slice, shaded and unshaded: 1, 2, 3, 4, 5, 6", "So the denominator (bottom number) is 6 — the picture shows 1/6"], answer: "6" } },
   { id: "vf-write", label: "Writing fractions from pictures", objective: "Student writes the fraction shown by a picture", bigIdea: "In a grid of squares the bottom number is not given — count the rows and columns to find how many equal squares there are, then count the shaded ones", directive: "Write the fraction each picture shows.", grade: "Grade 3", stars: 2, range: [4, 4], count: 8, forms: [vizGridArray], example: { problem: "[[viz grid 5 12]]", steps: ["Find the bottom number first: the grid has 4 squares across and 3 down, 4 × 3 = 12 equal squares (or count them one by one)", "Now count the shaded squares for the top number: 5", "Write shaded over total: 5/12"], answer: F(5, 12) } },
   { id: "vf-compare", label: "Comparing fractions with pictures", objective: "Student compares two fractions using pictures", bigIdea: "When two strips are the same length, the one with more of it shaded shows the larger fraction — look at the shaded LENGTH, not the number of pieces", directive: "Which fraction is larger? Write it.", grade: "Grade 3", stars: 2, range: [5, 5], count: 8, forms: [vizCompare], example: { problem: "[[viz cmp 1 2 1 3]]", steps: ["Both strips are the same length, so they are the same whole", "Top strip: 1 of 2 parts shaded — half the strip. Bottom strip: 1 of 3 parts shaded — less than half", "More of the strip is shaded on top, so 1/2 is larger. Write the fraction, not the picture"], answer: F(1, 2) } },
 
   // ── FRACTION SKILLS ──
-  { id: "fr-identify", label: "Identify fractions", objective: "Student writes a fraction from words or a picture", directive: "Write each as a fraction.", grade: "Grade 3", stars: 2, range: [6, 9], bigIdea: "Words and pictures name the same fraction: the part you have goes on top, the number of equal parts in the whole goes on the bottom", forms: [idText, idVizSmall], example: { problem: "3 out of 4", steps: ["'Out of 4' tells you the whole is cut into 4 equal parts — that is the bottom number", "'3' is how many of those parts you have — that is the top number", "Write it as part over whole: 3/4. A picture with 3 of 4 parts shaded is written the same way"], answer: F(3, 4) } },
+  { id: "fr-identify", label: "Identify fractions", objective: "Student writes a fraction from words or a picture", directive: "Write each as a fraction.", grade: "Grade 3", stars: 2, range: [6, 9], bigIdea: "Words and pictures name the same fraction: the part you have goes on top, the number of equal parts in the whole goes on the bottom", forms: [idText, idVizSmall, idWords], example: { problem: "3 out of 4", steps: ["'Out of 4' tells you the whole is cut into 4 equal parts — that is the bottom number", "'3' is how many of those parts you have — that is the top number", "Write it as part over whole: 3/4. A picture with 3 of 4 parts shaded is written the same way", "Later sheets — the fraction's NAME: 'three quarters' means 3 of the 4 equal parts, so write 3/4; 'seven tenths' is 7/10 (halves → 2, thirds → 3, quarters → 4, fifths → 5, sixths → 6, eighths → 8, tenths → 10, twelfths → 12)"], answer: F(3, 4) } },
   { id: "fr-equiv", label: "Equivalent fractions", objective: "Student finds equivalent fractions", bigIdea: "Two fractions can name the SAME amount: cut every part into smaller equal pieces and the picture does not change", directive: "Find the missing number.", grade: "Grade 4", stars: 3, range: [10, 15], forms: [equivViz, equivFillNum, equivFillDen], example: { problem: `[[viz cmp 2 3 8 12]] ${F(2, 3)} = ${BS}frac{?}{12}`, steps: ["Look at the two bars: 2 of 3 and 8 of 12 shade the SAME amount — they are equivalent", "Bottom: 3 became 12, that is × 4", "Do the same on top: 2 × 4 = 8", "If the ? is on the bottom (1/2 = 2/?): top 1 became 2, that is × 2, so bottom 2 × 2 = 4"], answer: "8" } },
   { id: "fr-compare", label: "Compare fractions", objective: "Student compares two fractions", bigIdea: "You can only compare tops when the bottoms are the same — so first make the bottoms the same", directive: "Compare. Write >, <, or =.", grade: "Grade 4", stars: 3, range: [16, 20], forms: [cmpSymbol], example: { problem: `${F(3, 4)} ___ ${F(5, 8)}`, steps: ["Same bottoms already (2/6 and 5/6)? Just compare the tops: 2 < 5, so 2/6 < 5/6", "Here the bottoms differ, but 8 is 4 × 2 — so rewrite 3/4 in eighths: 3/4 = 6/8", "Now the bottoms match: 6 > 5, so 3/4 > 5/8", "If the tops come out equal (1/2 = 3/6, and 3/6 is 3/6) write =", "Later sheets — neither bottom fits into the other (2/3 vs 3/5): multiply the bottoms, 3 × 5 = 15, then 2/3 = 10/15 and 3/5 = 9/15, so 2/3 > 3/5"], answer: ">" } },
-  { id: "fr-order", label: "Order fractions", objective: "Student orders fractions from least to greatest", bigIdea: "Give every fraction the same bottom, then line up the tops from smallest to biggest", directive: "Order each from least to greatest.", grade: "Grade 4", stars: 4, range: [21, 24], forms: [orderLeast], example: { problem: `${F(1, 2)}, ${F(1, 4)}, ${F(2, 3)}`, steps: ["Find a bottom that 2, 4 and 3 all fit into — list multiples of 4: 4, 8, 12 … 12 works for all three", "Rewrite each: 1/2 = 6/12, 1/4 = 3/12, 2/3 = 8/12", "Smallest top first: 3/12 < 6/12 < 8/12", "Write them back in their original form: 1/4 < 1/2 < 2/3"], answer: `${F(1, 4)} < ${F(1, 2)} < ${F(2, 3)}` } },
+  { id: "fr-order", label: "Order fractions", objective: "Student orders fractions from least to greatest", bigIdea: "Give every fraction the same bottom, then line up the tops from smallest to biggest", directive: "Order each from least to greatest.", grade: "Grade 4", stars: 4, range: [21, 24], forms: [orderLeast, orderWide, orderFour], example: { problem: `${F(1, 2)}, ${F(1, 4)}, ${F(2, 3)}`, steps: ["Find a bottom that 2, 4 and 3 all fit into — list multiples of 4: 4, 8, 12 … 12 works for all three", "Rewrite each: 1/2 = 6/12, 1/4 = 3/12, 2/3 = 8/12", "Smallest top first: 3/12 < 6/12 < 8/12", "Write them back in their original form: 1/4 < 1/2 < 2/3", "Later sheets — fifths, eighths, tenths and twelfths, and lists of FOUR fractions: same method, one shared bottom for all of them (2/5, 1/2, 3/10 → tenths: 4/10, 5/10, 3/10 → 3/10 < 2/5 < 1/2)"], answer: `${F(1, 4)} < ${F(1, 2)} < ${F(2, 3)}` } },
   { id: "fr-simplify", label: "Simplify fractions", objective: "Student writes a fraction in simplest form", bigIdea: "Dividing the top and bottom by the SAME number keeps the fraction's value — it is simplest when only 1 divides both", directive: "Write each fraction in simplest form.", grade: "Grade 4-5", stars: 3, range: [25, 30], forms: [simplifyForm("", "simp")], example: { problem: `${F(4, 8)}`, steps: ["Find the biggest number that divides EVENLY into both 4 and 8 — it's 4", "Divide both by it: 4 ÷ 4 = 1 and 8 ÷ 4 = 2", "Check: nothing bigger than 1 divides both 1 and 2, so 1/2 is the simplest form"], answer: F(1, 2) } },
   { id: "fr-mixed", label: "Mixed numbers", objective: "Student converts improper fractions to mixed numbers", directive: "Write each as a mixed number.", grade: "Grade 5", stars: 3, range: [31, 34], bigIdea: "A top bigger than the bottom means more than one whole: divide to find how many wholes, the remainder is the fraction left over", forms: [toMixed], example: { problem: `Write ${F(7, 3)} as a mixed number.`, steps: ["7 ÷ 3 = 2 remainder 1", "The 2 is the whole number; the remainder 1 goes back over the same bottom: 1/3", "So 7/3 = 2 1/3. The fraction part must be in simplest form — 1/3 already is"], answer: `2 ${F(1, 3)}` } },
   { id: "fr-improper", label: "Improper fractions", objective: "Student converts mixed numbers to improper fractions", directive: "Write each as an improper fraction.", grade: "Grade 5", stars: 3, range: [35, 38], bigIdea: "Each whole is worth a full set of thirds: multiply the wholes by the bottom, then add the top", forms: [toImproper], example: { problem: `Write 2 ${F(1, 3)} as an improper fraction.`, steps: ["Each whole is 3 thirds, so 2 wholes = 2 × 3 = 6 thirds", "Add the 1 third that is already there: 6 + 1 = 7 thirds", "Keep the same bottom: 7/3"], answer: F(7, 3) } },
-  { id: "fr-add", label: "Add fractions", objective: "Student adds fractions (like and unlike denominators)", directive: "Add. Simplify if possible.", grade: "Grade 5", stars: 4, range: [39, 41], bigIdea: "Same bottom: add the tops and keep the bottom. Different bottoms: make them the same first", forms: [fracOp("+", "frac-add")], example: { problem: `${F(3, 8)} + ${F(3, 8)}`, steps: ["Same bottom, so add only the tops: 3 + 3 = 6, and keep the 8: 6/8", "Write the answer in simplest form: 6 and 8 both divide by 2 → 3/4", "If the tops add up to the bottom (1/5 + 4/5 = 5/5) that is 1 whole — write 1", "If the top ends up bigger than the bottom (6/8 + 6/8 = 12/8 = 3/2) leave it as a fraction: 3/2", "Later sheets — different bottoms (1/4 + 3/8): 8 is 4 × 2, so 1/4 = 2/8, then 2/8 + 3/8 = 5/8"], answer: F(3, 4) } },
-  { id: "fr-sub", label: "Subtract fractions", objective: "Student subtracts fractions", directive: "Subtract. Simplify if possible.", grade: "Grade 5", stars: 4, range: [42, 44], bigIdea: "Same bottom: subtract the tops and keep the bottom. Different bottoms: make them the same first", forms: [fracOp("-", "frac-sub")], example: { problem: `${F(5, 6)} - ${F(1, 6)}`, steps: ["Same bottom, so subtract only the tops: 5 − 1 = 4, and keep the 6: 4/6", "Write the answer in simplest form: 4 and 6 both divide by 2 → 2/3", "Later sheets — different bottoms (3/4 − 1/2): 4 is 2 × 2, so 1/2 = 2/4, then 3/4 − 2/4 = 1/4"], answer: F(2, 3) } },
-  { id: "fr-mul", label: "Multiply fractions", objective: "Student multiplies fractions", directive: "Multiply. Simplify if possible.", grade: "Grade 5-6", stars: 4, range: [45, 47], bigIdea: "To multiply fractions, multiply the tops together and the bottoms together — no shared bottom needed", forms: [binUnlike("×", "mul")], example: { problem: `${F(2, 3)} × ${F(3, 4)}`, steps: ["Multiply the tops: 2 × 3 = 6", "Multiply the bottoms: 3 × 4 = 12, so the product is 6/12", "Write it in simplest form: 6 and 12 both divide by 6 → 1/2", "Unlike adding, the bottoms do NOT need to match first"], answer: F(1, 2) } },
-  { id: "fr-div", label: "Divide fractions", objective: "Student divides fractions using the reciprocal", directive: "Divide. Simplify if possible.", grade: "Grade 6", stars: 5, range: [48, 49], bigIdea: "Dividing by a fraction is the same as multiplying by it flipped over (its reciprocal)", forms: [binUnlike("÷", "div")], example: { problem: `${F(1, 2)} ÷ ${F(2, 3)}`, steps: ["Flip the second fraction over: 2/3 becomes 3/2 (this is called its reciprocal)", "Change ÷ to × and multiply across: 1/2 × 3/2 = 3/4 (tops 1 × 3, bottoms 2 × 2)", "Simplify if you can — 3/4 already is. If the top is bigger than the bottom, leave it as a fraction (e.g. 5/2)"], answer: F(3, 4) } },
-  { id: "fr-mastery", label: "Fraction mastery", objective: "Student works fluently across all fraction operations", grade: "Grade 6", stars: 5, range: [50, 50], forms: [addSame, binUnlike("+", "add-unlike"), binUnlike("×", "mul"), simplifyForm("Simplify", "simp")], bigIdea: "Read the instruction word first — Add, Multiply or Simplify — then use that operation's own rule, and give every answer in simplest form", example: { problem: `${F(2, 3)} × ${F(3, 5)}`, steps: ["The word says Multiply, so: tops 2 × 3 = 6, bottoms 3 × 5 = 15 → 6/15", "Simplest form: 6 and 15 both divide by 3 → 2/5", "If the word is Add (1/8 + 1/8): same bottom, add the tops → 2/8 = 1/4", "If the word is Simplify (12/16): divide top and bottom by 4 → 3/4"], answer: F(2, 5) } },
+  { id: "fr-add", label: "Add fractions", objective: "Student adds fractions (like and unlike denominators)", directive: "Add. Write the answer in simplest form; an improper fraction (5/4) is fine.", grade: "Grade 5", stars: 4, range: [39, 41], bandRamp: true, bigIdea: "Same bottom: add the tops and keep the bottom. Different bottoms: make them the same first", forms: [fracOp("+", "frac-add")], example: { problem: `${F(3, 8)} + ${F(3, 8)}`, steps: ["Same bottom, so add only the tops: 3 + 3 = 6, and keep the 8: 6/8", "Write the answer in simplest form: 6 and 8 both divide by 2 → 3/4", "If the tops add up to the bottom (1/5 + 4/5 = 5/5) that is 1 whole — write 1", "If the top ends up bigger than the bottom (6/8 + 6/8 = 12/8 = 3/2) leave it as a fraction: 3/2", "Sheet 2 — one bottom fits into the other (1/4 + 3/8): 8 is 4 × 2, so rewrite only 1/4 = 2/8, then 2/8 + 3/8 = 5/8", "Sheet 3 — neither bottom fits (1/3 + 2/5): find a bottom BOTH reach, 3 × 5 = 15; 1/3 = 5/15 and 2/5 = 6/15, so 5/15 + 6/15 = 11/15"], answer: F(3, 4) } },
+  { id: "fr-sub", label: "Subtract fractions", objective: "Student subtracts fractions", directive: "Subtract. Write the answer in simplest form.", grade: "Grade 5", stars: 4, range: [42, 44], bandRamp: true, bigIdea: "Same bottom: subtract the tops and keep the bottom. Different bottoms: make them the same first", forms: [fracOp("-", "frac-sub")], example: { problem: `${F(5, 6)} - ${F(1, 6)}`, steps: ["Same bottom, so subtract only the tops: 5 − 1 = 4, and keep the 6: 4/6", "Write the answer in simplest form: 4 and 6 both divide by 2 → 2/3", "Sheet 2 — one bottom fits into the other (3/4 − 1/12): 12 is 4 × 3, so rewrite only 3/4 = 9/12, then 9/12 − 1/12 = 8/12 = 2/3", "Sheet 3 — neither bottom fits (1/3 − 1/4): find a bottom BOTH reach, 3 × 4 = 12; 1/3 = 4/12 and 1/4 = 3/12, so 4/12 − 3/12 = 1/12"], answer: F(2, 3) } },
+  { id: "fr-mul", label: "Multiply fractions", objective: "Student multiplies fractions", directive: "Multiply. Write the answer in simplest form; an improper fraction is fine.", grade: "Grade 5-6", stars: 4, range: [45, 47], bigIdea: "To multiply fractions, multiply the tops together and the bottoms together — no shared bottom needed", forms: [binUnlike("×", "mul")], example: { problem: `${F(2, 3)} × ${F(3, 4)}`, steps: ["Multiply the tops: 2 × 3 = 6", "Multiply the bottoms: 3 × 4 = 12, so the product is 6/12", "Write it in simplest form: 6 and 12 both divide by 6 → 1/2", "Unlike adding, the bottoms do NOT need to match first"], answer: F(1, 2) } },
+  { id: "fr-div", label: "Divide fractions", objective: "Student divides fractions using the reciprocal", directive: "Divide. Write the answer in simplest form; an improper fraction (5/2) or a whole number is fine.", grade: "Grade 6", stars: 5, range: [48, 49], bigIdea: "Dividing by a fraction is the same as multiplying by it flipped over (its reciprocal)", forms: [binUnlike("÷", "div")], example: { problem: `${F(1, 2)} ÷ ${F(2, 3)}`, steps: ["Flip the second fraction over: 2/3 becomes 3/2 (this is called its reciprocal)", "Change ÷ to × and multiply across: 1/2 × 3/2 = 3/4 (tops 1 × 3, bottoms 2 × 2)", "Simplify if you can — 3/4 already is", "Sheet 2 — the answer can be 1 or more: 1/2 ÷ 1/8 = 1/2 × 8/1 = 8/2 = 4 (a whole number); 3/4 ÷ 1/2 = 3/4 × 2/1 = 6/4 = 3/2 — leave it as an improper fraction"], answer: F(3, 4) } },
+  { id: "fr-mastery", label: "Fraction mastery", objective: "Student works fluently across all fraction operations", grade: "Grade 6", stars: 5, range: [50, 50], directive: "Solve. Fill in each ?; write >, <, or = on each ___; order each list least to greatest. Every answer in simplest form; an improper fraction (5/4) is fine.", forms: MASTERY_FORMS, sampler: "round-robin", bigIdea: "Each line's shape tells you which unit's rule to use — a ? to fill, a ___ to compare, a list to order, or an instruction word — then give every answer in simplest form", example: { problem: `${F(2, 3)} ÷ ${F(3, 5)}`, steps: ["The word says Divide, so flip the second fraction and multiply: 2/3 × 5/3 = 10/9 (tops 2 × 5, bottoms 3 × 3)", "10/9 is already in simplest form — leave it as an improper fraction", "Subtract (5/6 − 1/4): neither bottom fits, so use 12 → 10/12 − 3/12 = 7/12. Add works the same way with +", "Multiply (2/3 × 3/5): tops 2 × 3 = 6, bottoms 3 × 5 = 15 → 6/15 = 2/5", "Compare or Order: give the fractions the same bottom, then compare the tops. Simplify (12/16): divide top and bottom by 4 → 3/4"], answer: F(10, 9) } },
 
   // ── DECIMALS ──
   { id: "dec-place", label: "Decimal place value", objective: "Student identifies decimal place values", directive: "Write the digit in the named place.", grade: "Grade 5", stars: 2, range: [51, 54], bigIdea: "The point separates wholes from parts: the first place after it is tenths (like 4/10), the second is hundredths (like 7/100)", forms: [decPlaceValue], example: { problem: "3.47 — hundredths", steps: ["The point separates wholes from parts: 3 is the wholes, .47 is the part", "First place after the point is TENTHS: the 4 means 4 tenths = 4/10", "Second place after the point is HUNDREDTHS: the 7 means 7 hundredths = 7/100", "So the digit in the hundredths place is 7 (asked for tenths, it would be 4)"], answer: "7" } },
@@ -588,6 +698,17 @@ function buildScoredPool(ui: number): XP[] {
 // normalised over the WHOLE unit so the opening sheet's GPI stays comparable.
 function poolForSheet(ui: number, t: number, span: number, count: number): XP[] {
   const pool = buildScoredPool(ui);
+  if (CURRICULUM[ui].bandRamp && span > 0) {
+    // Sheet k of the unit serves band k's method (opening sheet = band 0); if a
+    // band alone cannot fill the sheet, widen to the bands already taught.
+    const B = pool.reduce((m, p) => Math.max(m, p.band ?? 0), 0);
+    const stage = Math.min(B, Math.floor(t * (B + 1)));
+    const exact = pool.filter(p => (p.band ?? 0) === stage);
+    if (exact.length >= count) return exact;
+    const taught = pool.filter(p => (p.band ?? 0) <= stage);
+    if (taught.length >= count) return taught;
+    return pool;
+  }
   if (span > 0 && t === 0) {
     const open = pool.filter(p => !p.band);
     if (open.length >= count) return open;
@@ -603,11 +724,47 @@ function fdpRng(seed: number): () => number {
 }
 function fdpHash(s: string): number { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 
-function selectProblems(pool: XP[], t: number, count: number, seed = 0): XP[] {
+// Canonical text for the duplicate check: a commutative operation's operands
+// are sorted, so "2/10 + 8/10" and "8/10 + 2/10" count as one problem.
+function canonQ(q: string): string {
+  const m = q.match(/^((?:Add|Multiply) the fractions:\s+)(\S+) ([+×]) (\S+)$/);
+  if (!m) return q;
+  const [x, y] = [m[2], m[4]].sort();
+  return `${m[1]}${x} ${m[3]} ${y}`;
+}
+function dedupeSort(pool: XP[]): XP[] {
   // Dedup by QUESTION TEXT so two forms yielding the same problem can't repeat.
   const seenQ = new Set<string>();
-  const sorted = pool.filter(p => (seenQ.has(p.q) ? false : (seenQ.add(p.q), true)))
+  return pool.filter(p => { const c = canonQ(p.q); return seenQ.has(c) ? false : (seenQ.add(c), true); })
     .sort((a, b) => a.diff - b.diff || (a.key < b.key ? -1 : 1));
+}
+
+// Round-robin: split `count` evenly across the pool's forms (the remainder
+// goes to the LAST forms — the operations, on a mastery sheet), take each
+// form's share from evenly spaced slices of its difficulty range (a seeded
+// pick inside each slice), then print in difficulty order.
+function selectRoundRobin(pool: XP[], count: number, seed = 0): XP[] {
+  const sorted = dedupeSort(pool);
+  const forms = [...new Set(sorted.map(p => p.form))];
+  const rng = fdpRng(seed >>> 0);
+  const base = Math.floor(count / forms.length), extra = count - base * forms.length;
+  const out: XP[] = [];
+  forms.forEach((form, fi) => {
+    const items = sorted.filter(p => p.form === form);
+    const k = Math.min(items.length, base + (fi >= forms.length - extra ? 1 : 0));
+    for (let i = 0; i < k; i++) {
+      const lo = Math.floor((i * items.length) / k), hi = Math.floor(((i + 1) * items.length) / k) - 1;
+      out.push(items[lo + Math.floor(rng() * (hi - lo + 1))]);
+    }
+  });
+  // Top up from the whole pool if some form was too small to give its share.
+  const used = new Set(out.map(p => canonQ(p.q)));
+  for (const p of sorted) { if (out.length >= count) break; const c = canonQ(p.q); if (!used.has(c)) { used.add(c); out.push(p); } }
+  return out.sort((a, b) => a.diff - b.diff);
+}
+
+function selectProblems(pool: XP[], t: number, count: number, seed = 0): XP[] {
+  const sorted = dedupeSort(pool);
   const N = sorted.length;
   const rng = fdpRng(seed >>> 0);
   // No single question FORM may be a strict majority of the sheet. 40% is
@@ -710,7 +867,10 @@ export function generateFdpSheet(sheetNumber: number, totalSheets: number, probl
   const span = unit.range[1] - unit.range[0];
   const t = span === 0 ? 0.5 : (sheetNumber - unit.range[0]) / span;
 
-  const selected = selectProblems(poolForSheet(ui, t, span, count), t, count, fdpHash(`fdp:${sheetNumber}`));
+  const seed = fdpHash(`fdp:${sheetNumber}`);
+  const selected = unit.sampler === "round-robin"
+    ? selectRoundRobin(poolForSheet(ui, t, span, count), count, seed)
+    : selectProblems(poolForSheet(ui, t, span, count), t, count, seed);
   const problems = selected.map((p, i) => ({
     id: nanoid(8),
     type: "arithmetic" as const,
@@ -762,16 +922,22 @@ export function validateFdpPack(totalSheets = 100): { ok: boolean; issues: strin
     const count = unit.count ?? 30;
     const span = unit.range[1] - unit.range[0];
     const t = span === 0 ? 0.5 : (s - unit.range[0]) / span;
-    const sel = selectProblems(poolForSheet(ui, t, span, count), t, count);
+    const offered = poolForSheet(ui, t, span, count);
+    const sel = unit.sampler === "round-robin"
+      ? selectRoundRobin(offered, count)
+      : selectProblems(offered, t, count);
 
-    const dupes = sel.length - new Set(sel.map(p => p.q)).size;
+    const dupes = sel.length - new Set(sel.map(p => canonQ(p.q))).size;
     if (dupes > 0 && poolOf(unit).length >= count) issues.push(`Sheet ${s}: ${dupes} duplicate(s)`);
 
-    // variety — no single form may be a strict majority (>50%)
+    // variety — no single form may be a strict majority (>50%). Judged on the
+    // forms OFFERED to this sheet: an opening sheet (or a bandRamp stage) may
+    // deliberately hold one taught form while the unit has several.
     const fc: Record<string, number> = {};
     for (const p of sel) fc[p.form] = (fc[p.form] ?? 0) + 1;
     const maxForm = Math.max(...Object.values(fc));
-    if (maxForm > Math.ceil(count * 0.5) && poolOf(unit).length >= count && unit.forms.length > 1) {
+    const offeredForms = new Set(offered.map(p => p.form)).size;
+    if (maxForm > Math.ceil(count * 0.5) && poolOf(unit).length >= count && offeredForms > 1) {
       issues.push(`Sheet ${s}: form majority (${maxForm}/${count})`);
     }
 

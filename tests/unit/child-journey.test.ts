@@ -128,14 +128,22 @@ describe("child journey — 30 days through the math curriculum", () => {
       }
     });
 
-    it("does introduce the harder case later in the unit", () => {
-      // The ramp has to actually go somewhere — a unit that never gets harder
-      // is its own failure.
-      const lesson = getMathLevelSkills("M3").find(
-        (l) => l.label === "2-digit addition (regrouping)",
-      )!;
-      const last = serve("M3", lesson, lesson.range[1] - lesson.range[0]);
-      expect(last.questions.filter(crossesHundred).length).toBeGreaterThan(0);
+    it("introduces the harder case where it is taught: sums crossing 100 open the 3-digit unit", () => {
+      // The ramp has to actually go somewhere — but the tens-column carry
+      // ("write 13") is a new move the regrouping lesson page never shows, so
+      // the regrouping unit now holds ONLY the case it teaches (answers under
+      // 100), and the 2-digit sums that cross 100 are the opening band of the
+      // 3-digit lesson, whose page models them (pack audit, M3 #6).
+      const lessons = getMathLevelSkills("M3");
+      const regroup = lessons.find((l) => l.label === "2-digit addition (regrouping)")!;
+      const span = regroup.range[1] - regroup.range[0];
+      for (let day = 0; day <= span; day++) {
+        expect(serve("M3", regroup, day).questions.filter(crossesHundred)).toEqual([]);
+      }
+      const threeDigit = lessons.find((l) => l.label === "3-digit addition & three addends")!;
+      expect(threeDigit).toBeDefined();
+      const first = serve("M3", threeDigit, 0);
+      expect(first.questions.filter((q) => /^\d{2} \+ \d{2}$/.test(q) && crossesHundred(q)).length).toBeGreaterThan(0);
     });
   });
 

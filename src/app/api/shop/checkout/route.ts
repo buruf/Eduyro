@@ -59,7 +59,11 @@ export async function POST(req: NextRequest) {
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
     const skillLabels = uniqueSkills.map((s) => SHOP_SKILLS[s].label).join(", ");
-    const productDescription = `${skillLabels} · 100 worksheets per skill · ~${uniqueSkills.length * 3000} problems · Answer keys included`;
+    // Describe what is actually in the box: the Fractions pack is 50 sheets by
+    // design, so a flat "100 per skill" would overstate a Fractions purchase.
+    const totalSheets = uniqueSkills.reduce((n, s) => n + (SHOP_SKILLS[s].totalSheets ?? 100), 0);
+    const totalProblems = uniqueSkills.reduce((n, s) => n + SHOP_SKILLS[s].bands.reduce((m, b) => m + b.sheetCount * b.problemCount, 0), 0);
+    const productDescription = `${skillLabels} · ${totalSheets} worksheets · ~${totalProblems.toLocaleString("en-US")} problems · Answer keys included`;
 
     // Create the purchase record (PENDING)
     const purchase = await db.shopPurchase.create({

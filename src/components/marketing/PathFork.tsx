@@ -115,7 +115,7 @@ export function PathFork() {
 
               <h3 className="font-serif text-2xl font-bold text-ink mb-3">Printable worksheet packs</h3>
               <p className="text-muted text-sm leading-relaxed mb-6 flex-1">
-                Need extra practice for a specific skill? Buy a ready-made printable pack — 100 worksheets, answer keys included, instant download. No subscription, no account, no commitment.
+                Need extra practice for a specific skill? Buy a ready-made printable pack — up to 100 worksheets, answer keys included, instant download. No subscription, no account, no commitment.
               </p>
 
               <div className="grid grid-cols-2 gap-2 mb-8">

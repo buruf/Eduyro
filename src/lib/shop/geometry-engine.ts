@@ -33,11 +33,22 @@ const vertical: Builder = () => {
   const out: XP[] = [];
   // Two lines cross → vertical angles are EQUAL; the answer is the same measure.
   for (let a = 25; a <= 155; a++) out.push({ q: `[[viz angcross ${a}]]`, a: String(a), diff: a / 10, key: `vert:${a}` });
+  // Second half of the unit: the angle BESIDE the marked one (a linear pair,
+  // 180 − a) so the later sheets ask for a computation, not a copy. These sit
+  // above every copy-the-number item in difficulty (≈ 25% of the pool), so the
+  // first two sheets — and therefore the lesson page — stay pure vertical angles.
+  for (let a = 25; a <= 155; a += 3) out.push({ q: `Two lines cross at ${a}°. Find the angle beside it on the line.`, a: String(180 - a), diff: 16 + a / 10, key: `vadj:${a}` });
   return out;
 };
+// Angles on a straight line — THREE angles (two known, find x), so this unit is a
+// genuine step past Supplementary angles (unit 2 = one known angle in a diagram)
+// and a bridge to Angles around a point (unit 5 = the same form with 360°).
 const linearPair: Builder = () => {
   const out: XP[] = [];
-  for (let a = 20; a <= 160; a++) out.push({ q: `[[viz angline ${a}]]`, a: String(180 - a), diff: Math.abs(90 - a) / 2 + 10, key: `lin:${a}` });
+  for (let a = 20; a <= 120; a += 5) for (let b = a; b <= 120; b += 5) {
+    if (a + b > 155) continue;                      // x ≥ 25 so it always draws/reads sensibly
+    out.push({ q: `${a}° + ${b}° + x = 180°`, a: String(180 - a - b), diff: (a + b) / 12 + 10, key: `lin3:${a}_${b}` });
+  }
   return out;
 };
 const aroundPoint: Builder = () => {
@@ -84,6 +95,9 @@ const areaTri: Builder = () => {
   const out: XP[] = [];
   for (let b = 2; b <= 20; b += 2) for (let h = 2; h <= 20; h++) {
     if ((b * h) % 2 !== 0) continue;
+    // Keep height : base between 1:3 and 3:1 — a 2 × 17 triangle prints as a
+    // sliver whose height label and right-angle mark are unreadable.
+    if (h > 3 * b || b > 3 * h) continue;
     out.push({ q: `[[viz geomtri ${b} ${h}]]`, a: String((b * h) / 2), diff: b + h, key: `at:${b}_${h}` });
   }
   return out;
@@ -110,7 +124,14 @@ const TRIPLES: [number, number, number][] = (() => {
   return out;
 })();
 // Pythagorean theorem — find the hypotenuse. Figure: legs given, hyp = "?".
-const pythagHyp: Builder = () => TRIPLES.map(([a, b, c]) => ({ q: `[[viz geomright ${a} ${b} 0]]`, a: String(c), diff: c, key: `ph:${a}_${b}` }));
+// The small triples (hyp ≤ 30) also appear with the legs swapped (a different
+// figure), which weights the pool toward roots a child can find by trial
+// (√25, √100, √169) so the early sheets are not dominated by √1156 and √2500.
+const pythagHyp: Builder = () => {
+  const out: XP[] = TRIPLES.map(([a, b, c]) => ({ q: `[[viz geomright ${a} ${b} 0]]`, a: String(c), diff: c, key: `ph:${a}_${b}` }));
+  for (const [a, b, c] of TRIPLES) if (c <= 30) out.push({ q: `[[viz geomright ${b} ${a} 0]]`, a: String(c), diff: c + 0.5, key: `ph:${b}_${a}` });
+  return out;
+};
 // Pythagorean theorem — find a missing leg. Figure: one leg + hyp given, other = "?".
 const pythagLeg: Builder = () => TRIPLES.map(([a, b, c]) => ({ q: `[[viz geomright 0 ${b} ${c}]]`, a: String(a), diff: c + 0.5, key: `pl:${a}_${b}` }));
 // Trig ratios — read sin/cos/tan from a labelled right triangle. θ is at the
@@ -124,16 +145,28 @@ const trigRatio: Builder = () => {
   }
   return out;
 };
-// Find a missing side from a given trig ratio and the hypotenuse.
+// Find a missing side from a given trig ratio and one known side. Five cases so
+// the unit trains the whole objective, not just "scale sin": sin → opposite,
+// cos → adjacent, tan → opposite (from the adjacent), and the two inverse cases
+// where the HYPOTENUSE is the unknown (harder: the known side is the numerator).
 const trigSide: Builder = () => {
   const out: XP[] = []; const seen = new Set<string>();
-  // Scaled triples collapse to the same (ratio, hypotenuse) — e.g. (3,4,5)×2 and
-  // (6,8,10)×1 both give "sin θ = 4/5, hyp = 10" — so dedupe by question text.
-  for (const [, b, c] of TRIPLES) for (const k of [1, 2, 3, 4, 5]) {
+  const push = (q: string, a: number, diff: number, key: string) => {
+    // Scaled triples collapse to the same (ratio, side) — e.g. (3,4,5)×2 and
+    // (6,8,10)×1 both give "sin θ = 4/5, hyp = 10" — so dedupe by question text.
+    if (seen.has(q)) return; seen.add(q);
+    out.push({ q, a: String(a), diff, key });
+  };
+  for (const [a, b, c] of TRIPLES) for (const k of [1, 2, 3, 4, 5]) {
     if (c * k > 120) continue;
-    const q = `sin θ = ${fr(b, c)}. The hypotenuse is ${c * k}. Find the side opposite θ.`;
-    if (seen.has(q)) continue; seen.add(q);
-    out.push({ q, a: String(b * k), diff: c + k, key: `tso:${b}_${c}_${k}` });
+    push(`sin θ = ${fr(b, c)}. The hypotenuse is ${c * k}. Find the side opposite θ.`, b * k, c + k, `tso:${b}_${c}_${k}`);
+    push(`cos θ = ${fr(a, c)}. The hypotenuse is ${c * k}. Find the side adjacent to θ.`, a * k, c + k + 0.3, `tsa:${a}_${c}_${k}`);
+    push(`tan θ = ${fr(b, a)}. The side adjacent to θ is ${a * k}. Find the side opposite θ.`, b * k, c + k + 0.6, `tst:${a}_${b}_${k}`);
+    // +30 ranks the inverse cases after the small-triple forward cases, so the
+    // first sheet (and its lesson page) is mostly forward scaling and the
+    // find-the-hypotenuse items enter from sheet 93 on and dominate the end.
+    push(`sin θ = ${fr(b, c)}. The side opposite θ is ${b * k}. Find the hypotenuse.`, c * k, c + k + 30, `tsh:${b}_${c}_${k}`);
+    push(`cos θ = ${fr(a, c)}. The side adjacent to θ is ${a * k}. Find the hypotenuse.`, c * k, c + k + 30.3, `tsah:${a}_${c}_${k}`);
   }
   return out;
 };
@@ -150,8 +183,8 @@ const CURRICULUM: Unit[] = [
   // ── Angle relationships (rebalanced: ~6 sheets each instead of 12–14) ──
   { id: "g-comp", label: "Complementary angles", objective: "Student finds the complement of an angle", directive: "Find the missing angle. Complementary angles add to 90°.", grade: "Grade 6-7", stars: 2, range: [1, 6], pool: complement, example: { problem: "[[viz angright 35]]", steps: ["Complements add to 90°", "90 − 35 = 55"], answer: "55" } },
   { id: "g-supp", label: "Supplementary angles", objective: "Student finds the supplement of an angle", directive: "Find the missing angle. Supplementary angles add to 180°.", grade: "Grade 6-7", stars: 2, range: [7, 12], pool: supplement, example: { problem: "[[viz angline 110]]", steps: ["Supplements add to 180°", "180 − 110 = 70"], answer: "70" } },
-  { id: "g-vert", label: "Vertical angles", objective: "Student identifies equal vertical angles", directive: "Vertical angles are equal — write the missing angle.", grade: "Grade 7", stars: 2, range: [13, 18], pool: vertical, example: { problem: "[[viz angcross 70]]", steps: ["Vertical angles are equal"], answer: "70" } },
-  { id: "g-line", label: "Angles on a straight line", objective: "Student finds a missing angle on a straight line", directive: "Find the missing angle. Angles on a straight line add to 180°.", grade: "Grade 7", stars: 3, range: [19, 24], pool: linearPair, example: { problem: "[[viz angline 65]]", steps: ["180 − 65 = 115"], answer: "115" } },
+  { id: "g-vert", label: "Vertical angles", objective: "Student identifies equal vertical angles", directive: "Vertical angles are equal — write the missing angle. (Two angles beside each other on a line add to 180°.)", grade: "Grade 7", stars: 2, range: [13, 18], pool: vertical, example: { problem: "[[viz angcross 70]]", steps: ["Two lines cross — the angles OPPOSITE each other are vertical angles", "Vertical angles are always equal, so ? = 70"], answer: "70" } },
+  { id: "g-line", label: "Angles on a straight line", objective: "Student finds a missing angle on a straight line", directive: "Find x. The three angles on a straight line add to 180°.", grade: "Grade 7", stars: 3, range: [19, 24], pool: linearPair, example: { problem: "50° + 65° + x = 180°", steps: ["The angles on a straight line add to 180°", "Add the two known angles: 50 + 65 = 115", "x = 180 − 115 = 65"], answer: "65" } },
   { id: "g-point", label: "Angles around a point", objective: "Student finds a missing angle around a point", directive: "Find x. Angles around a point add to 360°.", grade: "Grade 7", stars: 4, range: [25, 30], pool: aroundPoint, example: { problem: "120° + 90° + x = 360°", steps: ["120 + 90 = 210", "360 − 210 = 150"], answer: "150" } },
   { id: "g-tri", label: "Triangle angle sum", objective: "Student finds the third angle of a triangle", directive: "Find the missing angle. A triangle's angles add to 180°.", grade: "Grade 7", stars: 4, range: [31, 36], pool: triangleSum, example: { problem: "[[viz angtri 50 60]]", steps: ["50 + 60 = 110", "180 − 110 = 70"], answer: "70" } },
   // ── Perimeter & area (expanded — were starved at 4–6 sheets) ──
@@ -160,10 +193,10 @@ const CURRICULUM: Unit[] = [
   { id: "g-area-tri", label: "Area of triangles", objective: "Student finds the area of a triangle", directive: "Find the area of each triangle.", grade: "Grade 6", stars: 4, range: [51, 56], pool: areaTri, example: { problem: "[[viz geomtri 10 6]]", steps: ["A = ½ × b × h", "½ × 10 × 6 = 30"], answer: "30" } },
   { id: "g-circle", label: "Circumference & area of circles", objective: "Student finds circle measures using π", directive: "Find each circle measure (use π = 3.14).", grade: "Grade 7", stars: 5, range: [57, 62], pool: circle, example: { problem: "[[viz geomcircle 5]] area (π = 3.14)", steps: ["A = π r²", "3.14 × 25 = 78.5"], answer: "78.5" } },
   // ── Trigonometry (NEW — right-triangle geometry, Grade 8–9) ──
-  { id: "g-pythag-hyp", label: "Pythagorean theorem — hypotenuse", objective: "Student finds the hypotenuse of a right triangle", directive: "Find the hypotenuse. Use a² + b² = c².", grade: "Grade 8", stars: 4, range: [63, 72], pool: pythagHyp, example: { problem: "[[viz geomright 3 4 0]]", steps: ["a² + b² = c²", "3² + 4² = 9 + 16 = 25", "c = √25 = 5"], answer: "5" } },
+  { id: "g-pythag-hyp", label: "Pythagorean theorem — hypotenuse", objective: "Student finds the hypotenuse of a right triangle", directive: "Find the hypotenuse. Use a² + b² = c², then take the square root (a calculator may be used for √).", grade: "Grade 8", stars: 4, range: [63, 72], pool: pythagHyp, example: { problem: "[[viz geomright 6 8 0]]", steps: ["a² + b² = c²", "6² + 8² = 36 + 64 = 100", "c = √100 — find the number that squares to 100: 9² = 81 is too small, 10² = 100 ✓", "c = 10"], answer: "10" } },
   { id: "g-pythag-leg", label: "Pythagorean theorem — find a leg", objective: "Student finds a missing leg of a right triangle", directive: "Find the missing leg. Use a² + b² = c².", grade: "Grade 8-9", stars: 5, range: [73, 82], pool: pythagLeg, example: { problem: "[[viz geomright 0 4 5]]", steps: ["a² = c² − b²", "5² − 4² = 25 − 16 = 9", "a = √9 = 3"], answer: "3" } },
-  { id: "g-trig-ratio", label: "Trig ratios (sin, cos, tan)", objective: "Student writes sin, cos and tan as ratios from a right triangle", directive: "Write each ratio as a fraction. Opposite/hypotenuse = sin, adjacent/hypotenuse = cos, opposite/adjacent = tan.", grade: "Grade 9", stars: 5, range: [83, 91], pool: trigRatio, example: { problem: "[[viz geomright 3 4 5 1]] sin θ", steps: ["sin θ = opposite / hypotenuse", "opposite = 4, hypotenuse = 5", "sin θ = 4/5"], answer: "4/5" } },
-  { id: "g-trig-side", label: "Find a side from a ratio", objective: "Student finds a missing side from a given trig ratio", directive: "Find the missing side using the given ratio.", grade: "Grade 9", stars: 5, range: [92, 100], pool: trigSide, example: { problem: "sin θ = 4/5. The hypotenuse is 10. Find the side opposite θ.", steps: ["sin θ = opposite / hypotenuse", "4/5 = opposite / 10", "opposite = 10 × 4/5 = 8"], answer: "8" } },
+  { id: "g-trig-ratio", label: "Trig ratios (sin, cos, tan)", objective: "Student writes sin, cos and tan as ratios from a right triangle", directive: "θ is the marked angle. Write each ratio as a fraction in lowest terms: sin = opposite/hypotenuse, cos = adjacent/hypotenuse, tan = opposite/adjacent.", grade: "Grade 9", stars: 5, range: [83, 91], pool: trigRatio, example: { problem: "[[viz geomright 6 8 10 1]] sin θ", steps: ["θ is the marked angle at the bottom-right corner", "The side OPPOSITE θ is the vertical leg, 8; the hypotenuse is the slanted side, 10", "sin θ = opposite / hypotenuse = 8/10", "Lowest terms: 8/10 = 4/5"], answer: "4/5" } },
+  { id: "g-trig-side", label: "Find a side from a ratio", objective: "Student finds a missing side from a given trig ratio", directive: "Find the missing side by scaling the given ratio. sin = opposite/hypotenuse, cos = adjacent/hypotenuse, tan = opposite/adjacent.", grade: "Grade 9", stars: 5, range: [92, 100], pool: trigSide, example: { problem: "sin θ = 4/5. The hypotenuse is 10. Find the side opposite θ.", steps: ["sin θ = opposite / hypotenuse, so 4/5 = opposite / 10", "Find the scale factor: the hypotenuse 5 became 10, so 10 ÷ 5 = 2", "Scale the opposite by the same factor: 4 × 2 = 8"], answer: "8" } },
 ];
 
 const CODE = "GEOMETRY";
@@ -183,6 +216,21 @@ function buildScoredPool(unitIndex: number): XP[] {
   const base = unitIndex * GPI_STEP;
   return raw.map((p) => ({ ...p, diff: base + ((p.diff - lo) / span) * GPI_BAND }));
 }
+// Within-sheet order: the sheet still climbs zone by zone (5 zones, easiest →
+// hardest, so zone 1 opens easy and zone 5 closes hard), but INSIDE each zone
+// the items are shuffled deterministically. A strictly sorted sheet printed the
+// answer column in order (280, 250, 240, 230 …) so a child could fill it by
+// pattern without computing; the zone shuffle breaks the pattern while keeping
+// the ramp across sheets untouched (selection is unchanged — only the order).
+const hashKey = (s: string): number => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; return h; };
+function zoneShuffle(sorted: XP[]): XP[] {
+  const block = Math.ceil(sorted.length / 5);
+  const out: XP[] = [];
+  for (let z = 0; z < sorted.length; z += block) {
+    out.push(...sorted.slice(z, z + block).sort((a, b) => hashKey(a.key) - hashKey(b.key) || (a.key < b.key ? -1 : 1)));
+  }
+  return out;
+}
 function selectProblems(pool: XP[], t: number, count: number): XP[] {
   const seen = new Set<string>();
   const uniq = pool.filter((p) => (seen.has(p.key) ? false : (seen.add(p.key), true)));
@@ -191,7 +239,7 @@ function selectProblems(pool: XP[], t: number, count: number): XP[] {
   if (N <= count) {
     const out: XP[] = [];
     for (let i = 0; i < count; i++) out.push(sorted[i % N]);
-    return out.sort((a, b) => a.diff - b.diff);
+    return zoneShuffle(out.sort((a, b) => a.diff - b.diff));
   }
   const W = Math.min(N, Math.max(count, Math.round(N * 0.6)));
   const start = Math.round(t * (N - W));
@@ -204,7 +252,7 @@ function selectProblems(pool: XP[], t: number, count: number): XP[] {
     used.add(idx);
     chosen.push(win[idx]);
   }
-  return chosen.sort((a, b) => a.diff - b.diff);
+  return zoneShuffle(chosen.sort((a, b) => a.diff - b.diff));
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────

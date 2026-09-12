@@ -81,16 +81,28 @@ describe("M5 facts arrive in an order a child can build", () => {
     expect(getArithmeticMicroLesson("×1 and ×0", "M5")!.example.steps.join(" ")).toMatch(/0 × 7 = 0/);
   });
 
-  it("squares open with 1–5 and 10 only; 6×6–9×9, 11×11, 12×12 wait for sheet 11", () => {
+  // The unit is 1² … 10²: every one of those is "the five you know plus more of
+  // the number" (7 × 7 = 35 + 14), which the lesson works through on its page,
+  // so the whole set is on the opening sheet. 11 × 11 and 12 × 12 have no
+  // strategy at this point (×11/×12 is taught two lessons later) and are out of
+  // the unit altogether. The review that fills the page is the ×2/×5/×10 facts
+  // the squares are built from, so sheet 10 is a normal page, not nine items.
+  it("squares are 1²–10² from the opening sheet; 11×11 and 12×12 wait for the ×10/×11/×12 unit", () => {
     const sq = (qs: string[]) => qs.map((q) => /^(\d+) × (\d+)( = \?)?$/.exec(q)).filter((m): m is RegExpExecArray => !!m && m[1] === m[2]).map((m) => Number(m[1]));
     const first = sq(arith("MULTIPLICATION", 10));
-    expect(first.length).toBeGreaterThan(0);
-    for (const n of first) expect(n <= 5 || n === 10).toBe(true);
-    expect(sq(arith("MULTIPLICATION", 11))).toEqual(expect.arrayContaining([6, 7, 8, 9, 11]));
+    expect(first).toEqual(expect.arrayContaining([6, 7, 8, 9]));
+    for (const n of [10, 11, 12]) {
+      const qs = arith("MULTIPLICATION", n);
+      expect(qs.length).toBeGreaterThanOrEqual(20);
+      for (const s of sq(qs)) expect(s).toBeLessThanOrEqual(10);
+      for (const q of qs) expect(q).not.toMatch(/(^| )1[12] × 1[12]( |$)/);
+    }
+    expect([49, 50, 51, 52].flatMap((n) => sq(arith("MULTIPLICATION", n))).some((s) => s >= 11)).toBe(true);
     // Squares are also review on the ×3/×4 opener — 12 × 12 must not leak there.
     expect(arith("MULTIPLICATION", 13)).not.toContain("12 × 12");
     const steps = getArithmeticMicroLesson("Square facts (n × n)", "M5")!.example.steps.join(" ");
     expect(steps).toMatch(/6 × 5 = 30/);
+    expect(steps).toMatch(/7 × 7 = .*35 \+ 14/);
   });
 
   it("missing-factor lesson never uses ÷ (division is M6)", () => {
