@@ -21,7 +21,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { columnSceneTimings } from "./timeline";
+import { columnSceneTimings, saidFor, type SaidFn } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
 import { Brand } from "./Brand";
 import { columnUnitById, columnNumbers, type ColumnUnit } from "./units";
@@ -85,7 +85,26 @@ const offStage = (from: { x: number; y: number }) => ({ x: from.x, y: STAGE_H + 
 interface SceneProps {
   dur: number;
   unit: ColumnUnit;
+  /** Scene-local frame at which the narrator says a number (timeline `saidFor`).
+   *  Every reveal that shows something she names — a digit, a column total,
+   *  the carried 1, the answer — is timed with it; the fallback is the old
+   *  hand-picked frame, for clips without alignment. */
+  said: SaidFn;
 }
+
+/** How many times `n` is spoken BEFORE the mention we want, given the numbers
+ *  the line says ahead of it. Column narration repeats digits constantly
+ *  ("take away 7 ones… there are only 2… now it has 12. Take away 7, and 5
+ *  are left"), and only the k-th mention is the moment the picture belongs to.
+ *  The lists passed in mirror `columnLines` (script.ts) word for word. */
+const before = (n: number, earlier: number[]) => earlier.filter((v) => v === n).length;
+
+/** Frames between the starts of consecutive blocks in a batch so that the
+ *  LAST one lands on `endAt` — never tighter than `min`, never slower than
+ *  `max` (a three-cube batch must not crawl for four seconds to meet a late
+ *  word). */
+const spread = (start: number, count: number, endAt: number, min: number, max: number) =>
+  count > 1 ? Math.min(max, Math.max(min, (endAt - start) / (count - 1))) : min;
 
 function useEnter(atFrame: number, durFrames = 14) {
   const frame = useCurrentFrame();
@@ -251,12 +270,9 @@ const FADE = 8;
 
 /** The value a building row has reached: blocks count when their fade ENDS,
  *  not when it starts, so the label never runs ahead of what's on screen. */
-function rowValueAt(frame: number, startAt: number, tens: number, ones: number): number {
-  const tensLanded = Math.max(0, Math.min(tens, Math.floor((frame - startAt - FADE) / 5) + 1));
-  const onesLanded = Math.max(
-    0,
-    Math.min(ones, Math.floor((frame - startAt - tens * 5 - FADE) / 3) + 1),
-  );
+function rowValueAt(frame: number, tensAt: number, onesAt: number, tens: number, ones: number): number {
+  const tensLanded = Math.max(0, Math.min(tens, Math.floor((frame - tensAt - FADE) / 5) + 1));
+  const onesLanded = Math.max(0, Math.min(ones, Math.floor((frame - onesAt - FADE) / 3) + 1));
   return tensLanded * 10 + onesLanded;
 }
 
@@ -319,9 +335,12 @@ function Stage({ children }: { children: React.ReactNode }) {
 // number over a rule, exactly as the child will write it. A horizontal
 // "52 − 27" asks them to mentally rotate it into columns before the lesson
 // even starts (user-caught: 2-digit work must be vertical).
-function SceneAsk({ unit }: SceneProps) {
-  const a = useEnter(6);
-  const b = useEnter(38);
+function SceneAsk({ unit, said }: SceneProps) {
+  // "37 plus 45": the top number as she says it, the bottom number with its
+  // sign and the rule as she says the second.
+  const a = useEnter(said(unit.x, 6, 0));
+  const yRow = useEnter(said(unit.y, 6, -1));
+  const b = useEnter(38); // not-speech-bound: "Let's build it out of blocks"
   const width = Math.max(String(unit.x).length, String(unit.y).length);
   const COLW = 120;
   const pad = (v: number) => String(v).padStart(width, " ").split("");
@@ -344,8 +363,10 @@ function SceneAsk({ unit }: SceneProps) {
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 44 }}>
       <div style={{ opacity: a.opacity, translate: `0 ${a.translateY}px` }}>
         <DigitRow chars={pad(unit.x)} />
-        <DigitRow chars={pad(unit.y)} prefix={unit.op} />
-        <div style={{ borderTop: `8px solid ${INK}`, marginTop: 8, marginLeft: 110, width: width * COLW }} />
+        <div style={{ opacity: yRow.opacity, translate: `0 ${yRow.translateY}px` }}>
+          <DigitRow chars={pad(unit.y)} prefix={unit.op} />
+          <div style={{ borderTop: `8px solid ${INK}`, marginTop: 8, marginLeft: 110, width: width * COLW }} />
+        </div>
       </div>
       <div
         style={{ fontSize: 56, color: MUTED, opacity: b.opacity, translate: `0 ${b.translateY}px` }}
@@ -357,12 +378,24 @@ function SceneAsk({ unit }: SceneProps) {
 }
 
 // ---- Scene 2: build the number(s) as blocks -------------------------------
-function SceneBuild({ dur, unit }: SceneProps) {
+function SceneBuild({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
   const n = columnNumbers(unit);
-  const title = useEnter(4);
-  const secondRowAt = Math.round(dur * 0.5);
+  const title = useEnter(4); // not-speech-bound: scene title
   const still = (p: { x: number; y: number }) => ({ from: p, to: p, at: 0 });
+  // "37 is 3 tens and 7 ones. And 45 is 4 tens and 5 ones." — the rods land
+  // as she says the tens digit, the cubes as she says the ones digit, each
+  // row's own value counting with them. Occurrences follow the line's order
+  // (52 is 5 tens and 2 ones: the "2" is the third number, after 52 and 5).
+  const xTensAt = said(n.xTens, 16, before(n.xTens, [unit.x]));
+  const xOnesAt = said(n.xOnes, xTensAt + n.xTens * 5, before(n.xOnes, [unit.x, n.xTens]));
+  const secondRowFallback = Math.round(dur * 0.5); // not-speech-bound: only for clips without alignment
+  const yTensAt = said(n.yTens, secondRowFallback, before(n.yTens, [unit.x, n.xTens, n.xOnes, unit.y]));
+  const yOnesAt = said(
+    n.yOnes,
+    yTensAt + n.yTens * 5,
+    before(n.yOnes, [unit.x, n.xTens, n.xOnes, unit.y, n.yTens]),
+  );
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 30 }}>
       <div
@@ -379,38 +412,38 @@ function SceneBuild({ dur, unit }: SceneProps) {
       <Stage>
         {/* x: appears block by block, so building IS counting */}
         {Array.from({ length: n.xTens }, (_, i) => (
-          <MovingRod key={`xt${i}`} {...still(rodSlot(i))} appearAt={16 + i * 5} />
+          <MovingRod key={`xt${i}`} {...still(rodSlot(i))} appearAt={xTensAt + i * 5} />
         ))}
         {Array.from({ length: n.xOnes }, (_, i) => (
-          <MovingCube key={`xo${i}`} {...still(onesSlot(i))} appearAt={16 + n.xTens * 5 + i * 3} />
+          <MovingCube key={`xo${i}`} {...still(onesSlot(i))} appearAt={xOnesAt + i * 3} />
         ))}
         {/* Each ROW carries its own value, counting up as its blocks land —
             column counters here described only the top number, which made the
             second one read as unlabeled clutter (user-caught: "you have the
             37 but no 45"). */}
         <RowValue
-          value={rowValueAt(frame, 16, n.xTens, n.xOnes)}
+          value={rowValueAt(frame, xTensAt, xOnesAt, n.xTens, n.xOnes)}
           y={ROW_Y + 90}
-          visible={frame >= 16 + FADE}
+          visible={frame >= Math.min(xTensAt, xOnesAt) + FADE}
         />
         {unit.op === "+" && (
           <RowValue
-            value={rowValueAt(frame, secondRowAt, n.yTens, n.yOnes)}
+            value={rowValueAt(frame, yTensAt, yOnesAt, n.yTens, n.yOnes)}
             y={STAGE_ROW_Y + 90}
-            visible={frame >= secondRowAt + FADE}
+            visible={frame >= Math.min(yTensAt, yOnesAt) + FADE}
           />
         )}
         {/* y staged below (addition only) — it will travel up in the next scene */}
         {unit.op === "+" &&
           Array.from({ length: n.yTens }, (_, i) => (
-            <MovingRod key={`yt${i}`} {...still(stagedRodSlot(n.xTens + i))} appearAt={secondRowAt + i * 5} />
+            <MovingRod key={`yt${i}`} {...still(stagedRodSlot(n.xTens + i))} appearAt={yTensAt + i * 5} />
           ))}
         {unit.op === "+" &&
           Array.from({ length: n.yOnes }, (_, i) => (
             <MovingCube
               key={`yo${i}`}
               {...still(stagedOnesSlot(n.xOnes + i, i))}
-              appearAt={secondRowAt + n.yTens * 5 + i * 3}
+              appearAt={yOnesAt + i * 3}
             />
           ))}
       </Stage>
@@ -426,34 +459,68 @@ function SceneAction(props: SceneProps) {
 
 /** Addition: y's blocks travel UP into x's columns; if the ones overflow, ten
  *  of them fly across and stack into a new rod in the tens column. */
-function SceneAdd({ dur, unit }: SceneProps) {
+function SceneAdd({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
   const n = columnNumbers(unit);
-  const title = useEnter(4);
+  const title = useEnter(4); // not-speech-bound: scene title
 
-  const mergeAt = Math.round(dur * 0.14);
   const travel = 16;
   const stagger = 3;
-  const mergeDone = mergeAt + Math.max(n.yTens, n.yOnes) * stagger + travel;
-  const carryAt = n.carries ? Math.round(dur * 0.55) : Infinity;
-
-  // Counts tick as blocks arrive/depart. A block "counts" once it's most of
-  // the way there — the tick lands ON the motion, not after it.
-  const arrivedRods = Array.from({ length: n.yTens }, (_, i) => mergeAt + i * stagger + travel * 0.8)
-    .filter((t) => frame >= t).length;
-  const arrivedOnes = Array.from({ length: n.yOnes }, (_, i) => mergeAt + i * stagger + travel * 0.8)
-    .filter((t) => frame >= t).length;
+  // "Now put all the ones together… 7 and 5 is 12": y's cubes set off on the
+  // 5 (y's ones digit) and the last one arrives — the count reaching 12 — on
+  // the 12. The line then either says "3 and 2 is 5" for the tens (no carry:
+  // rods go on y's tens digit, the last arriving on the sum) or never
+  // mentions the tens at all (carry: the rods ride up with the cubes).
+  const mergeFallback = Math.round(dur * 0.14); // not-speech-bound: only for clips without alignment
+  const mergeAt = said(n.yOnes, mergeFallback, before(n.yOnes, [n.xOnes]));
+  const onesSumAt = said(
+    n.onesSum,
+    mergeAt + (n.yOnes - 1) * stagger + travel * 0.8,
+    before(n.onesSum, [n.xOnes, n.yOnes]),
+  );
+  const onesStagger = spread(mergeAt + travel * 0.8, n.yOnes, onesSumAt, stagger, 10);
+  const tensSaid = [n.xOnes, n.yOnes, n.onesSum, n.xTens];
+  const rodsAt = n.carries ? mergeAt : said(n.yTens, mergeAt, before(n.yTens, tensSaid));
+  const tensSumAt = n.carries
+    ? rodsAt + (n.yTens - 1) * stagger + travel * 0.8
+    : said(n.tensSum, rodsAt + (n.yTens - 1) * stagger + travel * 0.8, before(n.tensSum, [...tensSaid, n.yTens]));
+  const rodStagger = spread(rodsAt + travel * 0.8, n.yTens, tensSumAt, stagger, 10);
+  const mergeDone = Math.max(
+    mergeAt + Math.max(0, n.yOnes - 1) * onesStagger,
+    rodsAt + Math.max(0, n.yTens - 1) * rodStagger,
+  ) + travel;
 
   // The carried ten: the LAST ten cubes of the combined ones (the leftovers
   // are indices 0..leftover-1, already sitting in place).
   const carryTravel = 20;
   const carryStagger = 2;
+  const carryFlight = 9 * carryStagger + carryTravel * 0.9;
+  // "So take ten of them… and snap them into one ten. Over it goes. That's
+  // the little 1 you carry": the flight has no number of its own ("ten" is a
+  // word, not a digit), so it is anchored to the 1 — the new rod lands, and
+  // the caption names it, as she says "the little 1". Never before the merge
+  // has finished.
+  const carryFallback = Math.round(dur * 0.55); // not-speech-bound: only for clips without alignment
+  const carryAt = n.carries
+    ? Math.max(
+        mergeDone + 6,
+        said(1, carryFallback + carryFlight, before(1, [n.xOnes, n.yOnes, n.onesSum, n.onesSum])) - carryFlight,
+      )
+    : Infinity;
+
+  // Counts tick as blocks arrive/depart. A block "counts" once it's most of
+  // the way there — the tick lands ON the motion, not after it.
+  const rodArrive = (i: number) => rodsAt + i * rodStagger + travel * 0.8;
+  const cubeArrive = (i: number) => mergeAt + i * onesStagger + travel * 0.8;
+  const arrivedRods = Array.from({ length: n.yTens }, (_, i) => rodArrive(i)).filter((t) => frame >= t).length;
+  const arrivedOnes = Array.from({ length: n.yOnes }, (_, i) => cubeArrive(i)).filter((t) => frame >= t).length;
+
   const departedCarry = n.carries
     ? Array.from({ length: 10 }, (_, k) => carryAt + k * carryStagger + carryTravel * 0.5).filter(
         (t) => frame >= t,
       ).length
     : 0;
-  const carryArrived = n.carries && frame >= carryAt + 9 * carryStagger + carryTravel * 0.9;
+  const carryArrived = n.carries && frame >= carryAt + carryFlight;
 
   const onesCount = n.xOnes + arrivedOnes - departedCarry;
   const tensCount = n.xTens + arrivedRods + (carryArrived ? 1 : 0);
@@ -461,14 +528,14 @@ function SceneAdd({ dur, unit }: SceneProps) {
   const lastOnesTick =
     arrivedOnes > 0 || departedCarry > 0
       ? Math.max(
-          arrivedOnes > 0 ? mergeAt + (arrivedOnes - 1) * stagger + travel * 0.8 : -1,
+          arrivedOnes > 0 ? cubeArrive(arrivedOnes - 1) : -1,
           departedCarry > 0 ? carryAt + (departedCarry - 1) * carryStagger + carryTravel * 0.5 : -1,
         )
       : null;
   const lastTensTick = carryArrived
-    ? carryAt + 9 * carryStagger + carryTravel * 0.9
+    ? carryAt + carryFlight
     : arrivedRods > 0
-      ? mergeAt + (arrivedRods - 1) * stagger + travel * 0.8
+      ? rodArrive(arrivedRods - 1)
       : null;
 
   return (
@@ -504,7 +571,7 @@ function SceneAdd({ dur, unit }: SceneProps) {
             key={`yt${i}`}
             from={stagedRodSlot(n.xTens + i)}
             to={rodSlot(n.xTens + i)}
-            at={mergeAt + i * stagger}
+            at={rodsAt + i * rodStagger}
             travel={travel}
           />
         ))}
@@ -517,7 +584,7 @@ function SceneAdd({ dur, unit }: SceneProps) {
                 key={`yo${i}`}
                 from={stagedOnesSlot(targetIdx, i)}
                 to={onesSlot(targetIdx)}
-                at={mergeAt + i * stagger}
+                at={mergeAt + i * onesStagger}
                 travel={travel}
               />
             );
@@ -563,26 +630,56 @@ function SceneAdd({ dur, unit }: SceneProps) {
 
 /** Subtraction: the taken-away blocks slide OFF the stage; a borrow first
  *  flies a rod's ten cubes back into the ones column. */
-function SceneSubtract({ dur, unit }: SceneProps) {
+function SceneSubtract({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
   const n = columnNumbers(unit);
-  const title = useEnter(4);
+  const title = useEnter(4); // not-speech-bound: scene title
 
-  const borrowAt = n.borrows ? Math.round(dur * 0.28) : Infinity;
   const borrowTravel = 20;
   const borrowStagger = 2;
+  const borrowFlight = 9 * borrowStagger + borrowTravel * 0.8; // last cube counted
+  const onesAvailable = n.xOnes + (n.borrows ? 10 : 0);
+  const onesLeft = onesAvailable - n.yOnes;
+
+  // Borrow line: "Now take away 7 ones. But look… there are only 2 up there.
+  // Not enough. So go next door and borrow a ten… and break it apart into
+  // ten ones. Now the ones column has 12. Take away 7, and 5 are left."
+  // The borrow has no digit of its own ("ten" is a word), so its ten cubes
+  // are anchored to land — the count reaching 12 — on the 12; never before
+  // she has said "only 2 up there". The cubes leave on the SECOND 7 (the
+  // first is the question), and the last one is gone on the 5.
+  // No-borrow line: "Now take away 3 ones. There are 8 up there, so that
+  // one's easy… 5 left." — cubes leave on the 3, the last is gone on the 5.
+  const borrowFallback = Math.round(dur * 0.28); // not-speech-bound: only for clips without alignment
+  const borrowAt = n.borrows
+    ? Math.max(
+        said(n.xOnes, 0, before(n.xOnes, [n.yOnes])) + 6,
+        said(onesAvailable, borrowFallback + borrowFlight, before(onesAvailable, [n.yOnes, n.xOnes])) - borrowFlight,
+      )
+    : Infinity;
   const borrowDone = n.borrows && frame >= borrowAt + 9 * borrowStagger + borrowTravel * 0.9;
 
-  const removeAt = Math.round(dur * (n.borrows ? 0.62 : 0.3));
   const travel = 18;
   const stagger = 3;
+  const removeFallback = Math.round(dur * (n.borrows ? 0.62 : 0.3)); // not-speech-bound: only for clips without alignment
+  const saidBeforeTake = n.borrows ? [n.yOnes, n.xOnes, onesAvailable] : [];
+  const removeAt = Math.max(
+    n.borrows ? borrowAt + borrowFlight : 0,
+    said(n.yOnes, removeFallback, before(n.yOnes, saidBeforeTake)),
+  );
+  const leftAt = said(
+    onesLeft,
+    removeAt + (n.yOnes - 1) * stagger + travel * 0.4,
+    before(onesLeft, [...saidBeforeTake, n.yOnes, ...(n.borrows ? [] : [n.xOnes])]),
+  );
+  const removeStagger = spread(removeAt + travel * 0.4, n.yOnes, leftAt, stagger, 10);
+  const cubeGone = (i: number) => removeAt + i * removeStagger + travel * 0.4;
+  // The tens are not narrated in either line: the rods leave alongside the cubes.
+  const rodGone = (i: number) => removeAt + i * stagger + travel * 0.4;
 
-  const onesAvailable = n.xOnes + (n.borrows ? 10 : 0);
   // Cubes leave highest-index first, so the survivors are a tidy block.
-  const removedOnes = Array.from({ length: n.yOnes }, (_, i) => removeAt + i * stagger + travel * 0.4)
-    .filter((t) => frame >= t).length;
-  const removedRods = Array.from({ length: n.yTens }, (_, i) => removeAt + i * stagger + travel * 0.4)
-    .filter((t) => frame >= t).length;
+  const removedOnes = Array.from({ length: n.yOnes }, (_, i) => cubeGone(i)).filter((t) => frame >= t).length;
+  const removedRods = Array.from({ length: n.yTens }, (_, i) => rodGone(i)).filter((t) => frame >= t).length;
 
   const borrowedArrived = n.borrows
     ? Array.from({ length: 10 }, (_, k) => borrowAt + k * borrowStagger + borrowTravel * 0.8).filter(
@@ -595,13 +692,13 @@ function SceneSubtract({ dur, unit }: SceneProps) {
 
   const lastOnesTick =
     removedOnes > 0
-      ? removeAt + (removedOnes - 1) * stagger + travel * 0.4
+      ? cubeGone(removedOnes - 1)
       : borrowedArrived > 0
         ? borrowAt + (borrowedArrived - 1) * borrowStagger + borrowTravel * 0.8
         : null;
   const lastTensTick =
     removedRods > 0
-      ? removeAt + (removedRods - 1) * stagger + travel * 0.4
+      ? rodGone(removedRods - 1)
       : n.borrows && frame >= borrowAt
         ? borrowAt
         : null;
@@ -651,7 +748,7 @@ function SceneSubtract({ dur, unit }: SceneProps) {
 
           // Cubes leave highest-index first, so survivors stay a tidy block.
           const removalIdx = onesAvailable - 1 - i;
-          const removalStart = removeAt + removalIdx * stagger;
+          const removalStart = removeAt + removalIdx * removeStagger;
           const leaving = removalIdx < n.yOnes && frame >= removalStart;
 
           if (leaving) {
@@ -694,12 +791,18 @@ function SceneSubtract({ dur, unit }: SceneProps) {
 }
 
 // ---- Scene 4: the written algorithm as a record ---------------------------
-function SceneWritten({ dur, unit }: SceneProps) {
+function SceneWritten({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
   const n = columnNumbers(unit);
-  const title = useEnter(4);
-  const markAt = Math.round(dur * 0.3);
-  const answerAt = Math.round(dur * 0.6);
+  const title = useEnter(4); // not-speech-bound: scene title
+  // "that little 1 above the tens is the ten you just made. 37 plus 45 is
+  // 82": the carry mark on the 1, the answer on the answer. The borrow line
+  // ("that crossed-out ten is the one you broke apart") names no digit for
+  // its mark, so it keeps its place before the numbers are read out.
+  const markFallback = Math.round(dur * 0.3); // not-speech-bound: only for clips without alignment / borrow mark
+  const markAt = n.carries ? said(1, markFallback, 0) : markFallback;
+  const answerFallback = Math.round(dur * 0.6); // not-speech-bound: only for clips without alignment
+  const answerAt = said(n.answer, answerFallback, -1);
   const col = (s: string) => s.padStart(3, " ");
   const markOpacity = interpolate(frame, [markAt, markAt + 14], [0, 1], {
     extrapolateLeft: "clamp",
@@ -904,19 +1007,33 @@ function useTrip(from: { x: number; y: number }, to: { x: number; y: number }, a
   return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t, t };
 }
 
-function SceneBuild3({ dur, unit }: SceneProps) {
+function SceneBuild3({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
   const n = columnNumbers(unit);
-  const title = useEnter(4);
-  const secondAt = Math.round(dur * 0.52);
+  const title = useEnter(4); // not-speech-bound: scene title
   const xDigits = [n.xHundreds, Math.floor((unit.x % 100) / 10), unit.x % 10];
   const yDigits = [n.yHundreds, Math.floor((unit.y % 100) / 10), unit.y % 10];
-  const rows: { d: number[]; y: number; at: number }[] =
+  // "248 is 24 tens and 8 ones. And 167 is 16 tens and 7 ones." — the line
+  // counts hundreds and tens together, so flats then rods land from the "24"
+  // on, and the cubes on the "8"; the row's value shows on its number.
+  const secondFallback = Math.round(dur * 0.52); // not-speech-bound: only for clips without alignment
+  const xLabelAt = said(unit.x, 0, 0);
+  const xTensAt = said(n.xTens, 16, before(n.xTens, [unit.x]));
+  const xOnesAt = said(n.xOnes, xTensAt + xDigits[0] * 6 + xDigits[1] * 4, before(n.xOnes, [unit.x, n.xTens]));
+  const ySaid = [unit.x, n.xTens, n.xOnes];
+  const yLabelAt = said(unit.y, secondFallback, before(unit.y, ySaid));
+  const yTensAt = said(n.yTens, secondFallback, before(n.yTens, [...ySaid, unit.y]));
+  const yOnesAt = said(
+    n.yOnes,
+    yTensAt + yDigits[0] * 6 + yDigits[1] * 4,
+    before(n.yOnes, [...ySaid, unit.y, n.yTens]),
+  );
+  const rows: { d: number[]; y: number; at: number; onesAt: number; labelAt: number }[] =
     unit.op === "−"
-      ? [{ d: xDigits, y: ROW3_Y, at: 16 }]
+      ? [{ d: xDigits, y: ROW3_Y, at: xTensAt, onesAt: xOnesAt, labelAt: xLabelAt }]
       : [
-          { d: xDigits, y: ROW3_Y, at: 16 },
-          { d: yDigits, y: STAGE3_ROW_Y, at: secondAt },
+          { d: xDigits, y: ROW3_Y, at: xTensAt, onesAt: xOnesAt, labelAt: xLabelAt },
+          { d: yDigits, y: STAGE3_ROW_Y, at: yTensAt, onesAt: yOnesAt, labelAt: yLabelAt },
         ];
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 18 }}>
@@ -945,9 +1062,7 @@ function SceneBuild3({ dur, unit }: SceneProps) {
               ) : null,
             )}
             {Array.from({ length: row.d[2] }, (_, i) =>
-              frame >= row.at + row.d[0] * 6 + row.d[1] * 4 + i * 3 ? (
-                <Cube3 key={`c${ri}${i}`} {...cube3Slot(i, row.y)} />
-              ) : null,
+              frame >= row.onesAt + i * 3 ? <Cube3 key={`c${ri}${i}`} {...cube3Slot(i, row.y)} /> : null,
             )}
             <div
               style={{
@@ -957,6 +1072,7 @@ function SceneBuild3({ dur, unit }: SceneProps) {
                 fontSize: 86,
                 fontWeight: 800,
                 color: INK,
+                opacity: frame >= row.labelAt ? 1 : 0,
               }}
             >
               {ri === 0 ? unit.x : unit.y}
@@ -969,22 +1085,34 @@ function SceneBuild3({ dur, unit }: SceneProps) {
 }
 
 /** Addition: ones merge and carry, then tens merge and carry. */
-function SceneAdd3({ dur, unit }: SceneProps) {
+function SceneAdd3({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
   const n = columnNumbers(unit);
-  const title = useEnter(4);
+  const title = useEnter(4); // not-speech-bound: scene title
   const xT = Math.floor((unit.x % 100) / 10);
   const yT = Math.floor((unit.y % 100) / 10);
   const onesSum = n.onesSum;
   const tensAfterCarry = xT + yT + (n.carries ? 1 : 0);
-
-  const mergeAt = Math.round(dur * 0.08);
-  const carry1At = Math.round(dur * 0.34); // ones → tens
-  const carry2At = Math.round(dur * 0.66); // tens → hundreds
   const trip = 22;
 
-  const merged = frame >= mergeAt + 20;
-  const carried1 = frame >= carry1At + trip * 0.9;
+  // Same line as the two-digit carry: "8 and 7 is 15 … That's the little 1
+  // you carry … And 5 are left behind." y's blocks join on the 7, the counts
+  // read 15 on the 15, and the ten ones arrive in the tens column as one rod
+  // on the 1. The second carry (ten tens → a hundred) is never narrated, so
+  // it follows the first at its old place in the scene.
+  const mergeFallback = Math.round(dur * 0.08); // not-speech-bound: only for clips without alignment
+  const mergeAt = said(n.yOnes, mergeFallback, before(n.yOnes, [n.xOnes]));
+  const mergedAt = Math.max(mergeAt + 12, said(onesSum, mergeAt + 20, before(onesSum, [n.xOnes, n.yOnes])));
+  const carry1Fallback = Math.round(dur * 0.34); // not-speech-bound: only for clips without alignment
+  const carry1At = Math.max(
+    mergedAt + 10,
+    said(1, carry1Fallback + trip * 0.9, before(1, [n.xOnes, n.yOnes, onesSum, onesSum])) - trip * 0.9,
+  ); // ones → tens
+  const carry2Fallback = Math.round(dur * 0.66); // not-speech-bound: the tens carry is not narrated
+  const carry2At = Math.max(carry1At + trip + 8, carry2Fallback); // tens → hundreds
+
+  const merged = frame >= mergedAt;
+  const carried1 = n.carries && frame >= carry1At + trip * 0.9;
   const carried2 = n.tensCarry && frame >= carry2At + trip * 0.9;
 
   const onesShown = carried1 ? n.leftover : merged ? onesSum : unit.x % 10;
@@ -1073,25 +1201,49 @@ function TravellingFlat({
 }
 
 /** Subtraction: borrow a hundred into tens if needed, then a ten into ones. */
-function SceneSub3({ dur, unit }: SceneProps) {
+function SceneSub3({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
   const n = columnNumbers(unit);
-  const title = useEnter(4);
+  const title = useEnter(4); // not-speech-bound: scene title
   const xH = n.xHundreds;
   const xT = Math.floor((unit.x % 100) / 10);
   const xO = unit.x % 10;
   const yH = n.yHundreds;
   const yT = Math.floor((unit.y % 100) / 10);
   const yO = unit.y % 10;
-
-  const borrow1At = Math.round(dur * 0.16); // ten → ones
-  const borrow2At = Math.round(dur * 0.44); // hundred → tens
-  const takeAt = Math.round(dur * 0.7);
   const trip = 22;
+  const onesAvailable = xO + (n.borrows ? 10 : 0);
+  const onesLeft = onesAvailable - yO;
 
-  const b1 = n.borrows && frame >= borrow1At + trip * 0.9;
+  // Same line as the two-digit borrow: "take away 8 ones … only 2 up there …
+  // Now the ones column has 12. Take away 8, and 4 are left." The broken ten
+  // arrives as ten ones on the 12 (never before "only 2"), the take-away
+  // starts on the SECOND 8 and the blocks are gone on the 4. The hundred
+  // that breaks into tens is never narrated: it goes between the two.
+  const borrow1Fallback = Math.round(dur * 0.16); // not-speech-bound: only for clips without alignment
+  const borrow1At = n.borrows
+    ? Math.max(
+        said(xO, 0, before(xO, [yO])) + 6,
+        said(onesAvailable, borrow1Fallback + trip * 0.9, before(onesAvailable, [yO, xO])) - trip * 0.9,
+      )
+    : -Infinity; // ten → ones
+  const borrow1Done = n.borrows ? borrow1At + trip * 0.9 : 0;
+  const takeFallback = Math.round(dur * 0.7); // not-speech-bound: only for clips without alignment
+  const saidBeforeTake = n.borrows ? [yO, xO, onesAvailable] : [];
+  const takeSaid = said(yO, takeFallback, before(yO, saidBeforeTake));
+  const borrow2Fallback = Math.round(dur * 0.44); // not-speech-bound: the hundred → tens borrow is not narrated
+  const borrow2At = n.tensBorrow
+    ? Math.max(borrow1Done + 6, Math.min(borrow2Fallback, takeSaid - trip - 6))
+    : -Infinity; // hundred → tens
+  const takeAt = Math.max(takeSaid, borrow1Done, n.tensBorrow ? borrow2At + trip + 4 : 0);
+  const tookAt = Math.max(
+    takeAt + 8,
+    said(onesLeft, takeAt + trip * 0.9, before(onesLeft, [...saidBeforeTake, yO, ...(n.borrows ? [] : [xO])])),
+  );
+
+  const b1 = n.borrows && frame >= borrow1Done;
   const b2 = n.tensBorrow && frame >= borrow2At + trip * 0.9;
-  const took = frame >= takeAt + trip * 0.9;
+  const took = frame >= tookAt;
 
   const onesNow = took ? xO + (n.borrows ? 10 : 0) - yO : xO + (b1 ? 10 : 0);
   const tensNow =
@@ -1155,12 +1307,16 @@ const SCENE_BODIES: Record<string, React.FC<SceneProps>> = {
 /** The written algorithm for three digits, with ONE mark per place.
  *  The two-digit version's annotation is a single pair and produced nonsense
  *  here ("33 12" for 342 − 158, where it should be 2 13 12). */
-function SceneWritten3({ dur, unit }: SceneProps) {
+function SceneWritten3({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
   const n = columnNumbers(unit);
-  const title = useEnter(4);
-  const markAt = Math.round(dur * 0.28);
-  const answerAt = Math.round(dur * 0.58);
+  const title = useEnter(4); // not-speech-bound: scene title
+  // Carry marks on "that little 1"; the borrow line names no digit for its
+  // crossings-out, so they keep their place. The answer on the answer.
+  const markFallback = Math.round(dur * 0.28); // not-speech-bound: only for clips without alignment / borrow marks
+  const markAt = n.carries ? said(1, markFallback, 0) : markFallback;
+  const answerFallback = Math.round(dur * 0.58); // not-speech-bound: only for clips without alignment
+  const answerAt = said(n.answer, answerFallback, -1);
 
   const xH = n.xHundreds;
   const xT = Math.floor((unit.x % 100) / 10);
@@ -1274,10 +1430,11 @@ export const ColumnVideo: React.FC<ColumnProps> = ({
     >
       {scenes.map((scene) => {
         const Body = bodies[scene.id];
+        const said = saidFor(unit.id, voice, scene.id);
         return (
           <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
             {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-            <Body dur={scene.dur} unit={unit} />
+            <Body dur={scene.dur} unit={unit} said={said} />
           </Sequence>
         );
       })}

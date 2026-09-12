@@ -36,7 +36,7 @@
 
 | template | reveal sites | converted |
 |---|---|---|
-| Column | 86 | |
+| Column | 86 | ✔ Sep 12 — blocks rise on their digit, ones count on the sum, carry rod on "1", borrowed ten on "12", answer on the answer; all 6 units verified (114 stills). Before: the whole stack and the answer were on screen at 0 s. Follow-up: 3-digit narration never mentions the second regroup, so that move stays un-narrated |
 | Graph | 59 | |
 | TenFrame | 35 | ✔ Sep 12 — 21 reveals bound (make-ten fillers on the second "2", count-on dots land on their counted total, subtract batches leave on their number); 4 units verified by stills. Follow-up: "N added" label overlaps waiting dots in count-up (pre-existing layout) |
 | HundredGrid | 26 | |
