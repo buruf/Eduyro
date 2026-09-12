@@ -73,3 +73,6 @@ agent/
 # Lesson videos live in Vercel Blob (scripts/upload-lesson-videos.ts); local
 # copies are render output, not source.
 public/lesson-video/
+
+# Locally exported shop pack PDFs (scripts/export-shop-packs.ts) - large, regenerable
+worksheet-packs/
