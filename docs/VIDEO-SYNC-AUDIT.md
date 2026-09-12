@@ -61,4 +61,4 @@
 | Poly | 4 | |
 | LinEq | 4 | |
 | Factor | 4 | |
-| Advanced | 4 | |
+| Advanced | 4 | ✔ Sep 12 — all 19 modes: chips, rows, dots and titles land on their number in narration order (synthetic-division bottom row never appeared before; integer dots were on an even grid); 3 units verified by stills |
