@@ -48,7 +48,7 @@
 | FractionBar | 17 | |
 | Balance | 14 | |
 | Area | 14 | |
-| NumberLine | 13 | |
+| NumberLine | 13 | ✔ Sep 12 — sequence cards land one per word, the dot rests on each hop number (arc shortens when words come fast), tip on its number; 4 units verified by stills. Before: whole sequence and question on screen at 0 s |
 | FactFamily | 12 | |
 | PolyOps | 11 | |
 | FractionOps | 8 | |

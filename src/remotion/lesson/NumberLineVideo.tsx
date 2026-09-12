@@ -16,7 +16,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { numberLineSceneTimings, spokenNumberFrame } from "./timeline";
+import { numberLineSceneTimings, saidFor, type SaidFn } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
 import { Brand } from "./Brand";
 import { numberLineUnitById, numberLineValues, type NumberLineUnit } from "./units-early";
@@ -46,6 +46,48 @@ interface SceneProps {
   dur: number;
   voice: string;
   unit: NumberLineUnit;
+  /** Scene-local frame at which the narrator says a number (timeline.ts
+   *  `saidFor`). Every reveal that shows a value she says — a card in the
+   *  sequence, the start dot, each hop's landing, the tip's number — is timed
+   *  with this, never with a fraction of the scene. */
+  said: SaidFn;
+}
+
+/** How many times `n` was already said among `earlier` — the occurrence to
+ *  hand `said` when a line repeats a value (the decade tip says 59 and 60 a
+ *  second time). */
+const before = (n: number, earlier: number[]) => earlier.filter((v) => v === n).length;
+
+/** Walks a line's numbers in the order the script says them ("6… then 7…
+ *  then 8"), so a scene that reveals values in narration order never counts
+ *  occurrences by hand: `next(n, fallback)` is the k-th time n is said, k =
+ *  how many earlier next() calls named n. */
+function spokenOrder(said: SaidFn) {
+  const earlier: number[] = [];
+  const next = (n: number, fallback: number) => {
+    const a = Math.abs(n);
+    const at = said(a, fallback, before(a, earlier));
+    earlier.push(a);
+    return at;
+  };
+  return { next };
+}
+
+/** The scene-local frames at which each card of the sequence is said, in
+ *  order. The gap card is the word "blank", which alignment does not carry:
+ *  it is spread from its neighbours — midway between them, or one typical
+ *  spacing after the last spoken number when it ends the sequence. */
+function sequenceSaidAt(unit: NumberLineUnit, said: SaidFn, fallback: number): number[] {
+  const n = numberLineValues(unit);
+  const order = spokenOrder(said);
+  const at = n.values.map((v, i) => (i === unit.gapIndex ? NaN : order.next(v, fallback)));
+  const spoken = at.filter((f) => !Number.isNaN(f));
+  const spacing =
+    spoken.length > 1 ? (spoken[spoken.length - 1] - spoken[0]) / (spoken.length - 1) : 0;
+  const g = unit.gapIndex;
+  const prev = g > 0 ? at[g - 1] : fallback;
+  at[g] = g < at.length - 1 ? Math.round((prev + at[g + 1]) / 2) : Math.round(prev + spacing);
+  return at;
 }
 
 function useEnter(atFrame: number, durFrames = 14) {
@@ -177,10 +219,27 @@ function Stage({ children }: { children: React.ReactNode }) {
 }
 
 // ---- Scene 1: the sequence with a hole ------------------------------------
-function SceneAsk({ unit }: SceneProps) {
-  const a = useEnter(6);
-  const b = useEnter(40);
+function SceneAsk({ unit, said }: SceneProps) {
+  const frame = useCurrentFrame();
+  // "6… then 7… then 8… then blank": each card lands on its number (speech
+  // starts at frame 0, so the first one opens the scene); the blank is
+  // spread from its neighbours. The question follows the last card.
+  const cardAt = sequenceSaidAt(unit, said, 6);
+  const lastCardAt = Math.max(...cardAt);
+  const b = useEnter(Math.max(40, lastCardAt + 16)); // not-speech-bound: "What goes in the blank?"
   const n = numberLineValues(unit);
+  const fade = (at: number) => ({
+    opacity: interpolate(frame, [at, at + 14], [0, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: Easing.bezier(0.16, 1, 0.3, 1),
+    }),
+    translate: `0 ${interpolate(frame, [at, at + 14], [18, 0], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: Easing.bezier(0.16, 1, 0.3, 1),
+    })}px`,
+  });
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 50 }}>
       <div
@@ -188,14 +247,12 @@ function SceneAsk({ unit }: SceneProps) {
           fontSize: 150,
           fontWeight: 800,
           color: INK,
-          opacity: a.opacity,
-          translate: `0 ${a.translateY}px`,
           display: "flex",
           gap: 40,
         }}
       >
         {n.values.map((v, i) => (
-          <span key={i} style={{ color: i === unit.gapIndex ? MUTED : INK }}>
+          <span key={i} style={{ color: i === unit.gapIndex ? MUTED : INK, ...fade(cardAt[i]) }}>
             {i === unit.gapIndex ? "__" : v}
             {i < unit.count - 1 ? "," : ""}
           </span>
@@ -209,14 +266,22 @@ function SceneAsk({ unit }: SceneProps) {
 }
 
 // ---- Scene 2: the line appears --------------------------------------------
-function SceneLine({ dur, unit }: SceneProps) {
+function SceneLine({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
-  const title = useEnter(4);
-  const growAt = Math.round(dur * 0.2);
+  const title = useEnter(4); // not-speech-bound
+  // "Here's the line. The sequence starts at 6." — the line itself follows no
+  // number; the dot lands on the start value as she says it (never before
+  // the line it sits on has grown).
+  const growAt = Math.round(dur * 0.2); // not-speech-bound: "Here's the line"
   const appear = interpolate(frame, [growAt, growAt + 22], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.bezier(0.4, 0, 0.2, 1),
+  });
+  const dotAt = Math.max(growAt, said(unit.start, growAt, 0));
+  const dotAppear = interpolate(frame, [dotAt, dotAt + 12], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
   });
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 16 }}>
@@ -244,7 +309,7 @@ function SceneLine({ dur, unit }: SceneProps) {
             height: 52,
             borderRadius: "50%",
             backgroundColor: GOLD,
-            opacity: appear,
+            opacity: Math.min(appear, dotAppear),
           }}
         />
       </Stage>
@@ -253,28 +318,37 @@ function SceneLine({ dur, unit }: SceneProps) {
 }
 
 // ---- Scene 3: hop to the gap ----------------------------------------------
-function SceneHop({ dur, unit, voice }: SceneProps) {
+function SceneHop({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
   const n = numberLineValues(unit);
-  const title = useEnter(4);
+  const title = useEnter(4); // not-speech-bound
   const hops = unit.count - 1; // start value → each next value
   const hopFrames = 24;
   const hopGap = 16;
-  const firstAt = Math.round(dur * 0.18);
-  // Each hop LANDS as its value is spoken ("Hop along… 7… 8…"), so the hop
-  // begins hopFrames earlier. Even spacing is the no-timestamp fallback.
+  const firstAt = Math.round(dur * 0.18); // not-speech-bound: fallback only
+  // Each hop LANDS as its value is spoken ("Hop along… 7… then 8… then 9"),
+  // so the hop begins hopFrames earlier. When the words come faster than
+  // that ("5… then 6" 0.7 s apart) the arc is shortened to just over half
+  // the gap, so the dot visibly RESTS on each number before leaving it —
+  // never a hop that starts before the previous one has landed. Even spacing
+  // is the no-timestamp fallback.
+  const order = spokenOrder(said);
+  const landAt: number[] = [];
+  for (let h = 0; h < hops; h++) {
+    const spoken = order.next(n.values[h + 1], firstAt + h * (hopFrames + hopGap) + hopFrames);
+    landAt.push(Math.max((h === 0 ? 6 : landAt[h - 1]) + 8, spoken));
+  }
   const hopStart = (h: number) => {
-    const spoken = spokenNumberFrame(unit.id, voice, "hop", n.values[h + 1], 0);
-    return spoken !== null
-      ? Math.max(6, spoken - hopFrames)
-      : firstAt + h * (hopFrames + hopGap);
+    const restingSince = h === 0 ? 6 : landAt[h - 1];
+    const len = Math.min(hopFrames, Math.max(6, Math.floor(0.55 * (landAt[h] - restingSince))));
+    return landAt[h] - len;
   };
 
   // Dot position: piecewise across hops, with a small arc.
   let dotX = xOf(unit, unit.start);
   let dotY = LINE_Y - 90;
   for (let h = 0; h < hops; h++) {
-    const t = interpolate(frame, [hopStart(h), hopStart(h) + hopFrames], [0, 1], {
+    const t = interpolate(frame, [hopStart(h), landAt[h]], [0, 1], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
       easing: Easing.bezier(0.4, 0, 0.2, 1),
@@ -286,7 +360,7 @@ function SceneHop({ dur, unit, voice }: SceneProps) {
       dotY = LINE_Y - 90 - Math.sin(Math.PI * t) * 90;
     }
   }
-  const landedAt = hopStart(hops - 1) + hopFrames;
+  const landedAt = landAt[hops - 1];
   const filled = frame >= landedAt;
   const flash = interpolate(frame, [landedAt, landedAt + 14], [1, 0], {
     extrapolateLeft: "clamp",
@@ -339,11 +413,35 @@ function SceneHop({ dur, unit, voice }: SceneProps) {
 }
 
 // ---- Scene 4: the completed sequence --------------------------------------
-function SceneRecord({ dur, unit }: SceneProps) {
+function SceneRecord({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
   const n = numberLineValues(unit);
-  const title = useEnter(4);
-  const tipAt = Math.round(dur * 0.5);
+  // "6… then 7… then 8… then 9. Say the number, then hop one more." — each
+  // number of the completed sequence lands as she says it (the first opens
+  // the scene). The tip lands on the first number IT says ("After 59, the
+  // tens tick over — 60": the second 59), or after the sequence when it
+  // names none.
+  const order = spokenOrder(said);
+  const valueAt = n.values.map((v) => order.next(v, 4));
+  const lastValueAt = Math.max(...valueAt);
+  const tipFallback = Math.round(dur * 0.5); // not-speech-bound: fallback only
+  const tipNums = unit.tip.match(/\d+/g)?.map(Number) ?? [];
+  const tipAt =
+    tipNums.length > 0
+      ? order.next(tipNums[0], tipFallback)
+      : Math.max(tipFallback, lastValueAt + 12);
+  const fade = (at: number) => ({
+    opacity: interpolate(frame, [at, at + 14], [0, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: Easing.bezier(0.16, 1, 0.3, 1),
+    }),
+    translate: `0 ${interpolate(frame, [at, at + 14], [18, 0], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: Easing.bezier(0.16, 1, 0.3, 1),
+    })}px`,
+  });
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 48 }}>
       <div
@@ -351,14 +449,12 @@ function SceneRecord({ dur, unit }: SceneProps) {
           fontSize: 140,
           fontWeight: 800,
           color: INK,
-          opacity: title.opacity,
-          translate: `0 ${title.translateY}px`,
           display: "flex",
           gap: 40,
         }}
       >
         {n.values.map((v, i) => (
-          <span key={i} style={{ color: i === unit.gapIndex ? GREEN : INK }}>
+          <span key={i} style={{ color: i === unit.gapIndex ? GREEN : INK, ...fade(valueAt[i]) }}>
             {v}
             {i < unit.count - 1 ? "," : ""}
           </span>
@@ -408,7 +504,7 @@ export const NumberLineVideo: React.FC<NumberLineProps> = ({
         return (
           <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
             {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-            <Body dur={scene.dur} unit={unit} voice={voice} />
+            <Body dur={scene.dur} unit={unit} voice={voice} said={saidFor(unitId, voice, scene.id)} />
           </Sequence>
         );
       })}
