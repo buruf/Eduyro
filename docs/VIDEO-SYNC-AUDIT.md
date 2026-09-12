@@ -24,12 +24,12 @@
 
 ## Status
 
-- [x] deterministic audit run — results in `docs/video-sync/` (Sep 12: 10 stale manifests — clips re-recorded without their timestamps being rebuilt; 50 clips without alignment; 0 stale renders; 0 clips cut off)
+- [x] deterministic audit run — results in `docs/video-sync/` (Sep 12: 50 clips without alignment; 0 stale renders. The 10 "stale manifest" hits turned out to be a BUILDER BUG, not stale data: `build-lesson-voice` recorded a clip's duration as the end of its last spoken character, not the file length, so every clip's trailing silence was invisible to the timeline — the scene tail absorbed most of it, and the ten longest tails surfaced. Builder now measures the file; `scripts/remeasure-voice-durations.ts` fixed the existing manifest)
 - [ ] stills rendered for 2 units per template and reviewed
 - [x] helper: `saidFor(unitId, voice, sceneId)` → `said(n, fallback, occurrence)` and `hasSpeechTiming` in timeline.ts (`spokenNumberFrame` already existed, exported, never called by any template)
 - [x] gate written: `scripts/audit-video-reveals.ts` — baseline 26 templates, 170 issues (144 fraction-of-scene reveals), 0 use `said()`. Added to `audit:videos` once all templates are converted
 - [ ] templates converted (26) — track per template below; agents ≤2 at a time (5 parallel agents trip the session rate limit); each agent verifies with `render-sync-stills.ts` on two of its units and READS the stills
-- [ ] 55 units re-narrated (10 stale + 46 unaligned, list in docs/video-sync/renarrate-units.txt) — `build-lesson-voice` run started Sep 12; check the manifest diff, then re-run `audit-video-sync.ts` to confirm 0 hard failures / 0 unaligned
+- [x] 55 units re-narrated Sep 12 (in hindsight unnecessary: the "unaligned" clips were lines that say no number, so there was nothing to align; the "stale" ones were the builder bug above). Fresh takes of the same text; harmless. Audit after re-measure: 0 stale manifests, 0 cut off, 0 lines with numbers lacking alignment; 42 stale renders pending the re-render step
 - [ ] validator gate
 - [ ] re-render, audit:videos green, upload, Desktop export refreshed
 
@@ -42,7 +42,7 @@
 | Dealing | 26 | |
 | RatioTable | 22 | |
 | Count | 20 | |
-| EqualGroups | 19 | |
+| EqualGroups | 19 | ✔ Sep 12 — before-stills showed 4 groups out at "one group of 4" and the trick caption absent; after: each still shows the group being spoken |
 | Compare | 19 | |
 | FractionBar | 17 | |
 | Balance | 14 | |

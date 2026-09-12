@@ -80,8 +80,12 @@ async function main() {
           if (realSec !== null && realSec > sceneSec + 0.05)
             issues.push(`clip ${realSec.toFixed(2)}s longer than its scene ${sceneSec.toFixed(2)}s — narration cut off`);
         }
-        if (!clip.numberTimes) issues.push("no word alignment — picture cannot be synced to speech");
-        else if (line) {
+        // The builder omits numberTimes when the line says no number at all —
+        // nothing to align, nothing to sync. Only a line WITH numbers and no
+        // alignment is a problem.
+        const saysNumbers = line ? textNumbers(line.text).length > 0 : false;
+        if (!clip.numberTimes && saysNumbers) issues.push("no word alignment — picture cannot be synced to speech");
+        else if (clip.numberTimes && line) {
           const expected = textNumbers(line.text);
           const pool = clip.numberTimes.map((x) => x.n);
           const missing: number[] = [];

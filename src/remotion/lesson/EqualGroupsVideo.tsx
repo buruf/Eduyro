@@ -19,7 +19,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { sceneTimings, spokenNumberFrame } from "./timeline";
+import { sceneTimings, saidFor, type SaidFn } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
 import { Brand } from "./Brand";
 import { unitById, unitNumbers, type LessonUnit } from "./units";
@@ -42,6 +42,10 @@ interface SceneProps {
   dur: number;
   voice: string;
   unit: LessonUnit;
+  /** Scene-local frame at which the narrator says a number (timeline.ts
+   *  `saidFor`). Every reveal that shows something she counts or names is
+   *  timed with this, never with a fraction of the scene. */
+  said: SaidFn;
 }
 
 /** Fade + slight rise — the only entrance used anywhere in the video. */
@@ -142,9 +146,11 @@ function GroupOfN({ a, b, appearAt }: { a: number; b: number; appearAt: number }
 }
 
 // ---- Scene 1: what the question asks -------------------------------------
-function SceneAsk({ unit }: SceneProps) {
-  const a = useEnter(6);
-  const b = useEnter(38);
+function SceneAsk({ unit, said }: SceneProps) {
+  // "So… what does 5 × 6 actually mean?" — the expression lands on the first
+  // number she says (a), the question once she has reached b.
+  const a = useEnter(said(unit.a, 6));
+  const b = useEnter(said(unit.b, 38, -1));
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 40 }}>
       <div
@@ -168,13 +174,20 @@ function SceneAsk({ unit }: SceneProps) {
 }
 
 // ---- Scene 2: the groups laid out ----------------------------------------
-function SceneGroups({ dur, unit }: SceneProps) {
+function SceneGroups({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
-  const title = useEnter(4);
-  // Beats are FRACTIONS of the scene: it stretches to fit its narration, so
-  // fixed frames would finish early and leave the picture sitting still.
+  // "It means 6 groups of 5." — the title names b first.
+  const title = useEnter(said(unit.b, 4));
+  // Even spread over the scene: the fallback for clips without alignment.
   const span = 0.78 / unit.b;
-  const groupAt = (g: number) => Math.round(dur * (0.12 + g * span));
+  const evenAt = (g: number) => Math.round(dur * (0.12 + g * span)); // not-speech-bound: fallback only
+  // "Let's put them out… one group of 5. And another. Keep going." — only the
+  // FIRST group is named (the last time she says a; the earlier a is the
+  // title's "groups of 5"). The rest are not spoken, so they fill the remaining
+  // scene evenly from that moment, leaving room for the last group's label.
+  const firstAt = said(unit.a, evenAt(0), -1);
+  const step = Math.max(12, Math.round((dur - 44 - firstAt) / unit.b));
+  const groupAt = (g: number) => firstAt + g * step;
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 56 }}>
       <div
@@ -213,24 +226,24 @@ function SceneGroups({ dur, unit }: SceneProps) {
 }
 
 // ---- Scene 3: count them into an equation --------------------------------
-function SceneCount({ dur, unit, voice }: SceneProps) {
+function SceneCount({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
-  const title = useEnter(4);
+  const title = useEnter(4); // "Count them up" — not-speech-bound
   const { a, b, product, running } = unitNumbers(unit);
   // Each group stays labelled `a`, because that is what it holds. The running
   // total lives in the EQUATION, where it is a result rather than a label on a
   // group — under the groups it would read as "this group has 40".
   //
   // A group lights exactly when its running total is SPOKEN ("5, 10, 15…") —
-  // first mention, since the same numbers recur later in the written sum. The
-  // even spread is the fallback for clips without timestamps.
+  // FIRST mention: in this line the count comes first and the written sum
+  // repeats the same numbers afterwards. The even spread is the fallback for
+  // clips without timestamps.
   const countAt = (g: number) =>
-    spokenNumberFrame(unit.id, voice, "count", running[g], 0) ??
-    Math.round(dur * (0.14 + g * (0.5 / b)));
+    said(running[g], Math.round(dur * (0.14 + g * (0.5 / b))), 0); // not-speech-bound: fallback only
   // The × line flashes when the narrator reaches the product's LAST mention —
-  // the "= 20" that closes the written sum.
-  const multiplyAt =
-    spokenNumberFrame(unit.id, voice, "count", product, -1) ?? Math.round(dur * 0.82);
+  // the "which is 30" that closes the written sum, just before "5 × 6 means
+  // exactly the same thing".
+  const multiplyAt = said(product, Math.round(dur * 0.82), -1); // not-speech-bound: fallback only
   const stage = Array.from({ length: b }, (_, g) => g).reduce(
     (n, g) => (frame >= countAt(g) ? g + 1 : n),
     0,
@@ -331,11 +344,18 @@ function SceneCount({ dur, unit, voice }: SceneProps) {
 }
 
 // ---- Scene 4: the unit's shortcut ----------------------------------------
-function SceneTrick({ dur, unit }: SceneProps) {
+function SceneTrick({ dur, unit, said }: SceneProps) {
   const frame = useCurrentFrame();
-  const title = useEnter(4);
-  const { a, b, product } = unitNumbers(unit);
-  const revealAt = Math.round(dur * 0.42);
+  const title = useEnter(4); // "The shortcut" — not-speech-bound
+  const numbers = unitNumbers(unit);
+  const { a, b, product } = numbers;
+  // The caption states the shortcut ("Skip count by 5s", "Double, then double
+  // again", "Cover the zero…"). Each trick line opens on a different number
+  // (5 / 7 / 2 / 1 / 12 …), so the caption lands on whichever of the unit's
+  // numbers the narrator says FIRST in this line.
+  const fallback = Math.round(dur * 0.42); // not-speech-bound: fallback only
+  const candidates = Object.values(numbers).filter((n): n is number => typeof n === "number");
+  const revealAt = Math.min(fallback, ...candidates.map((n) => said(n, Number.POSITIVE_INFINITY)));
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 64 }}>
       <div
@@ -397,12 +417,13 @@ export const EqualGroupsVideo: React.FC<EqualGroupsProps> = ({
     >
       {scenes.map((scene) => {
         const Body = SCENE_BODIES[scene.id];
+        const said = saidFor(unit.id, voice, scene.id);
         return (
           <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
             {/* Voice and picture share this Sequence's clock, so the line
                 always starts exactly when its scene does. */}
             {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-            <Body dur={scene.dur} unit={unit} voice={voice} />
+            <Body dur={scene.dur} unit={unit} voice={voice} said={said} />
           </Sequence>
         );
       })}

@@ -25,6 +25,18 @@ import { speakable } from "../src/lib/tts/speakable";
 const ROOT = process.cwd();
 const MANIFEST = join(ROOT, "src", "remotion", "lesson", "voice-manifest.ts");
 
+/** Length of the mp3 on disk. The API's alignment ends at the last spoken
+ *  character; the file runs on into trailing silence, and the timeline must
+ *  budget for the file. */
+async function measuredSeconds(file: string): Promise<number> {
+  const { parseMedia } = await import("@remotion/media-parser");
+  const { nodeReader } = await import("@remotion/media-parser/node");
+  try {
+    const r = await parseMedia({ src: file, reader: nodeReader, fields: { durationInSeconds: true }, acknowledgeRemotionLicense: true });
+    return r.durationInSeconds ?? 0;
+  } catch { return 0; }
+}
+
 for (const file of [".env.local", ".env"]) {
   const p = join(ROOT, file);
   if (!existsSync(p)) continue;
@@ -167,8 +179,14 @@ async function main() {
         // Normalise notation to what a teacher would SAY before synthesis — the
         // app's TTS route does this, and skipping it here made the video voice
         // read "4 × 7" as "4 ex 7".
-        const { mp3, duration, numberTimes } = await synthesize(speakable(line.text), voiceId);
-        writeFileSync(join(outDir, `${line.id}.mp3`), mp3);
+        const { mp3, duration: spokenEnd, numberTimes } = await synthesize(speakable(line.text), voiceId);
+        const mp3Path = join(outDir, `${line.id}.mp3`);
+        writeFileSync(mp3Path, mp3);
+        // The API's "duration" is the END OF THE LAST SPOKEN CHARACTER, not the
+        // file: every clip carries trailing silence the timeline never saw, so a
+        // scene could end while the file was still playing (sync audit, Sep
+        // 2026). Measure the file; the scene tail is then real silence.
+        const duration = Math.max(spokenEnd, await measuredSeconds(mp3Path));
         clips.push({
           id: line.id,
           file: `lesson-voice/${unit.id}/${voice.key}/${line.id}.mp3`,
