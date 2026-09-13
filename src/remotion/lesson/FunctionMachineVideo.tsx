@@ -8,6 +8,16 @@
 //
 // Numbers are computed from the unit's declared rule (units-functions.ts);
 // the machine can never show an answer the narration didn't derive.
+//
+// SYNC (Sep 2026): every reveal that shows a number the narrator says is timed
+// with `said(n, fallback, occurrence)` from the scene's clip alignment
+// (timeline `saidFor`). Each scene declares the numbers its line says IN
+// NARRATION ORDER (mirroring script-functions.ts), so a repeated number
+// resolves to the right occurrence. The chip lands on its value, the rule on
+// its numbers, the output on the result, and a composition's inner result
+// lands before the outer one. Hand-picked frames survive only as fallbacks
+// for clips without alignment, and reveals that follow no spoken number are
+// marked `// not-speech-bound`.
 import {
   AbsoluteFill,
   Audio,
@@ -18,7 +28,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { functionSceneTimings } from "./timeline";
+import { functionSceneTimings, saidFor, type SaidFn } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
 import { Brand } from "./Brand";
 import {
@@ -26,7 +36,6 @@ import {
   applyRule,
   ruleText,
   type FunctionUnit,
-  type FnRule,
 } from "./units-functions";
 
 export type FunctionProps = {
@@ -46,7 +55,18 @@ const RED = "#B23B2E";
 interface SceneProps {
   dur: number;
   unit: FunctionUnit;
+  /** Scene-local frame at which the narrator says a number (timeline `saidFor`).
+   *  The fallback is the old hand-picked frame, for clips without alignment. */
+  said: SaidFn;
 }
+
+/** How many times `n` is spoken BEFORE the mention we want. */
+const before = (n: number, earlier: number[]) => earlier.filter((v) => v === n).length;
+
+/** Frames at which a line's numbers are said, in the order the line says them.
+ *  NaN where the clip has no alignment, so each caller supplies a fallback. */
+const spokenAt = (said: SaidFn, order: number[]) =>
+  order.map((n, k) => said(n, Number.NaN, before(n, order.slice(0, k))));
 
 function useEnter(atFrame: number, durFrames = 14) {
   const frame = useCurrentFrame();
@@ -64,20 +84,37 @@ function useEnter(atFrame: number, durFrames = 14) {
   };
 }
 
-function Title({ text, enter }: { text: string; enter: { opacity: number; translateY: number } }) {
+/** Anything that should appear exactly when its number is said. */
+function Reveal({
+  at,
+  style,
+  children,
+}: {
+  at: number;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  const enter = useEnter(at);
   return (
-    <div
+    <div style={{ ...style, opacity: enter.opacity, translate: `0 ${enter.translateY}px` }}>
+      {children}
+    </div>
+  );
+}
+
+function Title({ text, at = 4 }: { text: string; at?: number }) {
+  return (
+    <Reveal
+      at={at}
       style={{
         fontSize: 72,
         fontWeight: 700,
         color: INK,
-        opacity: enter.opacity,
-        translate: `0 ${enter.translateY}px`,
         textAlign: "center",
       }}
     >
       {text}
-    </div>
+    </Reveal>
   );
 }
 
@@ -210,18 +247,20 @@ function Chip({
   );
 }
 
-/** In/out table that reveals one row at a time. */
+/** In/out table. Each row appears on the frame its OUTPUT is spoken (`rowAt`),
+ *  so an answer is never on screen before the narrator says it. */
 function IOTable({
   rows,
-  shown,
+  rowAt,
   colour = BLUE,
   outLabel = "out",
 }: {
   rows: { x: string; y: string }[];
-  shown: number;
+  rowAt: number[];
   colour?: string;
   outLabel?: string;
 }) {
+  const frame = useCurrentFrame();
   return (
     <div
       style={{
@@ -244,7 +283,7 @@ function IOTable({
             fontSize: 40,
             fontWeight: 800,
             color: INK,
-            opacity: i < shown ? 1 : 0.12,
+            opacity: frame >= (rowAt[i] ?? 0) ? 1 : 0.12,
             borderTop: `2px solid ${colour}22`,
           }}
         >
@@ -262,15 +301,53 @@ const MACH_X = 960; // centre
 const IN_Y = 210;
 const OUT_Y = 700;
 
-function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
+function SceneBody({ dur, unit, sceneId, said }: SceneProps & { sceneId: string }) {
   const frame = useCurrentFrame();
-  const title = useEnter(4);
   const f = (x: number) => applyRule(unit.rule, x);
   const eq = ruleText(unit.rule);
+  // Hand-picked reveal points as a fraction of the scene: ONLY the fallback
+  // for clips without alignment, and for reveals that follow no number.
+  const step = (k: number) => Math.round(dur * k); // not-speech-bound: fallback only
+  const CARRIED = 0; // not-speech-bound: already on screen from the previous scene
 
   // -- ask: machine introduced, first chip poised ---------------------------
   if (sceneId === "ask") {
-    const chipAt = Math.round(dur * 0.25);
+    const a = unit.rule.a ?? 1;
+    const b = unit.rule.b ?? 0;
+    const x0 = unit.inputs[0];
+    // Narration order per ask line (script-functions.ts):
+    //   notation:   "…written as f(x) = 2x + 3"                     → [a, b]
+    //   evaluate:   "f(x) = 3x + 2. Evaluate it at 0, at 1, at 2"   → [a, b, …inputs]
+    //   composition:"f adds 2. g multiplies by 3. …a 2?"            → [b, g.a, x0]
+    //   inverse:    "f(x)=2x+1. Feed it 3: times 2 is 6, plus 1… 7.
+    //                …the OUTPUT, 7… back to the 3"                 → below
+    //   domain-*:   squaring machine / "1 divided by, x minus 2"
+    const order =
+      unit.mode === "notation"
+        ? [a, b]
+        : unit.mode === "evaluate"
+          ? [a, b, ...unit.inputs]
+          : unit.mode === "composition"
+            ? [b, unit.rule2?.a ?? 1, x0]
+            : unit.mode === "inverse"
+              ? [a, b, x0, a, a * x0, b, f(x0), f(x0), x0]
+              : unit.mode === "domain-rational"
+                ? [1, unit.rule.k ?? 0, 1, unit.rule.k ?? 0]
+                : [];
+    const at = spokenAt(said, order);
+    const fb = (k: number, fallback: number) => (Number.isNaN(at[k] ?? Number.NaN) ? fallback : at[k]);
+    const chipFb = step(0.25); // not-speech-bound: fallback spacing
+    // The chip lands when she names the input. Notation and the rational
+    // domain never say it in the ask, so those keep the fallback.
+    const chipAt =
+      unit.mode === "evaluate" || unit.mode === "inverse"
+        ? fb(2, chipFb)
+        : unit.mode === "composition"
+          ? fb(2, chipFb)
+          : chipFb; // not-speech-bound: the ask line never says this input
+    // Composition names each machine in turn ("f adds 2", "g multiplies by 3").
+    const mfAt = unit.mode === "composition" ? fb(0, 0) : 0; // not-speech-bound elsewhere: the machine IS the subject of the line
+    const mgAt = unit.mode === "composition" ? fb(1, 0) : 0;
     const showBad = unit.mode === "domain-rational";
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 30 }}>
@@ -288,58 +365,98 @@ function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
                       ? "One input breaks it…"
                       : "Evaluate the function"
           }
-          enter={title}
         />
         <div style={{ display: "flex", gap: 90, alignItems: "flex-start" }}>
-          <Machine name="f" rule={eq} />
+          <Reveal at={mfAt}>
+            <Machine name="f" rule={eq} />
+          </Reveal>
           {unit.mode === "composition" && unit.rule2 && (
-            <Machine name="g" rule={ruleText(unit.rule2, "g")} colour={GOLD} />
+            <Reveal at={mgAt}>
+              <Machine name="g" rule={ruleText(unit.rule2, "g")} colour={GOLD} />
+            </Reveal>
           )}
         </div>
-        <Chip value={String(unit.inputs[0])} x={MACH_X} fromY={IN_Y - 90} toY={IN_Y - 60} at={chipAt} travel={16} />
+        <Chip value={String(x0)} x={MACH_X} fromY={IN_Y - 90} toY={IN_Y - 60} at={chipAt} travel={16} />
       </AbsoluteFill>
     );
   }
 
-  // -- work / twist / record per mode ---------------------------------------
-  const step = (k: number) => Math.round(dur * k);
-
   if (unit.mode === "notation" || unit.mode === "evaluate") {
     // Chips fall through the machine one at a time; the table fills.
     const inputs = unit.inputs;
-    const per = Math.floor((dur * 0.7) / inputs.length);
+    const a = unit.rule.a ?? 1;
+    const b = unit.rule.b ?? 0;
     const rows = inputs.map((x) => ({ x: String(x), y: String(f(x)) }));
-    const shown =
-      sceneId === "work"
-        ? Math.min(inputs.length, Math.max(0, Math.floor((frame - step(0.15)) / per) + 1))
-        : inputs.length;
+    const per = Math.floor((dur * 0.7) / inputs.length); // not-speech-bound: fallback spacing
+    const fbIn = (i: number) => step(0.15) + i * per;
+    const fbOut = (i: number) => step(0.15) + i * per + 30;
+    // Narration order (script-functions.ts):
+    //  notation work:  "f of 4 … feed 4 … 4 goes in… 2 times 4, plus 3… out comes 11"
+    //  notation twist: "f of 4 equals 11 … turns 4 into 11"
+    //  notation record:"f(4) means: feed 4 into machine f"
+    //  evaluate work:  "Feed it 0… 3 times 0 is 0, plus 2 makes 2. Feed it 1… 5. And 2… 8"
+    //  evaluate twist: "In: 0, 1, 2. Out: 2, 5, 8 … climb by 3"
+    //  evaluate record: no numbers aligned
+    const x0 = inputs[0];
+    const y0 = f(x0);
+    let order: number[] = [];
+    if (unit.mode === "notation") {
+      order =
+        sceneId === "work"
+          ? [x0, x0, x0, a, x0, b, y0]
+          : sceneId === "twist"
+            ? [x0, y0, x0, y0]
+            : [x0, x0];
+    } else {
+      order =
+        sceneId === "work"
+          ? [x0, a, x0, a * x0, b, y0, ...inputs.slice(1).flatMap((x) => [x, f(x)])]
+          : sceneId === "twist"
+            ? [...inputs, ...inputs.map(f), a]
+            : [];
+    }
+    const at = spokenAt(said, order);
+    const fb = (k: number, fallback: number) => (Number.isNaN(at[k] ?? Number.NaN) ? fallback : at[k]);
+    // work: chip i drops on its input word, the output chip lands on its value.
+    const inAt = inputs.map((_, i) =>
+      unit.mode === "notation" ? fb(2, fbIn(0)) : fb(i === 0 ? 0 : 6 + 2 * (i - 1), fbIn(i)),
+    );
+    const outAt = inputs.map((_, i) =>
+      unit.mode === "notation" ? fb(6, fbOut(0)) : fb(i === 0 ? 5 : 7 + 2 * (i - 1), fbOut(i)),
+    );
+    // The table fills as each OUTPUT is spoken; in twist/record it is carried
+    // over from work, already complete.
+    const rowAt = inputs.map((_, i) => (sceneId === "work" ? outAt[i] : CARRIED));
+    const titleAt =
+      unit.mode === "notation"
+        ? sceneId === "work"
+          ? fb(0, 4) // "f of 4 — feed 4 to machine f"
+          : sceneId === "twist"
+            ? fb(0, 4) // "f(4) = 11 is a fact"
+            : 4 // not-speech-bound: "Name · input · output"
+        : sceneId === "twist"
+          ? fb(inputs.length * 2, 4) // "The outputs climb by 3"
+          : 4; // not-speech-bound: "Swap the x for the input" / "Name · input · output"
+    const tipAt = unit.mode === "notation" ? fb(0, 4) : 4; // notation record says the tip's input; evaluate's has no alignment
     const headline =
       sceneId === "work"
         ? unit.mode === "notation"
-          ? `f(${inputs[0]}) — feed ${inputs[0]} to machine f`
+          ? `f(${x0}) — feed ${x0} to machine f`
           : "Swap the x for the input"
         : sceneId === "twist"
           ? unit.mode === "notation"
-            ? `f(${inputs[0]}) = ${f(inputs[0])} is a fact`
-            : `The outputs climb by ${unit.rule.a} — it's a line`
+            ? `f(${x0}) = ${y0} is a fact`
+            : `The outputs climb by ${a} — it's a line`
           : "Name · input · output";
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 26 }}>
-        <Title text={headline} enter={title} />
+        <Title text={headline} at={titleAt} />
         <div style={{ display: "flex", gap: 110, alignItems: "center" }}>
           <div style={{ position: "relative" }}>
             <Machine name="f" rule={eq} />
             {sceneId === "work" &&
               inputs.map((x, i) => (
-                <Chip
-                  key={x}
-                  value={String(x)}
-                  x={215}
-                  fromY={-80}
-                  toY={40}
-                  at={step(0.15) + i * per}
-                  hold={false}
-                />
+                <Chip key={x} value={String(x)} x={215} fromY={-80} toY={40} at={inAt[i]} hold={false} />
               ))}
             {sceneId === "work" &&
               inputs.map((x, i) => (
@@ -349,23 +466,24 @@ function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
                   x={215}
                   fromY={330}
                   toY={430}
-                  at={step(0.15) + i * per + 30}
+                  at={outAt[i]}
                   colour={GREEN}
                   hold={i === inputs.length - 1}
                 />
               ))}
           </div>
-          <IOTable rows={rows} shown={shown} outLabel={unit.mode === "notation" ? "f(x)" : "out"} />
+          <IOTable rows={rows} rowAt={rowAt} outLabel={unit.mode === "notation" ? "f(x)" : "out"} />
         </div>
         {sceneId === "record" && (
-          <div style={{ fontSize: 44, fontWeight: 800, color: GREEN }}>{unit.tip}</div>
+          <Reveal at={tipAt} style={{ fontSize: 44, fontWeight: 800, color: GREEN }}>
+            {unit.tip}
+          </Reveal>
         )}
       </AbsoluteFill>
     );
   }
 
   if (unit.mode === "composition" && unit.rule2) {
-    const g = (x: number) => applyRule(unit.rule2!, x);
     const x0 = unit.inputs[0];
     const fFirst = sceneId !== "twist"; // twist swaps the order
     const m1 = fFirst ? unit.rule : unit.rule2;
@@ -374,22 +492,51 @@ function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
     const n2 = fFirst ? "g" : "f";
     const mid = applyRule(m1, x0);
     const out = applyRule(m2, mid);
+    // Narration order:
+    //  work:  "2 drops into f… out comes 4. That 4 falls into g… times 3… 12.
+    //          …g of f of 2"                      → [x0, mid, mid, g.a, out, x0]
+    //  twist: "2 into g first… 6. Then into f… 8. Different answer! 12 one way,
+    //          8 the other"                       → [x0, mid, out, otherWay, out]
+    //  record: no numbers aligned
+    const otherWay = applyRule(unit.rule2, applyRule(unit.rule, x0));
+    const order =
+      sceneId === "work"
+        ? [x0, mid, mid, unit.rule2.a ?? 1, out, x0]
+        : sceneId === "twist"
+          ? [x0, mid, out, otherWay, out]
+          : [];
+    const at = spokenAt(said, order);
+    const fb = (k: number, fallback: number) => (Number.isNaN(at[k] ?? Number.NaN) ? fallback : at[k]);
+    const inAt = fb(0, step(0.12));
+    const midOutAt = fb(1, step(0.12) + 30);
+    // work re-says the middle number as it enters machine 2; twist doesn't, so
+    // that chip sits midway between the two numbers around it.
+    const midInAt =
+      sceneId === "work"
+        ? fb(2, step(0.5))
+        : Math.round((midOutAt + fb(2, step(0.5))) / 2); // not-speech-bound: "Then into f" names no number
+    const outAt = sceneId === "work" ? fb(4, step(0.5) + 30) : fb(2, step(0.5) + 30);
     const headline =
       sceneId === "work"
         ? `g(f(${x0})) — inside first`
         : sceneId === "twist"
           ? `Swap them: f(g(${x0}))`
           : `Output of one → input of the next`;
+    const chain = [
+      { text: String(x0), at: inAt },
+      { text: String(mid), at: midOutAt },
+      { text: String(out), at: outAt },
+    ];
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 30 }}>
-        <Title text={headline} enter={title} />
+        <Title text={headline} at={sceneId === "record" ? 4 : fb(0, 4)} />
         <div style={{ display: "flex", gap: 130, alignItems: "center" }}>
           <div style={{ position: "relative" }}>
             <Machine name={n1} rule={ruleText(m1, n1)} colour={n1 === "f" ? BLUE : GOLD} width={400} />
             {sceneId !== "record" && (
               <>
-                <Chip value={String(x0)} x={200} fromY={-80} toY={30} at={step(0.12)} hold={false} />
-                <Chip value={String(mid)} x={200} fromY={310} toY={400} at={step(0.12) + 30} colour={GREEN} hold={false} />
+                <Chip value={String(x0)} x={200} fromY={-80} toY={30} at={inAt} hold={false} />
+                <Chip value={String(mid)} x={200} fromY={310} toY={400} at={midOutAt} colour={GREEN} hold={false} />
               </>
             )}
           </div>
@@ -398,17 +545,23 @@ function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
             <Machine name={n2} rule={ruleText(m2, n2)} colour={n2 === "f" ? BLUE : GOLD} width={400} />
             {sceneId !== "record" && (
               <>
-                <Chip value={String(mid)} x={200} fromY={-80} toY={30} at={step(0.5)} hold={false} />
-                <Chip value={String(out)} x={200} fromY={310} toY={400} at={step(0.5) + 30} colour={GREEN} />
+                <Chip value={String(mid)} x={200} fromY={-80} toY={30} at={midInAt} hold={false} />
+                <Chip value={String(out)} x={200} fromY={310} toY={400} at={outAt} colour={GREEN} />
               </>
             )}
           </div>
         </div>
-        <div style={{ fontSize: 52, fontWeight: 800, color: INK }}>
-          {sceneId === "record"
-            ? unit.tip
-            : `${x0} → ${mid} → ${out}`}
-        </div>
+        {sceneId === "record" ? (
+          <div style={{ fontSize: 52, fontWeight: 800, color: INK }}>{unit.tip}</div>
+        ) : (
+          <div style={{ display: "flex", gap: 16, fontSize: 52, fontWeight: 800, color: INK }}>
+            {chain.map((c, i) => (
+              <Reveal key={i} at={c.at} style={{ display: "flex", gap: 16 }}>
+                {i > 0 ? "→" : ""} {c.text}
+              </Reveal>
+            ))}
+          </div>
+        )}
       </AbsoluteFill>
     );
   }
@@ -419,6 +572,20 @@ function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
     const a = unit.rule.a ?? 1;
     const b = unit.rule.b ?? 0;
     const backward = sceneId === "work" || sceneId === "twist";
+    // Narration order:
+    //  work:   "multiplied by 2, THEN added 1 … subtract 1… 6. Then divide by
+    //           2… 3"                              → [a, b, b, y0-b, a, x0]
+    //  twist:  no numbers aligned
+    //  record: "Forward: times 2, plus 1. Inverse: minus 1, divide 2"
+    //                                              → [a, b, b, a]
+    const order = sceneId === "work" ? [a, b, b, y0 - b, a, x0] : sceneId === "record" ? [a, b, b, a] : [];
+    const at = spokenAt(said, order);
+    const fb = (k: number, fallback: number) => (Number.isNaN(at[k] ?? Number.NaN) ? fallback : at[k]);
+    // The output chip re-enters the inverse machine on "subtract 1"; the two
+    // results land on their own numbers.
+    const backInAt = sceneId === "work" ? fb(2, step(0.2)) : step(0.2); // not-speech-bound in twist: y0 is not re-said
+    const minusAt = sceneId === "work" ? fb(3, step(0.2) + 26) : step(0.2) + 26;
+    const divAt = sceneId === "work" ? fb(5, step(0.2) + 52) : step(0.2) + 52;
     const headline =
       sceneId === "work"
         ? "Undo the LAST step first"
@@ -427,10 +594,13 @@ function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
           : `Forward: ×${a}, +${b}.  Inverse: −${b}, ÷${a}`;
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 30 }}>
-        <Title text={headline} enter={title} />
+        {/* work/twist titles name no number; the record title is the forward
+            half, which she reads as "times 2, plus 1". */}
+        <Title text={headline} at={sceneId === "record" ? fb(0, 4) : 4} />
         <div style={{ display: "flex", gap: 120, alignItems: "center" }}>
           <div style={{ position: "relative" }}>
             <Machine name="f" rule={eq} width={400} />
+            {/* not-speech-bound: the forward fact is carried from the ask */}
             <div style={{ textAlign: "center", fontSize: 40, fontWeight: 800, color: BLUE, marginTop: 14 }}>
               {x0} → {y0}
             </div>
@@ -438,16 +608,29 @@ function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
           {backward && (
             <div style={{ position: "relative" }}>
               <Machine name="f⁻¹" rule={`−${b}, then ÷${a}`} colour={GREEN} width={400} />
-              <Chip value={String(y0)} x={200} fromY={-80} toY={30} at={step(0.2)} hold={false} colour={GREEN} />
-              <Chip value={String(y0 - b)} x={200} fromY={140} toY={200} at={step(0.2) + 26} hold={false} colour={GREEN} />
-              <Chip value={String(x0)} x={200} fromY={310} toY={400} at={step(0.2) + 52} colour={GOLD} />
-              <div style={{ textAlign: "center", fontSize: 40, fontWeight: 800, color: GREEN, marginTop: 14 }}>
-                {y0} → {y0 - b} → {x0}
+              <Chip value={String(y0)} x={200} fromY={-80} toY={30} at={backInAt} hold={false} colour={GREEN} />
+              <Chip value={String(y0 - b)} x={200} fromY={140} toY={200} at={minusAt} hold={false} colour={GREEN} />
+              <Chip value={String(x0)} x={200} fromY={310} toY={400} at={divAt} colour={GOLD} />
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: 14,
+                  fontSize: 40,
+                  fontWeight: 800,
+                  color: GREEN,
+                  marginTop: 14,
+                }}
+              >
+                <Reveal at={backInAt}>{y0}</Reveal>
+                <Reveal at={minusAt}>→ {y0 - b}</Reveal>
+                <Reveal at={divAt}>→ {x0}</Reveal>
               </div>
             </div>
           )}
         </div>
         {sceneId === "record" && (
+          // not-speech-bound: the tip carries no number
           <div style={{ fontSize: 44, fontWeight: 800, color: GREEN }}>{unit.tip}</div>
         )}
       </AbsoluteFill>
@@ -456,21 +639,31 @@ function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
 
   if (unit.mode === "domain-range") {
     const rows = unit.inputs.map((x) => ({ x: String(x), y: String(f(x)) }));
-    const per = Math.floor((dur * 0.6) / rows.length);
-    const shown = sceneId === "work" ? Math.min(rows.length, Math.max(0, Math.floor((frame - step(0.15)) / per) + 1)) : rows.length;
+    const per = Math.floor((dur * 0.6) / rows.length); // not-speech-bound: fallback spacing
+    // Narration order (work): "-3… squared… 9. 0… gives 0. 3… also 9" — the
+    // minus is not a spoken number, so each input aligns on its magnitude.
+    const order =
+      sceneId === "work" ? unit.inputs.flatMap((x) => [Math.abs(x), f(x)]) : [];
+    const at = spokenAt(said, order);
+    const fb = (k: number, fallback: number) => (Number.isNaN(at[k] ?? Number.NaN) ? fallback : at[k]);
+    // Each row lands on its OUTPUT; twist/record carry the finished table.
+    const rowAt = rows.map((_, i) => (sceneId === "work" ? fb(i * 2 + 1, step(0.15) + i * per) : CARRIED));
     const headline =
       sceneId === "work" ? "Anything can go in — the DOMAIN" : sceneId === "twist" ? "But what can come OUT? The RANGE" : "Domain in. Range out.";
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 28 }}>
-        <Title text={headline} enter={title} />
+        {/* not-speech-bound: no headline in this mode names a number */}
+        <Title text={headline} />
         <div style={{ display: "flex", gap: 110, alignItems: "center" }}>
           <Machine name="f" rule={eq} />
-          <IOTable rows={rows} shown={shown} />
+          <IOTable rows={rows} rowAt={rowAt} />
         </div>
         {sceneId === "twist" && (
-          <div style={{ fontSize: 48, fontWeight: 800, color: RED }}>
+          // not-speech-bound: "the range is zero and up" — "zero" is a word,
+          // not an aligned number, so this lands on the fallback.
+          <Reveal at={step(0.6)} style={{ fontSize: 48, fontWeight: 800, color: RED }}>
             outputs never go below 0
-          </div>
+          </Reveal>
         )}
         {sceneId === "record" && (
           <div style={{ fontSize: 44, fontWeight: 800, color: GREEN }}>
@@ -486,28 +679,56 @@ function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
     const [x1, x2, xBad] = unit.inputs;
     const k = unit.rule.k ?? 0;
     const show = (v: number) => (Number.isInteger(v) ? String(v) : String(Math.round(v * 100) / 100));
-    const jam = sceneId === "twist";
+    /** The numbers a shown value is read as ("0.5" → 0 then 5). */
+    const spokenParts = (v: number) => show(v).split(/[^0-9]+/).filter(Boolean).map(Number);
+    // Narration order:
+    //  work:  "Feed it 3: bottom is 3 minus 2, which is 1… output 1. Feed it 4:
+    //          bottom is 2… output 0.5"
+    //  twist: "Now feed it 2. Bottom: 2 minus 2… zero. And 1 divided by zero"
+    //  record:"the domain is every number EXCEPT 2"
+    const order =
+      sceneId === "work"
+        ? [x1, x1, k, x1 - k, ...spokenParts(f(x1)), x2, x2 - k, ...spokenParts(f(x2))]
+        : sceneId === "twist"
+          ? [xBad, xBad, k, 1]
+          : [k];
+    const at = spokenAt(said, order);
+    const fb = (kk: number, fallback: number) => (Number.isNaN(at[kk] ?? Number.NaN) ? fallback : at[kk]);
+    const row1Out = 4; // index of the first digit of output 1
+    const row2Out = 4 + spokenParts(f(x1)).length + 2;
+    const perFb = Math.floor(dur * 0.3); // not-speech-bound: fallback spacing
+    // The machine jams on "1 divided by zero — the machine jams".
+    const jamAt = sceneId === "twist" ? fb(3, step(0.15)) : 0;
+    const jam = sceneId === "twist" && frame >= jamAt;
     const rows = [
       { x: String(x1), y: show(f(x1)) },
       { x: String(x2), y: show(f(x2)) },
       { x: String(xBad), y: jam || sceneId === "record" ? "⚠" : "?" },
     ];
-    const shown = sceneId === "work" ? Math.min(2, Math.max(0, Math.floor((frame - step(0.2)) / Math.floor(dur * 0.3)) + 1)) : 3;
+    const rowAt =
+      sceneId === "work"
+        ? [fb(row1Out, step(0.2)), fb(row2Out, step(0.2) + perFb), Number.MAX_SAFE_INTEGER]
+        : sceneId === "twist"
+          ? [CARRIED, CARRIED, jamAt]
+          : [CARRIED, CARRIED, CARRIED];
+    const chipAt = sceneId === "twist" ? fb(0, step(0.15)) : step(0.15);
     const headline =
-      sceneId === "work" ? "Feed it numbers…" : jam ? `${xBad} makes the bottom ZERO` : `Domain: every x except ${k}`;
+      sceneId === "work" ? "Feed it numbers…" : sceneId === "twist" ? `${xBad} makes the bottom ZERO` : `Domain: every x except ${k}`;
+    const titleAt = sceneId === "work" ? 4 : fb(0, 4); // work's headline names no number
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 28 }}>
-        <Title text={headline} enter={title} />
+        <Title text={headline} at={titleAt} />
         <div style={{ display: "flex", gap: 110, alignItems: "center" }}>
           <div style={{ position: "relative" }}>
             <Machine name="f" rule={eq} jammed={jam} />
-            {jam && (
-              <Chip value={String(xBad)} x={215} fromY={-80} toY={40} at={step(0.15)} hold colour={RED} />
+            {sceneId === "twist" && (
+              <Chip value={String(xBad)} x={215} fromY={-80} toY={40} at={chipAt} hold colour={RED} />
             )}
           </div>
-          <IOTable rows={rows} shown={shown} colour={jam ? RED : BLUE} />
+          <IOTable rows={rows} rowAt={rowAt} colour={jam ? RED : BLUE} />
         </div>
         {sceneId === "record" && (
+          // not-speech-bound: the tip carries no number
           <div style={{ fontSize: 44, fontWeight: 800, color: GREEN }}>{unit.tip}</div>
         )}
       </AbsoluteFill>
@@ -533,7 +754,12 @@ export const FunctionMachineVideo: React.FC<FunctionProps> = ({
       {scenes.map((scene) => (
         <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
           {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-          <SceneBody dur={scene.dur} unit={unit} sceneId={scene.id} />
+          <SceneBody
+            dur={scene.dur}
+            unit={unit}
+            sceneId={scene.id}
+            said={saidFor(unitId, voice, scene.id)}
+          />
         </Sequence>
       ))}
       <Brand />
