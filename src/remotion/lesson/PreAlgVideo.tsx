@@ -7,6 +7,14 @@
 // distribution impossible to under-count, a balance makes "do it to both
 // sides" visible, and integers walk a number line where the signs are
 // directions rather than decorations.
+//
+// SYNC (Sep 2026): every reveal that shows a number the narrator says is timed
+// with `said(n, fallback, occurrence)` — the scene-local frame of that word in
+// the recording (timeline.ts `saidFor`) — instead of a hand-picked fraction of
+// the scene. Negatives are aligned as their absolute value ("negative 5" is a
+// 5 in the alignment), so the integer walk asks for `Math.abs(v)`. Reveals
+// that follow no spoken number, and carried-over visuals that are already on
+// screen when the scene starts, are marked `// not-speech-bound`.
 import React from "react";
 import {
   AbsoluteFill,
@@ -18,7 +26,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { preAlgSceneTimings } from "./timeline";
+import { preAlgSceneTimings, saidFor, type SaidFn } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
 import { Brand } from "./Brand";
 import { preAlgUnitById, preAlgNumbers, type PreAlgUnit } from "./units-prealg";
@@ -39,14 +47,26 @@ const MUTED = "#8A7A5E";
 
 const STAGE_W = 1500;
 
+/** Already on screen when the scene starts — the picture carried over from the
+ *  scene before, so there is no word for it to wait for. */
+const CARRIED = 0; // not-speech-bound
+/** Never in this scene. */
+const NEVER = Number.MAX_SAFE_INTEGER;
+
 interface SceneProps {
   dur: number;
   unit: PreAlgUnit;
   sceneId: string;
+  /** Scene-local frame at which the narrator says a number (timeline `saidFor`). */
+  said: SaidFn;
 }
 
-function useEnter(atFrame: number, durFrames = 14) {
-  const frame = useCurrentFrame();
+/** How many times `n` has already been spoken, so repeats line up. */
+function before(n: number, earlier: number[]): number {
+  return earlier.filter((v) => v === n).length;
+}
+
+function enterAt(frame: number, atFrame: number, durFrames = 14) {
   return {
     opacity: interpolate(frame, [atFrame, atFrame + durFrames], [0, 1], {
       extrapolateLeft: "clamp",
@@ -59,6 +79,28 @@ function useEnter(atFrame: number, durFrames = 14) {
       easing: Easing.bezier(0.16, 1, 0.3, 1),
     }),
   };
+}
+
+/** Fade a piece of the picture in on the frame its number is said. */
+function Appear({
+  at,
+  frame,
+  children,
+  style,
+  from = 0,
+}: {
+  at: number;
+  frame: number;
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+  /** opacity before the word (dimmed-but-present rather than absent) */
+  from?: number;
+}) {
+  const o = interpolate(frame, [at, at + 10], [from, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  return <div style={{ opacity: o, ...style }}>{children}</div>;
 }
 
 function Title({ text, enter }: { text: string; enter: { opacity: number; translateY: number } }) {
@@ -218,11 +260,10 @@ function IntegerLine({ from, to, at, start }: { from: number; to: number; at: nu
   );
 }
 
-function SceneBody({ dur, unit, sceneId }: SceneProps) {
+function SceneBody({ dur, unit, sceneId, said }: SceneProps) {
   const frame = useCurrentFrame();
-  const title = useEnter(0);
   const x = preAlgNumbers(unit);
-  const step = (f: number) => Math.floor(dur * f);
+  const step = (f: number) => Math.floor(dur * f); // fallback frames only, for clips without word alignment
   const stage = { alignItems: "center", justifyContent: "center", gap: 38 } as const;
   const tip = (
     <div style={{ fontSize: 42, fontWeight: 800, color: GREEN, textAlign: "center", maxWidth: 1500 }}>{unit.tip}</div>
@@ -239,38 +280,47 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
           : sceneId === "twist"
             ? "Change x, and the answer moves"
             : "Substitute, then work it out";
+    // "x is 4" — the value pours into the box on the word. In the recap the
+    // filled box is carried from the work scene (the line is about a MINUS).
+    const fillAt = sceneId === "work" ? said(x.at, CARRIED, 0) : CARRIED;
+    // "x plus 7" — the constant.
+    const addAt = sceneId === "ask" || sceneId === "work" ? said(x.a, CARRIED, 0) : CARRIED;
+    const sumFallback = step(0.45); // not-speech-bound: fallback only
+    const sumAt = said(x.sum, sumFallback, -1);
+    // twist: the second column arrives on "say x is 10"; the first is carried.
+    const secondAt = said(x.at2, step(0.35), 0);
     return (
       <AbsoluteFill style={stage}>
-        <Title text={headline} enter={title} />
+        <Title text={headline} enter={enterAt(frame, sceneId === "work" ? fillAt : CARRIED)} />
         {sceneId === "twist" ? (
           <div style={{ display: "flex", gap: 110 }}>
             {[
-              { v: x.at, r: x.sum, c: BLUE },
-              { v: x.at2, r: x.sum2, c: GOLD },
+              { v: x.at, r: x.sum, c: BLUE, at: CARRIED },
+              { v: x.at2, r: x.sum2, c: GOLD, at: secondAt },
             ].map((c, i) => (
-              <div
-                key={i}
-                style={{
-                  textAlign: "center",
-                  opacity: i === 0 || frame >= step(0.35) ? 1 : 0.15,
-                }}
-              >
+              <Appear key={i} at={c.at} frame={frame} from={i === 0 ? 1 : 0.15} style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 40, fontWeight: 800, color: MUTED }}>x = {c.v}</div>
                 <div style={{ fontSize: 66, fontWeight: 800, color: c.c, marginTop: 12 }}>
                   {c.v} + {x.a}
                 </div>
                 <div style={{ fontSize: 80, fontWeight: 800, color: c.c }}>= {c.r}</div>
-              </div>
+              </Appear>
             ))}
           </div>
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: 26 }}>
-            <XBox value={sceneId === "ask" ? undefined : x.at} />
-            <div style={{ fontSize: 76, fontWeight: 800, color: INK }}>+ {x.a}</div>
+            <Appear at={sceneId === "ask" ? CARRIED : fillAt} frame={frame}>
+              <XBox value={sceneId === "ask" ? undefined : x.at} />
+            </Appear>
+            <Line at={addAt} frame={frame} size={76}>
+              + {x.a}
+            </Line>
             {sceneId !== "ask" && (
               <>
-                <div style={{ fontSize: 76, fontWeight: 800, color: MUTED }}>=</div>
-                <Line at={step(0.45)} frame={frame} size={90} colour={GREEN}>
+                <Line at={sumAt} frame={frame} size={76} colour={MUTED}>
+                  =
+                </Line>
+                <Line at={sumAt} frame={frame} size={90} colour={GREEN}>
                   {x.sum}
                 </Line>
               </>
@@ -279,6 +329,7 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
         )}
         {sceneId === "ask" && (
           <Line at={step(0.5)} frame={frame} size={40} colour={MUTED}>
+            {/* not-speech-bound: "there is nothing to work out" names no number */}
             nothing to work out until x has a value
           </Line>
         )}
@@ -289,7 +340,6 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
 
   if (unit.mode === "evaluate-mul") {
     const groups = Array.from({ length: x.a }, (_, i) => i);
-    const shown = sceneId === "twist" ? Math.min(x.a, Math.floor((frame - step(0.15)) / Math.max(1, step(0.2))) + 1) : x.a;
     const headline =
       sceneId === "ask"
         ? `${x.a}x`
@@ -298,32 +348,55 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
           : sceneId === "twist"
             ? `x = ${x.at}`
             : `${x.a}x, when x is ${x.at}, is ${x.product}`;
+    // work: the three readings, each on its own "3".
+    const wrong1At = said(x.a, CARRIED, 0);
+    const wrong2At = said(x.a, step(0.3), 1);
+    const rightAt = said(x.a, step(0.55), 2);
+    // twist: "count them: 4... 8... 12" — a group lands on its running total.
+    // The total is said LAST in the line (the coefficient is announced first),
+    // so ask for the final occurrence.
+    const groupAt = (i: number) => {
+      if (sceneId === "twist") return said(x.at * (i + 1), step(0.15) + i * step(0.2), -1);
+      if (sceneId === "record") return said(x.at, CARRIED, 0);
+      return CARRIED; // not-speech-bound: the boxes are the subject of ask/work
+    };
+    const productAt = said(x.product, step(0.6), -1);
+    const titleAt =
+      sceneId === "ask"
+        ? said(x.a, CARRIED, 0)
+        : sceneId === "work"
+          ? said(x.a, CARRIED, 0)
+          : sceneId === "twist"
+            ? said(x.at, CARRIED, 0)
+            : said(x.a, CARRIED, 0);
     return (
       <AbsoluteFill style={stage}>
-        <Title text={headline} enter={title} />
+        <Title text={headline} enter={enterAt(frame, titleAt)} />
         {sceneId === "work" ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 18, alignItems: "center" }}>
-            <Line at={0} frame={frame} size={56} colour={RED}>
+            <Line at={wrong1At} frame={frame} size={56} colour={RED}>
               not {x.a} next to x
             </Line>
-            <Line at={step(0.3)} frame={frame} size={56} colour={RED}>
+            <Line at={wrong2At} frame={frame} size={56} colour={RED}>
               not {x.a} + x
             </Line>
-            <Line at={step(0.55)} frame={frame} size={76} colour={GREEN}>
+            <Line at={rightAt} frame={frame} size={76} colour={GREEN}>
               {x.a} × x
             </Line>
           </div>
         ) : (
           <div style={{ display: "flex", gap: 34, alignItems: "center" }}>
             {groups.map((i) => (
-              <div key={i} style={{ opacity: i < shown ? 1 : 0.14 }}>
+              <Appear key={i} at={groupAt(i)} frame={frame} from={sceneId === "twist" ? 0.14 : 0}>
                 <XBox value={sceneId === "ask" ? undefined : x.at} colour={GOLD} />
-              </div>
+              </Appear>
             ))}
             {sceneId !== "ask" && (
               <>
-                <div style={{ fontSize: 70, fontWeight: 800, color: MUTED }}>=</div>
-                <Line at={step(0.6)} frame={frame} size={92} colour={GREEN}>
+                <Line at={productAt} frame={frame} size={70} colour={MUTED}>
+                  =
+                </Line>
+                <Line at={productAt} frame={frame} size={92} colour={GREEN}>
                   {x.product}
                 </Line>
               </>
@@ -344,50 +417,63 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
           : sceneId === "twist"
             ? `${x.a}x + ${x.b} — different things`
             : `${x.a}x + ${x.b}x = ${x.combined}x`;
-    const Boxes = ({ n, colour, dim = false }: { n: number; colour: string; dim?: boolean }) => (
-      <div style={{ display: "flex", gap: 14, opacity: dim ? 0.15 : 1 }}>
+    // ask: "3 x plus 2 x"; work: "3 x is 3 BOXES … 2 x is 2 BOXES" (the second
+    // mention is the one the boxes illustrate); twist: "3 x plus 2".
+    const blueAt =
+      sceneId === "work" ? said(x.a, CARRIED, 1) : sceneId === "record" ? CARRIED : said(x.a, CARRIED, 0);
+    const greenAt =
+      sceneId === "work" ? said(x.b, CARRIED, 1) : sceneId === "record" ? CARRIED : said(x.b, CARRIED, 0);
+    const combinedAt = said(x.combined, step(0.5), -1);
+    const titleAt = sceneId === "work" || sceneId === "record" ? CARRIED : said(x.a, CARRIED, 0);
+    const Boxes = ({ n, colour, at }: { n: number; colour: string; at: number }) => (
+      <Appear at={at} frame={frame} style={{ display: "flex", gap: 14 }} from={0.15}>
         {Array.from({ length: n }, (_, i) => (
           <XBox key={i} size={92} colour={colour} />
         ))}
-      </div>
+      </Appear>
     );
     return (
       <AbsoluteFill style={stage}>
-        <Title text={headline} enter={title} />
+        <Title text={headline} enter={enterAt(frame, titleAt)} />
         {sceneId === "twist" ? (
           <div style={{ display: "flex", gap: 60, alignItems: "center" }}>
-            <Boxes n={x.a} colour={BLUE} />
+            <Boxes n={x.a} colour={BLUE} at={blueAt} />
             <div style={{ fontSize: 66, fontWeight: 800, color: MUTED }}>+</div>
-            <div
-              style={{
-                width: 92,
-                height: 92,
-                borderRadius: 16,
-                border: `6px solid ${GOLD}`,
-                backgroundColor: GOLD,
-                color: "#FFF",
-                fontSize: 48,
-                fontWeight: 800,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {x.b}
-            </div>
+            <Appear at={greenAt} frame={frame}>
+              <div
+                style={{
+                  width: 92,
+                  height: 92,
+                  borderRadius: 16,
+                  border: `6px solid ${GOLD}`,
+                  backgroundColor: GOLD,
+                  color: "#FFF",
+                  fontSize: 48,
+                  fontWeight: 800,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {x.b}
+              </div>
+            </Appear>
+            {/* not-speech-bound: "different things do not combine" names no number */}
             <Line at={step(0.4)} frame={frame} size={48} colour={RED}>
               will not combine
             </Line>
           </div>
         ) : (
           <div style={{ display: "flex", gap: 44, alignItems: "center" }}>
-            <Boxes n={x.a} colour={BLUE} />
+            <Boxes n={x.a} colour={BLUE} at={blueAt} />
             <div style={{ fontSize: 66, fontWeight: 800, color: MUTED }}>+</div>
-            <Boxes n={x.b} colour={GREEN} />
+            <Boxes n={x.b} colour={GREEN} at={greenAt} />
             {sceneId !== "ask" && (
               <>
-                <div style={{ fontSize: 66, fontWeight: 800, color: MUTED }}>=</div>
-                <Line at={step(0.5)} frame={frame} size={88} colour={GREEN}>
+                <Line at={combinedAt} frame={frame} size={66} colour={MUTED}>
+                  =
+                </Line>
+                <Line at={combinedAt} frame={frame} size={88} colour={GREEN}>
                   {x.combined}x
                 </Line>
               </>
@@ -413,13 +499,39 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
           : sceneId === "twist"
             ? `Check it with x = ${x.at}`
             : `${x.a}x + ${x.outer}`;
+    // work: "a rectangle 3 tall" → height; "a piece of length 4" (the second 4)
+    // → the cut; "which is 3 x" (the third 3) → first room; "which is 12" →
+    // second room. In ask the height is the "3" of "expand 3, bracket…".
+    const heightAt = sceneId === "ask" || sceneId === "work" ? said(x.a, CARRIED, 0) : CARRIED;
+    const splitAt = sceneId === "work" ? said(x.b, step(0.35), 1) : sceneId === "ask" ? NEVER : CARRIED;
+    const room1At = sceneId === "work" ? said(x.a, splitAt, 2) : CARRIED;
+    const room2At = sceneId === "work" ? said(x.outer, room1At, 0) : CARRIED;
+    // twist: the two checks, each on the number that opens it.
+    const checkLeftAt = said(x.at, step(0.15), 1);
+    const checkRightAt = said(x.a * x.at, step(0.5), 0);
+    const titleAt =
+      sceneId === "ask"
+        ? said(x.a, CARRIED, 0)
+        : sceneId === "twist"
+          ? said(x.at, CARRIED, 0)
+          : sceneId === "record"
+            ? said(x.a, CARRIED, -1)
+            : CARRIED; // not-speech-bound: "Two rooms" names no number
     return (
       <AbsoluteFill style={stage}>
-        <Title text={headline} enter={title} />
+        <Title text={headline} enter={enterAt(frame, titleAt)} />
         <div style={{ position: "relative", paddingTop: 40, paddingLeft: 60 }}>
           {/* height label */}
           <div
-            style={{ position: "absolute", left: 0, top: 40 + H / 2 - 24, fontSize: 44, fontWeight: 800, color: MUTED }}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 40 + H / 2 - 24,
+              fontSize: 44,
+              fontWeight: 800,
+              color: MUTED,
+              opacity: enterAt(frame, heightAt).opacity,
+            }}
           >
             {x.a}
           </div>
@@ -428,7 +540,19 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
             x
           </div>
           {split && (
-            <div style={{ position: "absolute", left: 60 + WX, top: 0, width: WB, textAlign: "center", fontSize: 44, fontWeight: 800, color: GOLD }}>
+            <div
+              style={{
+                position: "absolute",
+                left: 60 + WX,
+                top: 0,
+                width: WB,
+                textAlign: "center",
+                fontSize: 44,
+                fontWeight: 800,
+                color: GOLD,
+                opacity: enterAt(frame, splitAt).opacity,
+              }}
+            >
               {x.b}
             </div>
           )}
@@ -447,14 +571,14 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
                 color: BLUE,
               }}
             >
-              {split ? `${x.a}x` : ""}
+              {split && <span style={{ opacity: enterAt(frame, room1At).opacity }}>{`${x.a}x`}</span>}
             </div>
             <div
               style={{
                 width: WB,
                 height: H,
-                border: `6px solid ${split ? GOLD : BLUE}`,
-                borderLeftWidth: split ? 6 : 0,
+                border: `6px solid ${split && frame >= splitAt ? GOLD : BLUE}`,
+                borderLeftWidth: split && frame >= splitAt ? 6 : 0,
                 backgroundColor: "#FFF",
                 display: "flex",
                 alignItems: "center",
@@ -464,16 +588,16 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
                 color: GOLD,
               }}
             >
-              {split ? x.outer : ""}
+              {split && <span style={{ opacity: enterAt(frame, room2At).opacity }}>{x.outer}</span>}
             </div>
           </div>
         </div>
         {sceneId === "twist" && (
           <div style={{ display: "flex", gap: 70, alignItems: "center" }}>
-            <Line at={step(0.15)} frame={frame} size={50} colour={MUTED}>
+            <Line at={checkLeftAt} frame={frame} size={50} colour={MUTED}>
               {x.a}({x.at} + {x.b}) = {x.checkLeft}
             </Line>
-            <Line at={step(0.5)} frame={frame} size={50} colour={GREEN}>
+            <Line at={checkRightAt} frame={frame} size={50} colour={GREEN}>
               {x.a * x.at} + {x.outer} = {x.checkRight}
             </Line>
           </div>
@@ -493,22 +617,36 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
           : sceneId === "twist"
             ? `Share both sides into ${x.a}`
             : `x = ${x.solution}`;
+    // ask "solve 4 x equals 12", work "on the left, 4 boxes … on the right, 12".
+    const boxesAt = shared ? CARRIED : said(x.a, CARRIED, 0);
+    // twist/record show the SOLUTION on the right: "is 3". Otherwise the total.
+    const rightFallback = step(0.35); // not-speech-bound: fallback only
+    const rightAt = shared ? said(x.solution, rightFallback, 0) : said(x.b, CARRIED, 0);
+    const checkFallback = step(0.7); // not-speech-bound: fallback only
+    const checkAt = said(x.b, checkFallback, -1);
+    const titleAt =
+      sceneId === "ask" || sceneId === "twist"
+        ? said(x.a, CARRIED, 0)
+        : sceneId === "record"
+          ? said(x.solution, CARRIED, 0)
+          : CARRIED; // not-speech-bound: the work headline names no number
     return (
       <AbsoluteFill style={stage}>
-        <Title text={headline} enter={title} />
+        <Title text={headline} enter={enterAt(frame, titleAt)} />
         <div style={{ display: "flex", gap: 56, alignItems: "center" }}>
-          <div style={{ display: "flex", gap: 16 }}>
+          <Appear at={boxesAt} frame={frame} style={{ display: "flex", gap: 16 }}>
             {Array.from({ length: shared ? 1 : x.a }, (_, i) => (
               <XBox key={i} size={104} colour={BLUE} />
             ))}
-          </div>
+          </Appear>
           <div style={{ fontSize: 76, fontWeight: 800, color: MUTED }}>=</div>
-          <Line at={shared ? step(0.35) : 0} frame={frame} size={92} colour={shared ? GREEN : GOLD}>
+          <Line at={rightAt} frame={frame} size={92} colour={shared ? GREEN : GOLD}>
             {shared ? x.solution : x.b}
           </Line>
         </div>
         {/* The balance the narration asks you to picture. A bare beam reads as
-            a fraction bar under "x = 3", so it gets a fulcrum. */}
+            a fraction bar under "x = 3", so it gets a fulcrum.
+            not-speech-bound: scenery, present for the whole scene. */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
           <div style={{ width: 760, height: 10, backgroundColor: MUTED, borderRadius: 5, opacity: 0.65 }} />
           <div
@@ -523,7 +661,7 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
           />
         </div>
         {(sceneId === "twist" || sceneId === "record") && (
-          <Line at={step(0.7)} frame={frame} size={44} colour={MUTED}>
+          <Line at={checkAt} frame={frame} size={44} colour={MUTED}>
             check: {x.a} × {x.solution} = {x.b}
           </Line>
         )}
@@ -535,22 +673,30 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
   // integers — walk the line.
   const from = -8;
   const to = 8;
-  const walkStart = step(0.2);
-  const walkEnd = step(0.8);
+  const walkStart = step(0.2); // not-speech-bound: fallback only
+  const walkEnd = step(0.8); // not-speech-bound: fallback only
+  // Each hop lands on its own number: "negative 2… negative 3… negative 4…".
+  // Negatives are aligned as their absolute value, and the step count (4) is
+  // said twice before the walk, so the occurrence counter starts primed.
+  const spokenBeforeHops: number[] = sceneId === "twist" ? [x.b, x.b] : [];
+  const hopFrames: number[] = [];
+  for (let k = 1; k <= x.b; k++) {
+    const v = Math.abs(unit.a - k);
+    const fallback = walkStart + Math.round(((walkEnd - walkStart) * k) / Math.max(1, x.b));
+    hopFrames.push(said(v, fallback, before(v, spokenBeforeHops)));
+    spokenBeforeHops.push(v);
+  }
+  const landedAt = said(Math.abs(x.integerResult), CARRIED, 0);
   const at =
     sceneId === "ask"
       ? unit.a
       : sceneId === "work"
         ? unit.a
         : sceneId === "twist"
-          ? Math.round(
-              interpolate(frame, [walkStart, walkEnd], [unit.a, x.integerResult], {
-                extrapolateLeft: "clamp",
-                extrapolateRight: "clamp",
-                easing: Easing.bezier(0.4, 0, 0.2, 1),
-              }),
-            )
-          : x.integerResult;
+          ? unit.a - hopFrames.filter((f) => frame >= f).length
+          : frame >= landedAt
+            ? x.integerResult
+            : unit.a;
   const headline =
     sceneId === "ask"
       ? `(${unit.a}) − ${x.b}`
@@ -559,14 +705,32 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
         : sceneId === "twist"
           ? `${x.b} steps left`
           : `(${unit.a}) − ${x.b} = ${x.integerResult}`;
+  // ask: "negative 1, minus 4" puts the line up on the first number; after
+  // that the line is carried. work: "find negative 1 and stand there".
+  const lineAt =
+    sceneId === "ask"
+      ? said(x.startAbs, CARRIED, 0)
+      : sceneId === "work"
+        ? CARRIED
+        : CARRIED;
+  const titleAt =
+    sceneId === "ask"
+      ? said(x.startAbs, CARRIED, 0)
+      : sceneId === "twist"
+        ? said(x.b, CARRIED, 0)
+        : sceneId === "record"
+          ? said(x.startAbs, CARRIED, 0)
+          : CARRIED; // not-speech-bound: the work headline names no number
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 320, gap: 30 }}>
-      <Title text={headline} enter={title} />
-      <div style={{ position: "relative", width: STAGE_W, height: 300 }}>
+      <Title text={headline} enter={enterAt(frame, titleAt)} />
+      <Appear at={lineAt} frame={frame} style={{ position: "relative", width: STAGE_W, height: 300 }}>
         <IntegerLine from={from} to={to} at={at} start={unit.a} />
-      </div>
+      </Appear>
       {sceneId === "work" && (
         <div style={{ display: "flex", gap: 90 }}>
+          {/* not-speech-bound: "plus means walk RIGHT / minus means walk LEFT"
+              names no number */}
           <Line at={step(0.15)} frame={frame} size={46} colour={GREEN}>
             + → right
           </Line>
@@ -595,7 +759,7 @@ export const PreAlgVideo: React.FC<PreAlgProps> = ({ unit: unitId, voice = DEFAU
       {scenes.map((scene) => (
         <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
           {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-          <SceneBody dur={scene.dur} unit={unit} sceneId={scene.id} />
+          <SceneBody dur={scene.dur} unit={unit} sceneId={scene.id} said={saidFor(unitId, voice, scene.id)} />
         </Sequence>
       ))}
       <Brand />
