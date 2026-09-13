@@ -8,6 +8,16 @@
 //                   dashed lines to the axes, and (cos, sin) is read off
 //
 // All numbers derive from the unit's declared triangle (units-trig.ts).
+//
+// SYNC (Sep 2026): every reveal that shows a number the narrator says is timed
+// with `said(n, fallback, occurrence)` from the scene's clip alignment
+// (timeline `saidFor`). Side labels land on their length, a square fills to the
+// value of that square, the hypotenuse arrives on its root, each ratio row on
+// its numerator digit, a compass point on its degrees, and the radian arc
+// reaches 3 and π on "3" and "180". Decimals are aligned on their digits
+// (0.6 → the "6"), so a row bound to 0.6 asks for 6. Hand-picked frames
+// survive only as fallbacks for clips without alignment, and reveals that
+// follow no spoken number are marked `// not-speech-bound`.
 import {
   AbsoluteFill,
   Audio,
@@ -18,7 +28,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { trigSceneTimings } from "./timeline";
+import { trigSceneTimings, saidFor, type SaidFn } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
 import { Brand } from "./Brand";
 import { trigUnitById, triNumbers, type TrigUnit } from "./units-trig";
@@ -42,6 +52,21 @@ const dec = (v: number) => String(Math.round(v * 100) / 100);
 interface SceneProps {
   dur: number;
   unit: TrigUnit;
+  /** Scene-local frame at which the narrator says a number (timeline `saidFor`).
+   *  The fallback is the old hand-picked frame, for clips without alignment. */
+  said: SaidFn;
+}
+
+/** Never: a reveal that must not show in this scene at all. */
+const HIDDEN = Number.POSITIVE_INFINITY;
+
+/** Opacity for something that appears at frame `at` (HIDDEN = never). */
+function fadeAt(frame: number, at: number, durFrames = 12) {
+  if (!Number.isFinite(at)) return 0;
+  return interpolate(frame, [at, at + durFrames], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 }
 
 function useEnter(atFrame: number, durFrames = 14) {
@@ -60,7 +85,30 @@ function useEnter(atFrame: number, durFrames = 14) {
   };
 }
 
-function Title({ text, enter }: { text: string; enter: { opacity: number; translateY: number } }) {
+/** A headline. Either one piece (`at`) or several, each landing on the frame
+ *  its own number is spoken, so a headline never shows a number early. */
+function Title({
+  text,
+  at = 4,
+  parts,
+}: {
+  text?: string;
+  at?: number;
+  parts?: { text: string; at: number }[];
+}) {
+  const frame = useCurrentFrame();
+  const enter = useEnter(at);
+  if (parts) {
+    return (
+      <div style={{ fontSize: 68, fontWeight: 700, color: INK, textAlign: "center" }}>
+        {parts.map((p, i) => (
+          <span key={i} style={{ opacity: fadeAt(frame, p.at, 14) }}>
+            {p.text}
+          </span>
+        ))}
+      </div>
+    );
+  }
   return (
     <div
       style={{
@@ -86,13 +134,21 @@ function Triangle({
   thetaAtLeft = true,
   showNames = false,
   highlight,
+  labelAt = {},
+  nameAt = {},
 }: {
   unit: TrigUnit;
   scale?: number;
   thetaAtLeft?: boolean;
   showNames?: boolean;
   highlight?: "a" | "b" | "c" | null;
+  /** Frame each numeric side label lands on — the frame its length is said.
+   *  Default 0 (already on screen); HIDDEN keeps an unknown side blank. */
+  labelAt?: { a?: number; b?: number; c?: number };
+  /** Frame each relative NAME lands on (opposite / adjacent / hypotenuse). */
+  nameAt?: { vert?: number; horiz?: number; hyp?: number };
 }) {
+  const frame = useCurrentFrame();
   const n = triNumbers(unit);
   const W = n.b * scale;
   const H = n.a * scale;
@@ -134,22 +190,23 @@ function Triangle({
         θ
       </text>
       {/* numeric side labels */}
-      <text x={(A.x + B.x) / 2 - 10} y={A.y + 56} fontSize={44} fontWeight={800} fill={col("b")}>
+      <text x={(A.x + B.x) / 2 - 10} y={A.y + 56} fontSize={44} fontWeight={800} fill={col("b")} opacity={fadeAt(frame, labelAt.b ?? 0)}>
         {unit.b}
       </text>
-      <text x={B.x + 22} y={(B.y + C.y) / 2 + 14} fontSize={44} fontWeight={800} fill={col("a")}>
+      <text x={B.x + 22} y={(B.y + C.y) / 2 + 14} fontSize={44} fontWeight={800} fill={col("a")} opacity={fadeAt(frame, labelAt.a ?? 0)}>
         {unit.a}
       </text>
-      <text x={(A.x + C.x) / 2 - 66} y={(A.y + C.y) / 2 - 20} fontSize={44} fontWeight={800} fill={col("c")}>
+      <text x={(A.x + C.x) / 2 - 66} y={(A.y + C.y) / 2 - 20} fontSize={44} fontWeight={800} fill={col("c")} opacity={fadeAt(frame, labelAt.c ?? 0)}>
         {dec(n.c)}
       </text>
       {/* relative names */}
       {showNames && (
         <>
-          <text x={(A.x + B.x) / 2 - 90} y={A.y - 16} fontSize={34} fontWeight={800} fill={GREEN}>
+          <text x={(A.x + B.x) / 2 - 90} y={A.y - 16} fontSize={34} fontWeight={800} fill={GREEN} opacity={fadeAt(frame, nameAt.horiz ?? 0)}>
             {names.horiz}
           </text>
           <text
+            opacity={fadeAt(frame, nameAt.vert ?? 0)}
             x={B.x - 30}
             y={(B.y + C.y) / 2 - 30}
             fontSize={34}
@@ -160,6 +217,7 @@ function Triangle({
             {names.vert}
           </text>
           <text
+            opacity={fadeAt(frame, nameAt.hyp ?? 0)}
             x={(A.x + C.x) / 2 - 40}
             y={(A.y + C.y) / 2 - 78}
             fontSize={34}
@@ -218,6 +276,7 @@ function UnitCircle({
   markSpecial = false,
   showDrop = true,
   arcRadians = 0,
+  specialAt,
 }: {
   angleDeg: number;
   R?: number;
@@ -225,7 +284,11 @@ function UnitCircle({
   showDrop?: boolean;
   /** Number of radius-lengths drawn along the rim (radians mode). */
   arcRadians?: number;
+  /** Frame each compass point (0°, 90°, 180°, 270°) lands on — the frame the
+   *  narrator says those degrees. Default: all on screen from frame 0. */
+  specialAt?: number[];
 }) {
+  const frame = useCurrentFrame();
   const S = R * 2 + 260; // room for the (1, 0)/(−1, 0) labels outside the rim
   const cx = S / 2;
   const cy = S / 2;
@@ -278,8 +341,8 @@ function UnitCircle({
       )}
       <circle cx={px} cy={py} r={14} fill={GOLD} />
       {markSpecial &&
-        special.map((s) => (
-          <g key={s.d}>
+        special.map((s, i) => (
+          <g key={s.d} opacity={fadeAt(frame, specialAt?.[i] ?? 0)}>
             <circle cx={cx + R * s.x} cy={cy - R * s.y} r={11} fill={BLUE} />
             <text
               x={cx + (R + 52) * s.x - 44}
@@ -297,24 +360,66 @@ function UnitCircle({
 }
 
 // ---- Scenes ----------------------------------------------------------------
-function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
+/** The digit group a recording carries for a decimal: 0.6 → 6, 0.36 → 36.
+ *  The alignment splits "0.6" into "0" then "6", so a reveal that shows a
+ *  decimal asks for its fractional digits. */
+const frac = (v: number) => {
+  const d = String(Math.round(v * 100) / 100).split(".")[1];
+  return d ? Number(d) : v;
+};
+
+/** Make a list of reveal frames strictly increasing, so interpolate() (which
+ *  rejects equal inputs) is safe when two numbers share a frame. */
+const rising = (fs: number[]) => fs.map((v, i, a) => (i ? Math.max(v, a[i - 1] + 1) : v));
+
+function SceneBody({ dur, unit, sceneId, said }: SceneProps & { sceneId: string }) {
   const frame = useCurrentFrame();
-  const title = useEnter(4);
   const n = triNumbers(unit);
-  const step = (k: number) => Math.round(dur * k);
+  // Hand-picked fractions of the scene: ONLY the fallback for clips without
+  // alignment, and for reveals that follow no spoken number.
+  const step = (k: number) => Math.round(dur * k); // not-speech-bound: fallback only
+  const CARRIED = 0; // not-speech-bound: already on screen from the previous scene
 
   // ------------------------------------------------------------ triangle ---
   if (unit.mode === "pythagorean") {
-    const shownA = interpolate(frame, [step(0.1), step(0.35)], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-    const shownB = interpolate(frame, [step(0.35), step(0.6)], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-    const shownC = interpolate(frame, [step(0.2), step(0.7)], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-    const headline =
-      sceneId === "ask" ? "How long is the slant?" : sceneId === "work" ? `${n.a2} + ${n.b2} = ${n.c2}` : sceneId === "twist" ? `√${n.c2} = ${n.c}` : "a² + b² = c²";
+    // Narration order (script-trig.ts):
+    //   ask    "One leg is 3, the other is 4"                        → a, b
+    //   work   "The 3 side … square of 9. The 4 side … 16.
+    //           9 plus 16 is 25"                       → a, a², b, b², a², b², c²
+    //   twist  "holds exactly 25 … square root of 25 … which is 5"  → c², c², c
+    //   record "3, 4, 5 — the most famous right triangle there is"   → a, b, c
+    const legA = said(unit.a, CARRIED);
+    const legB = said(unit.b, CARRIED);
+    const shownA = interpolate(frame, rising([said(unit.a, step(0.1)), said(n.a2, step(0.35))]), [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+    const shownB = interpolate(frame, rising([said(unit.b, step(0.35)), said(n.b2, step(0.6))]), [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+    const c2At = said(n.c2, step(0.2));
+    const shownC = interpolate(frame, rising([c2At, c2At + 24]), [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+    // The hypotenuse is the question: its length only appears when she says it.
+    const labelAt =
+      sceneId === "twist"
+        ? { a: CARRIED, b: CARRIED, c: said(n.c, step(0.6)) }
+        : sceneId === "record"
+          ? { a: legA, b: legB, c: said(n.c, CARRIED) }
+          : { a: legA, b: legB, c: HIDDEN };
+    const parts =
+      sceneId === "work"
+        ? [
+            { text: `${n.a2}`, at: said(n.a2, 4, 1) },
+            { text: ` + ${n.b2}`, at: said(n.b2, 4, 1) },
+            { text: ` = ${n.c2}`, at: said(n.c2, 4) },
+          ]
+        : sceneId === "twist"
+          ? [
+              { text: `√${n.c2}`, at: said(n.c2, 4, 1) },
+              { text: ` = ${n.c}`, at: said(n.c, 4) },
+            ]
+          : undefined;
+    const headline = sceneId === "ask" ? "How long is the slant?" : "a² + b² = c²";
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 16 }}>
-        <Title text={headline} enter={title} />
+        <Title text={headline} parts={parts} />
         <div style={{ display: "flex", gap: 80, alignItems: "center" }}>
-          <Triangle unit={unit} highlight={sceneId === "twist" ? "c" : null} />
+          <Triangle unit={unit} highlight={sceneId === "twist" ? "c" : null} labelAt={labelAt} />
           {sceneId !== "ask" && (
             <div style={{ display: "flex", gap: 40, alignItems: "flex-end" }}>
               <GridSquare s={unit.a} colour={INK} label={`${unit.a}² = ${n.a2}`} shown={sceneId === "work" ? shownA : 1} />
@@ -332,12 +437,29 @@ function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
 
   if (unit.mode === "side-names") {
     const swapped = sceneId === "twist";
+    // work: "the OPPOSITE — here, 3 … the ADJACENT… 4 … the HYPOTENUSE… 5",
+    // so each NAME and its length land together on that length.
+    const onWork = sceneId === "work";
+    const labelAt =
+      sceneId === "ask" || onWork
+        ? { a: said(n.a, CARRIED), b: said(n.b, CARRIED), c: said(n.c, CARRIED) }
+        : {};
+    const nameAt = onWork
+      ? { vert: said(n.a, CARRIED), horiz: said(n.b, CARRIED), hyp: said(n.c, CARRIED) }
+      : {}; // not-speech-bound: the twist's SWAP is the event, and record says no number
     const headline =
-      sceneId === "ask" ? "Stand at the angle θ" : sceneId === "work" ? "Three names, from θ" : swapped ? "Move θ — the names move too" : "Named from the angle";
+      sceneId === "ask" ? "Stand at the angle θ" : onWork ? "Three names, from θ" : swapped ? "Move θ — the names move too" : "Named from the angle";
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 10 }}>
-        <Title text={headline} enter={title} />
-        <Triangle unit={unit} thetaAtLeft={!swapped} showNames={sceneId !== "ask"} />
+        <Title text={headline} />
+        <Triangle
+          unit={unit}
+          thetaAtLeft={!swapped}
+          showNames={sceneId !== "ask"}
+          labelAt={labelAt}
+          nameAt={nameAt}
+          highlight={swapped && frame >= said(n.b, step(0.5)) ? "b" : null}
+        />
         {sceneId === "record" && (
           <div style={{ fontSize: 46, fontWeight: 800, color: GREEN }}>{unit.tip}</div>
         )}
@@ -358,17 +480,50 @@ function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
           { k: "cos²θ", v: `${dec(n.cos)}² = ${dec(n.cos * n.cos)}`, c: GREEN },
           { k: "sum", v: `${dec(n.sin * n.sin)} + ${dec(n.cos * n.cos)} = 1`, c: GOLD },
         ];
-    const per = Math.floor((dur * 0.55) / rows.length);
-    const shown = sceneId === "ask" ? 0 : sceneId === "work" ? Math.min(rows.length, Math.max(0, Math.floor((frame - step(0.15)) / per) + 1)) : rows.length;
+    const per = Math.floor((dur * 0.55) / rows.length); // not-speech-bound: fallback spacing only
+    // Each row lands on the number it ENDS with — its computed value — so an
+    // answer is never on screen before the narrator says it:
+    //   ratios       "3 over 5, which is 0.6 … 4 over 5… 0.8 … 3 over 4… 0.75"
+    //   pyth-identity "0.6 squared is 0.36 … 0.8 squared is 0.64 … exactly 1"
+    const rowAt =
+      sceneId === "ask"
+        ? [HIDDEN, HIDDEN, HIDDEN]
+        : sceneId === "work"
+          ? isRatios
+            ? [
+                said(frac(n.sin), step(0.15)),
+                said(frac(n.cos), step(0.15) + per),
+                said(frac(n.tan), step(0.15) + per * 2),
+              ]
+            : [
+                said(frac(n.sin * n.sin), step(0.15)),
+                said(frac(n.cos * n.cos), step(0.15) + per),
+                said(1, step(0.15) + per * 2),
+              ]
+          : [CARRIED, CARRIED, CARRIED];
     const headline = isRatios
       ? sceneId === "ask" ? "Three ratios of the sides" : sceneId === "work" ? "SOH · CAH · TOA" : sceneId === "twist" ? "Ten times bigger — same ratios" : "SOH CAH TOA"
-      : sceneId === "ask" ? "Square them. Add them." : sceneId === "work" ? "It lands on 1" : sceneId === "twist" ? `(${n.a2} + ${n.b2}) / ${n.c2} — Pythagoras!` : "sin²θ + cos²θ = 1";
+      : sceneId === "ask" ? "Square them. Add them." : sceneId === "work" ? "It lands on 1" : "sin²θ + cos²θ = 1";
+    // pyth-identity twist: "9 plus 16, all over 25" — each term on its word.
+    const parts =
+      !isRatios && sceneId === "twist"
+        ? [
+            { text: `(${n.a2}`, at: said(n.a2, 4) },
+            { text: ` + ${n.b2})`, at: said(n.b2, 4) },
+            { text: ` / ${n.c2} — Pythagoras!`, at: said(n.c2, 4) },
+          ]
+        : undefined;
     const bigTri = sceneId === "twist" && isRatios;
+    // "Blow the triangle up ten times: 30 over 50" — it grows on the 30.
+    const growAt = said(n.a * 10, step(0.3));
+    const triScale = bigTri
+      ? interpolate(frame, [growAt, growAt + 14], [110, 130], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+      : 110;
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 14 }}>
-        <Title text={headline} enter={title} />
+        <Title text={headline} parts={parts} />
         <div style={{ display: "flex", gap: 90, alignItems: "center" }}>
-          <Triangle unit={unit} showNames={isRatios} scale={bigTri ? 130 : 110} />
+          <Triangle unit={unit} showNames={isRatios} scale={triScale} />
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {rows.map((r, i) => (
               <div
@@ -377,7 +532,7 @@ function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
                   display: "flex",
                   gap: 24,
                   alignItems: "center",
-                  opacity: i < shown ? 1 : 0.12,
+                  opacity: 0.12 + 0.88 * fadeAt(frame, rowAt[i] ?? 0),
                   borderRadius: 16,
                   border: `4px solid ${r.c}`,
                   padding: "14px 26px",
@@ -399,26 +554,48 @@ function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
 
   // -------------------------------------------------------------- circle ---
   if (unit.mode === "unit-circle" || unit.mode === "circle-values" || unit.mode === "identities") {
+    // circle-values work: "At 0 degrees … At 90 … At 180… And at 270…" — the
+    // radius steps to each compass point, and that point's pair appears, as
+    // the narrator names its degrees.
+    const compass = rising([
+      said(0, step(0.05)),
+      said(90, step(0.3)),
+      said(180, step(0.55)),
+      said(270, step(0.8)),
+    ]);
+    const at90 = said(90, step(0.1));
+    const at180 = said(180, step(0.75));
     const sweep =
       sceneId === "ask"
-        ? interpolate(frame, [step(0.3), step(0.8)], [0, 50], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
-        : sceneId === "twist" && unit.mode === "unit-circle"
-          ? interpolate(frame, [step(0.1), step(0.75)], [50, 180], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
-          : 50;
+        ? interpolate(frame, [step(0.3), step(0.8)], [0, 50], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) // not-speech-bound: the ask names no angle
+        : unit.mode === "circle-values" && sceneId === "work"
+          ? interpolate(frame, compass, [0, 90, 180, 270], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+          : sceneId === "twist" && unit.mode === "unit-circle"
+            ? // "Straight up, at 90 degrees … Far left, at 180" — the radius
+              // arrives on each angle as it is named.
+              interpolate(frame, rising([at90 - 12, at90, at180 - 12, at180]), [50, 90, 90, 180], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+            : 50;
     const headline =
       unit.mode === "unit-circle"
         ? sceneId === "ask" ? "Walk θ around the circle" : sceneId === "work" ? "The point is (cos θ, sin θ)" : sceneId === "twist" ? "Slide θ — watch the pair" : "(cos θ, sin θ)"
         : unit.mode === "circle-values"
           ? sceneId === "ask" ? "Four compass points" : sceneId === "work" ? "Read each point" : sceneId === "twist" ? "cos = x · sin = y" : "The point IS the answer"
           : sceneId === "ask" ? "x² + y² = 1 … always" : sceneId === "work" ? "cos²θ + sin²θ = 1" : sceneId === "twist" ? "÷ cos²θ → 1 + tan²θ = 1/cos²θ" : "It all grows from the circle";
+    // The identities headlines ARE the spoken equation, so each lands on its 1
+    // ("…equals 1"); the ask says radius-1 first and the equation second.
+    const titleAt =
+      unit.mode === "identities" && sceneId !== "record"
+        ? said(1, 4, sceneId === "ask" ? 1 : 0)
+        : 4; // not-speech-bound: the other headlines name no number
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 8 }}>
-        <Title text={headline} enter={title} />
+        <Title text={headline} at={titleAt} />
         <UnitCircle
           angleDeg={sweep}
           markSpecial={unit.mode === "circle-values" && sceneId !== "ask"}
           showDrop={unit.mode !== "circle-values"}
           R={unit.mode === "circle-values" ? 230 : 250}
+          specialAt={sceneId === "work" ? compass : undefined}
         />
         {sceneId === "record" && (
           <div style={{ fontSize: 44, fontWeight: 800, color: GREEN }}>{unit.tip}</div>
@@ -429,17 +606,34 @@ function SceneBody({ dur, unit, sceneId }: SceneProps & { sceneId: string }) {
 
   // radians
   {
+    // ask:  the bent radius finishes on "…is called 1 RADIAN"
+    // work: "a little more than 3 of them … So 180 degrees equals pi radians"
+    const oneAt = said(1, step(0.8));
     const arcs =
       sceneId === "ask"
-        ? interpolate(frame, [step(0.35), step(0.8)], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+        ? interpolate(frame, rising([Math.max(0, oneAt - 20), oneAt]), [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
         : sceneId === "work"
-          ? interpolate(frame, [step(0.1), step(0.7)], [1, Math.PI], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+          ? interpolate(frame, rising([step(0.1), said(3, step(0.4)), said(180, step(0.7))]), [1, 3, Math.PI], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
           : Math.PI;
-    const headline =
-      sceneId === "ask" ? "Bend the radius onto the rim" : sceneId === "work" ? "Halfway round = π radians = 180°" : sceneId === "twist" ? "90° = π/2 · 60° = π/3 · 360° = 2π" : "180° = π";
+    const headline = sceneId === "ask" ? "Bend the radius onto the rim" : "180° = π";
+    const parts =
+      sceneId === "work"
+        ? [
+            { text: "Halfway round = π radians", at: said(3, 4) },
+            { text: " = 180°", at: said(180, 4) },
+          ]
+        : sceneId === "twist"
+          ? [
+              { text: "90° = π/2", at: said(90, 4) },
+              { text: " · 60° = π/3", at: said(60, 4) },
+              { text: " · 360° = 2π", at: said(360, 4) },
+            ]
+          : sceneId === "record"
+            ? [{ text: "180° = π", at: said(180, 4) }]
+            : undefined;
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 8 }}>
-        <Title text={headline} enter={title} />
+        <Title text={headline} parts={parts} />
         <UnitCircle angleDeg={(arcs * 180) / Math.PI} showDrop={false} arcRadians={arcs} />
         {sceneId === "record" && (
           <div style={{ fontSize: 44, fontWeight: 800, color: GREEN }}>{unit.tip}</div>
@@ -464,7 +658,12 @@ export const TrigVideo: React.FC<TrigProps> = ({ unit: unitId, voice = DEFAULT_V
       {scenes.map((scene) => (
         <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
           {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-          <SceneBody dur={scene.dur} unit={unit} sceneId={scene.id} />
+          <SceneBody
+            dur={scene.dur}
+            unit={unit}
+            sceneId={scene.id}
+            said={saidFor(unitId, voice, scene.id)}
+          />
         </Sequence>
       ))}
       <Brand />
