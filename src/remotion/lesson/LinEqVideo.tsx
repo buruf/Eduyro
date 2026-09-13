@@ -19,7 +19,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { linEqSceneTimings } from "./timeline";
+import { linEqSceneTimings, saidFor, type SaidFn } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
 import { Brand } from "./Brand";
 import { linEqUnitById, linEqNumbers, type LinEqUnit } from "./units-lineq";
@@ -44,6 +44,44 @@ interface SceneProps {
   dur: number;
   unit: LinEqUnit;
   sceneId: string;
+  /** Scene-local frame at which the narrator says a number (timeline `saidFor`). */
+  said: SaidFn;
+}
+
+/** A piece of a written line and the frame it earns its place on. */
+type Part = { text: string; at: number };
+
+/** Split a written line ("3x − 4", "÷ 3", "(3, 2)") into parts that appear on
+ *  the frame each number is SAID. `occ` gives, in order, which occurrence of
+ *  each number in the scene's line this row means (-1 = the last one); text
+ *  between numbers rides with the number that follows it, trailing text with
+ *  the number before. `occ = null` means the row follows no spoken number in
+ *  this scene (it was earned in an earlier one), so the whole line keeps the
+ *  template's own frame. */
+function numberParts(phrase: string, said: SaidFn, fallback: number, occ: number[] | null): Part[] {
+  if (!occ) return [{ text: phrase, at: fallback }]; // not-speech-bound
+  const tokens = phrase.split(/(\d+)/).filter((t) => t.length > 0);
+  const ats: number[] = [];
+  let k = 0;
+  for (const t of tokens) {
+    if (/^\d+$/.test(t)) {
+      ats.push(said(Number(t), fallback, occ[k] ?? 0));
+      k++;
+    } else ats.push(-1);
+  }
+  return tokens.map((text, i) => {
+    let a = ats[i];
+    if (a < 0) {
+      // Symbols ride with the number BEFORE them ("3x −" rather than a bare
+      // "3" waiting for its operator), and leading symbols with the number
+      // that follows.
+      a =
+        [...ats.slice(0, i)].reverse().find((v) => v >= 0) ??
+        ats.slice(i + 1).find((v) => v >= 0) ??
+        fallback;
+    }
+    return { text, at: a };
+  });
 }
 
 function useEnter(atFrame: number, durFrames = 14) {
@@ -62,43 +100,77 @@ function useEnter(atFrame: number, durFrames = 14) {
   };
 }
 
-function Title({ text, enter }: { text: string; enter: { opacity: number; translateY: number } }) {
+/** One part of a written line, faded in on its own spoken moment. */
+function Ink({ part }: { part: Part }) {
+  const enter = useEnter(part.at, 12);
+  return (
+    <span style={{ opacity: enter.opacity, whiteSpace: "pre" }}>{part.text}</span>
+  );
+}
+
+/** A block that arrives on one frame (its own spoken moment, or a fallback). */
+function Fade({ at, style, children }: { at: number; style?: React.CSSProperties; children: React.ReactNode }) {
+  const enter = useEnter(at);
+  return <div style={{ ...style, opacity: enter.opacity }}>{children}</div>;
+}
+
+function Title({ parts }: { parts: Part[] }) {
   return (
     <div
       style={{
         fontSize: 62,
         fontWeight: 700,
         color: INK,
-        opacity: enter.opacity,
-        translate: `0 ${enter.translateY}px`,
         textAlign: "center",
         maxWidth: 1600,
       }}
     >
-      {text}
+      {parts.map((p, i) => (
+        <Ink key={i} part={p} />
+      ))}
     </div>
   );
 }
 
-/** One line of the working: left side, equals, right side. */
-function EqRow({ left, right, colour = INK, opacity = 1 }: { left: string; right: string; colour?: string; opacity?: number }) {
+/** One line of the working: left side, equals, right side. Each side enters
+ *  number by number, on the frame the narrator says that number. */
+function EqRow({ left, right, colour = INK }: { left: Part[]; right: Part[]; colour?: string }) {
+  const eq: Part = { text: "=", at: right[0]?.at ?? left[0]?.at ?? 0 };
   return (
-    <div style={{ display: "flex", alignItems: "center", opacity }}>
-      <div style={{ width: 330, textAlign: "right", fontSize: 62, fontWeight: 800, color: colour }}>{left}</div>
-      <div style={{ width: 90, textAlign: "center", fontSize: 62, fontWeight: 800, color: MUTED }}>=</div>
-      <div style={{ width: 330, textAlign: "left", fontSize: 62, fontWeight: 800, color: colour }}>{right}</div>
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ width: 330, textAlign: "right", fontSize: 62, fontWeight: 800, color: colour }}>
+        {left.map((p, i) => (
+          <Ink key={i} part={p} />
+        ))}
+      </div>
+      <div style={{ width: 90, textAlign: "center", fontSize: 62, fontWeight: 800, color: MUTED }}>
+        <Ink part={eq} />
+      </div>
+      <div style={{ width: 330, textAlign: "left", fontSize: 62, fontWeight: 800, color: colour }}>
+        {right.map((p, i) => (
+          <Ink key={i} part={p} />
+        ))}
+      </div>
     </div>
   );
 }
 
 /** The move applied to BOTH sides, written under each side so the symmetry
- *  is visible rather than claimed. */
-function OpRow({ op, opacity = 1, colour = RED }: { op: string; opacity?: number; colour?: string }) {
+ *  is visible rather than claimed. Both copies land on the same spoken word,
+ *  because the narrator says the move once and means both sides. */
+function OpRow({ op, colour = RED }: { op: Part[]; colour?: string }) {
+  const side = (key: string, align: "right" | "left") => (
+    <div key={key} style={{ width: 330, textAlign: align, fontSize: 40, fontWeight: 800, color: colour }}>
+      {op.map((p, i) => (
+        <Ink key={i} part={p} />
+      ))}
+    </div>
+  );
   return (
-    <div style={{ display: "flex", alignItems: "center", opacity, height: 54 }}>
-      <div style={{ width: 330, textAlign: "right", fontSize: 40, fontWeight: 800, color: colour }}>{op}</div>
+    <div style={{ display: "flex", alignItems: "center", height: 54 }}>
+      {side("l", "right")}
       <div style={{ width: 90 }} />
-      <div style={{ width: 330, textAlign: "left", fontSize: 40, fontWeight: 800, color: colour }}>{op}</div>
+      {side("r", "left")}
     </div>
   );
 }
@@ -117,6 +189,10 @@ function Plane({
      *  moment two points share a row or a column. */
     anchor: "above" | "below" | "left" | "right";
     dashFrom?: { x: number; y: number };
+    /** Frame the narrator says this point's coordinates (negatives aligned on
+     *  the absolute value). The point, its label and its dashed journey all
+     *  arrive together on that word. */
+    at?: number;
   }[];
 }) {
   const R = 6; // shown range, -R..R
@@ -128,6 +204,13 @@ function Plane({
   const py = (v: number) => oy - v * S;
   const ticks: number[] = [];
   for (let v = -R; v <= R; v++) ticks.push(v);
+  const frame = useCurrentFrame();
+  const shownAt = (at?: number) =>
+    interpolate(frame, [at ?? 0, (at ?? 0) + 12], [0, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: Easing.bezier(0.16, 1, 0.3, 1),
+    });
   return (
     <>
       {/* grid */}
@@ -143,7 +226,7 @@ function Plane({
       {points.map((p, i) => (
         <React.Fragment key={i}>
           {p.dashFrom && (
-            <svg style={{ position: "absolute", left: 0, top: 0, width: STAGE_W, height: 2 * R * S + 60, pointerEvents: "none" }}>
+            <svg style={{ position: "absolute", left: 0, top: 0, width: STAGE_W, height: 2 * R * S + 60, pointerEvents: "none", opacity: shownAt(p.at) }}>
               <line
                 x1={px(p.dashFrom.x)}
                 y1={py(p.dashFrom.y)}
@@ -164,6 +247,7 @@ function Plane({
               height: 26,
               borderRadius: "50%",
               backgroundColor: p.colour,
+              opacity: shownAt(p.at),
             }}
           />
           <div
@@ -179,6 +263,7 @@ function Plane({
               fontWeight: 800,
               color: p.colour,
               whiteSpace: "nowrap",
+              opacity: shownAt(p.at),
             }}
           >
             {p.label}
@@ -189,12 +274,9 @@ function Plane({
   );
 }
 
-function SceneBody({ dur, unit, sceneId }: SceneProps) {
-  const frame = useCurrentFrame();
-  const title = useEnter(0);
+function SceneBody({ dur, unit, sceneId, said }: SceneProps) {
   const n = linEqNumbers(unit);
   const step = (f: number) => Math.floor(dur * f);
-  const at = (f: number) => interpolate(frame, [step(f), step(f) + 12], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const stage = { alignItems: "center", justifyContent: "center", gap: 10 } as const;
   const tipLine = (
     <div style={{ fontSize: 40, fontWeight: 800, color: GREEN, textAlign: "center", maxWidth: 1500, marginTop: 26 }}>
@@ -205,15 +287,51 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
   if (unit.mode === "transform") {
     const shown =
       sceneId === "ask" ? 0 : sceneId === "work" ? 1 : sceneId === "twist" ? 2 : 3;
+    // Each image lands on the moment its coordinates are named. "The point
+    // 3, 2" opens the ask; the reflection arrives on the flipped up-value
+    // ("2 becomes negative 2" — negatives align on the absolute value); the
+    // slide and the quarter turn each on the last time their new first
+    // coordinate is said, which is where the narrator reads the image out.
     const pts: Parameters<typeof Plane>[0]["points"] = [
-      { x: n.px, y: n.py, colour: INK, label: `(${n.px}, ${n.py})`, anchor: "above" },
+      {
+        x: n.px,
+        y: n.py,
+        colour: INK,
+        label: `(${n.px}, ${n.py})`,
+        anchor: "above",
+        at: sceneId === "ask" ? said(Math.abs(n.px), 0, 0) : 0,
+      },
     ];
     if (shown >= 1) {
-      pts.push({ x: n.reflectXx, y: n.reflectXy, colour: BLUE, label: `reflect (${n.reflectXx}, ${n.reflectXy})`, anchor: "below", dashFrom: { x: n.px, y: n.py } });
+      pts.push({
+        x: n.reflectXx,
+        y: n.reflectXy,
+        colour: BLUE,
+        label: `reflect (${n.reflectXx}, ${n.reflectXy})`,
+        anchor: "below",
+        dashFrom: { x: n.px, y: n.py },
+        at: sceneId === "work" ? said(Math.abs(n.reflectXy), 0, 1) : 0,
+      });
     }
     if (shown >= 2) {
-      pts.push({ x: n.translatedX, y: n.translatedY, colour: GOLD, label: `slide (${n.translatedX}, ${n.translatedY})`, anchor: "right", dashFrom: { x: n.px, y: n.py } });
-      pts.push({ x: n.rotatedX, y: n.rotatedY, colour: GREEN, label: `turn (${n.rotatedX}, ${n.rotatedY})`, anchor: "left", dashFrom: { x: n.px, y: n.py } });
+      pts.push({
+        x: n.translatedX,
+        y: n.translatedY,
+        colour: GOLD,
+        label: `slide (${n.translatedX}, ${n.translatedY})`,
+        anchor: "right",
+        dashFrom: { x: n.px, y: n.py },
+        at: sceneId === "twist" ? said(Math.abs(n.translatedX), 0, -1) : 0,
+      });
+      pts.push({
+        x: n.rotatedX,
+        y: n.rotatedY,
+        colour: GREEN,
+        label: `turn (${n.rotatedX}, ${n.rotatedY})`,
+        anchor: "left",
+        dashFrom: { x: n.px, y: n.py },
+        at: sceneId === "twist" ? said(Math.abs(n.rotatedX), 0, -1) : 0,
+      });
     }
     const headline =
       sceneId === "ask"
@@ -225,7 +343,7 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
             : "Three rules, three images";
     return (
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", gap: 18 }}>
-        <Title text={headline} enter={title} />
+        <Title parts={numberParts(headline, said, 0, sceneId === "ask" ? [0, 0] : null)} />
         <div style={{ position: "relative", width: STAGE_W, height: 640 }}>
           <Plane points={pts} />
         </div>
@@ -240,6 +358,14 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
   type Step = { kind: "eq"; left: string; right: string; colour?: string } | { kind: "op"; op: string };
   let steps: Step[] = [];
   let headline = "";
+  // Which spoken number each row waits for, per scene: one occurrence index
+  // per digit in the row, or null when this scene's line does not say the
+  // row's numbers (a row earned in an earlier scene, or a summary line with
+  // no alignment) — those keep the template's own frame.
+  let reveal: (number[] | null)[] = [];
+  let titleOcc: number[] | null = null;
+  const pick = (byScene: Record<string, (number[] | null)[]>) =>
+    byScene[sceneId] ?? byScene.record;
 
   if (unit.mode === "two-step") {
     steps = [
@@ -257,6 +383,15 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
           : sceneId === "twist"
             ? `Now divide by ${n.a}`
             : "Reverse order, both sides";
+    // ask: "3 x minus 4 equals 11" · work: "add 4 … 11 plus 4 is 15, so now
+    // 3 x equals 15" · twist: "divide by 3 … x equals 5".
+    reveal = pick({
+      ask: [[0, 0, 0], null, null, null, null],
+      work: [null, [1], [0, 1], null, null],
+      twist: [null, null, null, [1], [1]],
+      record: [null, null, null, null, null],
+    });
+    titleOcc = sceneId === "twist" ? [1] : null; // "Now divide by 3"
   } else if (unit.mode === "distribute-eq") {
     steps = [
       { kind: "eq", left: `${n.a}(x + ${n.b})`, right: `${n.c}` },
@@ -273,6 +408,17 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
           : sceneId === "twist"
             ? "The long way agrees"
             : "Divide first when it divides neatly";
+    // ask: "3, bracket, x plus 4, equals 21" · work: "divide both sides by 3
+    // … x plus 4 equals 7" · twist walks the EXPAND route instead, so the
+    // last two ledger rows land on the only words that name them there
+    // ("3 times 4", "x equals 3").
+    reveal = pick({
+      ask: [[0, 0, 0], null, null, null, null],
+      work: [null, [1], [1, 1], null, null],
+      twist: [null, null, null, [0], [-1]],
+      record: [null, null, null, null, null],
+    });
+    titleOcc = sceneId === "ask" ? [0, 0, 0] : null; // "3(x + 4) = 21"
   } else if (unit.mode === "both-sides") {
     steps = [
       { kind: "eq", left: `${n.a}x + ${n.b}`, right: `${n.c}x + ${n.d}` },
@@ -291,6 +437,16 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
           : sceneId === "twist"
             ? "Now it is an ordinary two-step"
             : "Collect the x’s, then finish as normal";
+    // ask: "5 x plus 2 equals 2 x plus 11" · work: "Take 2 x off … leaves
+    // 3 x … just 11 left" · twist: "Take 2 off … 3 x equals 9 … divide by 3:
+    // x equals 3".
+    reveal = pick({
+      ask: [[0, 0, 1, 0], null, null, null, null, null, null],
+      work: [null, [0], [0, 2, 0], null, null, null, null],
+      twist: [null, null, null, [1], [1, 1], [2], [-1]],
+      record: [null, null, null, null, null, null, null],
+    });
+    titleOcc = sceneId === "work" ? [0] : null; // "Take 2x off both sides"
   } else {
     steps = [
       { kind: "eq", left: `x / ${n.a}`, right: `${n.b}` },
@@ -305,6 +461,16 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
           : sceneId === "twist"
             ? `Multiply both sides by ${n.a}`
             : "Multiplying undoes dividing";
+    // ask: "x over 4 equals 6" · work: "undo it by MULTIPLYING by 4" (the
+    // last 4 of the line) · twist: "Multiply both sides by 4 … x equals 24".
+    reveal = pick({
+      ask: [[0, 0], null, null],
+      work: [null, [-1], [0]],
+      twist: [null, [0], [1]],
+      record: [null, null, null],
+    });
+    titleOcc =
+      sceneId === "ask" ? [0, 0] : sceneId === "work" ? [0, 0] : sceneId === "twist" ? [0] : null;
   }
 
   // How much of the ledger has been earned by this point in the lesson.
@@ -313,7 +479,10 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
   let seenEq = 0;
   const visible = steps.map((s) => {
     if (s.kind === "eq") seenEq++;
-    return seenEq <= target;
+    // An operation row belongs to the line BELOW it, so it waits for that
+    // line: otherwise "÷ 3" sat on screen through the whole work scene,
+    // where the narration never mentions dividing at all.
+    return s.kind === "eq" ? seenEq <= target : seenEq < target;
   });
 
   // The expand-route proof, shown only where the narration walks it.
@@ -321,23 +490,35 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
 
   return (
     <AbsoluteFill style={stage}>
-      <Title text={headline} enter={title} />
+      <Title parts={numberParts(headline, said, 0, titleOcc)} />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 18 }}>
-        {steps.map((s, i) =>
-          !visible[i] ? null : s.kind === "eq" ? (
-            <EqRow key={i} left={s.left} right={s.right} colour={s.colour ?? INK} opacity={at(0.1 + i * 0.11)} />
+        {steps.map((s, i) => {
+          const occ = reveal[i] ?? null;
+          // Speech-bound rows keep the template's old frame as their fallback;
+          // a row carried in from an earlier scene is already established, so
+          // it is simply there. // not-speech-bound
+          const fb = occ ? step(0.1 + i * 0.11) : 0;
+          return !visible[i] ? null : s.kind === "eq" ? (
+            <EqRow
+              key={i}
+              left={numberParts(s.left, said, fb, occ && occ.slice(0, (s.left.match(/\d+/g) ?? []).length))}
+              right={numberParts(s.right, said, fb, occ && occ.slice((s.left.match(/\d+/g) ?? []).length))}
+              colour={s.colour ?? INK}
+            />
           ) : (
-            <OpRow key={i} op={s.op} opacity={at(0.1 + i * 0.11)} />
-          ),
-        )}
+            <OpRow key={i} op={numberParts(s.op, said, fb, occ)} />
+          );
+        })}
       </div>
       {showAltRoute && (
-        <div style={{ marginTop: 24, opacity: at(0.55), textAlign: "center" }}>
+        // The expand route is read out as one sentence; it arrives on "is 12",
+        // the first number the long way produces.
+        <Fade at={said(n.expanded, step(0.55), 0)} style={{ marginTop: 24, textAlign: "center" }}>
           <div style={{ fontSize: 34, fontWeight: 800, color: MUTED }}>expanding instead</div>
           <div style={{ fontSize: 44, fontWeight: 800, color: GOLD }}>
             {n.a}x + {n.expanded} = {n.c} → {n.a}x = {n.c - n.expanded} → x = {n.distributeX}
           </div>
-        </div>
+        </Fade>
       )}
       {sceneId === "record" && tipLine}
     </AbsoluteFill>
@@ -359,7 +540,7 @@ export const LinEqVideo: React.FC<LinEqProps> = ({ unit: unitId, voice = DEFAULT
       {scenes.map((scene) => (
         <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
           {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-          <SceneBody dur={scene.dur} unit={unit} sceneId={scene.id} />
+          <SceneBody dur={scene.dur} unit={unit} sceneId={scene.id} said={saidFor(unitId, voice, scene.id)} />
         </Sequence>
       ))}
       <Brand />
