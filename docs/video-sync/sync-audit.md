@@ -1,224 +1,179 @@
 # Video sync audit — 168 units, 675 scenes
 
-Hard failures: **42** · scenes without word alignment: **50** (those cannot be synced to speech until re-narrated with timestamps)
-
-## Hard failures
-
-- sub-2d-borrow: mp4 is 32.8s, timeline says 31.4s — stale render
-- sub-3d: mp4 is 34.3s, timeline says 35.3s — stale render
-- add-fact-family: mp4 is 39.8s, timeline says 43.3s — stale render
-- sub-fact-family: mp4 is 39.6s, timeline says 40.3s — stale render
-- div-fact-family: mp4 is 40.1s, timeline says 40.9s — stale render
-- cur-number-bonds: mp4 is 38.3s, timeline says 37.4s — stale render
-- cur-identify-fractions: mp4 is 40.8s, timeline says 37.5s — stale render
-- cur-graphing-lines: mp4 is 76.9s, timeline says 76.2s — stale render
-- cur-end-behavior: mp4 is 55.4s, timeline says 51.3s — stale render
-- cur-logarithms: mp4 is 41.4s, timeline says 42.0s — stale render
-- cur-derivatives: mp4 is 42.8s, timeline says 45.0s — stale render
-- cur-integrals: mp4 is 41.5s, timeline says 39.9s — stale render
-- cur-evaluate-linear: mp4 is 48.3s, timeline says 51.2s — stale render
-- cur-composition: mp4 is 53.5s, timeline says 55.3s — stale render
-- cur-domain-range: mp4 is 64.8s, timeline says 64.2s — stale render
-- cur-triangle-sides: mp4 is 54.1s, timeline says 55.7s — stale render
-- cur-right-triangle-trig: mp4 is 59.7s, timeline says 62.1s — stale render
-- cur-unit-circle-values: mp4 is 51.8s, timeline says 50.8s — stale render
-- cur-add-poly: mp4 is 58.5s, timeline says 61.3s — stale render
-- cur-multiply-poly: mp4 is 53.5s, timeline says 58.7s — stale render
-- cur-factoring: mp4 is 54.1s, timeline says 50.8s — stale render
-- cur-factor-trinomial-a: mp4 is 74.5s, timeline says 83.9s — stale render
-- cur-difference-squares: mp4 is 64.8s, timeline says 63.7s — stale render
-- cur-cubes: mp4 is 83.2s, timeline says 84.4s — stale render
-- cur-discriminant: mp4 is 73.2s, timeline says 68.1s — stale render
-- cur-two-step-minus: mp4 is 72.0s, timeline says 66.7s — stale render
-- cur-fraction-equation: mp4 is 58.1s, timeline says 59.8s — stale render
-- cur-transformations: mp4 is 77.2s, timeline says 76.3s — stale render
-- cur-integer-add-sub: mp4 is 57.6s, timeline says 58.3s — stale render
-- cur-poly-anatomy: mp4 is 70.1s, timeline says 66.8s — stale render
-- cur-subtract-poly: mp4 is 60.9s, timeline says 62.5s — stale render
-- cur-distribute-monomial: mp4 is 64.5s, timeline says 71.4s — stale render
-- cur-long-division: mp4 is 67.8s, timeline says 64.0s — stale render
-- cur-order-fractions: mp4 is 42.6s, timeline says 44.4s — stale render
-- cur-divide-by-whole: mp4 is 42.5s, timeline says 44.6s — stale render
-- cur-order-ops: mp4 is 54.7s, timeline says 54.2s — stale render
-- cur-complex: mp4 is 49.6s, timeline says 52.1s — stale render
-- cur-vectors: mp4 is 50.0s, timeline says 49.3s — stale render
-- cur-diff-monomials: mp4 is 44.4s, timeline says 42.6s — stale render
-- cur-rational-root: mp4 is 59.5s, timeline says 61.5s — stale render
-- cur-exponential-equations: mp4 is 47.3s, timeline says 48.8s — stale render
-- cur-integrate-powers: mp4 is 60.2s, timeline says 61.5s — stale render
+Hard failures: **0** · scenes without word alignment: **50** (those cannot be synced to speech until re-narrated with timestamps)
 
 ## Rendered MP4 vs audio timeline
 
 | unit | mp4 s | timeline s | |
 |---|---|---|---|
 | mul-skip | 33.9 | 33.9 | ok |
-| mul-3-4 | 34.4 | 34.4 | ok |
+| mul-3-4 | 34.5 | 34.4 | ok |
 | mul-tens | 30.6 | 30.6 | ok |
-| mul-identity | 35.0 | 35.1 | ok |
-| mul-squares | 34.4 | 34.4 | ok |
-| mul-6-9 | 33.1 | 33.1 | ok |
-| mul-10-12 | 30.9 | 30.9 | ok |
-| add-2d-noregroup | 26.9 | 27.0 | ok |
-| add-2d-regroup | 39.3 | 39.4 | ok |
-| sub-2d-noborrow | 27.5 | 27.6 | ok |
-| sub-2d-borrow | 32.8 | 31.4 | STALE |
-| add-3d-three | 39.2 | 39.3 | ok |
-| sub-3d | 34.3 | 35.3 | STALE |
+| mul-identity | 35.1 | 35.1 | ok |
+| mul-squares | 34.5 | 34.4 | ok |
+| mul-6-9 | 33.2 | 33.1 | ok |
+| mul-10-12 | 31.0 | 30.9 | ok |
+| add-2d-noregroup | 27.0 | 27.0 | ok |
+| add-2d-regroup | 39.4 | 39.4 | ok |
+| sub-2d-noborrow | 27.6 | 27.6 | ok |
+| sub-2d-borrow | 31.4 | 31.4 | ok |
+| add-3d-three | 39.4 | 39.3 | ok |
+| sub-3d | 35.3 | 35.3 | ok |
 | add-count-on | 25.0 | 25.0 | ok |
 | add-doubles | 25.7 | 25.7 | ok |
 | add-zero-comm | 27.2 | 27.2 | ok |
 | add-near-doubles | 25.6 | 25.6 | ok |
-| add-make-ten | 25.9 | 26.0 | ok |
+| add-make-ten | 26.0 | 26.0 | ok |
 | sub-count-back | 25.0 | 25.0 | ok |
-| sub-count-up | 30.5 | 30.6 | ok |
+| sub-count-up | 30.6 | 30.6 | ok |
 | sub-zero | 25.0 | 25.0 | ok |
 | sub-halves | 25.7 | 25.7 | ok |
 | sub-bridge | 25.0 | 25.0 | ok |
 | cur-add-within-5 | 25.0 | 25.0 | ok |
 | cur-add-within-10 | 25.0 | 25.0 | ok |
-| div-skip | 37.4 | 37.5 | ok |
-| div-identity | 35.1 | 35.2 | ok |
-| div-squares | 37.4 | 37.5 | ok |
-| div-3-4 | 37.5 | 37.7 | ok |
-| div-6-9 | 38.0 | 38.1 | ok |
-| div-10-12 | 36.4 | 36.5 | ok |
-| div-remainder | 44.4 | 44.5 | ok |
-| div-larger | 33.6 | 33.6 | ok |
-| add-fact-family | 39.8 | 43.3 | STALE |
-| sub-fact-family | 39.6 | 40.3 | STALE |
-| mul-fact-family | 38.8 | 38.9 | ok |
-| div-fact-family | 40.1 | 40.9 | STALE |
-| cur-number-bonds | 38.3 | 37.4 | STALE |
+| div-skip | 37.5 | 37.5 | ok |
+| div-identity | 35.2 | 35.2 | ok |
+| div-squares | 37.5 | 37.5 | ok |
+| div-3-4 | 37.7 | 37.7 | ok |
+| div-6-9 | 38.1 | 38.1 | ok |
+| div-10-12 | 36.6 | 36.5 | ok |
+| div-remainder | 44.5 | 44.5 | ok |
+| div-larger | 33.7 | 33.6 | ok |
+| add-fact-family | 43.4 | 43.3 | ok |
+| sub-fact-family | 40.3 | 40.3 | ok |
+| mul-fact-family | 38.9 | 38.9 | ok |
+| div-fact-family | 40.9 | 40.9 | ok |
+| cur-number-bonds | 37.4 | 37.4 | ok |
 | mul-break-apart | 32.1 | 32.1 | ok |
-| mul-carry | 32.3 | 32.4 | ok |
-| mul-2d1d | 32.0 | 32.1 | ok |
-| mul-2d2d | 41.2 | 41.3 | ok |
-| cur-identify-fractions | 40.8 | 37.5 | STALE |
+| mul-carry | 32.4 | 32.4 | ok |
+| mul-2d1d | 32.1 | 32.1 | ok |
+| mul-2d2d | 41.3 | 41.3 | ok |
+| cur-identify-fractions | 37.5 | 37.5 | ok |
 | cur-compare-fractions | 30.6 | 30.6 | ok |
-| cur-add-fractions | 36.1 | 36.2 | ok |
-| cur-simplify-fractions | 36.7 | 36.7 | ok |
-| cur-decimal-place-value | 36.5 | 36.7 | ok |
-| cur-decimal-operations | 33.7 | 33.7 | ok |
-| cur-decimal-subtract | 33.2 | 33.3 | ok |
-| cur-decimal-multiply | 30.9 | 30.9 | ok |
+| cur-add-fractions | 36.2 | 36.2 | ok |
+| cur-simplify-fractions | 36.8 | 36.7 | ok |
+| cur-decimal-place-value | 36.7 | 36.7 | ok |
+| cur-decimal-operations | 33.8 | 33.7 | ok |
+| cur-decimal-subtract | 33.3 | 33.3 | ok |
+| cur-decimal-multiply | 31.0 | 30.9 | ok |
 | cur-percentages | 33.8 | 33.8 | ok |
-| cur-ratios | 30.4 | 30.5 | ok |
-| cur-proportions | 31.6 | 31.7 | ok |
-| cur-unit-rates | 30.4 | 30.5 | ok |
-| cur-one-step | 33.7 | 33.8 | ok |
-| cur-two-step | 36.2 | 36.3 | ok |
-| cur-inequalities | 38.0 | 38.1 | ok |
-| cur-graphing-lines | 76.9 | 76.2 | STALE |
-| cur-slope-intercept | 74.9 | 75.2 | ok |
-| cur-systems | 78.6 | 78.9 | ok |
-| cur-graphing-parabolas | 52.2 | 52.4 | ok |
-| cur-quadratic-range | 47.4 | 47.5 | ok |
-| cur-end-behavior | 55.4 | 51.3 | STALE |
-| cur-quadratic-equations | 42.0 | 42.1 | ok |
-| cur-quadratic-formula | 38.8 | 39.0 | ok |
+| cur-ratios | 30.5 | 30.5 | ok |
+| cur-proportions | 31.7 | 31.7 | ok |
+| cur-unit-rates | 30.5 | 30.5 | ok |
+| cur-one-step | 33.8 | 33.8 | ok |
+| cur-two-step | 36.3 | 36.3 | ok |
+| cur-inequalities | 38.1 | 38.1 | ok |
+| cur-graphing-lines | 76.2 | 76.2 | ok |
+| cur-slope-intercept | 75.2 | 75.2 | ok |
+| cur-systems | 78.9 | 78.9 | ok |
+| cur-graphing-parabolas | 52.4 | 52.4 | ok |
+| cur-quadratic-range | 47.6 | 47.5 | ok |
+| cur-end-behavior | 51.4 | 51.3 | ok |
+| cur-quadratic-equations | 42.2 | 42.1 | ok |
+| cur-quadratic-formula | 39.0 | 39.0 | ok |
 | cur-exponential | 44.6 | 44.5 | ok |
-| cur-logarithms | 41.4 | 42.0 | STALE |
-| cur-limits | 49.0 | 49.1 | ok |
-| cur-derivatives | 42.8 | 45.0 | STALE |
-| cur-integrals | 41.5 | 39.9 | STALE |
-| cur-function-notation | 61.2 | 61.4 | ok |
-| cur-evaluate-linear | 48.3 | 51.2 | STALE |
-| cur-composition | 53.5 | 55.3 | STALE |
-| cur-inverse-functions | 56.2 | 56.7 | ok |
-| cur-domain-range | 64.8 | 64.2 | STALE |
-| cur-domain-rational | 54.4 | 54.5 | ok |
-| cur-pythagorean | 47.3 | 47.4 | ok |
-| cur-triangle-sides | 54.1 | 55.7 | STALE |
-| cur-right-triangle-trig | 59.7 | 62.1 | STALE |
-| cur-pyth-identity | 56.8 | 57.0 | ok |
-| cur-unit-circle | 55.9 | 55.7 | ok |
-| cur-unit-circle-values | 51.8 | 50.8 | STALE |
-| cur-deg-radians | 55.4 | 55.7 | ok |
-| cur-trig-identities | 54.3 | 54.5 | ok |
-| cur-classify-poly | 58.5 | 58.7 | ok |
-| cur-add-poly | 58.5 | 61.3 | STALE |
-| cur-multiply-poly | 53.5 | 58.7 | STALE |
-| cur-factoring | 54.1 | 50.8 | STALE |
-| cur-factor-trinomial-a | 74.5 | 83.9 | STALE |
-| cur-difference-squares | 64.8 | 63.7 | STALE |
-| cur-perfect-square-trinomial | 65.2 | 65.4 | ok |
-| cur-factor-grouping | 72.5 | 72.4 | ok |
-| cur-cubes | 83.2 | 84.4 | STALE |
-| cur-perfect-squares | 54.8 | 55.0 | ok |
-| cur-solve-x2-k | 55.9 | 56.0 | ok |
-| cur-simplify-roots | 55.1 | 55.3 | ok |
-| cur-zero-product | 62.7 | 62.9 | ok |
-| cur-solve-factoring | 58.9 | 59.1 | ok |
-| cur-discriminant | 73.2 | 68.1 | STALE |
-| cur-two-step-minus | 72.0 | 66.7 | STALE |
-| cur-distribute-equation | 69.6 | 69.3 | ok |
-| cur-both-sides | 65.3 | 65.5 | ok |
-| cur-fraction-equation | 58.1 | 59.8 | STALE |
-| cur-transformations | 77.2 | 76.3 | STALE |
-| cur-evaluate-expr | 59.2 | 59.4 | ok |
-| cur-evaluate-product | 47.7 | 47.9 | ok |
-| cur-like-terms | 57.7 | 57.8 | ok |
-| cur-distribute | 62.4 | 62.6 | ok |
-| cur-one-step-times | 50.5 | 50.6 | ok |
-| cur-integer-add-sub | 57.6 | 58.3 | STALE |
-| cur-poly-anatomy | 70.1 | 66.8 | STALE |
-| cur-evaluate-poly | 55.2 | 55.4 | ok |
-| cur-subtract-poly | 60.9 | 62.5 | STALE |
-| cur-monomial-multiply | 58.5 | 58.7 | ok |
-| cur-divide-monomial | 55.7 | 55.9 | ok |
-| cur-factor-gcf | 60.0 | 60.5 | ok |
-| cur-distribute-monomial | 64.5 | 71.4 | STALE |
-| cur-long-division | 67.8 | 64.0 | STALE |
-| cur-subtract-fractions | 38.2 | 38.3 | ok |
-| cur-multiply-fractions | 43.3 | 43.5 | ok |
-| cur-divide-fractions | 39.8 | 40.0 | ok |
-| cur-mixed-numbers | 40.1 | 40.3 | ok |
-| cur-improper-fractions | 36.3 | 36.4 | ok |
-| cur-order-fractions | 42.6 | 44.4 | STALE |
-| cur-compare-decimals | 38.9 | 39.1 | ok |
-| cur-round-decimals | 40.2 | 40.3 | ok |
-| cur-multiply-decimals | 39.4 | 39.5 | ok |
-| cur-divide-decimals | 38.1 | 38.6 | ok |
-| cur-add-subtract-decimals | 63.9 | 64.1 | ok |
-| cur-divide-by-whole | 42.5 | 44.6 | STALE |
-| cur-percent-of | 37.2 | 37.3 | ok |
-| cur-percent-change | 37.0 | 37.1 | ok |
-| cur-place-value-tens | 33.6 | 33.7 | ok |
-| cur-place-value-ones | 32.1 | 32.2 | ok |
-| cur-compare-2digit | 36.5 | 36.6 | ok |
-| cur-skip-2 | 34.8 | 34.9 | ok |
-| cur-skip-10 | 32.7 | 32.8 | ok |
-| cur-numbers-before | 27.3 | 27.3 | ok |
-| cur-order-integers | 46.7 | 46.9 | ok |
-| cur-order-ops | 54.7 | 54.2 | STALE |
-| cur-complex | 49.6 | 52.1 | STALE |
-| cur-sequences | 47.7 | 47.3 | ok |
-| cur-vectors | 50.0 | 49.3 | STALE |
-| cur-power-rule | 48.7 | 49.1 | ok |
-| cur-diff-monomials | 44.4 | 42.6 | STALE |
+| cur-logarithms | 42.0 | 42.0 | ok |
+| cur-limits | 49.2 | 49.1 | ok |
+| cur-derivatives | 45.0 | 45.0 | ok |
+| cur-integrals | 40.0 | 39.9 | ok |
+| cur-function-notation | 61.4 | 61.4 | ok |
+| cur-evaluate-linear | 51.2 | 51.2 | ok |
+| cur-composition | 55.3 | 55.3 | ok |
+| cur-inverse-functions | 56.7 | 56.7 | ok |
+| cur-domain-range | 64.2 | 64.2 | ok |
+| cur-domain-rational | 54.6 | 54.5 | ok |
+| cur-pythagorean | 47.4 | 47.4 | ok |
+| cur-triangle-sides | 55.7 | 55.7 | ok |
+| cur-right-triangle-trig | 62.2 | 62.1 | ok |
+| cur-pyth-identity | 57.0 | 57.0 | ok |
+| cur-unit-circle | 55.8 | 55.7 | ok |
+| cur-unit-circle-values | 50.8 | 50.8 | ok |
+| cur-deg-radians | 55.7 | 55.7 | ok |
+| cur-trig-identities | 54.6 | 54.5 | ok |
+| cur-classify-poly | 58.7 | 58.7 | ok |
+| cur-add-poly | 61.3 | 61.3 | ok |
+| cur-multiply-poly | 58.7 | 58.7 | ok |
+| cur-factoring | 50.8 | 50.8 | ok |
+| cur-factor-trinomial-a | 84.0 | 83.9 | ok |
+| cur-difference-squares | 63.8 | 63.7 | ok |
+| cur-perfect-square-trinomial | 65.5 | 65.4 | ok |
+| cur-factor-grouping | 72.4 | 72.4 | ok |
+| cur-cubes | 84.5 | 84.4 | ok |
+| cur-perfect-squares | 55.0 | 55.0 | ok |
+| cur-solve-x2-k | 56.1 | 56.0 | ok |
+| cur-simplify-roots | 55.4 | 55.3 | ok |
+| cur-zero-product | 62.9 | 62.9 | ok |
+| cur-solve-factoring | 59.2 | 59.1 | ok |
+| cur-discriminant | 68.1 | 68.1 | ok |
+| cur-two-step-minus | 66.7 | 66.7 | ok |
+| cur-distribute-equation | 69.3 | 69.3 | ok |
+| cur-both-sides | 65.5 | 65.5 | ok |
+| cur-fraction-equation | 59.8 | 59.8 | ok |
+| cur-transformations | 76.4 | 76.3 | ok |
+| cur-evaluate-expr | 59.4 | 59.4 | ok |
+| cur-evaluate-product | 47.9 | 47.9 | ok |
+| cur-like-terms | 57.8 | 57.8 | ok |
+| cur-distribute | 62.7 | 62.6 | ok |
+| cur-one-step-times | 50.6 | 50.6 | ok |
+| cur-integer-add-sub | 58.3 | 58.3 | ok |
+| cur-poly-anatomy | 66.8 | 66.8 | ok |
+| cur-evaluate-poly | 55.5 | 55.4 | ok |
+| cur-subtract-poly | 62.5 | 62.5 | ok |
+| cur-monomial-multiply | 58.7 | 58.7 | ok |
+| cur-divide-monomial | 55.9 | 55.9 | ok |
+| cur-factor-gcf | 60.5 | 60.5 | ok |
+| cur-distribute-monomial | 71.4 | 71.4 | ok |
+| cur-long-division | 64.0 | 64.0 | ok |
+| cur-subtract-fractions | 38.3 | 38.3 | ok |
+| cur-multiply-fractions | 43.5 | 43.5 | ok |
+| cur-divide-fractions | 40.0 | 40.0 | ok |
+| cur-mixed-numbers | 40.3 | 40.3 | ok |
+| cur-improper-fractions | 36.4 | 36.4 | ok |
+| cur-order-fractions | 44.5 | 44.4 | ok |
+| cur-compare-decimals | 39.1 | 39.1 | ok |
+| cur-round-decimals | 40.3 | 40.3 | ok |
+| cur-multiply-decimals | 39.5 | 39.5 | ok |
+| cur-divide-decimals | 38.6 | 38.6 | ok |
+| cur-add-subtract-decimals | 64.1 | 64.1 | ok |
+| cur-divide-by-whole | 44.6 | 44.6 | ok |
+| cur-percent-of | 37.3 | 37.3 | ok |
+| cur-percent-change | 37.1 | 37.1 | ok |
+| cur-place-value-tens | 33.7 | 33.7 | ok |
+| cur-place-value-ones | 32.3 | 32.2 | ok |
+| cur-compare-2digit | 36.6 | 36.6 | ok |
+| cur-skip-2 | 35.0 | 34.9 | ok |
+| cur-skip-10 | 32.9 | 32.8 | ok |
+| cur-numbers-before | 27.4 | 27.3 | ok |
+| cur-order-integers | 46.9 | 46.9 | ok |
+| cur-order-ops | 54.2 | 54.2 | ok |
+| cur-complex | 52.1 | 52.1 | ok |
+| cur-sequences | 47.3 | 47.3 | ok |
+| cur-vectors | 49.3 | 49.3 | ok |
+| cur-power-rule | 49.2 | 49.1 | ok |
+| cur-diff-monomials | 42.6 | 42.6 | ok |
 | cur-calc-applications | 47.1 | 47.1 | ok |
-| cur-y-intercept | 54.8 | 55.0 | ok |
-| cur-multiplicity | 57.0 | 56.9 | ok |
-| cur-turning-points | 49.3 | 49.5 | ok |
-| cur-fta | 54.3 | 54.5 | ok |
-| cur-synthetic | 56.1 | 56.3 | ok |
-| cur-rational-root | 59.5 | 61.5 | STALE |
-| cur-exponential-equations | 47.3 | 48.8 | STALE |
-| cur-powers-of-i | 57.5 | 57.7 | ok |
-| cur-geometric | 52.9 | 53.1 | ok |
-| cur-limit-poly | 54.8 | 55.0 | ok |
-| cur-integrate-powers | 60.2 | 61.5 | STALE |
-| cur-counting-1-10 | 28.7 | 28.7 | ok |
-| cur-counting-1-50 | 34.2 | 34.3 | ok |
-| cur-counting-100 | 34.6 | 34.7 | ok |
+| cur-y-intercept | 55.0 | 55.0 | ok |
+| cur-multiplicity | 56.9 | 56.9 | ok |
+| cur-turning-points | 49.5 | 49.5 | ok |
+| cur-fta | 54.5 | 54.5 | ok |
+| cur-synthetic | 56.3 | 56.3 | ok |
+| cur-rational-root | 61.5 | 61.5 | ok |
+| cur-exponential-equations | 48.8 | 48.8 | ok |
+| cur-powers-of-i | 57.7 | 57.7 | ok |
+| cur-geometric | 53.1 | 53.1 | ok |
+| cur-limit-poly | 55.0 | 55.0 | ok |
+| cur-integrate-powers | 61.5 | 61.5 | ok |
+| cur-counting-1-10 | 28.8 | 28.7 | ok |
+| cur-counting-1-50 | 34.3 | 34.3 | ok |
+| cur-counting-100 | 34.7 | 34.7 | ok |
 | cur-number-recognition | 26.0 | 26.0 | ok |
-| cur-which-greater | 26.4 | 26.5 | ok |
+| cur-which-greater | 26.5 | 26.5 | ok |
 | cur-which-less | 25.0 | 25.0 | ok |
-| cur-more-less | 28.0 | 28.1 | ok |
-| cur-counting-on-next | 27.2 | 27.2 | ok |
-| cur-numbers-after-100 | 29.5 | 29.6 | ok |
+| cur-more-less | 28.1 | 28.1 | ok |
+| cur-counting-on-next | 27.3 | 27.2 | ok |
+| cur-numbers-after-100 | 29.6 | 29.6 | ok |
 | cur-missing-number | 26.9 | 26.9 | ok |
-| cur-number-patterns | 28.6 | 28.7 | ok |
+| cur-number-patterns | 28.7 | 28.7 | ok |
 
 ## Every scene — when each number is spoken (seconds into the scene)
 
