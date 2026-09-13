@@ -20,7 +20,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { decimalOpsSceneTimings } from "./timeline";
+import { decimalOpsSceneTimings, saidFor, type SaidFn } from "./timeline";
 import { DEFAULT_VOICE_KEY } from "./voices";
 import { Brand } from "./Brand";
 import { decimalOpsUnitById, decimalOpsNumbers, type DecimalOpsUnit } from "./units-decimalops";
@@ -45,7 +45,19 @@ interface SceneProps {
   dur: number;
   unit: DecimalOpsUnit;
   sceneId: string;
+  /** Scene-local frame at which the narrator says a number (timeline `saidFor`).
+   *  The fallback is the old hand-picked frame, for clips without alignment. */
+  said: SaidFn;
 }
+
+/** The number the narrator actually says for a decimal. `speakable()` voices
+ *  0.3 as "0 point 3" and 0.25 as "0 point 25", so the digits that carry the
+ *  value are 3 and 25 — 1.2 is "1" then "2". A whole number says itself. */
+const decDigits = (v: number) => {
+  if (Number.isInteger(v)) return v;
+  const frac = String(v).split(".")[1] ?? "";
+  return Number(frac);
+};
 
 function useEnter(atFrame: number, durFrames = 14) {
   const frame = useCurrentFrame();
@@ -139,13 +151,15 @@ function Grid({
   );
 }
 
-function SceneBody({ dur, unit, sceneId }: SceneProps) {
+function SceneBody({ dur, unit, sceneId, said }: SceneProps) {
   const frame = useCurrentFrame();
-  const title = useEnter(4);
+  const title = useEnter(4); // not-speech-bound: the headline is the scene's own caption
   const x = decimalOpsNumbers(unit);
-  const step = (k: number) => Math.round(dur * k);
+  const step = (k: number) => Math.round(dur * k); // not-speech-bound: fallback frames only
   const reveal = (at: number, d = 12) =>
-    interpolate(frame, [at, at + d], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+    Number.isFinite(at)
+      ? interpolate(frame, [at, at + d], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+      : 0;
 
   // ---- compare: two hundred squares side by side ---------------------------
   if (unit.mode === "compare") {
@@ -154,6 +168,11 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
     const leftX = STAGE_W / 2 - gw - 90;
     const rightX = STAGE_W / 2 + 90;
     const show = sceneId !== "ask";
+    // grid/action name the CELL counts ("0.3 is 30 cells… 0.25 is 25 cells"),
+    // record names the decimals themselves ("0.3 is bigger than 0.25"), so each
+    // square fills on the words that belong to it.
+    const goldAt = show ? said(sceneId === "record" ? decDigits(unit.a) : x.aCells, 0) : Number.POSITIVE_INFINITY;
+    const blueAt = show ? said(sceneId === "record" ? decDigits(x.b) : x.bCells, 0) : Number.POSITIVE_INFINITY;
     const headline =
       sceneId === "ask"
         ? `${unit.a} or ${x.b} — which is bigger?`
@@ -170,15 +189,15 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
             x={leftX}
             y={20}
             cell={cell}
-            colourOf={(i) => (show && i < x.aCells ? GOLD : null)}
-            label={`${unit.a}  =  ${x.aCells}/100`}
+            colourOf={(i) => (frame >= goldAt && i < x.aCells ? GOLD : null)}
+            label={<span style={{ opacity: reveal(goldAt) }}>{`${unit.a}  =  ${x.aCells}/100`}</span>}
           />
           <Grid
             x={rightX}
             y={20}
             cell={cell}
-            colourOf={(i) => (show && i < x.bCells ? BLUE : null)}
-            label={`${x.b}  =  ${x.bCells}/100`}
+            colourOf={(i) => (frame >= blueAt && i < x.bCells ? BLUE : null)}
+            label={<span style={{ opacity: reveal(blueAt) }}>{`${x.b}  =  ${x.bCells}/100`}</span>}
           />
         </div>
         {sceneId === "record" && (
@@ -195,7 +214,16 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
     const ly = 190;
     const t = (unit.a - x.lower) / (x.upper - x.lower); // 0..1 along the line
     const markerX = lx + W * t;
-    const showMid = sceneId === "action" || sceneId === "record";
+    const showMid = sceneId === "action" || sceneId === "record"; // not-speech-bound: "halfway" is a word
+    // The two end marks land on their own tenth while she names them ("a number
+    // line from 0.6 to 0.7"), the gold marker on the value she is placing.
+    const tickAt = [
+      sceneId === "grid" ? said(decDigits(x.lower), 0) : 0,
+      sceneId === "grid" ? said(decDigits(x.upper), 0) : 0,
+    ];
+    const markerAt = said(decDigits(unit.a), step(0.15));
+    // record: "↑ nearer this one" points at the tenth it rounds to.
+    const arrowAt = said(decDigits(x.rounded), 0);
     const headline =
       sceneId === "ask"
         ? `Round ${unit.a} to the nearest tenth`
@@ -213,8 +241,8 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
           {/* end ticks + labels */}
           {[0, 1].map((e) => (
             <React.Fragment key={e}>
-              <div style={{ position: "absolute", left: lx + e * W - 3, top: ly - 26, width: 6, height: 58, backgroundColor: INK }} />
-              <div style={{ position: "absolute", left: lx + e * W - 90, top: ly + 46, width: 180, textAlign: "center", fontSize: 46, fontWeight: 800, color: INK }}>
+              <div style={{ position: "absolute", left: lx + e * W - 3, top: ly - 26, width: 6, height: 58, backgroundColor: INK, opacity: reveal(tickAt[e]) }} />
+              <div style={{ position: "absolute", left: lx + e * W - 90, top: ly + 46, width: 180, textAlign: "center", fontSize: 46, fontWeight: 800, color: INK, opacity: reveal(tickAt[e]) }}>
                 {e === 0 ? x.lower : x.upper}
               </div>
             </React.Fragment>
@@ -240,7 +268,7 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
                   height: 28,
                   borderRadius: "50%",
                   backgroundColor: GOLD,
-                  opacity: reveal(step(0.15)),
+                  opacity: reveal(markerAt),
                 }}
               />
               <div
@@ -253,7 +281,7 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
                   fontSize: 46,
                   fontWeight: 800,
                   color: GOLD,
-                  opacity: reveal(step(0.15)),
+                  opacity: reveal(markerAt),
                 }}
               >
                 {unit.a}
@@ -272,6 +300,7 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
                 fontSize: 40,
                 fontWeight: 800,
                 color: GREEN,
+                opacity: reveal(arrowAt),
               }}
             >
               ↑ nearer this one
@@ -294,6 +323,11 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
     const rows = x.bTenths; // 0.4 -> 4 rows
     const showRows = sceneId === "action" || sceneId === "record";
     const overlap = Math.round(x.product * 100);
+    // grid: "shade 0.3 of it — that's 3 columns". action: "take 0.4 OF that
+    // shading… keep 4 of them" (the SECOND 4) and "the overlap: 12".
+    const colsAt = sceneId === "ask" ? Number.POSITIVE_INFINITY : sceneId === "grid" ? said(x.aTenths, 0) : 0;
+    const rowsAt = !showRows ? Number.POSITIVE_INFINITY : sceneId === "action" ? said(x.bTenths, 0, 1) : 0;
+    const overlapAt = !showRows ? Number.POSITIVE_INFINITY : said(overlap, 0);
     const headline =
       sceneId === "ask"
         ? `${unit.a} × ${x.b} — smaller than both?`
@@ -313,17 +347,16 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
             colourOf={(i) => {
               const col = Math.floor(i / 10);
               const row = i % 10;
-              const inCols = col < cols;
-              const inRows = row < rows;
-              if (sceneId === "ask") return null;
-              if (showRows && inCols && inRows) return GREEN; // the overlap
+              const inCols = col < cols && frame >= colsAt;
+              const inRows = row < rows && frame >= rowsAt;
+              if (inCols && inRows && frame >= overlapAt) return GREEN; // the overlap
               if (inCols) return GOLD;
-              if (showRows && inRows) return "rgba(27,79,138,0.30)";
+              if (inRows) return "rgba(27,79,138,0.30)";
               return null;
             }}
             label={
               sceneId === "record" ? (
-                <span style={{ color: GREEN }}>
+                <span style={{ color: GREEN, opacity: reveal(overlapAt) }}>
                   {overlap} of 100 = {x.product}
                 </span>
               ) : undefined
@@ -348,6 +381,15 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
     const gx = (STAGE_W - gw) / 2;
     const showB = sceneId !== "ask";
     const merged = sceneId === "action" || sceneId === "record";
+    // grid names the cell counts ("0.3 is 30 cells… 0.25 is 25 cells"), record
+    // names the decimals ("0.3 plus 0.25 is 0.55"); the merge to one colour
+    // waits for the total either way.
+    const goldAt =
+      sceneId === "ask" ? Number.POSITIVE_INFINITY : said(sceneId === "record" ? decDigits(unit.a) : x.aCells, 0);
+    const blueAt =
+      showB ? said(sceneId === "record" ? decDigits(x.b) : x.bCells, 0) : Number.POSITIVE_INFINITY;
+    const mergeAt = merged ? said(x.totalCells, 0) : Number.POSITIVE_INFINITY;
+    const isMerged = frame >= mergeAt;
     const headline =
       sceneId === "ask"
         ? `${unit.a} + ${x.b}`
@@ -365,27 +407,29 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
             y={10}
             cell={cell}
             colourOf={(i) => {
-              if (i < x.aCells) return merged ? GREEN : GOLD;
-              if (showB && i < x.totalCells) return merged ? GREEN : BLUE;
+              if (i < x.aCells) return frame >= goldAt ? (isMerged ? GREEN : GOLD) : null;
+              if (i < x.totalCells) return frame >= blueAt ? (isMerged ? GREEN : BLUE) : null;
               return null;
             }}
             label={
-              merged ? (
-                <span style={{ color: GREEN }}>
+              isMerged ? (
+                <span style={{ color: GREEN, opacity: reveal(mergeAt) }}>
                   {x.totalCells} cells = {x.total}
                 </span>
               ) : showB ? (
                 <span>
-                  <span style={{ color: GOLD }}>{x.aCells}</span>
-                  {" + "}
-                  <span style={{ color: BLUE }}>{x.bCells}</span>
+                  <span style={{ color: GOLD, opacity: reveal(goldAt) }}>{x.aCells}</span>
+                  <span style={{ opacity: reveal(blueAt) }}>
+                    {" + "}
+                    <span style={{ color: BLUE }}>{x.bCells}</span>
+                  </span>
                 </span>
               ) : undefined
             }
           />
         </div>
         {(sceneId === "action" || sceneId === "record") && (
-          <div style={{ fontSize: 40, fontWeight: 800, color: MUTED, opacity: reveal(step(0.55)) }}>
+          <div style={{ fontSize: 40, fontWeight: 800, color: MUTED, opacity: reveal(step(0.55)) }}> {/* not-speech-bound: names no number */}
             line up the decimal POINTS, not the ends
           </div>
         )}
@@ -400,8 +444,20 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
     const groups = Math.round(x.b);
     const per = x.shareTenths;
     const cell = 62;
+    // grid: the tenths appear on "1.2 is 12 tenths". action: the shares fill
+    // between "12 tenths" and "gives 4 tenths each", the last landing on the 4.
+    const tenthsAt = said(x.dividendTenths, 0);
+    const shareStart = said(x.dividendTenths, step(0.15)); // fallback: the old hand-picked frame
+    const shareEnd = said(x.shareTenths, step(0.15) + 2 * Math.max(1, step(0.22)), 0);
+    const perGroup = groups > 1 ? Math.max(6, (shareEnd - shareStart) / (groups - 1)) : 1;
     const shown =
-      sceneId === "ask" ? 0 : sceneId === "grid" ? 1 : Math.min(groups, Math.max(1, Math.floor((frame - step(0.15)) / Math.max(1, step(0.22))) + 1));
+      sceneId === "ask"
+        ? 0
+        : sceneId === "grid"
+          ? frame >= tenthsAt
+            ? 1
+            : 0
+          : Math.min(groups, Math.max(0, Math.floor((frame - shareStart) / perGroup) + 1));
     const palette = [GOLD, BLUE, GREEN, "#B23B2E", "#7A5AA8"];
     const headline =
       sceneId === "ask"
@@ -434,7 +490,7 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
           ))}
         </div>
         {(sceneId === "action" || sceneId === "record") && (
-          <div style={{ fontSize: 46, fontWeight: 800, color: GREEN, opacity: reveal(step(0.5)) }}>
+          <div style={{ fontSize: 46, fontWeight: 800, color: GREEN, opacity: reveal(said(x.shareTenths, step(0.5), 1)) }}>
             {per} tenths each = {x.share}
           </div>
         )}
@@ -447,12 +503,21 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
     const gw = 10 * (cell + 4);
     const gx = (STAGE_W - gw) / 2;
     const groups = Math.round(x.quotient);
-    const per = Math.round((dur * 0.5) / Math.max(1, groups));
+    // grid: "0.8 is 80 cells". action: the groups are cut between "groups of 20"
+    // and "it fits exactly 4 times", the last one landing on the 4. record: the
+    // whole grouping lands on the quotient she states.
+    const goldAt = sceneId === "ask" ? Number.POSITIVE_INFINITY : said(x.aCells, 0);
+    const perFallback = Math.round((dur * 0.5) / Math.max(1, groups)); // not-speech-bound: fallback spacing only
+    const cutStart = said(x.bCells, step(0.2));
+    const cutEnd = said(groups, step(0.2) + (groups - 1) * perFallback, 0);
+    const per = groups > 1 ? Math.max(6, (cutEnd - cutStart) / (groups - 1)) : perFallback;
     const shown =
       sceneId === "action"
-        ? Math.min(groups, Math.max(0, Math.floor((frame - step(0.2)) / per) + 1))
+        ? Math.min(groups, Math.max(0, Math.floor((frame - cutStart) / per) + 1))
         : sceneId === "record"
-          ? groups
+          ? frame >= said(groups, 0)
+            ? groups
+            : 0
           : 0;
     const palette = [GOLD, BLUE, GREEN, "#B23B2E", "#7A5AA8"];
     const headline =
@@ -473,7 +538,7 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
             cell={cell}
             colourOf={(i) => {
               if (i >= x.aCells) return null;
-              if (sceneId === "ask") return null;
+              if (frame < goldAt) return null;
               const g = Math.floor(i / Math.max(1, x.bCells));
               if (shown === 0) return GOLD;
               return g < shown ? palette[g % palette.length] : "rgba(200,144,42,0.25)";
@@ -502,6 +567,18 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
     const partW = (BAR_W * x.pct) / 100;
     const showPart = sceneId !== "ask";
     const showResult = sceneId === "action" || sceneId === "record";
+    // The gold slice lands on the percentage she names, its label on the part's
+    // value, and each result on the total it belongs to (up first, then down).
+    const pctAt = said(x.pct, Number.NaN);
+    const valAt = said(x.part, Number.NaN);
+    const named = [pctAt, valAt].filter((v) => Number.isFinite(v));
+    // The slice lands on whichever of its two numbers the line reaches first
+    // ("25 percent of 40… that's 10" vs "40 plus 10"); its label waits for the
+    // value when that comes later.
+    const partAt = showPart ? (named.length ? Math.min(...named) : step(0.15)) : Number.POSITIVE_INFINITY;
+    const partLabelAt = showPart ? (Number.isFinite(valAt) ? Math.max(valAt, partAt) : partAt) : Number.POSITIVE_INFINITY;
+    const upAt = showResult ? said(isChange ? x.increased : x.part, 0) : Number.POSITIVE_INFINITY;
+    const downAt = showResult ? said(x.decreased, 0) : Number.POSITIVE_INFINITY;
     const headline = isChange
       ? sceneId === "ask"
         ? `${unit.a}, up ${x.pct}% — what now?`
@@ -533,7 +610,7 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
                 height: 112,
                 borderRadius: 8,
                 backgroundColor: GOLD,
-                opacity: reveal(step(0.15)),
+                opacity: reveal(partAt),
               }}
             />
           )}
@@ -551,7 +628,7 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
                 fontSize: 40,
                 fontWeight: 800,
                 color: GOLD,
-                opacity: reveal(step(0.15)),
+                opacity: reveal(partLabelAt),
               }}
             >
               {x.pct}% = {x.part}
@@ -560,11 +637,11 @@ function SceneBody({ dur, unit, sceneId }: SceneProps) {
           {/* result row */}
           {showResult && (
             <div style={{ position: "absolute", left: bx, top: 245, width: BAR_W, display: "flex", justifyContent: "center", gap: 60 }}>
-              <div style={{ fontSize: 46, fontWeight: 800, color: GREEN }}>
+              <div style={{ fontSize: 46, fontWeight: 800, color: GREEN, opacity: reveal(upAt) }}>
                 {isChange ? `${unit.a} + ${x.part} = ${x.increased}` : `${x.part}`}
               </div>
               {isChange && (
-                <div style={{ fontSize: 46, fontWeight: 800, color: BLUE }}>
+                <div style={{ fontSize: 46, fontWeight: 800, color: BLUE, opacity: reveal(downAt) }}>
                   {unit.a} − {x.part} = {x.decreased}
                 </div>
               )}
@@ -594,7 +671,7 @@ export const DecimalOpsVideo: React.FC<DecimalOpsProps> = ({ unit: unitId, voice
       {scenes.map((scene) => (
         <Sequence key={scene.id} from={scene.from} durationInFrames={scene.dur}>
           {scene.voiceFile && <Audio src={staticFile(scene.voiceFile)} />}
-          <SceneBody dur={scene.dur} unit={unit} sceneId={scene.id} />
+          <SceneBody dur={scene.dur} unit={unit} sceneId={scene.id} said={saidFor(unitId, voice, scene.id)} />
         </Sequence>
       ))}
       <Brand />
