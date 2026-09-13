@@ -25,13 +25,13 @@
 ## Status
 
 - [x] deterministic audit run — results in `docs/video-sync/` (Sep 12: 50 clips without alignment; 0 stale renders. The 10 "stale manifest" hits turned out to be a BUILDER BUG, not stale data: `build-lesson-voice` recorded a clip's duration as the end of its last spoken character, not the file length, so every clip's trailing silence was invisible to the timeline — the scene tail absorbed most of it, and the ten longest tails surfaced. Builder now measures the file; `scripts/remeasure-voice-durations.ts` fixed the existing manifest)
-- [ ] stills rendered for 2 units per template and reviewed
+- [x] stills rendered and READ per template during each conversion (before-set at scratchpad/sync-stills, after-sets per agent)
 - [x] helper: `saidFor(unitId, voice, sceneId)` → `said(n, fallback, occurrence)` and `hasSpeechTiming` in timeline.ts (`spokenNumberFrame` already existed, exported, never called by any template)
 - [x] gate written: `scripts/audit-video-reveals.ts` — baseline 26 templates, 170 issues (144 fraction-of-scene reveals), 0 use `said()`. Added to `audit:videos` once all templates are converted
-- [ ] templates converted (26) — track per template below; agents ≤2 at a time (5 parallel agents trip the session rate limit); each agent verifies with `render-sync-stills.ts` on two of its units and READS the stills
+- [x] **templates converted: 26 of 26** (Sep 12–13) — `audit-video-reveals` reads ✅ 26 templates, 26 use said(), 0 issues. Each was verified by an agent reading its own before/after stills; per-template notes below. Bugs found on the way and fixed: the Balance answer box rendered at the top-left corner of every video, HundredGrid cells re-faded to invisible under their own label, the Quad root line lit the minus dot on "check 3", the Trig Pythagorean unit showed the answer on the hypotenuse while asking for it, a LinEq operation row sat through a scene its narration never mentions, and a FactFamily title read in the opposite order from the narration
 - [x] 55 units re-narrated Sep 12 (in hindsight unnecessary: the "unaligned" clips were lines that say no number, so there was nothing to align; the "stale" ones were the builder bug above). Fresh takes of the same text; harmless. Audit after re-measure: 0 stale manifests, 0 cut off, 0 lines with numbers lacking alignment; 42 stale renders pending the re-render step
 - [ ] validator gate
-- [ ] re-render every video, `npm run audit:videos` green, upload to Blob
+- [~] re-render every video (IN PROGRESS Sep 13), then `npm run audit:videos` green, upload to Blob
 - [ ] USER REQUEST (Sep 12): delete the old videos in `Desktopeduyro-lesson-videos` and replace them with the corrected renders (`scripts/export-lesson-videos.ts` prunes stale files), give every video its correct description, and regenerate `YOUTUBE-METADATA.md` in that folder
 
 | template | reveal sites | converted |
