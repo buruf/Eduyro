@@ -306,7 +306,15 @@ function SceneBody({ dur, unit, sceneId, said }: SceneProps) {
     // 5"); solve-factoring only reaches them in "twist" ("so it factors to…").
     const boxOcc = factoring ? (sceneId === "twist" || sceneId === "record" ? 0 : null) : sceneId === "ask" ? 0 : null;
     const boxAt = (i: number) =>
-      boxOcc === null ? 0 /* not-speech-bound: the brackets are already on screen */ : said(roots[i], 0, boxOcc);
+      // solve-factoring's ask scene POSES the quadratic ("Solve x² − 9x + 18 =
+      // 0"); the factored brackets are what the lesson goes on to work out, so
+      // showing them here answers the question before it is asked. The
+      // headline carries the quadratic; the brackets arrive in twist.
+      factoring && (sceneId === "ask" || sceneId === "work")
+        ? Number.POSITIVE_INFINITY
+        : boxOcc === null
+          ? 0 /* not-speech-bound: the brackets are already on screen */
+          : said(roots[i], 0, boxOcc);
     // "x is 3 … x is 5" — in twist that is the SECOND time each root is named
     // (after "x minus 3 is zero"); in record it is the only time.
     const solAt = (i: number) =>

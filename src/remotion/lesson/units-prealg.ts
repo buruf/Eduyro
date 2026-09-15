@@ -109,7 +109,13 @@ export function preAlgNumbers(u: PreAlgUnit) {
     /** evaluate-add: x + a, and the same with a minus */
     sum: at + u.a,
     sum2: at2 + u.a,
-    difference: at - u.b,
+    /** The x used for the recap's MINUS case. It must not produce a negative
+     *  answer: this unit is lesson 2 of M10 and integers are lesson 9, so
+     *  "4 − 7 is negative 3" taught a result the child has no method for (the
+     *  same defect the transition audit fixed on the practice sheets). Prefer
+     *  the x that keeps the answer at or above zero. */
+    minusAt: at - u.b >= 0 ? at : at2 - u.b >= 0 ? at2 : at,
+    difference: (at - u.b >= 0 ? at : at2 - u.b >= 0 ? at2 : at) - u.b,
     /** evaluate-mul: a·x */
     product: u.a * at,
     product2: u.a * at2,

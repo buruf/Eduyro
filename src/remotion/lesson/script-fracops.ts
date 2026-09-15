@@ -63,7 +63,14 @@ export function fracOpsLines(u: FracOpsUnit): LessonLine[] {
         },
         {
           id: "action",
-          text: `Lay the measuring piece onto the shading, and count the fits. One... two... three. It fits exactly ${x.quot} times.`,
+          // The count is written as DIGITS and generated from the quotient.
+          // Spelling it "One... two... three" gave the alignment no digits to
+          // match, so the hop rings could never land on the count; hardcoding
+          // three steps also went silently wrong for any other quotient.
+          text: `Lay the measuring piece onto the shading, and count the fits. ${Array.from(
+            { length: x.quot },
+            (_, i) => i + 1,
+          ).join("... ")}. It fits exactly ${x.quot} times.`,
         },
         {
           id: "record",

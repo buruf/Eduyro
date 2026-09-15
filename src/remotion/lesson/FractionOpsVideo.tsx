@@ -549,12 +549,17 @@ function SceneBody({ dur, unit, sceneId, said }: SceneProps) {
     const cutsAt = sceneId === "parts" ? stagger(said(unit.d, 0), unit.d - 1, 10) : undefined;
     const cellsAt = sceneId === "parts" ? stagger(said(unit.n, 0, 1), unit.n, 8) : undefined;
     const pieceAt = sceneId === "parts" ? said(x.n2, 0) : -20;
-    // action: the counted fits are words the alignment does not carry, so
-    // they keep their even stagger — but all are in place by "3 times".
-    const hopEvery = Math.round((dur * 0.55) / Math.max(1, hops)); // not-speech-bound: "One… two… three" are words, not aligned
-    const hopStart = Math.round(dur * 0.2); // not-speech-bound: "One… two… three" are words, not aligned
-    const quotAt = said(x.quot, hopStart + (hops - 1) * hopEvery);
-    const hopAt = (i: number) => Math.min(hopStart + i * hopEvery, quotAt - (hops - 1 - i) * 2);
+    // action: the narrator counts the fits as digits ("1… 2… 3"), so each ring
+    // lands on its own number. The even stagger survives only as the fallback
+    // for a clip without alignment.
+    const hopEvery = Math.round((dur * 0.55) / Math.max(1, hops)); // not-speech-bound: fallback spacing only
+    const hopStart = Math.round(dur * 0.2); // not-speech-bound: fallback only
+    // The LAST count and the closing "fits exactly 3 times" are the same
+    // number, so the final ring takes the first mention and the caption the
+    // last one.
+    const quotAt = said(x.quot, hopStart + (hops - 1) * hopEvery, -1);
+    const hopAt = (i: number) =>
+      Math.min(said(i + 1, hopStart + i * hopEvery, 0), quotAt - (hops - 1 - i) * 2);
     const fitsShown =
       sceneId === "action"
         ? Array.from({ length: hops }, (_, i) => i).filter((i) => frame >= hopAt(i)).length

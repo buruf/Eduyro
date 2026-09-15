@@ -11711,17 +11711,17 @@
    "comp": "PreAlg",
    "scene": "ask",
    "text": "x plus 7. That is not a puzzle with one answer — it is a RULE. It says: take a number, and add 7 to it. Until someone tells you what x is, there is nothing to work out.",
-   "sceneSec": 14.2,
-   "clipSec": 13.401,
-   "realSec": 13.400816326530613,
+   "sceneSec": 14.333333333333334,
+   "clipSec": 13.531,
+   "realSec": 13.531428571428572,
    "spoken": [
     {
      "n": 7,
-     "s": 0.94
+     "s": 0.801
     },
     {
      "n": 7,
-     "s": 7.953
+     "s": 8.197
     }
    ],
    "issues": []
@@ -11731,33 +11731,33 @@
    "comp": "PreAlg",
    "scene": "work",
    "text": "So here it comes: x is 4. Now the letter has a value, and you can swap it in. Wherever you see x, write 4 instead. x plus 7 becomes 4 plus 7... which is 11.",
-   "sceneSec": 13.9,
-   "clipSec": 13.113,
-   "realSec": 13.113469387755101,
+   "sceneSec": 14.633333333333333,
+   "clipSec": 13.845,
+   "realSec": 13.844897959183674,
    "spoken": [
     {
      "n": 4,
-     "s": 1.788
+     "s": 1.95
     },
     {
      "n": 4,
-     "s": 7.396
+     "s": 7.906
     },
     {
      "n": 7,
-     "s": 9.404
+     "s": 10.043
     },
     {
      "n": 4,
-     "s": 10.356
+     "s": 11.018
     },
     {
      "n": 7,
-     "s": 11.088
+     "s": 11.738
     },
     {
      "n": 11,
-     "s": 12.202
+     "s": 12.783
     }
    ],
    "issues": []
@@ -11767,29 +11767,29 @@
    "comp": "PreAlg",
    "scene": "twist",
    "text": "Now watch what makes this different from ordinary sums. Change x. Say x is 10. The rule has not changed at all — still add 7 — but the answer has: 10 plus 7 is 17. One expression, and a different answer for every x you feed it.",
-   "sceneSec": 17.166666666666668,
-   "clipSec": 16.353,
-   "realSec": 16.35265306122449,
+   "sceneSec": 18.366666666666667,
+   "clipSec": 17.58,
+   "realSec": 17.580408163265307,
    "spoken": [
     {
      "n": 10,
-     "s": 5.259
+     "s": 5.944
     },
     {
      "n": 7,
-     "s": 8.684
+     "s": 9.718
     },
     {
      "n": 10,
-     "s": 10.716
+     "s": 11.807
     },
     {
      "n": 7,
-     "s": 11.401
+     "s": 12.504
     },
     {
      "n": 17,
-     "s": 11.866
+     "s": 13.096
     }
    ],
    "issues": []
@@ -11798,22 +11798,22 @@
    "unit": "cur-evaluate-expr",
    "comp": "PreAlg",
    "scene": "record",
-   "text": "Substitute, then work it out. A minus behaves exactly the same way: x minus 7, when x is 4, is negative 3. An expression is a rule - feed it a number, get a number back.",
-   "sceneSec": 14.1,
-   "clipSec": 13.296,
-   "realSec": 13.296326530612244,
+   "text": "Substitute, then work it out. A minus behaves exactly the same way: x minus 7, when x is 10, is 3. An expression is a rule - feed it a number, get a number back.",
+   "sceneSec": 13.366666666666667,
+   "clipSec": 12.565,
+   "realSec": 12.564897959183673,
    "spoken": [
     {
      "n": 7,
-     "s": 6.002
+     "s": 5.817
     },
     {
-     "n": 4,
-     "s": 7.303
+     "n": 10,
+     "s": 7.024
     },
     {
      "n": 3,
-     "s": 8.557
+     "s": 7.744
     }
    ],
    "issues": []
@@ -13710,101 +13710,9 @@
    "comp": "FractionOps",
    "scene": "ask",
    "text": "3/4 divided by 1/4. Division asks a fitting question: how many 1/4 pieces fit inside 3/4?",
-   "sceneSec": 9.833333333333334,
-   "clipSec": 9.038,
-   "realSec": 9.038367346938776,
-   "spoken": [
-    {
-     "n": 3,
-     "s": 0
-    },
-    {
-     "n": 4,
-     "s": 0.801
-    },
-    {
-     "n": 1,
-     "s": 1.858
-    },
-    {
-     "n": 4,
-     "s": 2.392
-    },
-    {
-     "n": 1,
-     "s": 5.654
-    },
-    {
-     "n": 4,
-     "s": 6.188
-    },
-    {
-     "n": 3,
-     "s": 7.79
-    },
-    {
-     "n": 4,
-     "s": 8.336
-    }
-   ],
-   "issues": []
-  },
-  {
-   "unit": "cur-divide-fractions",
-   "comp": "FractionOps",
-   "scene": "parts",
-   "text": "Here's 3/4: 3 shaded quarters. And here's the measuring piece: a single 1/4.",
-   "sceneSec": 6.9,
-   "clipSec": 6.087,
-   "realSec": 6.086530612244898,
-   "spoken": [
-    {
-     "n": 3,
-     "s": 0.511
-    },
-    {
-     "n": 4,
-     "s": 1.068
-    },
-    {
-     "n": 3,
-     "s": 1.788
-    },
-    {
-     "n": 1,
-     "s": 4.795
-    },
-    {
-     "n": 4,
-     "s": 5.375
-    }
-   ],
-   "issues": []
-  },
-  {
-   "unit": "cur-divide-fractions",
-   "comp": "FractionOps",
-   "scene": "action",
-   "text": "Lay the measuring piece onto the shading, and count the fits. One... two... three. It fits exactly 3 times.",
-   "sceneSec": 8.833333333333334,
-   "clipSec": 8.02,
-   "realSec": 8.019591836734694,
-   "spoken": [
-    {
-     "n": 3,
-     "s": 6.838
-    }
-   ],
-   "issues": []
-  },
-  {
-   "unit": "cur-divide-fractions",
-   "comp": "FractionOps",
-   "scene": "record",
-   "text": "3/4 divided by 1/4 is 3. And look: that's the same answer as 3/4 times 4/1 - flip the second fraction, then multiply. Division asks: how many of these fit in that?.",
-   "sceneSec": 14.4,
-   "clipSec": 13.584,
-   "realSec": 13.583673469387755,
+   "sceneSec": 9.466666666666667,
+   "clipSec": 8.673,
+   "realSec": 8.672653061224489,
    "spoken": [
     {
      "n": 3,
@@ -13816,31 +13724,135 @@
     },
     {
      "n": 1,
-     "s": 1.823
+     "s": 1.834
     },
     {
      "n": 4,
-     "s": 2.322
-    },
-    {
-     "n": 3,
-     "s": 2.786
-    },
-    {
-     "n": 3,
-     "s": 5.689
-    },
-    {
-     "n": 4,
-     "s": 6.258
-    },
-    {
-     "n": 4,
-     "s": 6.885
+     "s": 2.345
     },
     {
      "n": 1,
-     "s": 7.477
+     "s": 5.143
+    },
+    {
+     "n": 4,
+     "s": 5.619
+    },
+    {
+     "n": 3,
+     "s": 7.465
+    },
+    {
+     "n": 4,
+     "s": 7.988
+    }
+   ],
+   "issues": []
+  },
+  {
+   "unit": "cur-divide-fractions",
+   "comp": "FractionOps",
+   "scene": "parts",
+   "text": "Here's 3/4: 3 shaded quarters. And here's the measuring piece: a single 1/4.",
+   "sceneSec": 7.5,
+   "clipSec": 6.687,
+   "realSec": 6.6873469387755105,
+   "spoken": [
+    {
+     "n": 3,
+     "s": 0.58
+    },
+    {
+     "n": 4,
+     "s": 1.161
+    },
+    {
+     "n": 3,
+     "s": 1.834
+    },
+    {
+     "n": 1,
+     "s": 5.422
+    },
+    {
+     "n": 4,
+     "s": 5.956
+    }
+   ],
+   "issues": []
+  },
+  {
+   "unit": "cur-divide-fractions",
+   "comp": "FractionOps",
+   "scene": "action",
+   "text": "Lay the measuring piece onto the shading, and count the fits. 1... 2... 3. It fits exactly 3 times.",
+   "sceneSec": 8.766666666666667,
+   "clipSec": 7.967,
+   "realSec": 7.96734693877551,
+   "spoken": [
+    {
+     "n": 1,
+     "s": 3.901
+    },
+    {
+     "n": 2,
+     "s": 4.458
+    },
+    {
+     "n": 3,
+     "s": 5.097
+    },
+    {
+     "n": 3,
+     "s": 6.745
+    }
+   ],
+   "issues": []
+  },
+  {
+   "unit": "cur-divide-fractions",
+   "comp": "FractionOps",
+   "scene": "record",
+   "text": "3/4 divided by 1/4 is 3. And look: that's the same answer as 3/4 times 4/1 - flip the second fraction, then multiply. Division asks: how many of these fit in that?.",
+   "sceneSec": 13.766666666666667,
+   "clipSec": 12.983,
+   "realSec": 12.982857142857142,
+   "spoken": [
+    {
+     "n": 3,
+     "s": 0
+    },
+    {
+     "n": 4,
+     "s": 0.743
+    },
+    {
+     "n": 1,
+     "s": 1.707
+    },
+    {
+     "n": 4,
+     "s": 2.218
+    },
+    {
+     "n": 3,
+     "s": 2.728
+    },
+    {
+     "n": 3,
+     "s": 4.946
+    },
+    {
+     "n": 4,
+     "s": 5.515
+    },
+    {
+     "n": 4,
+     "s": 6.188
+    },
+    {
+     "n": 1,
+     "s": 6.815
     }
    ],
    "issues": []

@@ -32,7 +32,7 @@ export function preAlgLines(u: PreAlgUnit): LessonLine[] {
         },
         {
           id: "record",
-          text: `Substitute, then work it out. A minus behaves exactly the same way: x minus ${x.b}, when x is ${x.at}, is ${signed(x.difference)}. ${u.tip}.`,
+          text: `Substitute, then work it out. A minus behaves exactly the same way: x minus ${x.b}, when x is ${x.minusAt}, is ${signed(x.difference)}. ${u.tip}.`,
         },
       ];
 

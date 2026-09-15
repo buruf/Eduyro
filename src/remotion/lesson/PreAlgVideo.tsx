@@ -287,6 +287,16 @@ function SceneBody({ dur, unit, sceneId, said }: SceneProps) {
     const addAt = sceneId === "ask" || sceneId === "work" ? said(x.a, CARRIED, 0) : CARRIED;
     const sumFallback = step(0.45); // not-speech-bound: fallback only
     const sumAt = said(x.sum, sumFallback, -1);
+    // The recap line is about a MINUS: "x minus 7, when x is 10, is 3". It used
+    // to be narrated over the carried addition (x + 7 = 11), so the picture
+    // contradicted the words. Show the minus the line actually describes, each
+    // part landing on its own number in narration order (b, then x, then the
+    // answer).
+    const minus = sceneId === "record";
+    const boxValue = minus ? x.minusAt : x.at;
+    const boxAt = minus ? said(x.minusAt, step(0.3), 0) : sceneId === "ask" ? CARRIED : fillAt;
+    const opAt = minus ? said(x.b, CARRIED, 0) : addAt;
+    const resultAt = minus ? said(x.difference, step(0.55), 0) : sumAt;
     // twist: the second column arrives on "say x is 10"; the first is carried.
     const secondAt = said(x.at2, step(0.35), 0);
     return (
@@ -309,19 +319,19 @@ function SceneBody({ dur, unit, sceneId, said }: SceneProps) {
           </div>
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: 26 }}>
-            <Appear at={sceneId === "ask" ? CARRIED : fillAt} frame={frame}>
-              <XBox value={sceneId === "ask" ? undefined : x.at} />
+            <Appear at={boxAt} frame={frame}>
+              <XBox value={sceneId === "ask" ? undefined : boxValue} />
             </Appear>
-            <Line at={addAt} frame={frame} size={76}>
-              + {x.a}
+            <Line at={opAt} frame={frame} size={76}>
+              {minus ? "−" : "+"} {minus ? x.b : x.a}
             </Line>
             {sceneId !== "ask" && (
               <>
-                <Line at={sumAt} frame={frame} size={76} colour={MUTED}>
+                <Line at={resultAt} frame={frame} size={76} colour={MUTED}>
                   =
                 </Line>
-                <Line at={sumAt} frame={frame} size={90} colour={GREEN}>
-                  {x.sum}
+                <Line at={resultAt} frame={frame} size={90} colour={GREEN}>
+                  {minus ? x.difference : x.sum}
                 </Line>
               </>
             )}

@@ -110,7 +110,7 @@ Hard failures: **0** · scenes without word alignment: **50** (those cannot be s
 | cur-both-sides | 65.5 | 65.5 | ok |
 | cur-fraction-equation | 59.8 | 59.8 | ok |
 | cur-transformations | 76.4 | 76.3 | ok |
-| cur-evaluate-expr | 59.4 | 59.4 | ok |
+| cur-evaluate-expr | 60.7 | 60.7 | ok |
 | cur-evaluate-product | 47.9 | 47.9 | ok |
 | cur-like-terms | 57.8 | 57.8 | ok |
 | cur-distribute | 62.7 | 62.6 | ok |
@@ -126,7 +126,7 @@ Hard failures: **0** · scenes without word alignment: **50** (those cannot be s
 | cur-long-division | 64.0 | 64.0 | ok |
 | cur-subtract-fractions | 38.3 | 38.3 | ok |
 | cur-multiply-fractions | 43.5 | 43.5 | ok |
-| cur-divide-fractions | 40.0 | 40.0 | ok |
+| cur-divide-fractions | 39.5 | 39.5 | ok |
 | cur-mixed-numbers | 40.3 | 40.3 | ok |
 | cur-improper-fractions | 36.4 | 36.4 | ok |
 | cur-order-fractions | 44.5 | 44.4 | ok |
@@ -1227,14 +1227,14 @@ Reveals inside a scene fire at hand-picked frames; compare them to these moments
   - "Reflect flips one coordinate. Translate adds to both. A quarter turn swaps them and changes a sign. Every transformation is one rule applied"
 
 ### cur-evaluate-expr (PreAlg)
-- **ask** · scene 14.20s, clip 13.401s, tail 0.80s · 7@0.94s  7@7.95s
+- **ask** · scene 14.33s, clip 13.531s, tail 0.80s · 7@0.80s  7@8.20s
   - "x plus 7. That is not a puzzle with one answer — it is a RULE. It says: take a number, and add 7 to it. Until someone tells you what x is, t"
-- **work** · scene 13.90s, clip 13.113s, tail 0.79s · 4@1.79s  4@7.40s  7@9.40s  4@10.36s  7@11.09s  11@12.20s
+- **work** · scene 14.63s, clip 13.845s, tail 0.79s · 4@1.95s  4@7.91s  7@10.04s  4@11.02s  7@11.74s  11@12.78s
   - "So here it comes: x is 4. Now the letter has a value, and you can swap it in. Wherever you see x, write 4 instead. x plus 7 becomes 4 plus 7"
-- **twist** · scene 17.17s, clip 16.353s, tail 0.81s · 10@5.26s  7@8.68s  10@10.72s  7@11.40s  17@11.87s
+- **twist** · scene 18.37s, clip 17.58s, tail 0.79s · 10@5.94s  7@9.72s  10@11.81s  7@12.50s  17@13.10s
   - "Now watch what makes this different from ordinary sums. Change x. Say x is 10. The rule has not changed at all — still add 7 — but the answe"
-- **record** · scene 14.10s, clip 13.296s, tail 0.80s · 7@6.00s  4@7.30s  3@8.56s
-  - "Substitute, then work it out. A minus behaves exactly the same way: x minus 7, when x is 4, is negative 3. An expression is a rule - feed it"
+- **record** · scene 13.37s, clip 12.565s, tail 0.80s · 7@5.82s  10@7.02s  3@7.74s
+  - "Substitute, then work it out. A minus behaves exactly the same way: x minus 7, when x is 10, is 3. An expression is a rule - feed it a numbe"
 
 ### cur-evaluate-product (PreAlg)
 - **ask** · scene 9.20s, clip 8.385s, tail 0.81s · 3@0.00s
@@ -1387,13 +1387,13 @@ Reveals inside a scene fire at hand-picked frames; compare them to these moments
   - "So 1/2 times 3/4 is 3/8. Tops multiply: 1 times 3 is 3. Bottoms multiply: 2 times 4 is 8. Times means OF - tops multiply, bottoms multiply."
 
 ### cur-divide-fractions (FractionOps)
-- **ask** · scene 9.83s, clip 9.038s, tail 0.80s · 3@0.00s  4@0.80s  1@1.86s  4@2.39s  1@5.65s  4@6.19s  3@7.79s  4@8.34s
+- **ask** · scene 9.47s, clip 8.673s, tail 0.79s · 3@0.00s  4@0.81s  1@1.83s  4@2.35s  1@5.14s  4@5.62s  3@7.46s  4@7.99s
   - "3/4 divided by 1/4. Division asks a fitting question: how many 1/4 pieces fit inside 3/4?"
-- **parts** · scene 6.90s, clip 6.087s, tail 0.81s · 3@0.51s  4@1.07s  3@1.79s  1@4.79s  4@5.38s
+- **parts** · scene 7.50s, clip 6.687s, tail 0.81s · 3@0.58s  4@1.16s  3@1.83s  1@5.42s  4@5.96s
   - "Here's 3/4: 3 shaded quarters. And here's the measuring piece: a single 1/4."
-- **action** · scene 8.83s, clip 8.02s, tail 0.81s · 3@6.84s
-  - "Lay the measuring piece onto the shading, and count the fits. One... two... three. It fits exactly 3 times."
-- **record** · scene 14.40s, clip 13.584s, tail 0.82s · 3@0.00s  4@0.81s  1@1.82s  4@2.32s  3@2.79s  3@5.69s  4@6.26s  4@6.88s  1@7.48s
+- **action** · scene 8.77s, clip 7.967s, tail 0.80s · 1@3.90s  2@4.46s  3@5.10s  3@6.75s
+  - "Lay the measuring piece onto the shading, and count the fits. 1... 2... 3. It fits exactly 3 times."
+- **record** · scene 13.77s, clip 12.983s, tail 0.78s · 3@0.00s  4@0.74s  1@1.71s  4@2.22s  3@2.73s  3@4.95s  4@5.51s  4@6.19s  1@6.82s
   - "3/4 divided by 1/4 is 3. And look: that's the same answer as 3/4 times 4/1 - flip the second fraction, then multiply. Division asks: how man"
 
 ### cur-mixed-numbers (FractionOps)

@@ -10104,84 +10104,7 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-divide-fractions/ramlah/ask.mp3",
-        "durationInSeconds": 9.038,
-        "numberTimes": [
-          {
-            "n": 3,
-            "s": 0
-          },
-          {
-            "n": 4,
-            "s": 0.801
-          },
-          {
-            "n": 1,
-            "s": 1.858
-          },
-          {
-            "n": 4,
-            "s": 2.392
-          },
-          {
-            "n": 1,
-            "s": 5.654
-          },
-          {
-            "n": 4,
-            "s": 6.188
-          },
-          {
-            "n": 3,
-            "s": 7.79
-          },
-          {
-            "n": 4,
-            "s": 8.336
-          }
-        ]
-      },
-      {
-        "id": "parts",
-        "file": "lesson-voice/cur-divide-fractions/ramlah/parts.mp3",
-        "durationInSeconds": 6.087,
-        "numberTimes": [
-          {
-            "n": 3,
-            "s": 0.511
-          },
-          {
-            "n": 4,
-            "s": 1.068
-          },
-          {
-            "n": 3,
-            "s": 1.788
-          },
-          {
-            "n": 1,
-            "s": 4.795
-          },
-          {
-            "n": 4,
-            "s": 5.375
-          }
-        ]
-      },
-      {
-        "id": "action",
-        "file": "lesson-voice/cur-divide-fractions/ramlah/action.mp3",
-        "durationInSeconds": 8.02,
-        "numberTimes": [
-          {
-            "n": 3,
-            "s": 6.838
-          }
-        ]
-      },
-      {
-        "id": "record",
-        "file": "lesson-voice/cur-divide-fractions/ramlah/record.mp3",
-        "durationInSeconds": 13.584,
+        "durationInSeconds": 8.673,
         "numberTimes": [
           {
             "n": 3,
@@ -10193,31 +10116,120 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
           },
           {
             "n": 1,
-            "s": 1.823
+            "s": 1.834
           },
           {
             "n": 4,
-            "s": 2.322
-          },
-          {
-            "n": 3,
-            "s": 2.786
-          },
-          {
-            "n": 3,
-            "s": 5.689
-          },
-          {
-            "n": 4,
-            "s": 6.258
-          },
-          {
-            "n": 4,
-            "s": 6.885
+            "s": 2.345
           },
           {
             "n": 1,
-            "s": 7.477
+            "s": 5.143
+          },
+          {
+            "n": 4,
+            "s": 5.619
+          },
+          {
+            "n": 3,
+            "s": 7.465
+          },
+          {
+            "n": 4,
+            "s": 7.988
+          }
+        ]
+      },
+      {
+        "id": "parts",
+        "file": "lesson-voice/cur-divide-fractions/ramlah/parts.mp3",
+        "durationInSeconds": 6.687,
+        "numberTimes": [
+          {
+            "n": 3,
+            "s": 0.58
+          },
+          {
+            "n": 4,
+            "s": 1.161
+          },
+          {
+            "n": 3,
+            "s": 1.834
+          },
+          {
+            "n": 1,
+            "s": 5.422
+          },
+          {
+            "n": 4,
+            "s": 5.956
+          }
+        ]
+      },
+      {
+        "id": "action",
+        "file": "lesson-voice/cur-divide-fractions/ramlah/action.mp3",
+        "durationInSeconds": 7.967,
+        "numberTimes": [
+          {
+            "n": 1,
+            "s": 3.901
+          },
+          {
+            "n": 2,
+            "s": 4.458
+          },
+          {
+            "n": 3,
+            "s": 5.097
+          },
+          {
+            "n": 3,
+            "s": 6.745
+          }
+        ]
+      },
+      {
+        "id": "record",
+        "file": "lesson-voice/cur-divide-fractions/ramlah/record.mp3",
+        "durationInSeconds": 12.983,
+        "numberTimes": [
+          {
+            "n": 3,
+            "s": 0
+          },
+          {
+            "n": 4,
+            "s": 0.743
+          },
+          {
+            "n": 1,
+            "s": 1.707
+          },
+          {
+            "n": 4,
+            "s": 2.218
+          },
+          {
+            "n": 3,
+            "s": 2.728
+          },
+          {
+            "n": 3,
+            "s": 4.946
+          },
+          {
+            "n": 4,
+            "s": 5.515
+          },
+          {
+            "n": 4,
+            "s": 6.188
+          },
+          {
+            "n": 1,
+            "s": 6.815
           }
         ]
       }
@@ -12318,92 +12330,92 @@ export const CLIPS_BY_UNIT: Record<string, Record<string, VoiceClip[]>> = {
       {
         "id": "ask",
         "file": "lesson-voice/cur-evaluate-expr/ramlah/ask.mp3",
-        "durationInSeconds": 13.401,
+        "durationInSeconds": 13.531,
         "numberTimes": [
           {
             "n": 7,
-            "s": 0.94
+            "s": 0.801
           },
           {
             "n": 7,
-            "s": 7.953
+            "s": 8.197
           }
         ]
       },
       {
         "id": "work",
         "file": "lesson-voice/cur-evaluate-expr/ramlah/work.mp3",
-        "durationInSeconds": 13.113,
+        "durationInSeconds": 13.845,
         "numberTimes": [
           {
             "n": 4,
-            "s": 1.788
+            "s": 1.95
           },
           {
             "n": 4,
-            "s": 7.396
+            "s": 7.906
           },
           {
             "n": 7,
-            "s": 9.404
+            "s": 10.043
           },
           {
             "n": 4,
-            "s": 10.356
+            "s": 11.018
           },
           {
             "n": 7,
-            "s": 11.088
+            "s": 11.738
           },
           {
             "n": 11,
-            "s": 12.202
+            "s": 12.783
           }
         ]
       },
       {
         "id": "twist",
         "file": "lesson-voice/cur-evaluate-expr/ramlah/twist.mp3",
-        "durationInSeconds": 16.353,
+        "durationInSeconds": 17.58,
         "numberTimes": [
           {
             "n": 10,
-            "s": 5.259
+            "s": 5.944
           },
           {
             "n": 7,
-            "s": 8.684
+            "s": 9.718
           },
           {
             "n": 10,
-            "s": 10.716
+            "s": 11.807
           },
           {
             "n": 7,
-            "s": 11.401
+            "s": 12.504
           },
           {
             "n": 17,
-            "s": 11.866
+            "s": 13.096
           }
         ]
       },
       {
         "id": "record",
         "file": "lesson-voice/cur-evaluate-expr/ramlah/record.mp3",
-        "durationInSeconds": 13.296,
+        "durationInSeconds": 12.565,
         "numberTimes": [
           {
             "n": 7,
-            "s": 6.002
+            "s": 5.817
           },
           {
-            "n": 4,
-            "s": 7.303
+            "n": 10,
+            "s": 7.024
           },
           {
             "n": 3,
-            "s": 8.557
+            "s": 7.744
           }
         ]
       }
